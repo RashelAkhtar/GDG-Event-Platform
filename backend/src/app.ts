@@ -3,6 +3,7 @@ import express, { type Express } from "express";
 import passport from "./config/passport.ts";
 import authRoutes from "./routes/auth.routes.ts";
 import eventRoutes from "./routes/event.routes.ts";
+import quizRoutes from "./routes/quiz.routes.ts";
 import 'dotenv/config';
 
 const app: Express = express();
@@ -31,5 +32,6 @@ app.get("/health", (_req, res) => {
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/events", eventRoutes);
+app.use("/api/v1/events", quizRoutes);
 
 export default app;
