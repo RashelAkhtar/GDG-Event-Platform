@@ -7,10 +7,16 @@ import quizRoutes from "./routes/quiz.routes.ts";
 import 'dotenv/config';
 
 const app: Express = express();
-const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+const clientUrl = process.env.CLIENT_URL || "http://localhost:3000";
+const allowedOrigins = [clientUrl, "http://localhost:3000", "http://localhost:5173"];
 
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", clientUrl);
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  } else {
+    res.setHeader("Access-Control-Allow-Origin", clientUrl);
+  }
   res.setHeader("Access-Control-Allow-Credentials", "true");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");

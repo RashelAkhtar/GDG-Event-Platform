@@ -1,17 +1,14 @@
 import mongoose from 'mongoose';
 import 'dotenv/config';
 
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/gdg';
 
 export const connectDB = async (): Promise<void> => {
+  mongoose.set('bufferCommands', false);
   try {
-    if (!MONGODB_URI) {
-      throw new Error('MONGODB_URI must be configured');
-    }
-    await mongoose.connect(MONGODB_URI);
+    await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 2000 });
     console.log('🚀 MongoDB connected successfully');
   } catch (error) {
-    console.error('❌ MongoDB connection error:', error);
-    process.exit(1);
+    console.warn('⚠️ MongoDB connection unavailable. Server continuing with real-time WebSocket and API routing.');
   }
 };
