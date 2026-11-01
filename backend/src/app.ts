@@ -8,16 +8,25 @@ import 'dotenv/config';
 
 const app: Express = express();
 const clientUrl = process.env.CLIENT_URL || "http://localhost:3000";
-const allowedOrigins = [clientUrl, "http://localhost:3000", "http://localhost:5173"];
+const allowedOrigins = new Set(
+  [clientUrl, ...(process.env.CLIENT_URLS || "").split(","), "http://localhost:3000", "http://localhost:5173"]
+    .map((url) => {
+      try {
+        return new URL(url.trim()).origin;
+      } catch {
+        return null;
+      }
+    })
+    .filter((origin): origin is string => origin !== null)
+);
 
 app.set("trust proxy", 1);
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  if (origin && allowedOrigins.includes(origin)) {
+  res.vary("Origin");
+  if (origin && allowedOrigins.has(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
-  } else {
-    res.setHeader("Access-Control-Allow-Origin", clientUrl);
   }
   res.setHeader("Access-Control-Allow-Credentials", "true");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
