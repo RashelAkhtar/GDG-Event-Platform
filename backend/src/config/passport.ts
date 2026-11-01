@@ -31,9 +31,10 @@ if (isGoogleConfigured && googleClientId && googleClientSecret) {
             return done(new Error('No email found from Google profile'), undefined);
           }
 
-          const adminEmail = (process.env.ADMIN_EMAIL || 'aryan.crores@gmail.com').toLowerCase();
-          const isAdmin = email.toLowerCase() === adminEmail;
-          const assignedRole = isAdmin ? UserRole.ADMIN : UserRole.USER;
+          const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+          if (adminEmail && email.toLowerCase() === adminEmail) {
+            return done(new Error('Use admin email and password sign-in.'), undefined);
+          }
 
           let user = null;
           if (mongoose.connection.readyState === 1) {
@@ -44,22 +45,13 @@ if (isGoogleConfigured && googleClientId && googleClientSecret) {
                 email,
                 name: profile.displayName,
                 avatar: profile.photos?.[0]?.value,
-                role: assignedRole,
+                role: UserRole.USER,
               });
-            } else if (isAdmin && user.role !== UserRole.ADMIN) {
-              user.role = UserRole.ADMIN;
-              await user.save();
             }
           }
 
           if (!user) {
-            user = {
-              _id: 'admin_master_aryan',
-              email,
-              name: profile.displayName || 'Aryan',
-              avatar: profile.photos?.[0]?.value || 'https://api.dicebear.com/7.x/initials/svg?seed=Aryan&backgroundColor=1a73e8&textColor=ffffff',
-              role: assignedRole,
-            } as any;
+            return done(new Error('Authentication service is unavailable.'), undefined);
           }
 
           return done(null, user);
@@ -71,21 +63,7 @@ if (isGoogleConfigured && googleClientId && googleClientSecret) {
   );
   console.log('🔒 Google OAuth Strategy initialized with credentials');
 } else {
-  // Always register a fallback strategy for 'google' so passport.authenticate('google') never throws Unknown authentication strategy
-  passport.use('google', {
-    authenticate: function(this: any) {
-      const adminEmail = (process.env.ADMIN_EMAIL || 'aryan.crores@gmail.com').toLowerCase();
-      const devUser = {
-        _id: 'admin_master_aryan',
-        email: adminEmail,
-        name: 'Aryan',
-        avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=Aryan&backgroundColor=1a73e8&textColor=ffffff',
-        role: UserRole.ADMIN,
-      };
-      this.success(devUser);
-    },
-  } as any);
-  console.log('⚡ Fallback Google authentication strategy registered for development');
+  console.log('Google OAuth is not configured.');
 }
 
 export default passport;

@@ -1,10 +1,10 @@
 'use client'
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 import { GoogleG, GdgLogoBadge } from './GoogleBrand'
-import { LogOut, ShieldCheck, ChevronDown } from 'lucide-react'
+import { LogOut, ChevronDown } from 'lucide-react'
 
 export function Navbar() {
   const { user, loginWithGoogle, logout } = useAuth()
@@ -54,17 +54,6 @@ export function Navbar() {
                       </span>
                     </div>
 
-                    {user.role === 'ADMIN' && (
-                      <Link
-                        href="/admin"
-                        onClick={() => setMenuOpen(false)}
-                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-[#202124] hover:bg-[#F8F9FA] transition-colors"
-                      >
-                        <ShieldCheck className="h-4 w-4 text-[#1A73E8]" />
-                        <span>Admin Console</span>
-                      </Link>
-                    )}
-
                     <button
                       onClick={() => {
                         setMenuOpen(false)
@@ -89,14 +78,6 @@ export function Navbar() {
                 <span className="hidden xs:inline">Sign in with</span> Google
               </button>
 
-              <Link
-                href="/login"
-                title="Admin Sign In"
-                className="flex h-8 items-center gap-1.5 rounded-full border border-[#DADCE0] bg-white px-3 text-xs font-medium text-[#5F6368] hover:bg-[#F8F9FA] hover:text-[#202124] transition-colors"
-              >
-                <ShieldCheck className="h-3.5 w-3.5 text-[#1A73E8]" />
-                <span>Admin</span>
-              </Link>
             </div>
           )}
         </div>

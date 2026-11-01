@@ -18,6 +18,10 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
+## Admin access
+
+Set `ADMIN_PANEL_PATH` in the frontend server environment (see `.env.example`) to a private path. Open that path to enter the admin email and password; append `/panel` to access the panel after signing in. The regular `/login` and `/admin` paths are not exposed. The path only hides the entry point; the backend still verifies admin credentials and permissions.
+
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More

@@ -1,5 +1,10 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import type { Server as HttpServer } from 'http';
+import type { IncomingMessage } from 'http';
+import mongoose from 'mongoose';
+import { User, UserRole } from './models/User.ts';
+import { verifyToken } from './utils/jwt.ts';
+import 'dotenv/config';
 
 export interface WsMessage {
   type:
@@ -25,6 +30,7 @@ class EventWebSocketService {
   private wss: WebSocketServer | null = null;
   private users: Map<string, ConnectedUser> = new Map();
   private socketToUserId: Map<WebSocket, string> = new Map();
+  private socketPrincipals: Map<WebSocket, ConnectedUser> = new Map();
   private gameStates: Record<string, { isLocked: boolean; status: string }> = {
     'web-dev-quiz': { isLocked: false, status: 'LIVE' },
     'mentis-quiz': { isLocked: true, status: 'UPCOMING' },
@@ -32,18 +38,21 @@ class EventWebSocketService {
   };
 
   public init(server: HttpServer) {
-    this.wss = new WebSocketServer({ server, path: '/ws' });
+    const allowedOrigins = new Set([
+      process.env.CLIENT_URL || 'http://localhost:3000',
+      'http://localhost:3000',
+      'http://localhost:5173',
+    ]);
 
-    this.wss.on('connection', (ws: WebSocket) => {
-      // Send initial state to newly connected client
-      this.sendTo(ws, {
-        type: 'SYNC_STATE',
-        payload: {
-          users: Array.from(this.users.values()),
-          gameStates: this.gameStates,
-        },
-      });
+    this.wss = new WebSocketServer({
+      server,
+      path: '/ws',
+      verifyClient: ({ origin }, callback) => {
+        callback(Boolean(origin && allowedOrigins.has(origin)), 403, 'Forbidden');
+      },
+    });
 
+    this.wss.on('connection', (ws: WebSocket, request: IncomingMessage) => {
       ws.on('message', (data: string) => {
         try {
           const message: WsMessage = JSON.parse(data.toString());
@@ -54,6 +63,7 @@ class EventWebSocketService {
       });
 
       ws.on('close', () => {
+        this.socketPrincipals.delete(ws);
         const userId = this.socketToUserId.get(ws);
         if (userId) {
           this.socketToUserId.delete(ws);
@@ -64,38 +74,88 @@ class EventWebSocketService {
           });
         }
       });
+
+      void this.initializeConnection(ws, request);
     });
 
     console.log('[WebSocket] Realtime server initialized on path /ws');
   }
 
-  private handleMessage(ws: WebSocket, message: WsMessage) {
-    switch (message.type) {
-      case 'USER_JOIN': {
-        const { id, name, avatar, role, email } = message.payload || {};
-        // STRICTLY EXCLUDE ADMIN FROM PARTICIPANT BUCKET
-        const isAdmin =
-          role === 'ADMIN' ||
-          email === process.env.ADMIN_EMAIL ||
-          name?.includes('(Admin)');
-        if (isAdmin) {
+  private async initializeConnection(ws: WebSocket, request: IncomingMessage) {
+    let principal: ConnectedUser | null = null;
+    try {
+      principal = await this.authenticateRequest(request);
+    } catch (error) {
+      console.error('[WebSocket] Failed to authenticate connection:', error);
+    }
+
+    if (ws.readyState !== WebSocket.OPEN) return;
+
+    if (principal) {
+      this.socketPrincipals.set(ws, principal);
+      if (principal.role !== UserRole.ADMIN) {
+        this.users.set(principal.id, principal);
+        this.socketToUserId.set(ws, principal.id);
+      }
+    }
+
+    this.sendTo(ws, {
+      type: 'SYNC_STATE',
+      payload: {
+        users: Array.from(this.users.values()),
+        gameStates: this.gameStates,
+      },
+    });
+
+    if (principal && principal.role !== UserRole.ADMIN) {
+      this.broadcast({ type: 'USER_JOIN', payload: principal });
+    }
+  }
+
+  private async authenticateRequest(request: IncomingMessage): Promise<ConnectedUser | null> {
+    let token: string | undefined;
+    try {
+      for (const part of (request.headers.cookie || '').split(';')) {
+        const [name, ...valueParts] = part.trim().split('=');
+        if (name === 'gdg_token' || name === 'token') {
+          token = decodeURIComponent(valueParts.join('='));
           break;
         }
-
-        if (id && name) {
-          const userObj: ConnectedUser = { id, name, avatar, role, joinedAt: Date.now() };
-          this.users.set(id, userObj);
-          this.socketToUserId.set(ws, id);
-          // Broadcast to all clients (including sender) to drop the bubble
-          this.broadcast({
-            type: 'USER_JOIN',
-            payload: userObj,
-          });
-        }
-        break;
       }
+    } catch {
+      return null;
+    }
+
+    if (!token) return null;
+
+    let decoded: ReturnType<typeof verifyToken>;
+    try {
+      decoded = verifyToken(token);
+    } catch {
+      return null;
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(decoded.userId)) return null;
+
+    const user = await User.findById(decoded.userId).select('_id name avatar role');
+    if (!user) return null;
+
+    return {
+      id: user._id.toString(),
+      name: user.name,
+      avatar: user.avatar,
+      role: user.role,
+      joinedAt: Date.now(),
+    };
+  }
+
+  private handleMessage(ws: WebSocket, message: WsMessage) {
+    switch (message.type) {
+      case 'USER_JOIN':
+        break;
 
       case 'GAME_LOCK_TOGGLE': {
+        if (this.socketPrincipals.get(ws)?.role !== UserRole.ADMIN) break;
         const { gameSlug, isLocked, status } = message.payload || {};
         if (gameSlug) {
           this.gameStates[gameSlug] = { isLocked, status };
@@ -108,16 +168,16 @@ class EventWebSocketService {
       }
 
       case 'START_COUNTDOWN': {
-        // Admin triggered 5-4-3-2-1 quiz countdown
+        if (this.socketPrincipals.get(ws)?.role !== UserRole.ADMIN) break;
         this.broadcast({
           type: 'START_COUNTDOWN',
-          payload: message.payload, // e.g. { gameSlug: 'web-dev-quiz', seconds: 5 }
+          payload: message.payload,
         });
         break;
       }
 
       case 'START_WINNER_CEREMONY': {
-        // Admin triggered 5-4-3-2-1 winner ceremony
+        if (this.socketPrincipals.get(ws)?.role !== UserRole.ADMIN) break;
         this.broadcast({
           type: 'START_WINNER_CEREMONY',
           payload: message.payload,
@@ -126,7 +186,7 @@ class EventWebSocketService {
       }
 
       case 'NEW_WORD_OR_QUESTION': {
-        // Admin created new question or word puzzle
+        if (this.socketPrincipals.get(ws)?.role !== UserRole.ADMIN) break;
         this.broadcast({
           type: 'NEW_WORD_OR_QUESTION',
           payload: message.payload,

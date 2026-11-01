@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { GdgLogoBadge } from '@/components/ui/GoogleBrand'
 import { ShieldCheck, ArrowLeft, AlertCircle, CheckCircle2, Lock, Mail } from 'lucide-react'
@@ -10,6 +10,7 @@ import { ShieldCheck, ArrowLeft, AlertCircle, CheckCircle2, Lock, Mail } from 'l
 function LoginContent() {
   const { user, adminPasswordLogin } = useAuth()
   const router = useRouter()
+  const pathname = usePathname()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
@@ -19,12 +20,10 @@ function LoginContent() {
   const [adminLoading, setAdminLoading] = useState(false)
 
   useEffect(() => {
-    if (user && user.role === 'ADMIN') {
-      router.push('/admin')
-    } else if (user) {
+    if (user && user.role !== 'ADMIN') {
       router.push('/')
     }
-  }, [user, router])
+  }, [user, router, pathname])
 
   const handleAdminSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -32,10 +31,10 @@ function LoginContent() {
     setAdminLoading(true)
 
     try {
-      const res = await adminPasswordLogin(adminEmail.trim(), adminPassword.trim())
+      const res = await adminPasswordLogin(adminEmail.trim(), adminPassword)
       if (res.success) {
         setSuccessMessage('Admin verified! Entering platform...')
-        setTimeout(() => router.push('/admin'), 600)
+        setTimeout(() => router.push(`${pathname.replace(/\/+$/, '')}/panel`), 600)
       } else {
         setErrorMessage(res.message || 'Invalid admin credentials')
       }

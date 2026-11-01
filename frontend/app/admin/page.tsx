@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   api,
   DEFAULT_WEB_EVENT,
@@ -12,7 +13,6 @@ import {
   WendWord,
   WendBoardConfig,
   findWordPathInGrid,
-  DEFAULT_WEND_BOARD,
   CeremonyWinner,
   RankedParticipant,
   LeaderboardEntry,
@@ -39,7 +39,6 @@ import {
   Edit2,
   Edit3,
   Sliders,
-  Send,
   UserCheck,
   RefreshCw,
   Crown,
@@ -57,7 +56,6 @@ import {
   Eye,
   EyeOff,
   Eraser,
-  CornerDownLeft,
 } from 'lucide-react'
 import { LockedIllustration, UnlockedIllustration } from '@/components/ui/LockIllustrations'
 import { AnimatedLockToggle } from '@/components/ui/AnimatedLockToggle'
@@ -72,8 +70,17 @@ function formatDuration(ms: number): string {
 }
 
 export default function AdminPage() {
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
+  const pathname = usePathname()
+  const router = useRouter()
   const { gameLockStates, sendLockToggle, sendCountdownStart, sendWinnerCeremonyStart, connected } = useWebSocket()
+
+  useEffect(() => {
+    if (!loading && user?.role !== 'ADMIN') {
+      const loginPath = pathname.replace(/\/panel\/?$/, '') || '/'
+      router.replace(loginPath)
+    }
+  }, [loading, pathname, router, user])
 
   const [webEvent, setWebEvent] = useState<GdgEvent>(DEFAULT_WEB_EVENT)
   const [mentisEvent, setMentisEvent] = useState<GdgEvent>(DEFAULT_MENTIS_EVENT)
@@ -636,6 +643,14 @@ export default function AdminPage() {
     showToast(`BROADCASTED: Winner Announcement ceremony with ${automatedRanking.winners.length} podium winners is live!`)
   }
 
+  if (loading || user?.role !== 'ADMIN') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F8F9FA]">
+        <div className="h-8 w-8 animate-spin rounded-full border-3 border-[#1A73E8] border-t-transparent" />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F9FA] text-[#202124]">
       {/* Top Admin Header */}
@@ -656,9 +671,6 @@ export default function AdminPage() {
                 <h1 className="text-sm font-semibold tracking-tight text-[#202124] leading-none">
                   GDG Admin Command Center
                 </h1>
-                <span className="text-[11px] text-[#5F6368]">
-                  Logged in as <strong className="text-[#1A73E8]">aryan.crores@gmail.com</strong>
-                </span>
               </div>
             </div>
           </div>

@@ -4,79 +4,61 @@ import { verifyToken } from '../utils/jwt.ts';
 import { User, UserRole, type IUser } from '../models/User.ts';
 
 export const protect = async (req: Request, res: Response, next: NextFunction) => {
+  const authorization = req.headers.authorization;
+  const bearerToken = authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
+  const token = req.cookies?.gdg_token || req.cookies?.token || bearerToken;
+
+  if (!token) {
+    return res.status(401).json({ message: 'Unauthorized. Please log in.' });
+  }
+
+  let decoded: ReturnType<typeof verifyToken>;
   try {
-    const authorization = req.headers.authorization;
-    const bearerToken = authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
-    const token = req.cookies?.gdg_token || req.cookies?.token || bearerToken;
-
-    if (!token) {
-      return res.status(401).json({ message: 'Unauthorized. Please log in.' });
-    }
-
-    const decoded = verifyToken(token);
-    let user: IUser | null = null;
-    try {
-      if (mongoose.connection.readyState === 1 && mongoose.Types.ObjectId.isValid(decoded.userId)) {
-        user = await User.findById(decoded.userId);
-      }
-    } catch {}
-
-    if (!user) {
-      const adminEmail = (process.env.ADMIN_EMAIL || 'aryan.crores@gmail.com').toLowerCase();
-      if (decoded.userId === 'admin_master_aryan' || decoded.role === UserRole.ADMIN) {
-        user = {
-          _id: 'admin_master_aryan',
-          email: adminEmail,
-          name: 'Aryan (Admin)',
-          avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=Aryan&backgroundColor=1a73e8&textColor=ffffff',
-          role: UserRole.ADMIN,
-        } as any;
-      } else {
-        return res.status(401).json({ message: 'User no longer exists.' });
-      }
-    }
-
-    req.user = user as any;
-    next();
+    decoded = verifyToken(token);
   } catch {
     return res.status(401).json({ message: 'Invalid or expired token.' });
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(decoded.userId)) {
+    return res.status(401).json({ message: 'User no longer exists.' });
+  }
+
+  try {
+    const user: IUser | null = await User.findById(decoded.userId);
+    if (!user) {
+      return res.status(401).json({ message: 'User no longer exists.' });
+    }
+
+    req.user = user;
+    return next();
+  } catch (error) {
+    return next(error);
   }
 };
 
 export const optionalAuth = async (req: Request, _res: Response, next: NextFunction) => {
+  const authorization = req.headers.authorization;
+  const bearerToken = authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
+  const token = req.cookies?.gdg_token || req.cookies?.token || bearerToken;
+
+  if (!token) return next();
+
+  let decoded: ReturnType<typeof verifyToken>;
   try {
-    const authorization = req.headers.authorization;
-    const bearerToken = authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
-    const token = req.cookies?.gdg_token || req.cookies?.token || bearerToken;
-
-    if (token) {
-      const decoded = verifyToken(token);
-      let user: IUser | null = null;
-      try {
-        if (mongoose.connection.readyState === 1 && mongoose.Types.ObjectId.isValid(decoded.userId)) {
-          user = await User.findById(decoded.userId);
-        }
-      } catch {}
-
-      if (!user && (decoded.userId === 'admin_master_aryan' || decoded.role === UserRole.ADMIN)) {
-        const adminEmail = (process.env.ADMIN_EMAIL || 'aryan.crores@gmail.com').toLowerCase();
-        user = {
-          _id: 'admin_master_aryan',
-          email: adminEmail,
-          name: 'Aryan (Admin)',
-          avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=Aryan&backgroundColor=1a73e8&textColor=ffffff',
-          role: UserRole.ADMIN,
-        } as any;
-      }
-
-      if (user) {
-        req.user = user;
-      }
-    }
+    decoded = verifyToken(token);
   } catch {
-    // Non-blocking: continue as guest
+    return next();
   }
-  next();
+
+  if (!mongoose.Types.ObjectId.isValid(decoded.userId)) return next();
+
+  try {
+    const user = await User.findById(decoded.userId);
+    if (user) req.user = user;
+    return next();
+  } catch (error) {
+    return next(error);
+  }
 };
 
 export const requireAdmin = (req: Request, res: Response, next: NextFunction) => {

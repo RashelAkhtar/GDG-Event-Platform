@@ -176,18 +176,7 @@ export const api = {
       const data = await res.json()
       return data
     } catch {
-      // Local fallback for dev
-      if (email.toLowerCase() === 'aryan.crores@gmail.com' && password === 'DHRITIDULJITNOSHIN') {
-        const adminUser: User = {
-          _id: 'admin_master_aryan',
-          email: 'aryan.crores@gmail.com',
-          name: 'Aryan (Admin)',
-          avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=Aryan&backgroundColor=1a73e8&textColor=ffffff',
-          role: 'ADMIN',
-        }
-        return { success: true, user: adminUser }
-      }
-      return { success: false, message: 'Invalid admin credentials' }
+      return { success: false, message: 'Could not connect to the authentication service' }
     }
   },
 
@@ -856,4 +845,3 @@ export interface WendWord {
   round: number
 }
 export const DEFAULT_WEND_WORDS: WendWord[] = []
-

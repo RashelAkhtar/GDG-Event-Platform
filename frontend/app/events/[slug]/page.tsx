@@ -35,46 +35,63 @@ function formatDuration(ms: number): string {
 function QuizRunnerContent() {
   const params = useParams()
   const slug = (params?.slug as string) || 'web-dev-quiz'
-  const { user } = useAuth()
+  const { user, loading: authLoading, loginWithGoogle } = useAuth()
   const startTimeRef = useRef<number | null>(null)
 
   const [event, setEvent] = useState<GdgEvent | null>(null)
+  const [participationError, setParticipationError] = useState<string | null>(null)
   const [questions, setQuestions] = useState<QuestionData[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({})
   const [timeLeft, setTimeLeft] = useState<number>(30)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [completedSession, setCompletedSession] = useState<ParticipantSession | null>(() =>
-    api.getParticipantSession(slug)
-  )
+  const [completedSession, setCompletedSession] = useState<ParticipantSession | null>(null)
   const [loading, setLoading] = useState(true)
 
   // Load event & questions
   useEffect(() => {
+    if (authLoading) return
+    if (!user) return
+    const authenticatedUser = user
+
     async function initQuiz() {
+      setLoading(true)
+      setParticipationError(null)
       try {
+        const savedSession = api.getParticipantSession(slug)
+        const userSession = savedSession?.userId === authenticatedUser._id ? savedSession : null
+        setCompletedSession(userSession)
+
         const foundEvent = await api.getEventBySlug(slug)
         setEvent(foundEvent)
 
-        if (foundEvent) {
+        if (foundEvent && !userSession) {
           const startRes = await api.startQuiz(foundEvent._id)
-          if (startRes.success && startRes.questions && startRes.questions.length > 0) {
+          if (startRes.success && Array.isArray(startRes.questions)) {
             setQuestions(startRes.questions)
           } else {
-            setQuestions(api.getQuestionsForSlug(slug))
+            setQuestions([])
+            setParticipationError(startRes.message || 'Unable to start this event.')
           }
+        } else if (!foundEvent) {
+          setParticipationError('This event could not be found.')
         }
-      } catch {
-        setQuestions(api.getQuestionsForSlug(slug))
+      } catch (error) {
+        setParticipationError(error instanceof Error ? error.message : 'Unable to load this event.')
       } finally {
         startTimeRef.current = Date.now()
         setLoading(false)
       }
     }
-    initQuiz()
-  }, [slug])
+    void initQuiz()
+  }, [authLoading, slug, user])
 
   const handleSubmitQuiz = useCallback(async () => {
+    if (!user || !event) {
+      setParticipationError('Sign in before participating in an event.')
+      return
+    }
+
     setIsSubmitting(true)
     try {
       const answersPayload = questions.map((q, idx) => ({
@@ -82,36 +99,13 @@ function QuizRunnerContent() {
         selectedOptionIndex: selectedAnswers[idx] ?? -1,
       }))
 
-      if (event) {
-        await api.submitQuiz(event._id, answersPayload)
+      const submission = await api.submitQuiz(event._id, answersPayload)
+      if (!submission.success) {
+        setParticipationError(submission.message || 'Your answers could not be submitted.')
+        return
       }
-
-      let score = 0
-      let correct = 0
-      questions.forEach((q, idx) => {
-        const selected = selectedAnswers[idx]
-        if (q.correctOptionIndex !== undefined && selected === q.correctOptionIndex) {
-          score += q.points || 100
-          correct++
-        } else if (selected !== undefined && selected !== -1) {
-          score += q.points || 100
-          correct++
-        }
-      })
 
       const durationMs = Math.max(1500, Date.now() - (startTimeRef.current ?? Date.now()))
-      const attemptEntry = {
-        _id: `quiz_${Date.now()}_${user?._id || 'anon'}`,
-        totalScore: score,
-        durationMs,
-        submittedAt: new Date().toISOString(),
-        user: {
-          _id: user?._id,
-          name: user?.name || 'Community Participant',
-          avatar: user?.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${user?.name || 'Participant'}`,
-        },
-      }
-      api.recordLocalAttempt(slug, attemptEntry)
 
       try {
         confetti({
@@ -133,11 +127,12 @@ function QuizRunnerContent() {
         durationMs,
         submittedAt: new Date().toISOString(),
         status: 'SUBMITTED',
-        internalScore: score,
-        internalCorrectCount: correct,
       }
       api.saveParticipantSession(slug, sessionData)
       setCompletedSession(sessionData)
+      setParticipationError(null)
+    } catch (error) {
+      setParticipationError(error instanceof Error ? error.message : 'Your answers could not be submitted.')
     } finally {
       setIsSubmitting(false)
     }
@@ -182,7 +177,31 @@ function QuizRunnerContent() {
     }))
   }
 
-  if (loading) {
+  if (!authLoading && !user) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#F8F9FA] text-[#202124]">
+        <Navbar />
+        <main className="mx-auto flex w-full max-w-lg flex-1 flex-col items-center justify-center px-4 text-center">
+          <h1 className="text-2xl font-semibold">Sign in to participate</h1>
+          <p className="mt-2 text-sm text-[#5F6368]">
+            You need to be signed in before joining an event.
+          </p>
+          <button
+            type="button"
+            onClick={loginWithGoogle}
+            className="mt-5 rounded-full bg-[#1A73E8] px-5 py-3 text-sm font-medium text-white hover:bg-[#1765CC]"
+          >
+            Sign in with Google
+          </button>
+          <Link href="/" className="mt-4 text-sm text-[#1A73E8] hover:underline">
+            Return home
+          </Link>
+        </main>
+      </div>
+    )
+  }
+
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F9FA]">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#1A73E8] border-t-transparent" />
@@ -198,6 +217,12 @@ function QuizRunnerContent() {
       <Navbar />
 
       <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pt-4 pb-16 sm:px-6">
+        {participationError && (
+          <p role="alert" className="mb-3 rounded-xl border border-[#EA4335]/20 bg-[#FCE8E6] p-3 text-sm text-[#C5221F]">
+            {participationError}
+          </p>
+        )}
+
         {/* Top Back bar */}
         <div className="flex items-center justify-between mb-3">
           <Link

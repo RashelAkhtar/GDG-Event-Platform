@@ -1,17 +1,14 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Navbar } from '@/components/ui/Navbar'
 import { CircleBucket } from '@/components/bucket/CircleBucket'
 import { DualQuizSection } from '@/components/quiz/DualQuizSection'
 import { api, DEFAULT_WEB_EVENT, DEFAULT_MENTIS_EVENT, GdgEvent } from '@/lib/api'
-import { useAuth } from '@/context/AuthContext'
-import { GoogleG } from '@/components/ui/GoogleBrand'
 import Link from 'next/link'
-import { ShieldCheck, Trophy } from 'lucide-react'
+import { Trophy } from 'lucide-react'
 
 export default function HomePage() {
-  const { user, loginWithGoogle } = useAuth()
   const [webEvent, setWebEvent] = useState<GdgEvent>(DEFAULT_WEB_EVENT)
   const [mentisEvent, setMentisEvent] = useState<GdgEvent>(DEFAULT_MENTIS_EVENT)
 
@@ -48,22 +45,6 @@ export default function HomePage() {
           <h1 className="text-[28px] sm:text-[34px] font-semibold tracking-tight text-[#202124] leading-tight">
             Learn, Compete & Build
           </h1>
-          <p className="mt-1 text-xs text-[#5F6368]">
-            Sign in to unlock interactive quizzes and join the community bucket.
-          </p>
-
-          {/* Quick Google Sign In CTA if unauthenticated */}
-          {!user && (
-            <div className="mt-3.5 flex justify-center">
-              <button
-                onClick={loginWithGoogle}
-                className="inline-flex items-center gap-2.5 rounded-full bg-white px-5 py-2.5 text-xs font-semibold text-[#3C4043] border border-[#DADCE0] shadow-xs hover:bg-[#F8F9FA] hover:shadow-sm active:scale-95 transition-all"
-              >
-                <GoogleG className="h-4 w-4" />
-                <span>One-Tap Sign in with Google</span>
-              </button>
-            </div>
-          )}
         </section>
 
         {/* 2. Interactive Circle Bucket with Falling Profile Bubbles */}
@@ -116,18 +97,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Admin Quick Access Footer (for easy navigation) */}
-        {user?.role === 'ADMIN' && (
-          <div className="mt-6 text-center">
-            <Link
-              href="/admin"
-              className="inline-flex items-center gap-1.5 rounded-full bg-[#E8F0FE] px-4 py-1.5 text-xs font-medium text-[#1967D2] hover:bg-[#D2E3FC] transition-colors"
-            >
-              <ShieldCheck className="h-3.5 w-3.5" />
-              <span>Open Admin Controller</span>
-            </Link>
-          </div>
-        )}
       </main>
 
       {/* Footer */}
@@ -135,10 +104,6 @@ export default function HomePage() {
         <div className="mx-auto flex max-w-lg flex-col items-center justify-between gap-2 px-4 text-center text-xs text-[#5F6368] sm:flex-row">
           <span>© 2026 Google Developer Groups</span>
           <div className="flex items-center gap-3">
-            <Link href="/admin" className="hover:text-[#202124] transition-colors">
-              Admin Page
-            </Link>
-            <span>•</span>
             <a
               href="https://developers.google.com/community/gdg"
               target="_blank"
