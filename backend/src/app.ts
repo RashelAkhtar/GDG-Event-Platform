@@ -10,6 +10,8 @@ const app: Express = express();
 const clientUrl = process.env.CLIENT_URL || "http://localhost:3000";
 const allowedOrigins = [clientUrl, "http://localhost:3000", "http://localhost:5173"];
 
+app.set("trust proxy", 1);
+
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (origin && allowedOrigins.includes(origin)) {
