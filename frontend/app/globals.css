@@ -447,3 +447,43 @@ body {
   overscroll-behavior: contain;
 }
 
+
+/* =========================================================================
+   ANTI-COPY & TOUCH SELECTION SUPPRESSION FOR GAMES & INTERACTIVE HUBS
+   ========================================================================= */
+
+*,
+*::before,
+*::after {
+  -webkit-touch-callout: none;
+}
+
+body {
+  -webkit-touch-callout: none;
+}
+
+.select-none,
+.touch-none,
+.no-copy,
+canvas,
+button,
+nav,
+svg {
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  -khtml-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-user-drag: none !important;
+}
+
+/* Suppress browser native selection highlight rectangles & drag handles */
+::selection {
+  background: transparent;
+  color: inherit;
+}
+::-moz-selection {
+  background: transparent;
+  color: inherit;
+}

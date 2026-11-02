@@ -649,11 +649,11 @@ export function CircleBucket() {
   }, [])
 
   return (
-    <div className="relative flex flex-col items-center">
+    <div className="relative flex flex-col items-center select-none touch-none" onContextMenu={(e) => e.preventDefault()}>
       {/* Bucket Heading & Counter Pill */}
       <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mb-3 max-w-full px-2">
         {/* Active Count Pill */}
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1 text-xs font-semibold text-[#3C4043] border border-[#DADCE0] shadow-2xs">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1 text-xs font-semibold text-[#3C4043] border border-[#DADCE0] shadow-2xs select-none pointer-events-none">
           <span
             className={`h-2 w-2 rounded-full ${
               totalCount > 0 ? 'bg-[#34A853] animate-pulse' : 'bg-[#9AA0A6]'
@@ -706,7 +706,7 @@ export function CircleBucket() {
       {/* Circular Bucket Visual Container with Ambient Google Glow */}
       <div
         ref={containerRef}
-        className="relative mx-auto aspect-square w-full max-w-[300px] xs:max-w-[320px] sm:max-w-[340px]"
+        className="relative mx-auto aspect-square w-full max-w-[300px] xs:max-w-[320px] sm:max-w-[340px] select-none touch-none" onContextMenu={(e) => e.preventDefault()}
       >
         {/* Ambient Google Aurora Glow */}
         <div className="pointer-events-none absolute -inset-3 rounded-full bg-gradient-to-tr from-[#4285F4]/25 via-[#FBBC04]/20 to-[#34A853]/25 blur-xl animate-aurora" />
@@ -720,7 +720,7 @@ export function CircleBucket() {
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerUp}
-            className="h-full w-full touch-none select-none"
+            className="h-full w-full touch-none select-none" onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none', touchAction: 'none' }}
           />
         </div>
 

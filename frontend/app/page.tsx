@@ -39,16 +39,16 @@ export default function HomePage() {
       {/* 1. Google Authentication & App Bar */}
       <Navbar />
 
-      <main className="relative z-10 mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pt-6 pb-16 sm:px-6">
+      <main className="relative z-10 mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pt-6 pb-16 sm:px-6 select-none" onContextMenu={(e) => e.preventDefault()}>
         {/* Minimal Hero Header */}
-        <section className="text-center">
-          <h1 className="text-[28px] sm:text-[34px] font-semibold tracking-tight text-[#202124] leading-tight">
+        <section className="text-center select-none">
+          <h1 className="text-[28px] sm:text-[34px] font-semibold tracking-tight text-[#202124] leading-tight select-none">
             Learn, Compete & Build
           </h1>
         </section>
 
         {/* 2. Interactive Circle Bucket with Falling Profile Bubbles */}
-        <section className="mt-6 mb-8">
+        <section className="mt-6 mb-8 select-none touch-none">
           <CircleBucket />
         </section>
 
