@@ -77,7 +77,13 @@ export function AnimatedLockToggle({
           }
           className={`btn-lock ${!isAdmin || disabled ? 'btn-lock-readonly' : ''}`}
         >
-          <svg width="36" height="40" viewBox="0 0 36 40" aria-hidden="true">
+          <svg
+            width="36"
+            height="36"
+            viewBox="-6 0 40 40"
+            className="overflow-visible block"
+            aria-hidden="true"
+          >
             {/* Padlock Base Body */}
             <path
               className="lockb"
