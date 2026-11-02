@@ -24,7 +24,8 @@ import {
   ArrowLeft,
   Clock,
   Lock,
-  RotateCcw,
+  Home,
+  ArrowRight,
 } from 'lucide-react'
 
 const GOOGLE_COLORS = ['#4285F4', '#34A853', '#FBBC04', '#EA4335']
@@ -439,18 +440,6 @@ export default function WendGamePage() {
   }
 
   // Reset / Play Again
-  const handlePlayAgain = () => {
-    const userKey = user?._id || user?.email || (currentSessionId ? `guest_${currentSessionId}` : 'guest')
-    api.clearParticipantSession('wend-game', userKey)
-    setCompletedSession(null)
-    setFoundWordIds(new Set())
-    setDiscoveredWords([])
-    setIsTimeUp(false)
-    const freshBoard = api.getWendBoard()
-    setBoard(freshBoard)
-    setTimeLeft(freshBoard.timeLimitSeconds || 120)
-    startTimeRef.current = Date.now()
-  }
 
   const wordColorMap = React.useMemo(() => {
     const map = new Map<string, number>()
@@ -469,7 +458,7 @@ export default function WendGamePage() {
 
       <Navbar />
 
-      <main className="relative z-10 flex-1 flex flex-col items-center justify-between p-3 sm:p-5 max-w-lg mx-auto w-full">
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-between p-3 sm:p-5 max-w-lg mx-auto w-full select-none no-copy" onCopy={(e) => { e.preventDefault(); showCopyProhibitedAlert(); }} onCut={(e) => e.preventDefault()} onContextMenu={(e) => e.preventDefault()}>
         {/* Navigation & Live Header with Admin Time Limit */}
         <div className="w-full flex items-center justify-between mb-2 gap-2">
           <Link
@@ -656,20 +645,15 @@ export default function WendGamePage() {
               <span>Winners will broadcast live on this screen</span>
             </div>
 
-            {/* Actions */}
-            <div className="flex gap-2.5 w-full max-w-sm">
-              <button
-                onClick={handlePlayAgain}
-                className="flex h-11 flex-1 items-center justify-center gap-1.5 rounded-full border border-[#DADCE0] bg-white text-xs font-semibold text-[#3C4043] shadow-xs hover:bg-[#F8F9FA] active:scale-95 transition-all"
-              >
-                <RotateCcw className="h-3.5 w-3.5" />
-                <span>Play Again</span>
-              </button>
+            {/* Actions: ONLY Redirect Home (No Replay / Play Again on user side) */}
+            <div className="flex w-full max-w-sm justify-center">
               <Link
                 href="/"
-                className="flex h-11 flex-1 items-center justify-center rounded-full bg-[#1A73E8] text-xs font-semibold text-white shadow-xs hover:bg-[#1765CC] active:scale-95 transition-all"
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#1A73E8] to-[#4285F4] text-xs font-bold text-white shadow-md shadow-[#1A73E8]/25 hover:from-[#1765CC] hover:to-[#1A73E8] active:scale-95 transition-all"
               >
-                Return to Hub
+                <Home className="h-4 w-4" />
+                <span>Redirect Home</span>
+                <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </div>

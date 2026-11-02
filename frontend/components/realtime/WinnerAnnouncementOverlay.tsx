@@ -195,9 +195,12 @@ export function WinnerAnnouncementOverlay() {
         </div>
 
         <button
-          onClick={closeCeremony}
+          onClick={() => {
+            closeCeremony()
+            router.push('/')
+          }}
           className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/10 text-slate-300 shadow-md backdrop-blur-xl hover:bg-white/20 hover:text-white active:scale-95 transition-all cursor-pointer"
-          title="Close broadcast"
+          title="Redirect Home"
         >
           <X className="h-4 w-4" />
         </button>

@@ -18,14 +18,12 @@ import confetti from 'canvas-confetti'
 import {
   Clock,
   CheckCircle2,
-  Trophy,
   Award,
   ArrowRight,
+  Home,
   ArrowLeft,
   HelpCircle,
-  Hourglass,
   Sparkles,
-  RotateCcw,
 } from 'lucide-react'
 
 function formatDuration(ms: number): string {
@@ -197,16 +195,6 @@ function QuizRunnerContent() {
       window.removeEventListener('keyup', handleKeyUp, true)
     }
   }, [completedSession, isDisqualified, triggerScreenshotViolation])
-
-  const handlePlayAgain = () => {
-    const userKey = user?._id || user?.email || (currentSessionId ? `guest_${currentSessionId}` : 'guest')
-    api.clearParticipantSession(slug, userKey)
-    setCompletedSession(null)
-    setCurrentIndex(0)
-    setSelectedAnswers({})
-    setTimeLeft(30)
-    startTimeRef.current = Date.now()
-  }
 
   // Load event & questions
   useEffect(() => {
@@ -460,21 +448,15 @@ function QuizRunnerContent() {
               <span>Winners will broadcast live on this screen</span>
             </div>
 
-            {/* Actions: Replay & Return */}
-            <div className="flex gap-2.5 w-full max-w-sm">
-              <button
-                type="button"
-                onClick={handlePlayAgain}
-                className="flex h-11 flex-1 items-center justify-center gap-1.5 rounded-full border border-[#DADCE0] bg-white text-xs font-semibold text-[#3C4043] shadow-xs hover:bg-[#F8F9FA] active:scale-95 transition-all"
-              >
-                <RotateCcw className="h-3.5 w-3.5" />
-                <span>Play Again</span>
-              </button>
+            {/* Actions: ONLY Redirect Home (No Replay / Play Again on user side) */}
+            <div className="flex w-full max-w-sm justify-center">
               <Link
                 href="/"
-                className="flex h-11 flex-1 items-center justify-center rounded-full bg-[#1A73E8] text-xs font-semibold text-white shadow-xs hover:bg-[#1765CC] active:scale-95 transition-all"
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#1A73E8] to-[#4285F4] text-xs font-bold text-white shadow-md shadow-[#1A73E8]/25 hover:from-[#1765CC] hover:to-[#1A73E8] active:scale-95 transition-all"
               >
-                Return to Hub
+                <Home className="h-4 w-4" />
+                <span>Redirect Home</span>
+                <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </div>
