@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { Navbar } from '@/components/ui/Navbar'
+import { ScreenshotWarningModal } from '@/components/security/ScreenshotWarningModal'
 import {
   api,
   WendBoardConfig,
@@ -47,7 +48,7 @@ function formatTimer(totalSecs: number): string {
 
 export default function WendGamePage() {
   const { user, loading: authLoading } = useAuth()
-  const { gameLockStates, subscribeToLeaderboardReset, sendSubmitAttempt, currentSessionId } = useWebSocket()
+  const { gameLockStates, subscribeToLeaderboardReset, sendSubmitAttempt, sendScreenshotViolation, currentSessionId } = useWebSocket()
   const isLocked = gameLockStates['wend-game']?.isLocked ?? false
 
   const startTimeRef = useRef<number | null>(null)
@@ -63,6 +64,17 @@ export default function WendGamePage() {
   const [hintClue, setHintClue] = useState<string | null>(null)
   const [shakeInvalid, setShakeInvalid] = useState(false)
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'info' | 'error' } | null>(null)
+  const [screenshotWarningCount, setScreenshotWarningCount] = useState<number>(0)
+  const [showScreenshotWarning, setShowScreenshotWarning] = useState<boolean>(false)
+  const [isDisqualified, setIsDisqualified] = useState<boolean>(false)
+  const [copyWarningToast, setCopyWarningToast] = useState<boolean>(false)
+
+  const showCopyProhibitedAlert = useCallback(() => {
+    setCopyWarningToast(true)
+    try { soundManager.playError() } catch {}
+    setTimeout(() => setCopyWarningToast(false), 2800)
+  }, [])
+
   const [completedSession, setCompletedSession] = useState<ParticipantSession | null>(null)
   // User result isolation guard: strictly ensure session belongs to the current user
   const isMySession = Boolean(
@@ -204,6 +216,94 @@ export default function WendGamePage() {
     return () => unsubscribe()
   }, [subscribeToLeaderboardReset])
 
+
+  const handleSecurityDisqualification = useCallback(async () => {
+    setIsDisqualified(true)
+    const userKey = user?._id || user?.email || (currentSessionId ? `guest_${currentSessionId}` : 'guest')
+    const durationMs = Math.max(1500, Date.now() - (startTimeRef.current ?? Date.now()))
+
+    const sessionData: ParticipantSession = {
+      sessionId: `sess_disq_${Date.now()}_${user?._id || 'guest'}`,
+      eventSlug: 'wend-game',
+      eventTitle: board.title || 'Wend Word Puzzle Arena',
+      userId: user?._id,
+      userEmail: user?.email,
+      userName: user?.name || 'Community Participant',
+      userAvatar: user?.avatar,
+      totalItems: foundWordIds.size,
+      durationMs,
+      submittedAt: new Date().toISOString(),
+      status: 'SUBMITTED',
+      internalScore: 0,
+    }
+
+    api.saveParticipantSession('wend-game', sessionData, userKey)
+    setCompletedSession(sessionData)
+  }, [board.title, currentSessionId, foundWordIds.size, user])
+
+  const triggerScreenshotViolation = useCallback(() => {
+    setScreenshotWarningCount((prev) => {
+      const nextCount = prev + 1
+      try { soundManager.playError() } catch {}
+
+      sendScreenshotViolation({
+        userId: user?._id,
+        userName: user?.name || 'Anonymous Participant',
+        userEmail: user?.email,
+        avatar: user?.avatar,
+        gameSlug: 'wend-game',
+        gameTitle: board.title || 'Wend Word Puzzle Arena',
+        questionIndex: foundWordIds.size,
+        warningCount: nextCount,
+      })
+
+      setShowScreenshotWarning(true)
+
+      if (nextCount >= 3) {
+        setIsDisqualified(true)
+        void handleSecurityDisqualification()
+      }
+
+      return nextCount
+    })
+  }, [board.title, foundWordIds.size, handleSecurityDisqualification, sendScreenshotViolation, user])
+
+  useEffect(() => {
+    if (completedSession || isDisqualified) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isPrintScreen = e.key === 'PrintScreen' || e.code === 'PrintScreen'
+      const isSnippingTool = (e.key === 's' || e.key === 'S') && (e.metaKey || e.shiftKey) && (e.ctrlKey || e.metaKey)
+      const isMacScreenshot = (e.metaKey || e.ctrlKey) && e.shiftKey && ['3', '4', '5'].includes(e.key)
+      const isPrintDialog = (e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')
+
+      if (isPrintScreen || isSnippingTool || isMacScreenshot || isPrintDialog) {
+        e.preventDefault()
+        e.stopPropagation()
+
+        if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText('').catch(() => {})
+        }
+
+        triggerScreenshotViolation()
+      }
+    }
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'PrintScreen' || e.code === 'PrintScreen') {
+        if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText('').catch(() => {})
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown, true)
+    window.addEventListener('keyup', handleKeyUp, true)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown, true)
+      window.removeEventListener('keyup', handleKeyUp, true)
+    }
+  }, [completedSession, isDisqualified, triggerScreenshotViolation])
 
   // Confetti helper
   const triggerWinConfetti = () => {
@@ -604,6 +704,26 @@ export default function WendGamePage() {
             </div>
           </div>
         )}
+        
+        {/* Anti-Copy Prohibited Toast */}
+        {copyWarningToast && (
+          <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-3 duration-200">
+            <div className="flex items-center gap-2 rounded-full border border-[#EA4335]/40 bg-[#FCE8E6] px-4 py-2 text-xs font-bold text-[#C5221F] shadow-lg backdrop-blur-md">
+              <span>⚠️ Copying puzzle content is strictly prohibited</span>
+            </div>
+          </div>
+        )}
+
+        {/* Screenshot Warning & Disqualification Modal */}
+        {showScreenshotWarning && (
+          <ScreenshotWarningModal
+            warningCount={screenshotWarningCount}
+            maxWarnings={3}
+            isDisqualified={isDisqualified}
+            onAcknowledge={() => setShowScreenshotWarning(false)}
+          />
+        )}
+
       </main>
     </div>
   )

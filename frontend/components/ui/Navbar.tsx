@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 import { GoogleG, GdgLogoBadge } from './GoogleBrand'
 import { LogOut, ChevronDown } from 'lucide-react'
+import { SecurityNotificationBell } from '@/components/security/SecurityNotificationBell'
 
 export function Navbar() {
   const { user, loginWithGoogle, logout } = useAuth()
@@ -23,6 +24,7 @@ export function Navbar() {
 
         {/* Auth Actions */}
         <div className="flex items-center gap-2">
+          {user?.role === 'ADMIN' && <SecurityNotificationBell />}
           {user ? (
             <div className="relative">
               <button

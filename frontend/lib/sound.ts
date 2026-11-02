@@ -185,6 +185,35 @@ class SoundEngine {
     } catch {}
   }
 
+  /**
+   * Sound 5: Error / Security Violation Buzzer (Low dissonant buzz)
+   */
+  public playError() {
+    if (this.muted) return
+
+    try {
+      const ctx = this.getAudioContext()
+      if (ctx) {
+        const now = ctx.currentTime
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.type = 'sawtooth'
+        osc.frequency.setValueAtTime(160, now)
+        osc.frequency.setValueAtTime(120, now + 0.1)
+
+        gain.gain.setValueAtTime(0.3, now)
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25)
+
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+
+        osc.start(now)
+        osc.stop(now + 0.25)
+        return
+      }
+    } catch {}
+  }
+
   public setMuted(muted: boolean) {
     this.muted = muted
   }

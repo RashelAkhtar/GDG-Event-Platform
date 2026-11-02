@@ -4,6 +4,7 @@ import React, { useEffect, useState, Suspense, useCallback, useRef } from 'react
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { Navbar } from '@/components/ui/Navbar'
+import { ScreenshotWarningModal } from '@/components/security/ScreenshotWarningModal'
 import { useAuth } from '@/context/AuthContext'
 import { useWebSocket } from '@/context/WebSocketContext'
 import { soundManager } from '@/lib/sound'
@@ -40,7 +41,7 @@ function QuizRunnerContent() {
   const params = useParams()
   const slug = (params?.slug as string) || 'web-dev-quiz'
   const { user, loading: authLoading } = useAuth()
-  const { currentSessionId, subscribeToLeaderboardReset, sendSubmitAttempt } = useWebSocket()
+  const { currentSessionId, subscribeToLeaderboardReset, sendSubmitAttempt, sendScreenshotViolation } = useWebSocket()
   const startTimeRef = useRef<number | null>(null)
 
   const [event, setEvent] = useState<GdgEvent | null>(null)
@@ -48,6 +49,17 @@ function QuizRunnerContent() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({})
   const [timeLeft, setTimeLeft] = useState<number>(30)
+
+  const [screenshotWarningCount, setScreenshotWarningCount] = useState<number>(0)
+  const [showScreenshotWarning, setShowScreenshotWarning] = useState<boolean>(false)
+  const [isDisqualified, setIsDisqualified] = useState<boolean>(false)
+  const [copyWarningToast, setCopyWarningToast] = useState<boolean>(false)
+
+  const showCopyProhibitedAlert = useCallback(() => {
+    setCopyWarningToast(true)
+    try { soundManager.playError() } catch {}
+    setTimeout(() => setCopyWarningToast(false), 2800)
+  }, [])
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [completedSession, setCompletedSession] = useState<ParticipantSession | null>(null)
@@ -94,6 +106,97 @@ function QuizRunnerContent() {
     })
     return () => unsubscribe()
   }, [slug, subscribeToLeaderboardReset])
+
+  const handleSecurityDisqualification = useCallback(async () => {
+    setIsDisqualified(true)
+    const userKey = user?._id || user?.email || (currentSessionId ? `guest_${currentSessionId}` : 'guest')
+    const durationMs = Math.max(1500, Date.now() - (startTimeRef.current ?? Date.now()))
+
+    const sessionData: ParticipantSession = {
+      sessionId: `sess_disq_${Date.now()}_${user?._id || 'guest'}`,
+      eventSlug: slug,
+      eventTitle: event?.title || 'Quiz Session',
+      userId: user?._id,
+      userEmail: user?.email,
+      userName: user?.name || 'Community Participant',
+      avatar: user?.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${user?.name || 'Participant'}`,
+      totalItems: questions.length,
+      durationMs,
+      submittedAt: new Date().toISOString(),
+      status: 'SUBMITTED',
+      internalScore: 0,
+      internalCorrectCount: 0,
+    }
+
+    api.saveParticipantSession(slug, sessionData, userKey)
+    setCompletedSession(sessionData)
+  }, [currentSessionId, event, questions, slug, user])
+
+  const triggerScreenshotViolation = useCallback(() => {
+    setScreenshotWarningCount((prev) => {
+      const nextCount = prev + 1
+      try { soundManager.playError() } catch {}
+
+      sendScreenshotViolation({
+        userId: user?._id,
+        userName: user?.name || 'Anonymous Participant',
+        userEmail: user?.email,
+        avatar: user?.avatar,
+        gameSlug: slug,
+        gameTitle: event?.title || 'Quiz Challenge',
+        questionIndex: currentIndex,
+        warningCount: nextCount,
+      })
+
+      setShowScreenshotWarning(true)
+
+      if (nextCount >= 3) {
+        setIsDisqualified(true)
+        void handleSecurityDisqualification()
+      }
+
+      return nextCount
+    })
+  }, [currentIndex, event, handleSecurityDisqualification, sendScreenshotViolation, slug, user])
+
+  // Global screenshot & screen capture shortcut detection
+  useEffect(() => {
+    if (completedSession || isDisqualified) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isPrintScreen = e.key === 'PrintScreen' || e.code === 'PrintScreen'
+      const isSnippingTool = (e.key === 's' || e.key === 'S') && (e.metaKey || e.shiftKey) && (e.ctrlKey || e.metaKey)
+      const isMacScreenshot = (e.metaKey || e.ctrlKey) && e.shiftKey && ['3', '4', '5'].includes(e.key)
+      const isPrintDialog = (e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')
+
+      if (isPrintScreen || isSnippingTool || isMacScreenshot || isPrintDialog) {
+        e.preventDefault()
+        e.stopPropagation()
+
+        // Clear clipboard buffer
+        if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText('').catch(() => {})
+        }
+
+        triggerScreenshotViolation()
+      }
+    }
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'PrintScreen' || e.code === 'PrintScreen') {
+        if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText('').catch(() => {})
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown, true)
+    window.addEventListener('keyup', handleKeyUp, true)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown, true)
+      window.removeEventListener('keyup', handleKeyUp, true)
+    }
+  }, [completedSession, isDisqualified, triggerScreenshotViolation])
 
   const handlePlayAgain = () => {
     const userKey = user?._id || user?.email || (currentSessionId ? `guest_${currentSessionId}` : 'guest')
@@ -440,12 +543,12 @@ function QuizRunnerContent() {
             </div>
 
             {/* Question Card */}
-            <div className="relative mt-3 flex-1 rounded-[32px] border border-white/90 bg-white/95 p-6 sm:p-7 shadow-[0_12px_40px_rgba(0,0,0,0.06)] backdrop-blur-xl flex flex-col justify-between overflow-hidden">
+            <div className="relative mt-3 flex-1 rounded-[32px] border border-white/90 bg-white/95 p-6 sm:p-7 shadow-[0_12px_40px_rgba(0,0,0,0.06)] backdrop-blur-xl flex flex-col justify-between overflow-hidden select-none no-copy" onCopy={(e) => { e.preventDefault(); showCopyProhibitedAlert(); }} onCut={(e) => e.preventDefault()} onContextMenu={(e) => e.preventDefault()}>
               {/* Top Google Accent Line */}
               <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-[#4285F4] via-[#EA4335] via-[#FBBC04] to-[#34A853]" />
 
               <div>
-                <h3 className="text-base sm:text-lg font-bold leading-snug text-[#202124]">
+                <h3 className="text-base sm:text-lg font-bold leading-snug text-[#202124] select-none pointer-events-none">
                   {currentQ?.questionText}
                 </h3>
 
@@ -537,6 +640,26 @@ function QuizRunnerContent() {
             </div>
           </div>
         )}
+        
+        {/* Anti-Copy Prohibited Toast */}
+        {copyWarningToast && (
+          <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-3 duration-200">
+            <div className="flex items-center gap-2 rounded-full border border-[#EA4335]/40 bg-[#FCE8E6] px-4 py-2 text-xs font-bold text-[#C5221F] shadow-lg backdrop-blur-md">
+              <span>⚠️ Copying questions or options is strictly prohibited</span>
+            </div>
+          </div>
+        )}
+
+        {/* Screenshot Warning & Disqualification Modal */}
+        {showScreenshotWarning && (
+          <ScreenshotWarningModal
+            warningCount={screenshotWarningCount}
+            maxWarnings={3}
+            isDisqualified={isDisqualified}
+            onAcknowledge={() => setShowScreenshotWarning(false)}
+          />
+        )}
+
       </main>
     </div>
   )

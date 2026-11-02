@@ -61,6 +61,7 @@ import {
 } from 'lucide-react'
 import { LockedIllustration, UnlockedIllustration } from '@/components/ui/LockIllustrations'
 import { AnimatedLockToggle } from '@/components/ui/AnimatedLockToggle'
+import { SecurityNotificationBell } from '@/components/security/SecurityNotificationBell'
 
 function formatDuration(ms: number): string {
   if (!ms || ms <= 0) return '0s'
@@ -700,7 +701,8 @@ export default function AdminPage() {
           </div>
 
           {/* WebSocket Status Indicator */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
+            <SecurityNotificationBell />
             <span className="inline-flex items-center gap-1.5 rounded-full border border-[#DADCE0] bg-white px-3 py-1 text-xs font-medium text-[#3C4043]">
               <span className={`h-2 w-2 rounded-full ${connected ? 'bg-[#34A853]' : 'bg-[#FBBC04] animate-pulse'}`} />
               <span>{connected ? 'WebSocket Live' : 'Local Channel Active'}</span>

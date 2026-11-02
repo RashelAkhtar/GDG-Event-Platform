@@ -23,6 +23,22 @@ export interface CeremonyData {
   fullLeaderboard: LeaderboardEntry[]
 }
 
+
+export interface SecurityAlert {
+  id: string
+  userId?: string
+  userName: string
+  userEmail?: string
+  avatar?: string
+  gameSlug: string
+  gameTitle?: string
+  questionIndex?: number
+  warningCount: number
+  maxWarnings: number
+  isDisqualified: boolean
+  timestamp: string
+}
+
 interface WebSocketContextType {
   connected: boolean
   currentSessionId: string
@@ -38,6 +54,11 @@ interface WebSocketContextType {
   sendWinnerCeremonyStart: (ceremonyData: CeremonyData) => void
   sendLeaderboardReset: (gameSlug: string) => void
   sendBubbleImpulse: (impulse: { x: number; y: number; senderSessionId?: string }) => void
+  securityAlerts: SecurityAlert[]
+  unreadSecurityAlertsCount: number
+  sendScreenshotViolation: (alert: Omit<SecurityAlert, 'id' | 'maxWarnings' | 'isDisqualified' | 'timestamp'>) => void
+  clearSecurityAlerts: () => void
+  markSecurityAlertsRead: () => void
   closeCeremony: () => void
   reconnect: () => void
   subscribeToUserJoin: (callback: (session: ConnectedSession) => void) => () => void
@@ -61,6 +82,11 @@ const WebSocketContext = createContext<WebSocketContextType>({
   sendWinnerCeremonyStart: () => {},
   sendLeaderboardReset: () => {},
   sendBubbleImpulse: () => {},
+  securityAlerts: [],
+  unreadSecurityAlertsCount: 0,
+  sendScreenshotViolation: () => {},
+  clearSecurityAlerts: () => {},
+  markSecurityAlertsRead: () => {},
   closeCeremony: () => {},
   reconnect: () => {},
   subscribeToUserJoin: () => () => {},
@@ -112,6 +138,8 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     'wend-game': { isLocked: false, status: 'LIVE' },
   })
   const [liveLeaderboards, setLiveLeaderboards] = useState<Record<string, LeaderboardEntry[]>>({})
+  const [securityAlerts, setSecurityAlerts] = useState<SecurityAlert[]>([])
+  const [unreadSecurityAlertsCount, setUnreadSecurityAlertsCount] = useState<number>(0)
 
   const wsRef = useRef<WebSocket | null>(null)
   const broadcastChannelRef = useRef<BroadcastChannel | null>(null)
@@ -291,6 +319,25 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
           if (payload?.leaderboards && typeof payload.leaderboards === 'object') {
             setLiveLeaderboards(payload.leaderboards as Record<string, LeaderboardEntry[]>)
           }
+          if (Array.isArray(payload?.securityAlerts)) {
+            setSecurityAlerts(payload.securityAlerts as SecurityAlert[])
+          }
+          break
+        }
+        case 'ADMIN_SECURITY_ALERT': {
+          const alert = payload as unknown as SecurityAlert
+          if (alert && alert.id) {
+            setSecurityAlerts((prev) => {
+              const filtered = prev.filter((a) => a.id !== alert.id)
+              return [alert, ...filtered.slice(0, 49)]
+            })
+            setUnreadSecurityAlertsCount((c) => c + 1)
+          }
+          break
+        }
+        case 'CLEAR_SECURITY_ALERTS': {
+          setSecurityAlerts([])
+          setUnreadSecurityAlertsCount(0)
           break
         }
         case 'PING': {
@@ -528,6 +575,34 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     [broadcastMessage, currentSessionId]
   )
 
+  const sendScreenshotViolation = useCallback(
+    (alertData: Omit<SecurityAlert, 'id' | 'maxWarnings' | 'isDisqualified' | 'timestamp'>) => {
+      const fullAlert: SecurityAlert = {
+        ...alertData,
+        id: `alert_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        maxWarnings: 3,
+        isDisqualified: alertData.warningCount >= 3,
+        timestamp: new Date().toISOString(),
+      }
+      setSecurityAlerts((prev) => [fullAlert, ...prev.slice(0, 49)])
+      broadcastMessage({
+        type: 'SCREENSHOT_VIOLATION',
+        payload: fullAlert,
+      })
+    },
+    [broadcastMessage]
+  )
+
+  const clearSecurityAlerts = useCallback(() => {
+    setSecurityAlerts([])
+    setUnreadSecurityAlertsCount(0)
+    broadcastMessage({ type: 'CLEAR_SECURITY_ALERTS', payload: {} })
+  }, [broadcastMessage])
+
+  const markSecurityAlertsRead = useCallback(() => {
+    setUnreadSecurityAlertsCount(0)
+  }, [])
+
   const closeCeremony = useCallback(() => {
     setActiveCeremony(null)
   }, [])
@@ -580,6 +655,11 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
         sendWinnerCeremonyStart,
         sendLeaderboardReset,
         sendBubbleImpulse,
+        securityAlerts,
+        unreadSecurityAlertsCount,
+        sendScreenshotViolation,
+        clearSecurityAlerts,
+        markSecurityAlertsRead,
         closeCeremony,
         reconnect,
         subscribeToUserJoin,

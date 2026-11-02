@@ -20,6 +20,9 @@ export interface WsMessage {
     | 'BUBBLE_IMPULSE'
     | 'PING'
     | 'PONG'
+    | 'SCREENSHOT_VIOLATION'
+    | 'ADMIN_SECURITY_ALERT'
+    | 'CLEAR_SECURITY_ALERTS'
     | 'SYNC_STATE';
   payload?: any;
 }
@@ -32,6 +35,22 @@ export interface ConnectedSession {
   role?: string;
   device?: 'mobile' | 'desktop' | 'tablet';
   joinedAt: number;
+}
+
+
+export interface SecurityAlert {
+  id: string;
+  userId?: string;
+  userName: string;
+  userEmail?: string;
+  avatar?: string;
+  gameSlug: string;
+  gameTitle?: string;
+  questionIndex?: number;
+  warningCount: number;
+  maxWarnings: number;
+  isDisqualified: boolean;
+  timestamp: string;
 }
 
 export interface LeaderboardEntryPayload {
@@ -61,6 +80,7 @@ class EventWebSocketService {
     'mentis-quiz': { isLocked: true, status: 'UPCOMING' },
     'wend-game': { isLocked: false, status: 'LIVE' },
   };
+  private securityAlerts: SecurityAlert[] = [];
   private heartbeatInterval: NodeJS.Timeout | null = null;
 
   public init(server: HttpServer) {
@@ -164,6 +184,7 @@ class EventWebSocketService {
         })),
         gameStates: this.gameStates,
         leaderboards: leaderboardsObj,
+        securityAlerts: this.securityAlerts,
       },
     });
 
@@ -260,6 +281,42 @@ class EventWebSocketService {
             payload: { gameSlug, leaderboard: updated },
           });
         }
+        break;
+      }
+
+      case 'SCREENSHOT_VIOLATION': {
+        const payload = message.payload as Partial<SecurityAlert> | undefined;
+        if (payload) {
+          const alert: SecurityAlert = {
+            id: `alert_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+            userId: payload.userId,
+            userName: payload.userName || 'Anonymous Participant',
+            userEmail: payload.userEmail,
+            avatar: payload.avatar,
+            gameSlug: payload.gameSlug || 'quiz',
+            gameTitle: payload.gameTitle || 'Quiz Challenge',
+            questionIndex: payload.questionIndex,
+            warningCount: payload.warningCount || 1,
+            maxWarnings: 3,
+            isDisqualified: Boolean(payload.warningCount && payload.warningCount >= 3),
+            timestamp: payload.timestamp || new Date().toISOString(),
+          };
+          this.securityAlerts = [alert, ...this.securityAlerts.slice(0, 49)];
+          console.log(`[SECURITY] Screenshot attempt by ${alert.userName} (${alert.userEmail || 'No email'}) - Warning ${alert.warningCount}/3`);
+          this.broadcast({
+            type: 'ADMIN_SECURITY_ALERT',
+            payload: alert,
+          });
+        }
+        break;
+      }
+
+      case 'CLEAR_SECURITY_ALERTS': {
+        this.securityAlerts = [];
+        this.broadcast({
+          type: 'CLEAR_SECURITY_ALERTS',
+          payload: {},
+        });
         break;
       }
 
