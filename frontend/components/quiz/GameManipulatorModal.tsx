@@ -257,14 +257,12 @@ function GameManipulatorModalInner({
 
           <div className="flex items-center gap-2">
             <a
-              href={isWend ? '/admin?tab=wend' : `/admin?tab=quiz&track=${event.slug}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden md:inline-flex items-center gap-1.5 rounded-full border border-[#DADCE0] bg-white px-3 py-1.5 text-xs font-semibold text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] transition-colors"
-              title="Open dedicated tab in Admin Command Center"
+              href={isWend ? '/admin-panel/panel?tab=wend' : `/admin-panel/panel?tab=quiz&track=${event.slug}`}
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#1A73E8]/40 bg-[#E8F0FE] px-3.5 py-1.5 text-xs font-bold text-[#1967D2] hover:bg-[#D2E3FC] transition-colors shadow-2xs"
+              title="Open Full Dedicated Studio in Admin Command Center"
             >
-              <ExternalLink className="h-3.5 w-3.5" />
-              <span>Full Studio</span>
+              <ExternalLink className="h-3.5 w-3.5 text-[#1967D2]" />
+              <span>Open Full Studio</span>
             </a>
             <button
               onClick={onClose}
@@ -672,7 +670,7 @@ function GameManipulatorModalInner({
                     </p>
                   </div>
                   <a
-                    href="/admin?tab=wend"
+                    href="/admin-panel/panel?tab=wend"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 rounded-full bg-[#1A73E8] px-3.5 py-1.5 text-xs font-semibold text-white shadow-2xs hover:bg-[#1765CC]"

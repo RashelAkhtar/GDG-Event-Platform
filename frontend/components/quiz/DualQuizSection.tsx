@@ -21,6 +21,7 @@ import {
   Sliders,
   ExternalLink,
   Trophy,
+  Maximize2,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useWebSocket } from '@/context/WebSocketContext'
@@ -260,7 +261,7 @@ export function DualQuizSection({
         <div className={`absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r ${trackRibbonGradient}`} />
 
         <div className="relative z-10 flex flex-col gap-4">
-          {/* Header Row: Track Badge + Interactive Lock Status Switch */}
+          {/* Header Row: Track Badge + Full Studio Button (Admin) + Interactive Lock Status Switch */}
           <div className="flex items-center justify-between">
             <span
               className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-bold shadow-2xs backdrop-blur-md transition-all ${accentBg}`}
@@ -269,35 +270,50 @@ export function DualQuizSection({
               <span>{trackLabel}</span>
             </span>
 
-            {/* Live Now / Locked Pill Indicator */}
-            <span
-              className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold shadow-2xs backdrop-blur-md transition-all ${
-                isLive
-                  ? 'bg-[#E6F4EA]/90 text-[#137333] border border-[#34A853]/40'
-                  : 'bg-[#F1F3F4]/90 text-[#5F6368] border border-[#DADCE0]'
-              }`}
-            >
-              {isLive ? (
-                <>
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#34A853] opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[#34A853]" />
-                  </span>
-                  <span>Live Now</span>
-                  <span className="ml-0.5 inline-flex h-4 w-7 items-center rounded-full bg-[#34A853] px-0.5 transition-colors">
-                    <span className="h-3 w-3 translate-x-3 rounded-full bg-white shadow-xs transition-transform" />
-                  </span>
-                </>
-              ) : (
-                <>
-                  <Lock className="h-3 w-3 text-[#5F6368]" />
-                  <span>Locked</span>
-                  <span className="ml-0.5 inline-flex h-4 w-7 items-center rounded-full bg-[#BDC1C6] px-0.5 transition-colors">
-                    <span className="h-3 w-3 translate-x-0 rounded-full bg-white shadow-xs transition-transform" />
-                  </span>
-                </>
+            <div className="flex items-center gap-2">
+              {/* Dedicated Full Studio Button for Host/Admin */}
+              {isAdmin && (
+                <Link
+                  href={adminPanelHref}
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[#1A73E8]/40 bg-white/95 px-3 py-1 text-xs font-bold text-[#1967D2] shadow-xs hover:bg-[#E8F0FE] hover:border-[#1A73E8] hover:scale-105 active:scale-95 transition-all cursor-pointer backdrop-blur-md"
+                  title="Open Full Game Studio in Admin Command Center"
+                >
+                  <Maximize2 className="h-3.5 w-3.5 text-[#1967D2]" />
+                  <span>Studio</span>
+                </Link>
               )}
-            </span>
+
+              {/* Live Now / Locked Pill Indicator */}
+              <span
+                className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold shadow-2xs backdrop-blur-md transition-all ${
+                  isLive
+                    ? 'bg-[#E6F4EA]/90 text-[#137333] border border-[#34A853]/40'
+                    : 'bg-[#F1F3F4]/90 text-[#5F6368] border border-[#DADCE0]'
+                }`}
+              >
+                {isLive ? (
+                  <>
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#34A853] opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-[#34A853]" />
+                    </span>
+                    <span>Live Now</span>
+                    <span className="ml-0.5 inline-flex h-4 w-7 items-center rounded-full bg-[#34A853] px-0.5 transition-colors">
+                      <span className="h-3 w-3 translate-x-3 rounded-full bg-white shadow-xs transition-transform" />
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Lock className="h-3 w-3 text-[#5F6368]" />
+                    <span>Locked</span>
+                    <span className="ml-0.5 inline-flex h-4 w-7 items-center rounded-full bg-[#BDC1C6] px-0.5 transition-colors">
+                      <span className="h-3 w-3 translate-x-0 rounded-full bg-white shadow-xs transition-transform" />
+                    </span>
+                  </>
+                )}
+              </span>
+            </div>
           </div>
 
           {/* Centered Animated Lock Toggle with Glowing Halo & Concentric Waves */}
@@ -422,9 +438,10 @@ export function DualQuizSection({
                 </span>
                 <Link
                   href={adminPanelHref}
-                  className="text-[11px] font-bold text-[#1A73E8] hover:underline flex items-center gap-1 group/link"
+                  className="text-[11px] font-bold text-[#1A73E8] hover:underline flex items-center gap-1.5 group/link"
                 >
-                  <span>Edit in Admin Panel</span>
+                  <Maximize2 className="h-3 w-3" />
+                  <span>Open Full Studio</span>
                   <span className="group-hover/link:translate-x-0.5 transition-transform">➔</span>
                 </Link>
               </div>

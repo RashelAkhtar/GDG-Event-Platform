@@ -46,6 +46,7 @@ import {
   Crown,
   Medal,
   Rocket,
+  Maximize2,
   Grid,
   RotateCcw,
   Check,
@@ -938,39 +939,55 @@ function AdminPageContent() {
                           <span>{trackTag}</span>
                         </span>
 
-                        {/* Interactive Lock/Unlock Pill Switch */}
-                        <button
-                          type="button"
-                          disabled={isUpdating}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleToggleDivLock(slug, isLive)
-                          }}
-                          title={isLive ? 'Click to switch to LOCKED' : 'Click to switch to UNLOCKED'}
-                          className={`group/switch inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-2xs ${
-                            isLive
-                              ? 'bg-[#E6F4EA] border border-[#34A853]/50 text-[#137333] hover:bg-[#CEEAD6]'
-                              : 'bg-[#F1F3F4] border border-[#DADCE0] text-[#5F6368] hover:bg-[#E8EAED]'
-                          }`}
-                        >
-                          {isLive ? (
-                            <>
-                              <span className="h-2 w-2 rounded-full bg-[#34A853] animate-pulse" />
-                              <span>LIVE NOW</span>
-                              <span className="ml-0.5 inline-flex h-4 w-7 items-center rounded-full bg-[#34A853] px-0.5 transition-colors">
-                                <span className="h-3 w-3 translate-x-3 rounded-full bg-white shadow-xs transition-transform" />
-                              </span>
-                            </>
-                          ) : (
-                            <>
-                              <Lock className="h-3 w-3" />
-                              <span>LOCKED</span>
-                              <span className="ml-0.5 inline-flex h-4 w-7 items-center rounded-full bg-[#BDC1C6] px-0.5 transition-colors">
-                                <span className="h-3 w-3 translate-x-0 rounded-full bg-white shadow-xs transition-transform" />
-                              </span>
-                            </>
-                          )}
-                        </button>
+                        <div className="flex items-center gap-2">
+                          {/* Dedicated Full Studio Pill Button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              navigateToPanel(jumpTab, slug !== 'wend-game' ? slug : undefined)
+                            }}
+                            className="inline-flex items-center gap-1.5 rounded-full border border-[#1A73E8]/40 bg-white/95 px-3 py-1 text-xs font-bold text-[#1967D2] shadow-2xs hover:bg-[#E8F0FE] hover:border-[#1A73E8] hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                            title={`Open full ${actionTitle} studio`}
+                          >
+                            <Maximize2 className="h-3.5 w-3.5 text-[#1967D2]" />
+                            <span>Studio</span>
+                          </button>
+
+                          {/* Interactive Lock/Unlock Pill Switch */}
+                          <button
+                            type="button"
+                            disabled={isUpdating}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleToggleDivLock(slug, isLive)
+                            }}
+                            title={isLive ? 'Click to switch to LOCKED' : 'Click to switch to UNLOCKED'}
+                            className={`group/switch inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-2xs ${
+                              isLive
+                                ? 'bg-[#E6F4EA] border border-[#34A853]/50 text-[#137333] hover:bg-[#CEEAD6]'
+                                : 'bg-[#F1F3F4] border border-[#DADCE0] text-[#5F6368] hover:bg-[#E8EAED]'
+                            }`}
+                          >
+                            {isLive ? (
+                              <>
+                                <span className="h-2 w-2 rounded-full bg-[#34A853] animate-pulse" />
+                                <span>LIVE NOW</span>
+                                <span className="ml-0.5 inline-flex h-4 w-7 items-center rounded-full bg-[#34A853] px-0.5 transition-colors">
+                                  <span className="h-3 w-3 translate-x-3 rounded-full bg-white shadow-xs transition-transform" />
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <Lock className="h-3 w-3" />
+                                <span>LOCKED</span>
+                                <span className="ml-0.5 inline-flex h-4 w-7 items-center rounded-full bg-[#BDC1C6] px-0.5 transition-colors">
+                                  <span className="h-3 w-3 translate-x-0 rounded-full bg-white shadow-xs transition-transform" />
+                                </span>
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </div>
 
                       {/* Animated Padlock Illustration with Soft Ambient Radial Aura */}
