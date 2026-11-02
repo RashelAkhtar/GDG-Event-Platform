@@ -881,7 +881,7 @@ export function DualQuizSection({
                   className="flex h-12 flex-1 cursor-not-allowed items-center justify-center gap-2 rounded-full bg-[#F1F3F4] px-5 text-sm font-medium text-[#80868B]"
                 >
                   <Lock className="h-4 w-4 text-[#80868B]" />
-                  <span>Locked by Host</span>
+                  <span>Locked</span>
                 </button>
               )}
 
