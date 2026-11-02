@@ -487,3 +487,108 @@ svg {
   background: transparent;
   color: inherit;
 }
+
+/* =========================================================================
+   AESTHETIC & SEXY GOOGLE THEME ANIMATED BACKGROUND MESH & GRID
+   ========================================================================= */
+
+@keyframes googleMeshFloat1 {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1) rotate(0deg);
+  }
+  33% {
+    transform: translate(80px, -60px) scale(1.18) rotate(10deg);
+  }
+  66% {
+    transform: translate(-50px, 40px) scale(0.88) rotate(-8deg);
+  }
+}
+
+@keyframes googleMeshFloat2 {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1) rotate(0deg);
+  }
+  33% {
+    transform: translate(-70px, 60px) scale(1.12) rotate(-12deg);
+  }
+  66% {
+    transform: translate(50px, -40px) scale(0.92) rotate(8deg);
+  }
+}
+
+@keyframes googleMeshFloat3 {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1) rotate(0deg);
+  }
+  50% {
+    transform: translate(60px, 50px) scale(1.15) rotate(15deg);
+  }
+}
+
+@keyframes googleMeshFloat4 {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1) rotate(0deg);
+  }
+  50% {
+    transform: translate(-70px, -40px) scale(1.1) rotate(-10deg);
+  }
+}
+
+@keyframes googleGlowPulse {
+  0%, 100% {
+    opacity: 0.65;
+    filter: drop-shadow(0 0 16px rgba(66, 133, 244, 0.25));
+  }
+  50% {
+    opacity: 0.95;
+    filter: drop-shadow(0 0 28px rgba(66, 133, 244, 0.45));
+  }
+}
+
+.animate-mesh-1 {
+  animation: googleMeshFloat1 20s ease-in-out infinite;
+  will-change: transform;
+}
+.animate-mesh-2 {
+  animation: googleMeshFloat2 24s ease-in-out infinite;
+  will-change: transform;
+}
+.animate-mesh-3 {
+  animation: googleMeshFloat3 22s ease-in-out infinite;
+  will-change: transform;
+}
+.animate-mesh-4 {
+  animation: googleMeshFloat4 26s ease-in-out infinite;
+  will-change: transform;
+}
+.animate-glow-pulse {
+  animation: googleGlowPulse 4s ease-in-out infinite;
+}
+
+/* Subtle Google Developer Grid Overlay */
+.bg-google-grid {
+  background-image: 
+    radial-gradient(rgba(66, 133, 244, 0.14) 1.25px, transparent 1.25px), 
+    radial-gradient(rgba(234, 67, 53, 0.09) 1.25px, transparent 1.25px);
+  background-size: 32px 32px;
+  background-position: 0 0, 16px 16px;
+}
+
+/* Frosted Glass Specular Highlight Card */
+.google-card-specular {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.02),
+    0 12px 32px -4px rgba(66, 133, 244, 0.08),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.95);
+}
+
+.google-card-specular:hover {
+  box-shadow: 
+    0 10px 15px -3px rgba(0, 0, 0, 0.03),
+    0 24px 48px -6px rgba(66, 133, 244, 0.14),
+    inset 0 1px 0 0 rgba(255, 255, 255, 1);
+}

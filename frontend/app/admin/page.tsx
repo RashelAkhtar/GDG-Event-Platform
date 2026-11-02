@@ -673,39 +673,60 @@ export default function AdminPage() {
     showToast(`BROADCASTED VIA SOCKET: Winner Announcement ceremony with ${currentRankings.winners.length} podium winners is live!`)
   }
 
-  return (
-    <div className="min-h-screen flex flex-col bg-[#F8F9FA] text-[#202124]">
+    return (
+    <div className="relative min-h-screen flex flex-col bg-[#F8F9FA] text-[#202124] overflow-x-hidden selection:bg-[#4285F4]/20 selection:text-[#1A73E8]">
+      {/* Ambient Animated Google Theme Aurora Background Mesh */}
+      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        {/* Subtle Google Tech Dot Matrix Grid */}
+        <div className="absolute inset-0 bg-google-grid opacity-60" />
+
+        {/* Dynamic Glowing Aurora Orbs with CSS Keyframe Animation */}
+        <div className="absolute -top-32 -left-32 h-[560px] w-[560px] rounded-full bg-gradient-to-br from-[#4285F4]/20 via-[#4285F4]/10 to-transparent blur-3xl animate-mesh-1" />
+        <div className="absolute top-1/4 -right-36 h-[580px] w-[580px] rounded-full bg-gradient-to-br from-[#EA4335]/16 via-[#EA4335]/08 to-transparent blur-3xl animate-mesh-2" />
+        <div className="absolute bottom-1/3 left-1/4 h-[520px] w-[520px] rounded-full bg-gradient-to-br from-[#FBBC04]/18 via-[#FBBC04]/08 to-transparent blur-3xl animate-mesh-3" />
+        <div className="absolute -bottom-28 right-1/4 h-[560px] w-[560px] rounded-full bg-gradient-to-br from-[#34A853]/18 via-[#34A853]/08 to-transparent blur-3xl animate-mesh-4" />
+      </div>
+
       {/* Top Admin Header */}
-      <header className="sticky top-0 z-40 border-b border-[#DADCE0] bg-white/95 backdrop-blur-md">
+      <header className="sticky top-0 z-40 border-b border-[#DADCE0]/80 bg-white/80 backdrop-blur-xl shadow-xs">
+        {/* Top Google 4-Color Accent Line */}
+        <div className="h-1 w-full bg-gradient-to-r from-[#4285F4] via-[#EA4335] via-[#FBBC04] to-[#34A853]" />
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-[#DADCE0] bg-white text-[#5F6368] hover:bg-[#F8F9FA]"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-[#DADCE0] bg-white/90 text-[#5F6368] hover:bg-white hover:text-[#202124] hover:shadow-xs transition-all active:scale-95"
             >
               <ArrowLeft className="h-4 w-4" />
             </Link>
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#1A73E8] text-white">
-                <ShieldCheck className="h-4 w-4" />
-              </span>
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#1A73E8] to-[#4285F4] text-white shadow-sm shadow-[#1A73E8]/30">
+                <ShieldCheck className="h-4.5 w-4.5" />
+              </div>
               <div>
-                <h1 className="text-sm font-semibold tracking-tight text-[#202124] leading-none">
-                  GDG Admin Command Center
-                </h1>
-                <span className="text-[11px] text-[#5F6368]">
-                  Logged in as <strong className="text-[#1A73E8]">aryan.crores@gmail.com</strong>
-                </span>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-sm font-bold tracking-tight text-[#202124] leading-none">
+                    GDG Admin Command Center
+                  </h1>
+                  <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-[#E8F0FE] border border-[#1A73E8]/20 px-2 py-0.5 text-[10px] font-bold text-[#1967D2]">
+                    <Sparkles className="h-2.5 w-2.5 text-[#1A73E8]" />
+                    Host
+                  </span>
+                </div>
+                <div className="mt-1 flex items-center gap-1.5 text-[11px] text-[#5F6368]">
+                  <span>Active Session:</span>
+                  <strong className="font-semibold text-[#1A73E8]">aryan.crores@gmail.com</strong>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* WebSocket Status Indicator */}
+          {/* WebSocket Status Indicator & Security Alerts Bell */}
           <div className="flex items-center gap-2.5">
             <SecurityNotificationBell />
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#DADCE0] bg-white px-3 py-1 text-xs font-medium text-[#3C4043]">
-              <span className={`h-2 w-2 rounded-full ${connected ? 'bg-[#34A853]' : 'bg-[#FBBC04] animate-pulse'}`} />
-              <span>{connected ? 'WebSocket Live' : 'Local Channel Active'}</span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#DADCE0]/80 bg-white/90 backdrop-blur-md px-3 py-1.5 text-xs font-semibold text-[#3C4043] shadow-2xs">
+              <span className={`h-2 w-2 rounded-full ${connected ? 'bg-[#34A853] shadow-[0_0_8px_#34A853]' : 'bg-[#FBBC04] animate-pulse'}`} />
+              <span>{connected ? 'WebSocket Live' : 'Local Channel'}</span>
             </span>
           </div>
         </div>
