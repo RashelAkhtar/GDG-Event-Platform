@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, Suspense, useCallback, useRef } from 'react'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { Navbar } from '@/components/ui/Navbar'
 import { ScreenshotWarningModal } from '@/components/security/ScreenshotWarningModal'
 import { LocalGameCountdown } from '@/components/realtime/LocalGameCountdown'
@@ -40,9 +40,17 @@ function formatDuration(ms: number): string {
 }
 
 function QuizRunnerContent() {
+  const router = useRouter()
   const params = useParams()
   const slug = (params?.slug as string) || 'web-dev-quiz'
   const { user, loading: authLoading } = useAuth()
+
+  // Guest Player Guard: Guest users must not play — redirect immediately to /login
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace(`/login?redirect=${encodeURIComponent(`/events/${slug}`)}`)
+    }
+  }, [authLoading, user, slug, router])
   const { currentSessionId, subscribeToLeaderboardReset, sendSubmitAttempt, sendScreenshotViolation } = useWebSocket()
   const startTimeRef = useRef<number | null>(null)
 
@@ -348,11 +356,25 @@ function QuizRunnerContent() {
     }))
   }
 
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F9FA] bg-tech-grid">
+        <div className="h-9 w-9 border-3 border-[#1A73E8] border-t-transparent animate-spin" />
+        <p className="mt-4 font-mono text-xs font-bold uppercase tracking-wider text-[#3C4043]">
+          Verifying participant authentication...
+        </p>
+        <p className="mt-1 font-mono text-[11px] text-[#5F6368]">
+          Guest players are restricted. Redirecting to sign in.
+        </p>
+      </div>
+    )
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F9FA]">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#1A73E8] border-t-transparent" />
-        <p className="mt-3 text-xs text-[#5F6368]">Loading quiz questions...</p>
+        <div className="h-9 w-9 border-3 border-[#1A73E8] border-t-transparent animate-spin" />
+        <p className="mt-3 font-mono text-xs text-[#5F6368]">Loading quiz questions...</p>
       </div>
     )
   }

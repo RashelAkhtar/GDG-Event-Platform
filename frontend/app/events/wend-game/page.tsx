@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback, useRef } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/ui/Navbar'
 import { ScreenshotWarningModal } from '@/components/security/ScreenshotWarningModal'
 import { LocalGameCountdown } from '@/components/realtime/LocalGameCountdown'
@@ -50,9 +51,17 @@ function formatTimer(totalSecs: number): string {
 }
 
 export default function WendGamePage() {
+  const router = useRouter()
   const { user, loading: authLoading } = useAuth()
   const { gameLockStates, subscribeToLeaderboardReset, sendSubmitAttempt, sendScreenshotViolation, currentSessionId } = useWebSocket()
   const isLocked = gameLockStates['wend-game']?.isLocked ?? false
+
+  // Guest Player Guard: Guest users must not play — redirect immediately to /login
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace(`/login?redirect=${encodeURIComponent('/events/wend-game')}`)
+    }
+  }, [authLoading, user, router])
 
   const startTimeRef = useRef<number | null>(null)
   const [board, setBoard] = useState<WendBoardConfig>(() => api.getWendBoard())
@@ -481,6 +490,20 @@ export default function WendGamePage() {
     discoveredWords.forEach((dw) => map.set(dw.wordId, dw.colorIndex))
     return map
   }, [discoveredWords])
+
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F9FA] bg-tech-grid">
+        <div className="h-9 w-9 border-3 border-[#34A853] border-t-transparent animate-spin" />
+        <p className="mt-4 font-mono text-xs font-bold uppercase tracking-wider text-[#3C4043]">
+          Authenticating participant...
+        </p>
+        <p className="mt-1 font-mono text-[11px] text-[#5F6368]">
+          Guest players are restricted. Redirecting to sign in.
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F9FA] text-[#202124] relative overflow-hidden">

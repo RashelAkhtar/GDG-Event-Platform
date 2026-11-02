@@ -252,6 +252,10 @@ export function DualQuizSection({
         : `/admin-panel/panel?tab=quiz&track=${event.slug}`
 
     const handleCardClick = () => {
+      if (!user) {
+        router.push(`/login?redirect=${encodeURIComponent(targetHref)}`)
+        return
+      }
       if (isAdmin) {
         router.push(adminPanelHref)
       } else if (isLive) {
@@ -260,6 +264,8 @@ export function DualQuizSection({
         showToast('This challenge arena is currently locked. Check back soon!')
       }
     }
+
+    const enterHref = user ? targetHref : `/login?redirect=${encodeURIComponent(targetHref)}`
 
     return (
       <div
@@ -400,7 +406,7 @@ export function DualQuizSection({
           <div onClick={(e) => e.stopPropagation()} className="pt-2 flex items-center gap-2">
             {isLive ? (
               <Link
-                href={targetHref}
+                href={enterHref}
                 onClick={() => {
                   void soundManager.unlock()
                 }}
@@ -412,7 +418,7 @@ export function DualQuizSection({
                     : 'border-[#137333] bg-[#1E8E3E] hover:bg-[#137333]'
                 }`}
               >
-                <span>{buttonText}</span>
+                <span>{user ? buttonText : `SIGN IN TO PLAY • ${buttonText}`}</span>
                 <ArrowRight className="h-4 w-4" />
               </Link>
             ) : (
