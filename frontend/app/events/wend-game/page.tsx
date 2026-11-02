@@ -9,6 +9,7 @@ import { LocalGameCountdown } from '@/components/realtime/LocalGameCountdown'
 import {
   api,
   WendBoardConfig,
+  DEFAULT_WEND_BOARD,
   findWordPathInGrid,
   ParticipantSession,
   DiscoveredWordRecord,
@@ -64,7 +65,13 @@ export default function WendGamePage() {
   }, [authLoading, user, router])
 
   const startTimeRef = useRef<number | null>(null)
-  const [board, setBoard] = useState<WendBoardConfig>(() => api.getWendBoard())
+  const [board, setBoard] = useState<WendBoardConfig>(DEFAULT_WEND_BOARD)
+
+  useEffect(() => {
+    const loadedBoard = api.getWendBoard()
+    setBoard(loadedBoard)
+  }, [])
+
   const allocatedTimeSeconds = board.timeLimitSeconds || 120
   const [timeLeft, setTimeLeft] = useState<number>(() => allocatedTimeSeconds)
   const [isCountingDown, setIsCountingDown] = useState<boolean>(true)

@@ -6,8 +6,8 @@ import { protect, requireAdmin, optionalAuth } from '../middlewares/auth.middlew
 const router = Router();
 
 router.post('/:eventId/questions', protect, requireAdmin, addQuestions);
-router.post('/:eventId/quiz/start', protect, startQuiz);
-router.post('/:eventId/quiz/submit', protect, submitQuiz);
+router.post('/:eventId/quiz/start', optionalAuth, startQuiz);
+router.post('/:eventId/quiz/submit', optionalAuth, submitQuiz);
 router.get('/:eventId/leaderboard', optionalAuth, getLeaderboard);
 router.delete('/:eventId/leaderboard', protect, requireAdmin, resetLeaderboard);
 

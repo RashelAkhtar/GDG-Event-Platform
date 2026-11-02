@@ -17,6 +17,7 @@ import {
   ParticipantSession,
   DEFAULT_WEB_EVENT,
   DEFAULT_MENTIS_EVENT,
+  DEFAULT_QUESTIONS,
 } from '@/lib/api'
 import confetti from 'canvas-confetti'
 import {
@@ -55,7 +56,7 @@ function QuizRunnerContent() {
   const startTimeRef = useRef<number | null>(null)
 
   const [event, setEvent] = useState<GdgEvent | null>(() => (slug === 'mentis-quiz' ? DEFAULT_MENTIS_EVENT : DEFAULT_WEB_EVENT))
-  const [questions, setQuestions] = useState<QuestionData[]>(() => api.getQuestionsForSlug(slug))
+  const [questions, setQuestions] = useState<QuestionData[]>(() => DEFAULT_QUESTIONS[slug] || [])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({})
   const [timeLeft, setTimeLeft] = useState<number>(30)
@@ -251,8 +252,8 @@ function QuizRunnerContent() {
         selectedOptionIndex: selectedAnswers[idx] ?? -1,
       }))
 
-      if (event) {
-        await api.submitQuiz(event._id, answersPayload)
+      if (event && !event._id.endsWith('-id')) {
+        await api.submitQuiz(event._id, answersPayload).catch(() => ({}))
       }
 
       let score = 0

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -77,7 +77,13 @@ export function DualQuizSection({
     rankedParticipants: RankedParticipant[]
   }>({ winners: [], rankedStandings: [], rankedParticipants: [] })
 
-  const isAdmin = user?.role === 'ADMIN'
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const isAuthed = mounted && Boolean(user)
+  const isAdmin = mounted && user?.role === 'ADMIN'
 
   const showToast = (msg: string) => {
     setToastMessage(msg)
@@ -213,8 +219,8 @@ export function DualQuizSection({
     // Live question / word count for specs chip
     const activeQuestionsCount =
       type === 'wend'
-        ? api.getWendBoard().targetWords.length
-        : api.getQuestionsForSlug(event.slug).length
+        ? (mounted ? api.getWendBoard().targetWords.length : 8)
+        : (mounted ? api.getQuestionsForSlug(event.slug).length : 4)
 
     const wendLimit = api.getWendBoard().timeLimitSeconds || 120
     const specsBadge =
@@ -231,7 +237,7 @@ export function DualQuizSection({
         : `/admin-panel/panel?tab=quiz&track=${event.slug}`
 
     const handleCardClick = () => {
-      if (!user) {
+      if (!isAuthed) {
         router.push(`/login?redirect=${encodeURIComponent(targetHref)}`)
         return
       }
@@ -244,7 +250,7 @@ export function DualQuizSection({
       }
     }
 
-    const enterHref = user ? targetHref : `/login?redirect=${encodeURIComponent(targetHref)}`
+    const enterHref = isAuthed ? targetHref : `/login?redirect=${encodeURIComponent(targetHref)}`
 
     return (
       <div
@@ -335,9 +341,9 @@ export function DualQuizSection({
 
           {/* Live Specs Structured Chip */}
           <div className="flex items-center justify-start">
-            <span className="inline-flex items-center gap-1.5 border border-[#DADCE0] bg-[#F8F9FA] px-2.5 py-1 font-mono text-[11px] font-medium text-[#3C4043]">
+            <span className="inline-flex items-center gap-1.5 border border-[#DADCE0] bg-[#F8F9FA] px-2.5 py-1 font-mono text-[11px] font-medium text-[#3C4043]" suppressHydrationWarning>
               <Clock className="h-3 w-3 text-[#5F6368]" />
-              <span>{specsBadge}</span>
+              <span suppressHydrationWarning>{specsBadge}</span>
             </span>
           </div>
         </div>
@@ -359,7 +365,7 @@ export function DualQuizSection({
                     : 'border-[#137333] bg-[#1E8E3E] hover:bg-[#137333]'
                 }`}
               >
-                <span>{user ? buttonText : `SIGN IN TO PLAY • ${buttonText}`}</span>
+                <span suppressHydrationWarning>{isAuthed ? buttonText : `SIGN IN TO PLAY • ${buttonText}`}</span>
                 <ArrowRight className="h-4 w-4" />
               </Link>
             ) : (

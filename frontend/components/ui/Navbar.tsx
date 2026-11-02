@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 import { GoogleG, GdgLogoBadge } from './GoogleBrand'
@@ -10,6 +10,11 @@ import { SecurityNotificationBell } from '@/components/security/SecurityNotifica
 export function Navbar() {
   const { user, loginWithGoogle, logout } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   return (
     <header className="sticky top-0 z-40 border-b border-[#DADCE0] bg-white/95 backdrop-blur-md">
@@ -22,10 +27,10 @@ export function Navbar() {
           </span>
         </Link>
 
-        {/* Auth Actions */}
-        <div className="flex items-center gap-2">
-          {user?.role === 'ADMIN' && <SecurityNotificationBell />}
-          {user ? (
+        {/* Auth Actions (Protected against SSR Hydration Mismatch) */}
+        <div className="flex items-center gap-2" suppressHydrationWarning>
+          {mounted && user?.role === 'ADMIN' && <SecurityNotificationBell />}
+          {mounted && user ? (
             <div className="relative">
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
