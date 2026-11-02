@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react'
-import { LeaderboardEntry, CeremonyWinner } from '@/lib/api'
+import { LeaderboardEntry, CeremonyWinner, WendBoardConfig, api } from '@/lib/api'
 
 export interface ConnectedSession {
   sessionId: string
@@ -55,6 +55,7 @@ interface WebSocketContextType {
   sendCountdownStart: (gameSlug: string) => void
   sendWinnerCeremonyStart: (ceremonyData: CeremonyData) => void
   sendLeaderboardReset: (gameSlug: string) => void
+  sendWendConfigUpdate: (config: WendBoardConfig) => void
   sendBubbleImpulse: (impulse: { x: number; y: number; senderSessionId?: string }) => void
   securityAlerts: SecurityAlert[]
   unreadSecurityAlertsCount: number
@@ -83,6 +84,7 @@ const WebSocketContext = createContext<WebSocketContextType>({
   sendCountdownStart: () => {},
   sendWinnerCeremonyStart: () => {},
   sendLeaderboardReset: () => {},
+  sendWendConfigUpdate: () => {},
   sendBubbleImpulse: () => {},
   securityAlerts: [],
   unreadSecurityAlertsCount: 0,
@@ -329,6 +331,21 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
           }
           if (Array.isArray(payload?.securityAlerts)) {
             setSecurityAlerts(payload.securityAlerts as SecurityAlert[])
+          }
+          if (payload?.wendBoardConfig) {
+            api.saveWendBoard(payload.wendBoardConfig as unknown as WendBoardConfig)
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('gdg_wend_board_sync', { detail: payload.wendBoardConfig }))
+            }
+          }
+          break
+        }
+        case 'WEND_CONFIG_UPDATE': {
+          if (payload) {
+            api.saveWendBoard(payload as unknown as WendBoardConfig)
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('gdg_wend_board_sync', { detail: payload }))
+            }
           }
           break
         }
@@ -579,6 +596,16 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     [broadcastMessage, notifyLeaderboardReset]
   )
 
+  const sendWendConfigUpdate = useCallback(
+    (config: WendBoardConfig) => {
+      broadcastMessage({
+        type: 'WEND_CONFIG_UPDATE',
+        payload: config,
+      })
+    },
+    [broadcastMessage]
+  )
+
   const sendBubbleImpulse = useCallback(
     (impulse: { x: number; y: number; senderSessionId?: string }) => {
       broadcastMessage({
@@ -668,6 +695,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
         sendCountdownStart,
         sendWinnerCeremonyStart,
         sendLeaderboardReset,
+        sendWendConfigUpdate,
         sendBubbleImpulse,
         securityAlerts,
         unreadSecurityAlertsCount,

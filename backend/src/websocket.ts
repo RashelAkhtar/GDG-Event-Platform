@@ -23,6 +23,7 @@ export interface WsMessage {
     | 'SCREENSHOT_VIOLATION'
     | 'ADMIN_SECURITY_ALERT'
     | 'CLEAR_SECURITY_ALERTS'
+    | 'WEND_CONFIG_UPDATE'
     | 'SYNC_STATE';
   payload?: any;
 }
@@ -81,6 +82,7 @@ class EventWebSocketService {
     'wend-game': { isLocked: false, status: 'LIVE' },
   };
   private securityAlerts: SecurityAlert[] = [];
+  private wendBoardConfig: unknown = null;
   private heartbeatInterval: NodeJS.Timeout | null = null;
 
   public init(server: HttpServer) {
@@ -185,6 +187,7 @@ class EventWebSocketService {
         gameStates: this.gameStates,
         leaderboards: leaderboardsObj,
         securityAlerts: this.securityAlerts,
+        wendBoardConfig: this.wendBoardConfig,
       },
     });
 
@@ -388,6 +391,15 @@ class EventWebSocketService {
         if (this.socketPrincipals.get(ws)?.role !== UserRole.ADMIN) break;
         this.broadcast({
           type: 'NEW_WORD_OR_QUESTION',
+          payload: message.payload,
+        });
+        break;
+      }
+
+      case 'WEND_CONFIG_UPDATE': {
+        this.wendBoardConfig = message.payload;
+        this.broadcast({
+          type: 'WEND_CONFIG_UPDATE',
           payload: message.payload,
         });
         break;

@@ -14,6 +14,8 @@ import {
   GdgEvent,
   QuestionData,
   ParticipantSession,
+  DEFAULT_WEB_EVENT,
+  DEFAULT_MENTIS_EVENT,
 } from '@/lib/api'
 import confetti from 'canvas-confetti'
 import {
@@ -43,8 +45,8 @@ function QuizRunnerContent() {
   const { currentSessionId, subscribeToLeaderboardReset, sendSubmitAttempt, sendScreenshotViolation } = useWebSocket()
   const startTimeRef = useRef<number | null>(null)
 
-  const [event, setEvent] = useState<GdgEvent | null>(null)
-  const [questions, setQuestions] = useState<QuestionData[]>([])
+  const [event, setEvent] = useState<GdgEvent | null>(() => (slug === 'mentis-quiz' ? DEFAULT_MENTIS_EVENT : DEFAULT_WEB_EVENT))
+  const [questions, setQuestions] = useState<QuestionData[]>(() => api.getQuestionsForSlug(slug))
   const [currentIndex, setCurrentIndex] = useState(0)
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({})
   const [timeLeft, setTimeLeft] = useState<number>(30)
@@ -95,7 +97,7 @@ function QuizRunnerContent() {
     }, 0)
     return () => clearTimeout(timer)
   }, [user, authLoading, slug, currentSessionId])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
 
   // Listen for admin leaderboard resets so user can replay in real time
   useEffect(() => {

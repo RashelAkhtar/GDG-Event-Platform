@@ -71,7 +71,7 @@ function AdminPageContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { user } = useAuth()
-  const { gameLockStates, sendLockToggle, sendCountdownStart, sendWinnerCeremonyStart, sendLeaderboardReset, liveLeaderboards, subscribeToLeaderboardUpdate, connected } = useWebSocket()
+  const { gameLockStates, sendLockToggle, sendWinnerCeremonyStart, sendLeaderboardReset, sendWendConfigUpdate, liveLeaderboards, subscribeToLeaderboardUpdate, connected } = useWebSocket()
 
   // Deep linking params (?tab=locks|quiz|wend|winners&track=web-dev-quiz|mentis-quiz)
   const tabParam = searchParams.get('tab') as 'locks' | 'quiz' | 'wend' | 'winners' | null
@@ -621,6 +621,7 @@ function AdminPageContent() {
     const updatedBoard = { ...wendBoard, targetWords: updatedWords }
     setWendBoard(updatedBoard)
     api.saveWendBoard(updatedBoard)
+    sendWendConfigUpdate(updatedBoard)
 
     setNewTargetWord('')
     setNewTargetHint('')
@@ -637,19 +638,22 @@ function AdminPageContent() {
     const updatedBoard = { ...wendBoard, targetWords: updatedWords }
     setWendBoard(updatedBoard)
     api.saveWendBoard(updatedBoard)
+    sendWendConfigUpdate(updatedBoard)
     showToast('Target word removed from board')
   }
 
   const handleResetToReferenceBoard = () => {
     const defaultBoard = api.resetWendBoard()
     setWendBoard(defaultBoard)
+    sendWendConfigUpdate(defaultBoard)
     showToast('Reset Wend Board to Reference "H & I" Layout!', 'success')
   }
 
   const handleSetWendTimeLimit = (seconds: number) => {
     const updated = api.setWendTimeLimit(seconds)
     setWendBoard(updated)
-    showToast(`Updated Wend round time limit to ${seconds}s (${formatDuration(seconds * 1000)})! Reflects live on user screens.`)
+    sendWendConfigUpdate(updated)
+    showToast(`Updated Wend round time limit to ${seconds}s (${formatDuration(seconds * 1000)})! Broadcast live to all participant screens.`)
   }
 
   // --- 4. WINNER CEREMONY BROADCAST (AUTOMATED PODIUM 3rd, 2nd, 1st) ---

@@ -126,11 +126,18 @@ export default function WendGamePage() {
     }
   }, [])
 
+  const foundWordIdsRef = useRef(foundWordIds)
+  useEffect(() => {
+    foundWordIdsRef.current = foundWordIds
+  }, [foundWordIds])
+
   // Auto-submit when time set by admin expires
   const handleTimeUpSubmit = useCallback(() => {
+    if (completedSession) return
     setIsTimeUp(true)
+    const currentFoundWords = foundWordIdsRef.current
     const durationMs = allocatedTimeSeconds * 1000
-    const totalPoints = foundWordIds.size * 200
+    const totalPoints = currentFoundWords.size * 200
 
     const attemptEntry = {
       _id: `wend_${Date.now()}_${user?._id || 'anon'}`,
@@ -155,7 +162,7 @@ export default function WendGamePage() {
       userEmail: user?.email,
       userName: user?.name || 'Community Participant',
       userAvatar: user?.avatar,
-      totalItems: foundWordIds.size,
+      totalItems: currentFoundWords.size,
       durationMs,
       submittedAt: new Date().toISOString(),
       status: 'SUBMITTED',
@@ -164,8 +171,8 @@ export default function WendGamePage() {
 
     api.saveParticipantSession('wend-game', sessionData, userKey)
     setCompletedSession(sessionData)
-    showToast(`Time's up! You discovered ${foundWordIds.size} / ${board.targetWords.length} words.`, 'info')
-  }, [allocatedTimeSeconds, board, currentSessionId, foundWordIds, sendSubmitAttempt, user])
+    showToast(`Time's up! You discovered ${currentFoundWords.size} / ${board.targetWords.length} words.`, 'info')
+  }, [allocatedTimeSeconds, board, completedSession, currentSessionId, sendSubmitAttempt, showToast, user])
 
   // Countdown timer honoring time set by admin
   useEffect(() => {
@@ -175,11 +182,13 @@ export default function WendGamePage() {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer)
-          handleTimeUpSubmit()
+          setTimeout(() => {
+            handleTimeUpSubmit()
+          }, 0)
           return 0
         }
         if (prev <= 10) {
-          soundManager.playCountdownTick(prev)
+          try { soundManager.playCountdownTick(prev - 1) } catch {}
         }
         return prev - 1
       })
@@ -188,20 +197,37 @@ export default function WendGamePage() {
     return () => clearInterval(timer)
   }, [completedSession, isLocked, isCountingDown, handleTimeUpSubmit])
 
-  // Real-time synchronization if admin updates board time limit
+  // Real-time synchronization if admin updates board time limit or layout
   useEffect(() => {
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === 'gdg_wend_board_config') {
-        const fresh = api.getWendBoard()
-        setBoard(fresh)
-        if (!completedSession) {
-          const freshTime = fresh.timeLimitSeconds || 120
-          setTimeLeft(freshTime)
-        }
+    const applyFreshBoard = (fresh: WendBoardConfig) => {
+      setBoard(fresh)
+      if (!completedSession) {
+        const freshTime = fresh.timeLimitSeconds || 120
+        setTimeLeft(freshTime)
       }
     }
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'gdg_wend_board_config') {
+        applyFreshBoard(api.getWendBoard())
+      }
+    }
+
+    const handleCustomSync = (e: Event) => {
+      const detail = (e as CustomEvent<WendBoardConfig>).detail
+      if (detail) {
+        applyFreshBoard(detail)
+      } else {
+        applyFreshBoard(api.getWendBoard())
+      }
+    }
+
     window.addEventListener('storage', handleStorage)
-    return () => window.removeEventListener('storage', handleStorage)
+    window.addEventListener('gdg_wend_board_sync', handleCustomSync)
+    return () => {
+      window.removeEventListener('storage', handleStorage)
+      window.removeEventListener('gdg_wend_board_sync', handleCustomSync)
+    }
   }, [completedSession])
 
   // Listen for admin leaderboard reset
