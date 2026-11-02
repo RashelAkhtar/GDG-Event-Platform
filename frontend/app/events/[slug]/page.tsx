@@ -558,15 +558,6 @@ function QuizRunnerContent() {
                     const isSelected = selectedAnswers[currentIndex] === optIdx
                     const optionLetter = String.fromCharCode(65 + optIdx)
 
-                    // Distinct Google color accents per option A/B/C/D
-                    const GOOGLE_OPTS = [
-                      { border: 'border-[#4285F4]', bg: 'bg-[#E8F0FE]', text: 'text-[#1967D2]', badge: 'bg-[#4285F4]', ring: 'ring-[#4285F4]/30' },
-                      { border: 'border-[#EA4335]', bg: 'bg-[#FCE8E6]', text: 'text-[#C5221F]', badge: 'bg-[#EA4335]', ring: 'ring-[#EA4335]/30' },
-                      { border: 'border-[#FBBC04]', bg: 'bg-[#FEF7E0]', text: 'text-[#B06000]', badge: 'bg-[#FBBC04]', ring: 'ring-[#FBBC04]/30' },
-                      { border: 'border-[#34A853]', bg: 'bg-[#E6F4EA]', text: 'text-[#137333]', badge: 'bg-[#34A853]', ring: 'ring-[#34A853]/30' },
-                    ]
-                    const gColor = GOOGLE_OPTS[optIdx % GOOGLE_OPTS.length]
-
                     return (
                       <button
                         key={optIdx}
@@ -574,15 +565,15 @@ function QuizRunnerContent() {
                         onClick={() => handleSelectOption(optIdx)}
                         className={`group relative flex min-h-[54px] w-full items-center justify-between gap-3.5 rounded-2xl border px-4 py-3.5 text-left transition-all duration-200 active:scale-[0.98] ${
                           isSelected
-                            ? `${gColor.border} ${gColor.bg} ${gColor.text} shadow-sm ring-2 ${gColor.ring} scale-[1.01]`
-                            : 'border-[#DADCE0] bg-white text-[#3C4043] hover:border-[#BDC1C6] hover:bg-[#F8F9FA] hover:-translate-y-0.5'
+                            ? 'border-[#1A73E8] bg-[#E8F0FE]/90 text-[#1967D2] shadow-sm ring-2 ring-[#1A73E8]/30 scale-[1.01]'
+                            : 'border-[#DADCE0] bg-white text-[#3C4043] hover:border-[#1A73E8]/50 hover:bg-[#F8F9FA] hover:-translate-y-0.5'
                         }`}
                       >
                         <div className="flex items-center gap-3.5">
                           <span
                             className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-black transition-all ${
                               isSelected
-                                ? `${gColor.badge} text-white shadow-xs`
+                                ? 'bg-[#1A73E8] text-white shadow-xs'
                                 : 'bg-[#F1F3F4] text-[#5F6368] group-hover:bg-[#E8EAED]'
                             }`}
                           >
@@ -594,7 +585,7 @@ function QuizRunnerContent() {
                         </div>
 
                         {isSelected && (
-                          <span className={`shrink-0 flex h-6 w-6 items-center justify-center rounded-full ${gColor.badge} text-white shadow-xs animate-in zoom-in-75`}>
+                          <span className="shrink-0 flex h-6 w-6 items-center justify-center rounded-full bg-[#1A73E8] text-white shadow-xs animate-in zoom-in-75">
                             <CheckCircle2 className="h-3.5 w-3.5" />
                           </span>
                         )}
