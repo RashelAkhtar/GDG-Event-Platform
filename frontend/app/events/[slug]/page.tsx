@@ -48,8 +48,16 @@ function QuizRunnerContent() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({})
   const [timeLeft, setTimeLeft] = useState<number>(30)
+
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [completedSession, setCompletedSession] = useState<ParticipantSession | null>(null)
+  // User result isolation guard: strictly ensure session belongs to the current user
+  const isMySession = Boolean(
+    completedSession &&
+    ((user && (completedSession.userId === user._id || completedSession.userEmail === user.email)) ||
+     (!user && completedSession.sessionId?.includes(currentSessionId)))
+  )
+
 
   // Reactively verify that completedSession belongs to the current logged-in user
   useEffect(() => {
@@ -276,7 +284,7 @@ function QuizRunnerContent() {
         </div>
 
         {/* --- AESTHETIC WAIT MESSAGE & SESSION INFO SCREEN --- */}
-        {completedSession ? (
+        {isMySession && completedSession ? (
           <div className="relative my-auto flex flex-col items-center rounded-[36px] border border-white/90 bg-white/95 p-7 sm:p-9 text-center shadow-[0_15px_45px_rgba(0,0,0,0.06)] backdrop-blur-2xl animate-in zoom-in-95 duration-400 overflow-hidden">
             {/* Top Google 4-Color Accent Ribbon */}
             <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-[#4285F4] via-[#EA4335] via-[#FBBC04] to-[#34A853]" />

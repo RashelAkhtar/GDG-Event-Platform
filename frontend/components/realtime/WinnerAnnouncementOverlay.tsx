@@ -56,6 +56,9 @@ export function WinnerAnnouncementOverlay() {
   // Sequence controller: Dynamic adaptive stages (3rd -> 2nd -> 1st) with crisp SFX
   useEffect(() => {
     if (!activeCeremony) return
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`gdg_ceremony_revealed_${activeCeremony.gameSlug}`, 'true')
+    }
 
     const hasThird = Boolean(third)
     const hasSecond = Boolean(second)

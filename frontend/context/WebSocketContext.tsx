@@ -257,6 +257,9 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
         case 'RESET_GAME_LEADERBOARD': {
           const gameSlug = payload?.gameSlug as string | undefined
           if (gameSlug) {
+            if (typeof window !== 'undefined') {
+              localStorage.removeItem(`gdg_ceremony_revealed_${gameSlug}`)
+            }
             setLiveLeaderboards((prev) => ({
               ...prev,
               [gameSlug]: [],

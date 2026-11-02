@@ -54,6 +54,7 @@ export default function WendGamePage() {
   const [board, setBoard] = useState<WendBoardConfig>(() => api.getWendBoard())
   const allocatedTimeSeconds = board.timeLimitSeconds || 120
   const [timeLeft, setTimeLeft] = useState<number>(() => allocatedTimeSeconds)
+
   const [isTimeUp, setIsTimeUp] = useState<boolean>(false)
   const [foundWordIds, setFoundWordIds] = useState<Set<string>>(new Set())
   const [discoveredWords, setDiscoveredWords] = useState<DiscoveredWordRecord[]>([])
@@ -63,6 +64,13 @@ export default function WendGamePage() {
   const [shakeInvalid, setShakeInvalid] = useState(false)
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'info' | 'error' } | null>(null)
   const [completedSession, setCompletedSession] = useState<ParticipantSession | null>(null)
+  // User result isolation guard: strictly ensure session belongs to the current user
+  const isMySession = Boolean(
+    completedSession &&
+    ((user && (completedSession.userId === user._id || completedSession.userEmail === user.email)) ||
+     (!user && completedSession.sessionId?.includes(currentSessionId)))
+  )
+
 
   // Reactively verify that completedSession belongs to the current logged-in user (not another account)
   useEffect(() => {
@@ -91,6 +99,11 @@ export default function WendGamePage() {
 
   useEffect(() => {
     startTimeRef.current = Date.now()
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('gdg_user_session_wend-game')
+      localStorage.removeItem('gdg_wend_session')
+      localStorage.removeItem('gdg_user_session_wend-game')
+    }
   }, [])
 
   // Auto-submit when time set by admin expires
@@ -456,7 +469,7 @@ export default function WendGamePage() {
               </Link>
             </div>
           </div>
-        ) : completedSession ? (
+        ) : isMySession && completedSession ? (
           /* --- AESTHETIC WAIT MESSAGE & SESSION INFO SCREEN --- */
           <div className="relative my-auto flex flex-col items-center rounded-[36px] border border-white/90 bg-white/95 p-7 sm:p-9 text-center shadow-[0_15px_45px_rgba(0,0,0,0.06)] backdrop-blur-2xl animate-in zoom-in-95 duration-400 w-full overflow-hidden">
             {/* Top Google 4-Color Accent Ribbon */}

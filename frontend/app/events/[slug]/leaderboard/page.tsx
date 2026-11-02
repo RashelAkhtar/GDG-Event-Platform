@@ -8,7 +8,17 @@ import { Podium } from '@/components/leaderboard/Podium'
 import { RankList } from '@/components/leaderboard/RankList'
 import { api, DEFAULT_LEADERBOARD, LeaderboardEntry } from '@/lib/api'
 import { useWebSocket } from '@/context/WebSocketContext'
-import { ArrowLeft, RefreshCw, Trophy, Home } from 'lucide-react'
+import { ArrowLeft, RefreshCw, Trophy, Home, Sparkles, CheckCircle2, Lock } from 'lucide-react'
+import { useAuth } from '@/context/AuthContext'
+
+function formatDuration(ms: number): string {
+  if (!ms || ms <= 0) return '0s'
+  const seconds = (ms / 1000).toFixed(1)
+  if (ms < 60000) return `${seconds}s`
+  const minutes = Math.floor(ms / 60000)
+  const remainingSecs = Math.floor((ms % 60000) / 1000)
+  return `${minutes}m ${remainingSecs}s`
+}
 
 function LeaderboardContent() {
   const params = useParams()

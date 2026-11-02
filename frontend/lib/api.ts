@@ -492,10 +492,17 @@ export const api = {
         session.userEmail ||
         (session.userName ? session.userName.toLowerCase().replace(/\s+/g, '_') : 'guest')
 
-      // Save user-specific unique session receipt
+      // Save STRICTLY under user-scoped key ONLY (never in a shared unscoped key)
       localStorage.setItem(`gdg_user_session_${slug}_${uKey}`, JSON.stringify(session))
-      // Also update generic active session with ownership tags
-      localStorage.setItem(`gdg_user_session_${slug}`, JSON.stringify(session))
+
+      // Clean up legacy shared keys so no previous user's result can ever leak
+      localStorage.removeItem(`gdg_user_session_${slug}`)
+      localStorage.removeItem(`gdg_active_session_${slug}`)
+      localStorage.removeItem(`gdg_quiz_attempt_${slug}`)
+      if (slug === 'wend-game') {
+        localStorage.removeItem('gdg_user_session_wend-game')
+        localStorage.removeItem('gdg_wend_session')
+      }
 
       const allKey = `gdg_all_sessions_${slug}`
       const existingStr = localStorage.getItem(allKey)
@@ -517,43 +524,21 @@ export const api = {
   },
 
   getParticipantSession(slug: string, userKey?: string): ParticipantSession | null {
-    if (typeof window !== 'undefined') {
-      // 1. If a specific userKey is requested (user._id or user.email)
-      if (userKey) {
-        const userSpecific = localStorage.getItem(`gdg_user_session_${slug}_${userKey}`)
-        if (userSpecific) {
-          try {
-            return JSON.parse(userSpecific)
-          } catch {}
-        }
-
-        // Check if legacy gdg_user_session_${slug} matches this user
-        const stored = localStorage.getItem(`gdg_user_session_${slug}`)
-        if (stored) {
-          try {
-            const parsed = JSON.parse(stored) as ParticipantSession
-            const matches =
-              (parsed.userId && parsed.userId === userKey) ||
-              (parsed.userEmail && parsed.userEmail === userKey) ||
-              (parsed.userName && parsed.userName.toLowerCase().replace(/\s+/g, '_') === userKey)
-            if (matches) {
-              return parsed
-            }
-          } catch {}
-        }
-
-        // Different user! Do NOT return another user's session!
-        return null
-      }
-
-      // 2. If no userKey provided, check legacy key
-      const stored = localStorage.getItem(`gdg_user_session_${slug}`)
-      if (stored) {
+    if (typeof window !== 'undefined' && userKey) {
+      const userSpecific = localStorage.getItem(`gdg_user_session_${slug}_${userKey}`)
+      if (userSpecific) {
         try {
-          return JSON.parse(stored)
+          const parsed = JSON.parse(userSpecific) as ParticipantSession
+          const isMine =
+            (parsed.userId && parsed.userId === userKey) ||
+            (parsed.userEmail && parsed.userEmail === userKey) ||
+            (parsed.userName && parsed.userName.toLowerCase().replace(/\s+/g, '_') === userKey) ||
+            (parsed.sessionId && parsed.sessionId.includes(userKey))
+          if (isMine) return parsed
         } catch {}
       }
     }
+    // Strict isolation: if no userKey or doesn't belong to current user, NEVER return another user's result!
     return null
   },
 
