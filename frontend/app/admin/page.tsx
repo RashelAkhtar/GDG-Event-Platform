@@ -51,12 +51,8 @@ import {
   Check,
   X,
   Zap,
-  ArrowUp,
-  ArrowDown,
-  ArrowRight,
   Eye,
   EyeOff,
-  Eraser,
   CornerDownLeft,
 } from 'lucide-react'
 import { LockedIllustration, UnlockedIllustration } from '@/components/ui/LockIllustrations'
@@ -2033,15 +2029,13 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Grid Canvas + On-screen Navigation Controls */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-                {/* 8x8 Grid Canvas */}
-                <div className="lg:col-span-7 flex flex-col items-center">
-                  <div
-                    tabIndex={0}
-                    onKeyDown={handleGridKeyDown}
-                    className="relative aspect-square w-full max-w-[360px] sm:max-w-[400px] rounded-2xl border-2 border-[#3C4043] bg-white p-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8]/50"
-                  >
+              {/* 8x8 Grid Canvas (Centered Clean Studio) */}
+              <div className="flex flex-col items-center justify-center w-full py-2">
+                <div
+                  tabIndex={0}
+                  onKeyDown={handleGridKeyDown}
+                  className="relative aspect-square w-full max-w-[380px] sm:max-w-[420px] rounded-2xl border-2 border-[#3C4043] bg-white p-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8]/50"
+                >
                     <div
                       className="grid h-full w-full gap-1 sm:gap-1.5"
                       style={{
@@ -2108,167 +2102,8 @@ export default function AdminPage() {
                       )}
                     </div>
                   </div>
-
-                  {/* Keyboard Instruction Hints */}
-                  <div className="mt-2.5 flex flex-wrap items-center justify-center gap-2 text-[11px] text-[#5F6368]">
-                    <span className="inline-flex items-center gap-1 rounded bg-[#F1F3F4] px-1.5 py-0.5 font-mono text-[10px] text-[#3C4043]">
-                      Arrows ⬆️ ⬇️ ⬅️ ➡️
-                    </span>
-                    <span>navigate</span>
-                    <span>•</span>
-                    <span className="inline-flex items-center gap-1 rounded bg-[#F1F3F4] px-1.5 py-0.5 font-mono text-[10px] text-[#3C4043]">
-                      A-Z
-                    </span>
-                    <span>type letter</span>
-                    <span>•</span>
-                    <span className="inline-flex items-center gap-1 rounded bg-[#F1F3F4] px-1.5 py-0.5 font-mono text-[10px] text-[#3C4043]">
-                      Space
-                    </span>
-                    <span>toggle obstacle</span>
-                    <span>•</span>
-                    <span className="inline-flex items-center gap-1 rounded bg-[#F1F3F4] px-1.5 py-0.5 font-mono text-[10px] text-[#3C4043]">
-                      Backspace
-                    </span>
-                    <span>clear</span>
-                  </div>
-                </div>
-
-                {/* On-Screen Arrow Buttons & Quick Action Deck */}
-                <div className="lg:col-span-5 flex flex-col gap-4 bg-[#F8F9FA] p-4 sm:p-5 rounded-2xl border border-[#DADCE0]">
-                  {/* Selected Box Info Header */}
-                  <div className="flex items-center justify-between pb-2.5 border-b border-[#DADCE0]">
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#5F6368]">
-                        Selected Grid Cell
-                      </span>
-                      <span className="text-sm font-black text-[#202124]">
-                        Row {focusedCell.r + 1}, Column {focusedCell.c + 1}
-                      </span>
-                    </div>
-
-                    {/* Status Badge */}
-                    {(() => {
-                      const cur = wendBoard.grid[focusedCell.r]?.[focusedCell.c]
-                      if (!cur) return null
-                      if (cur.type === 'OBSTACLE') {
-                        return (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-[#3C4043] px-2.5 py-0.5 text-[10px] font-bold text-white">
-                            <span>Obstacle [#]</span>
-                          </span>
-                        )
-                      }
-                      if (!cur.letter) {
-                        return (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-[#FEF7E0] border border-[#FBBC04]/50 px-2.5 py-0.5 text-[10px] font-bold text-[#B06000]">
-                            <span>Empty Box [ ]</span>
-                          </span>
-                        )
-                      }
-                      return (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-[#E8F0FE] border border-[#1A73E8]/40 px-2.5 py-0.5 text-[10px] font-bold text-[#1A73E8]">
-                          <span>Letter &ldquo;{cur.letter}&rdquo;</span>
-                        </span>
-                      )
-                    })()}
-                  </div>
-
-                  {/* Direct Letter Input Field (for touchscreens or quick typing) */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[11px] font-semibold text-[#3C4043]">
-                      Type Letter for Box ({focusedCell.r + 1}, {focusedCell.c + 1}):
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        maxLength={1}
-                        value={wendBoard.grid[focusedCell.r]?.[focusedCell.c]?.letter || ''}
-                        onChange={(e) => {
-                          const char = e.target.value.slice(-1).toUpperCase()
-                          if (char) {
-                            handleSetCellLetter(focusedCell.r, focusedCell.c, char)
-                            moveFocus(0, 1)
-                          }
-                        }}
-                        placeholder="A-Z"
-                        className="grid-box-input h-10 w-16 text-center uppercase font-black text-lg rounded-xl border-2 border-[#1A73E8] bg-white text-[#1A73E8] shadow-xs focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleClearCell(focusedCell.r, focusedCell.c)}
-                        className="flex h-10 items-center justify-center gap-1 rounded-xl border border-[#DADCE0] bg-white px-3 text-xs font-semibold text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] transition-all"
-                      >
-                        <Eraser className="h-3.5 w-3.5 text-[#EA4335]" />
-                        <span>Clear Box</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleToggleCellType(focusedCell.r, focusedCell.c)}
-                        className="flex h-10 flex-1 items-center justify-center gap-1 rounded-xl border border-[#DADCE0] bg-white px-3 text-xs font-semibold text-[#3C4043] hover:bg-[#F1F3F4] transition-all"
-                      >
-                        <Layers className="h-3.5 w-3.5 text-[#1A73E8]" />
-                        <span>Toggle Obstacle</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* On-Screen D-Pad Arrow Buttons */}
-                  <div className="flex flex-col items-center pt-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#5F6368] mb-2">
-                      Arrow Navigation Buttons
-                    </span>
-
-                    <div className="flex flex-col items-center gap-1.5">
-                      {/* Top Arrow (Up) */}
-                      <button
-                        type="button"
-                        onClick={() => moveFocus(-1, 0)}
-                        title="Move Up"
-                        className="flex h-10 w-12 items-center justify-center rounded-xl border border-[#DADCE0] bg-white shadow-2xs hover:bg-[#E8F0FE] hover:border-[#1A73E8] active:scale-95 transition-all text-[#202124]"
-                      >
-                        <ArrowUp className="h-5 w-5 text-[#1A73E8]" />
-                      </button>
-
-                      {/* Middle Row (Left, Center, Right) */}
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => moveFocus(0, -1)}
-                          title="Move Left"
-                          className="flex h-10 w-12 items-center justify-center rounded-xl border border-[#DADCE0] bg-white shadow-2xs hover:bg-[#E8F0FE] hover:border-[#1A73E8] active:scale-95 transition-all text-[#202124]"
-                        >
-                          <ArrowLeft className="h-5 w-5 text-[#1A73E8]" />
-                        </button>
-
-                        <div className="flex h-10 w-12 items-center justify-center rounded-xl border-2 border-[#1A73E8] bg-[#E8F0FE] font-black text-sm text-[#1A73E8] shadow-xs">
-                          {wendBoard.grid[focusedCell.r]?.[focusedCell.c]?.type === 'OBSTACLE'
-                            ? '#'
-                            : wendBoard.grid[focusedCell.r]?.[focusedCell.c]?.letter || '·'}
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => moveFocus(0, 1)}
-                          title="Move Right"
-                          className="flex h-10 w-12 items-center justify-center rounded-xl border border-[#DADCE0] bg-white shadow-2xs hover:bg-[#E8F0FE] hover:border-[#1A73E8] active:scale-95 transition-all text-[#202124]"
-                        >
-                          <ArrowRight className="h-5 w-5 text-[#1A73E8]" />
-                        </button>
-                      </div>
-
-                      {/* Bottom Arrow (Down) */}
-                      <button
-                        type="button"
-                        onClick={() => moveFocus(1, 0)}
-                        title="Move Down"
-                        className="flex h-10 w-12 items-center justify-center rounded-xl border border-[#DADCE0] bg-white shadow-2xs hover:bg-[#E8F0FE] hover:border-[#1A73E8] active:scale-95 transition-all text-[#202124]"
-                      >
-                        <ArrowDown className="h-5 w-5 text-[#1A73E8]" />
-                      </button>
-                    </div>
-                  </div>
                 </div>
               </div>
-            </div>
 
             {/* Target Words Manager & Solvability Checker */}
             <div className="rounded-3xl border border-[#DADCE0] bg-white p-5 sm:p-6 shadow-2xs">
