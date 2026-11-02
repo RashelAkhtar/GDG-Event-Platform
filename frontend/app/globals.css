@@ -15,7 +15,18 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans), "Google Sans", "Google Sans Text", Roboto, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono);
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* =========================================================================
+   STRICT PRECISION ARCHITECTURE — ZERO BORDER RADIUS SYSTEM
+   Simple, structured, clean geometric lines across all elements
+   ========================================================================= */
+
+*,
+*::before,
+*::after {
+  border-radius: 0 !important;
 }
 
 body {
@@ -26,115 +37,65 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom scrollbar for mobile */
+/* Precision Sharp Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #F1F3F4;
 }
 ::-webkit-scrollbar-thumb {
   background: #DADCE0;
-  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #BDC1C6;
+  background: #9AA0A6;
 }
 
 /* =========================================================================
-   AESTHETIC & SEXY CSS ANIMATIONS
+   AESTHETIC & STRUCTURED CSS BACKGROUND ANIMATIONS
    ========================================================================= */
 
-/* 1. Elastic 3D Countdown Number Pop with Spring & Rotation */
-@keyframes countPop {
+/* 1. Precision Technical Grid with Dynamic Subtle Ambient Gridlines */
+.bg-tech-grid {
+  background-image: 
+    linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.bg-tech-dots {
+  background-image: radial-gradient(rgba(26, 115, 232, 0.12) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* 2. Living Ambient Organic Google Aurora Mesh */
+@keyframes ambientAurora {
   0% {
-    transform: scale(0.25) rotate(-6deg);
-    opacity: 0;
-    filter: blur(14px);
+    transform: translate(0px, 0px) scale(1);
+    opacity: 0.65;
   }
-  45% {
-    transform: scale(1.22) rotate(2deg);
-    opacity: 1;
-    filter: blur(0);
+  33% {
+    transform: translate(30px, -25px) scale(1.12);
+    opacity: 0.85;
   }
-  70% {
-    transform: scale(0.94) rotate(-1deg);
+  66% {
+    transform: translate(-25px, 20px) scale(0.92);
+    opacity: 0.7;
   }
   100% {
-    transform: scale(1) rotate(0deg);
-    opacity: 1;
+    transform: translate(0px, 0px) scale(1);
+    opacity: 0.65;
   }
 }
 
-.animate-count-pop {
-  animation: countPop 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+.animate-aurora {
+  animation: ambientAurora 16s ease-in-out infinite;
+  will-change: transform, opacity;
 }
 
-/* 2. Concentric Radar Ripple Waves with Luminous Glow */
-@keyframes rippleWave {
-  0% {
-    transform: scale(0.8);
-    opacity: 0.95;
-  }
-  50% {
-    opacity: 0.45;
-  }
-  100% {
-    transform: scale(2.3);
-    opacity: 0;
-  }
-}
-
-.animate-ripple-1 {
-  animation: rippleWave 2.4s cubic-bezier(0.1, 0.7, 0.1, 1) infinite;
-}
-.animate-ripple-2 {
-  animation: rippleWave 2.4s cubic-bezier(0.1, 0.7, 0.1, 1) infinite;
-  animation-delay: 0.8s;
-}
-.animate-ripple-3 {
-  animation: rippleWave 2.4s cubic-bezier(0.1, 0.7, 0.1, 1) infinite;
-  animation-delay: 1.6s;
-}
-
-/* 3. Smooth Floating Levitation */
-@keyframes floating {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-8px) rotate(1deg);
-  }
-}
-
-.animate-float {
-  animation: floating 4s ease-in-out infinite;
-}
-
-.animate-float-slow {
-  animation: floating 6s ease-in-out infinite;
-}
-
-/* 4. Radiant Rotating Sunburst Halo */
-@keyframes haloSpin {
-  0% {
-    transform: rotate(0deg) scale(1);
-  }
-  50% {
-    transform: rotate(180deg) scale(1.08);
-  }
-  100% {
-    transform: rotate(360deg) scale(1);
-  }
-}
-
-.animate-halo-spin {
-  animation: haloSpin 16s linear infinite;
-}
-
-/* 5. Shimmer Light Sweep */
-@keyframes shimmerSweep {
+/* 3. Subtle Laser Sweep Horizon / Progress Glow */
+@keyframes laserSweep {
   0% {
     background-position: -200% 0;
   }
@@ -143,177 +104,101 @@ body {
   }
 }
 
-.animate-shimmer {
+.animate-laser {
   background: linear-gradient(
     90deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.4) 50%,
-    rgba(255, 255, 255, 0) 100%
+    transparent 0%,
+    rgba(66, 133, 244, 0.6) 25%,
+    rgba(234, 67, 53, 0.6) 50%,
+    rgba(251, 188, 4, 0.6) 75%,
+    transparent 100%
   );
   background-size: 200% 100%;
-  animation: shimmerSweep 3s infinite;
+  animation: laserSweep 4s linear infinite;
 }
 
-/* 6. Aurora Ambient Morphing Background */
-@keyframes auroraShift {
+/* 4. Concentric Square Radar Waves (Sharp Geometry) */
+@keyframes squareRipple {
   0% {
-    transform: translate(0%, 0%) scale(1);
+    transform: scale(0.85);
+    opacity: 0.9;
   }
-  33% {
-    transform: translate(4%, -5%) scale(1.1);
-  }
-  66% {
-    transform: translate(-5%, 3%) scale(0.95);
+  50% {
+    opacity: 0.4;
   }
   100% {
-    transform: translate(0%, 0%) scale(1);
-  }
-}
-
-.animate-aurora {
-  animation: auroraShift 12s ease-in-out infinite alternate;
-}
-
-/* 7. Pedestal 3D Extrusion Rise */
-@keyframes pedestalRise {
-  0% {
-    transform: translateY(100%) scaleY(0);
+    transform: scale(2.2);
     opacity: 0;
   }
-  60% {
-    transform: translateY(-6px) scaleY(1.05);
+}
+
+.animate-ripple-1 {
+  animation: squareRipple 2.4s cubic-bezier(0.1, 0.7, 0.1, 1) infinite;
+}
+.animate-ripple-2 {
+  animation: squareRipple 2.4s cubic-bezier(0.1, 0.7, 0.1, 1) infinite;
+  animation-delay: 0.8s;
+}
+.animate-ripple-3 {
+  animation: squareRipple 2.4s cubic-bezier(0.1, 0.7, 0.1, 1) infinite;
+  animation-delay: 1.6s;
+}
+
+/* 5. Sharp Numeric Count Pop */
+@keyframes countPop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.15);
     opacity: 1;
   }
   100% {
-    transform: translateY(0) scaleY(1);
+    transform: scale(1);
     opacity: 1;
   }
 }
 
-.animate-pedestal {
-  animation: pedestalRise 0.8s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+.animate-count-pop {
+  animation: countPop 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* 8. Specular Glassmorphism Utilities */
+/* 6. Continuous Floating Mesh Spheres */
+@keyframes floatMesh1 {
+  0%, 100% { transform: translate(0px, 0px); }
+  50% { transform: translate(40px, -30px); }
+}
+@keyframes floatMesh2 {
+  0%, 100% { transform: translate(0px, 0px); }
+  50% { transform: translate(-35px, 35px); }
+}
+@keyframes floatMesh3 {
+  0%, 100% { transform: translate(0px, 0px); }
+  50% { transform: translate(30px, 40px); }
+}
+
+.animate-mesh-1 { animation: floatMesh1 22s ease-in-out infinite; will-change: transform; }
+.animate-mesh-2 { animation: floatMesh2 26s ease-in-out infinite; will-change: transform; }
+.animate-mesh-3 { animation: floatMesh3 24s ease-in-out infinite; will-change: transform; }
+
+/* 7. Structured Crisp Panels */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 10px 30px -10px rgba(60, 64, 67, 0.08);
+  border: 1px solid #DADCE0;
+  box-shadow: 0 1px 3px 0 rgba(60, 64, 67, 0.08);
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(218, 220, 224, 0.7);
-  box-shadow: 0 4px 20px -2px rgba(60, 64, 67, 0.06);
-}
-
-/* Luxury Iridescent Glass Cards for Winners */
-.card-champion-gold {
-  background: radial-gradient(120% 120% at 50% 0%, rgba(255, 255, 255, 0.98) 0%, rgba(255, 252, 240, 0.96) 50%, rgba(254, 243, 199, 0.92) 100%);
-  border-radius: 36px;
-  position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 
-    0 0 0 1px rgba(245, 158, 11, 0.2),
-    0 25px 60px -15px rgba(245, 158, 11, 0.35),
-    0 0 50px -10px rgba(236, 72, 153, 0.22),
-    inset 0 1px 2px rgba(255, 255, 255, 1);
-  overflow: hidden;
-}
-
-.card-champion-gold::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 2px;
-  background: linear-gradient(135deg, rgba(251, 188, 4, 0.8), rgba(236, 72, 153, 0.7), rgba(99, 102, 241, 0.75), rgba(52, 168, 83, 0.7));
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-}
-
-.card-runnerup-silver {
-  background: radial-gradient(120% 120% at 50% 0%, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.96) 50%, rgba(241, 245, 249, 0.92) 100%);
-  border-radius: 32px;
-  position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 
-    0 0 0 1px rgba(148, 163, 184, 0.25),
-    0 20px 50px -12px rgba(100, 116, 139, 0.25),
-    0 0 35px -8px rgba(14, 165, 233, 0.15),
-    inset 0 1px 2px rgba(255, 255, 255, 1);
-  overflow: hidden;
-}
-
-.card-runnerup-silver::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1.5px;
-  background: linear-gradient(135deg, rgba(203, 213, 225, 0.8), rgba(148, 163, 184, 0.6), rgba(56, 189, 248, 0.6));
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-}
-
-.card-bronze {
-  background: radial-gradient(120% 120% at 50% 0%, rgba(255, 255, 255, 0.98) 0%, rgba(255, 247, 237, 0.96) 50%, rgba(254, 237, 213, 0.92) 100%);
-  border-radius: 32px;
-  position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 
-    0 0 0 1px rgba(234, 88, 12, 0.25),
-    0 20px 50px -12px rgba(234, 88, 12, 0.25),
-    0 0 35px -8px rgba(249, 115, 22, 0.15),
-    inset 0 1px 2px rgba(255, 255, 255, 1);
-  overflow: hidden;
-}
-
-.card-bronze::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1.5px;
-  background: linear-gradient(135deg, rgba(251, 146, 60, 0.8), rgba(234, 88, 12, 0.6), rgba(245, 158, 11, 0.6));
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-}
-
-/* Multi-color Google Glow */
-.google-glow-ambient {
-  filter: drop-shadow(0 0 25px rgba(66, 133, 244, 0.25))
-         drop-shadow(0 0 35px rgba(234, 67, 53, 0.2))
-         drop-shadow(0 0 45px rgba(251, 188, 4, 0.25))
-         drop-shadow(0 0 55px rgba(52, 168, 83, 0.2));
-}
-
-/* Pulsing Badge Glow */
-@keyframes badgeGlow {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(26, 115, 232, 0.4);
-  }
-  50% {
-    box-shadow: 0 0 0 8px rgba(26, 115, 232, 0);
-  }
-}
-
-.animate-badge-glow {
-  animation: badgeGlow 2s infinite;
+  background: #FFFFFF;
+  border: 1px solid #DADCE0;
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.06);
 }
 
 /* =========================================================================
-   UIVERSE.IO ANIMATED LOCK TOGGLE (by mobinkakei)
+   PRECISION SHARP LOCK TOGGLE (No rounded corners, clean geometric badge)
    ========================================================================= */
 
 .btn-lock {
@@ -321,27 +206,27 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #ff5b5b;
-  width: 64px;
-  height: 64px;
+  background: #EA4335;
+  width: 54px;
+  height: 54px;
   box-sizing: border-box;
   padding: 0;
   margin: 0;
-  border-radius: 50%;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: background 0.35s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
-  box-shadow: 0 6px 20px -2px rgba(255, 91, 91, 0.45);
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px -1px rgba(234, 67, 53, 0.35);
   user-select: none;
+  border: 1px solid rgba(234, 67, 53, 0.5);
 }
 
 .btn-lock:hover {
-  transform: scale(1.06);
-  box-shadow: 0 8px 25px -2px rgba(255, 91, 91, 0.6);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -2px rgba(234, 67, 53, 0.5);
 }
 
 .btn-lock:active {
-  transform: scale(0.94);
+  transform: translateY(1px);
 }
 
 .btn-lock.btn-lock-readonly {
@@ -351,13 +236,12 @@ body {
 
 .btn-lock svg {
   fill: none;
-  transform: translate3d(0, 0, 0);
 }
 
 .btn-lock svg .bling {
   stroke: #fff;
   stroke-width: 2.5;
-  stroke-linecap: round;
+  stroke-linecap: square;
   stroke-dasharray: 3;
   stroke-dashoffset: 15;
   transition: all 0.3s ease;
@@ -365,18 +249,18 @@ body {
 
 .btn-lock svg .lock {
   stroke: #fff;
-  stroke-width: 4;
-  stroke-linejoin: round;
-  stroke-linecap: round;
+  stroke-width: 3.5;
+  stroke-linejoin: miter;
+  stroke-linecap: square;
   stroke-dasharray: 36;
-  transition: all 0.4s ease;
+  transition: all 0.3s ease;
 }
 
 .btn-lock svg .lockb {
   fill: #fff;
   fill-rule: evenodd;
   clip-rule: evenodd;
-  transform: rotate(8deg);
+  transform: rotate(6deg);
   transform-origin: 14px 20px;
   transition: all 0.2s ease;
 }
@@ -388,57 +272,43 @@ body {
 
 #inpLock:checked + label,
 .inp-lock:checked + .btn-lock {
-  background: #20cca5;
-  box-shadow: 0 6px 20px -2px rgba(32, 204, 165, 0.5);
+  background: #1E8E3E;
+  border-color: rgba(30, 142, 62, 0.5);
+  box-shadow: 0 2px 8px -1px rgba(30, 142, 62, 0.35);
 }
 
 #inpLock:checked + label:hover,
 .inp-lock:checked + .btn-lock:hover {
-  box-shadow: 0 8px 25px -2px rgba(32, 204, 165, 0.65);
-}
-
-#inpLock:checked + label svg,
-.inp-lock:checked + .btn-lock svg {
-  opacity: 1;
+  box-shadow: 0 4px 12px -2px rgba(30, 142, 62, 0.5);
 }
 
 #inpLock:checked + label svg .bling,
 .inp-lock:checked + .btn-lock svg .bling {
   animation: bling6132 0.3s linear forwards;
-  animation-delay: 0.2s;
+  animation-delay: 0.15s;
 }
 
 #inpLock:checked + label svg .lock,
 .inp-lock:checked + .btn-lock svg .lock {
   stroke-dasharray: 48;
-  animation: locked 0.3s linear forwards;
+  animation: locked 0.25s linear forwards;
 }
 
 #inpLock:checked + label svg .lockb,
 .inp-lock:checked + .btn-lock svg .lockb {
   transform: rotate(0);
-  transform-origin: 14px 22px;
 }
 
 @keyframes bling6132 {
-  50% {
-    stroke-dasharray: 3;
-    stroke-dashoffset: 12;
-  }
-
-  100% {
-    stroke-dasharray: 3;
-    stroke-dashoffset: 9;
-  }
+  50% { stroke-dasharray: 3; stroke-dashoffset: 12; }
+  100% { stroke-dasharray: 3; stroke-dashoffset: 9; }
 }
 
 @keyframes locked {
-  50% {
-    transform: translateY(1px);
-  }
+  50% { transform: translateY(1px); }
 }
 
-/* Mobile Touch Isolation for Touch Games */
+/* Mobile Touch Isolation */
 .touch-arena {
   touch-action: none;
   -webkit-touch-callout: none;
@@ -447,18 +317,13 @@ body {
   overscroll-behavior: contain;
 }
 
-
 /* =========================================================================
-   ANTI-COPY & TOUCH SELECTION SUPPRESSION FOR GAMES & INTERACTIVE HUBS
+   ANTI-COPY & SUPPRESSION
    ========================================================================= */
 
 *,
 *::before,
 *::after {
-  -webkit-touch-callout: none;
-}
-
-body {
   -webkit-touch-callout: none;
 }
 
@@ -471,124 +336,12 @@ nav,
 svg {
   -webkit-touch-callout: none !important;
   -webkit-user-select: none !important;
-  -khtml-user-select: none !important;
   -moz-user-select: none !important;
   -ms-user-select: none !important;
   user-select: none !important;
-  -webkit-user-drag: none !important;
 }
 
-/* Suppress browser native selection highlight rectangles & drag handles */
 ::selection {
   background: transparent;
   color: inherit;
-}
-::-moz-selection {
-  background: transparent;
-  color: inherit;
-}
-
-/* =========================================================================
-   AESTHETIC & SEXY GOOGLE THEME ANIMATED BACKGROUND MESH & GRID
-   ========================================================================= */
-
-@keyframes googleMeshFloat1 {
-  0%, 100% {
-    transform: translate(0px, 0px) scale(1) rotate(0deg);
-  }
-  33% {
-    transform: translate(80px, -60px) scale(1.18) rotate(10deg);
-  }
-  66% {
-    transform: translate(-50px, 40px) scale(0.88) rotate(-8deg);
-  }
-}
-
-@keyframes googleMeshFloat2 {
-  0%, 100% {
-    transform: translate(0px, 0px) scale(1) rotate(0deg);
-  }
-  33% {
-    transform: translate(-70px, 60px) scale(1.12) rotate(-12deg);
-  }
-  66% {
-    transform: translate(50px, -40px) scale(0.92) rotate(8deg);
-  }
-}
-
-@keyframes googleMeshFloat3 {
-  0%, 100% {
-    transform: translate(0px, 0px) scale(1) rotate(0deg);
-  }
-  50% {
-    transform: translate(60px, 50px) scale(1.15) rotate(15deg);
-  }
-}
-
-@keyframes googleMeshFloat4 {
-  0%, 100% {
-    transform: translate(0px, 0px) scale(1) rotate(0deg);
-  }
-  50% {
-    transform: translate(-70px, -40px) scale(1.1) rotate(-10deg);
-  }
-}
-
-@keyframes googleGlowPulse {
-  0%, 100% {
-    opacity: 0.65;
-    filter: drop-shadow(0 0 16px rgba(66, 133, 244, 0.25));
-  }
-  50% {
-    opacity: 0.95;
-    filter: drop-shadow(0 0 28px rgba(66, 133, 244, 0.45));
-  }
-}
-
-.animate-mesh-1 {
-  animation: googleMeshFloat1 20s ease-in-out infinite;
-  will-change: transform;
-}
-.animate-mesh-2 {
-  animation: googleMeshFloat2 24s ease-in-out infinite;
-  will-change: transform;
-}
-.animate-mesh-3 {
-  animation: googleMeshFloat3 22s ease-in-out infinite;
-  will-change: transform;
-}
-.animate-mesh-4 {
-  animation: googleMeshFloat4 26s ease-in-out infinite;
-  will-change: transform;
-}
-.animate-glow-pulse {
-  animation: googleGlowPulse 4s ease-in-out infinite;
-}
-
-/* Subtle Google Developer Grid Overlay */
-.bg-google-grid {
-  background-image: 
-    radial-gradient(rgba(66, 133, 244, 0.14) 1.25px, transparent 1.25px), 
-    radial-gradient(rgba(234, 67, 53, 0.09) 1.25px, transparent 1.25px);
-  background-size: 32px 32px;
-  background-position: 0 0, 16px 16px;
-}
-
-/* Frosted Glass Specular Highlight Card */
-.google-card-specular {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 
-    0 4px 6px -1px rgba(0, 0, 0, 0.02),
-    0 12px 32px -4px rgba(66, 133, 244, 0.08),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.95);
-}
-
-.google-card-specular:hover {
-  box-shadow: 
-    0 10px 15px -3px rgba(0, 0, 0, 0.03),
-    0 24px 48px -6px rgba(66, 133, 244, 0.14),
-    inset 0 1px 0 0 rgba(255, 255, 255, 1);
 }

@@ -231,24 +231,6 @@ export function DualQuizSection({
       ? 'bg-[#F97316]/15 animate-mesh-3'
       : 'bg-[#06B6D4]/15 animate-mesh-3'
 
-    const cardHoverGlow = isWeb
-      ? 'hover:shadow-[0_24px_55px_-12px_rgba(66,133,244,0.22)] hover:border-[#4285F4]/40'
-      : isMentis
-      ? 'hover:shadow-[0_24px_55px_-12px_rgba(251,188,4,0.25)] hover:border-[#FBBC04]/40'
-      : 'hover:shadow-[0_24px_55px_-12px_rgba(52,168,83,0.22)] hover:border-[#34A853]/40'
-
-    const btnGradient = isWeb
-      ? 'from-[#1A73E8] via-[#1765CC] to-[#1557B0]'
-      : isMentis
-      ? 'from-[#EA4335] via-[#D93025] to-[#B06000]'
-      : 'from-[#1E8E3E] via-[#34A853] to-[#137333]'
-
-    const btnShadow = isWeb
-      ? 'shadow-[#1A73E8]/25 hover:shadow-[#1A73E8]/40'
-      : isMentis
-      ? 'shadow-[#EA4335]/25 hover:shadow-[#EA4335]/40'
-      : 'shadow-[#34A853]/25 hover:shadow-[#34A853]/40'
-
     // Live question / word count for specs chip
     const activeQuestionsCount =
       type === 'wend'
@@ -282,198 +264,175 @@ export function DualQuizSection({
     return (
       <div
         onClick={handleCardClick}
-        className={`group relative flex flex-col justify-between overflow-hidden rounded-[34px] sm:rounded-[38px] border transition-all duration-500 backdrop-blur-2xl p-6 sm:p-7 cursor-pointer ${
+        className={`group relative flex flex-col justify-between overflow-hidden border transition-all duration-300 p-6 sm:p-7 cursor-pointer bg-white ${
           isLive
-            ? 'border-white/90 bg-white/85 shadow-[0_16px_40px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] hover:-translate-y-1.5 ' +
-              cardHoverGlow
-            : 'border-white/70 bg-white/75 shadow-xs hover:border-[#DADCE0] hover:shadow-md'
-        } ${isAdmin ? 'hover:ring-2 hover:ring-[#1A73E8]/30' : ''}`}
+            ? 'border-[#34A853] shadow-xs hover:shadow-md hover:border-[#1A73E8]'
+            : 'border-[#DADCE0] hover:border-[#1A73E8] hover:shadow-xs'
+        } ${isAdmin ? 'hover:ring-1 hover:ring-[#1A73E8]' : ''}`}
         title={isAdmin ? 'Click to open Game in Admin Panel' : isLive ? 'Click to play' : 'Challenge Locked'}
       >
         {/* ======================================================== */}
-        {/* BACKGROUND ANIMATIONS: LIVING MULTI-ORB AURORA & GRID   */}
+        {/* AESTHETIC CSS BACKGROUND ANIMATION: AMBIENT AURORA & GRID */}
         {/* ======================================================== */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[34px] sm:rounded-[38px] -z-0">
-          {/* Animated floating color orbs */}
-          <div className={`absolute -top-16 -right-16 h-56 w-56 rounded-full blur-3xl opacity-35 transition-colors duration-700 ${meshOrb1}`} />
-          <div className={`absolute top-1/2 -left-16 h-52 w-52 rounded-full blur-3xl opacity-30 transition-colors duration-700 ${meshOrb2}`} />
-          <div className={`absolute -bottom-16 right-1/4 h-48 w-48 rounded-full blur-3xl opacity-25 transition-colors duration-700 ${meshOrb3}`} />
-
-          {/* Subtle Google Developer Grid pattern */}
-          <div className="absolute inset-0 bg-google-grid opacity-25" />
-
-          {/* Diagonal Glass Sheen Sweep on hover */}
-          <div className="absolute -inset-full bg-gradient-to-r from-transparent via-white/25 to-transparent -rotate-45 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
+        <div className="pointer-events-none absolute inset-0 overflow-hidden -z-0">
+          <div className={`absolute -top-16 -right-16 h-56 w-56 blur-3xl opacity-20 transition-colors duration-700 ${meshOrb1}`} />
+          <div className={`absolute top-1/2 -left-16 h-52 w-52 blur-3xl opacity-20 transition-colors duration-700 ${meshOrb2}`} />
+          <div className={`absolute -bottom-16 right-1/4 h-48 w-48 blur-3xl opacity-15 transition-colors duration-700 ${meshOrb3}`} />
+          <div className="absolute inset-0 bg-tech-grid opacity-30" />
         </div>
 
-        {/* Top Google Signature Stripe per Track */}
-        <div className={`absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r ${trackRibbonGradient}`} />
+        {/* Top Sharp Google Accent Line */}
+        <div className={`absolute top-0 inset-x-0 h-1 bg-gradient-to-r ${trackRibbonGradient}`} />
 
         <div className="relative z-10 flex flex-col gap-4">
-          {/* Header Row: Track Badge + Full Studio Button (Admin) + Interactive Lock Status Switch */}
+          {/* Header Row: Track Badge + Studio Button (Admin) + Live Status */}
           <div className="flex items-center justify-between">
             <span
-              className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-bold shadow-2xs backdrop-blur-md transition-all ${accentBg}`}
+              className={`inline-flex items-center gap-1.5 border px-2.5 py-1 font-mono text-xs font-bold tracking-wider ${accentBg}`}
             >
               {icon}
-              <span>{trackLabel}</span>
+              <span>{trackLabel.toUpperCase()}</span>
             </span>
 
-            <div className="flex items-center gap-2">
-              {/* Dedicated Full Studio Button for Host/Admin */}
+            <div className="flex items-center gap-1.5">
+              {/* Dedicated Studio Button for Host/Admin */}
               {isAdmin && (
                 <Link
                   href={adminPanelHref}
                   onClick={(e) => e.stopPropagation()}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-[#1A73E8]/40 bg-white/95 px-3 py-1 text-xs font-bold text-[#1967D2] shadow-xs hover:bg-[#E8F0FE] hover:border-[#1A73E8] hover:scale-105 active:scale-95 transition-all cursor-pointer backdrop-blur-md"
+                  className="inline-flex items-center gap-1 border border-[#1A73E8] bg-white px-2.5 py-1 font-mono text-[11px] font-bold text-[#1967D2] shadow-2xs hover:bg-[#1A73E8] hover:text-white transition-all cursor-pointer"
                   title="Open Full Game Studio in Admin Command Center"
                 >
-                  <Maximize2 className="h-3.5 w-3.5 text-[#1967D2]" />
-                  <span>Studio</span>
+                  <Maximize2 className="h-3 w-3" />
+                  <span>STUDIO</span>
                 </Link>
               )}
 
               {/* Live Now / Locked Pill Indicator */}
               <span
-                className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold shadow-2xs backdrop-blur-md transition-all ${
+                className={`inline-flex items-center gap-1.5 border px-2.5 py-1 font-mono text-[11px] font-bold transition-all ${
                   isLive
-                    ? 'bg-[#E6F4EA]/90 text-[#137333] border border-[#34A853]/40'
-                    : 'bg-[#F1F3F4]/90 text-[#5F6368] border border-[#DADCE0]'
+                    ? 'bg-[#E6F4EA] text-[#137333] border-[#34A853]'
+                    : 'bg-[#F1F3F4] text-[#5F6368] border-[#DADCE0]'
                 }`}
               >
                 {isLive ? (
                   <>
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#34A853] opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-[#34A853]" />
-                    </span>
-                    <span>Live Now</span>
-                    <span className="ml-0.5 inline-flex h-4 w-7 items-center rounded-full bg-[#34A853] px-0.5 transition-colors">
-                      <span className="h-3 w-3 translate-x-3 rounded-full bg-white shadow-xs transition-transform" />
-                    </span>
+                    <span className="h-2 w-2 bg-[#34A853] animate-pulse" />
+                    <span>LIVE NOW</span>
                   </>
                 ) : (
                   <>
                     <Lock className="h-3 w-3 text-[#5F6368]" />
-                    <span>Locked</span>
-                    <span className="ml-0.5 inline-flex h-4 w-7 items-center rounded-full bg-[#BDC1C6] px-0.5 transition-colors">
-                      <span className="h-3 w-3 translate-x-0 rounded-full bg-white shadow-xs transition-transform" />
-                    </span>
+                    <span>LOCKED</span>
                   </>
                 )}
               </span>
             </div>
           </div>
 
-          {/* Centered Animated Lock Toggle with Glowing Halo & Concentric Waves */}
-          <div className="relative my-2 flex items-center justify-center select-none">
-            {/* Ambient dynamic radial halo behind lock */}
-            <div
-              className={`absolute h-36 w-36 rounded-full blur-2xl transition-all duration-700 pointer-events-none ${
+          {/* Centered Structured Geometric Status Block */}
+          <div className="my-1 flex items-center justify-between border border-[#DADCE0] bg-[#F8F9FA] p-3">
+            <div className="flex items-center gap-3">
+              <div className={`flex h-11 w-11 shrink-0 items-center justify-center border font-mono ${
                 isLive
-                  ? 'bg-gradient-to-tr from-[#34A853]/30 via-[#4285F4]/25 to-[#34A853]/30 animate-glow-pulse'
-                  : 'bg-gradient-to-tr from-[#EA4335]/25 via-[#FBBC04]/20 to-[#EA4335]/25 animate-glow-pulse'
-              }`}
-            />
+                  ? 'border-[#34A853] bg-[#1E8E3E] text-white'
+                  : 'border-[#EA4335] bg-[#D93025] text-white'
+              }`}>
+                {isLive ? <Unlock className="h-5 w-5" /> : <Lock className="h-5 w-5" />}
+              </div>
+              <div className="text-left">
+                <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#5F6368]">
+                  {isLive ? 'ARENA STATUS: LIVE & READY' : 'ARENA STATUS: LOCKED'}
+                </p>
+                <p className="text-xs font-bold text-[#202124]">
+                  {isLive ? 'Tap button below to enter battle' : 'Locked by chapter hosts'}
+                </p>
+              </div>
+            </div>
 
-            {/* Concentric radar wave rings */}
-            <div
-              className={`absolute h-28 w-28 rounded-full border border-dashed pointer-events-none animate-ripple-1 ${
-                isLive ? 'border-[#34A853]/30' : 'border-[#EA4335]/25'
-              }`}
-            />
-            <div
-              className={`absolute h-32 w-32 rounded-full border pointer-events-none animate-ripple-2 ${
-                isLive ? 'border-[#4285F4]/20' : 'border-[#FBBC04]/20'
-              }`}
-            />
-
-            {/* Frosted circular pedestal for the lock */}
-            <div
-              onClick={(e) => {
-                if (isAdmin) {
+            {isAdmin && (
+              <button
+                type="button"
+                disabled={isUpdating}
+                onClick={(e) => {
                   e.stopPropagation()
                   toggleEventLock(event, isLive, setEvent)
-                }
-              }}
-              className="relative flex items-center justify-center rounded-full p-2.5 bg-white/80 backdrop-blur-xl border border-white/90 shadow-[0_8px_24px_rgba(0,0,0,0.06)] ring-6 ring-white/50 hover:scale-105 active:scale-95 transition-all cursor-pointer"
-              title={isAdmin ? 'Click lock to toggle live status' : undefined}
-            >
-              <AnimatedLockToggle
-                id={`lock-toggle-${event.slug}`}
-                checked={isLive}
-                isAdmin={isAdmin}
-                disabled={isUpdating}
-                onChange={() => toggleEventLock(event, isLive, setEvent)}
-                size="lg"
-              />
-            </div>
+                }}
+                className={`px-3 py-1 font-mono text-xs font-bold border transition-all cursor-pointer ${
+                  isLive
+                    ? 'border-[#EA4335] bg-white text-[#EA4335] hover:bg-[#EA4335] hover:text-white'
+                    : 'border-[#34A853] bg-white text-[#34A853] hover:bg-[#34A853] hover:text-white'
+                }`}
+              >
+                {isLive ? 'LOCK' : 'GO LIVE'}
+              </button>
+            )}
           </div>
 
           {/* Title & Description */}
-          <div className="flex flex-col gap-1.5 text-center sm:text-left">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-              <h3 className="text-xl sm:text-2xl font-black text-[#1F1F1F] tracking-tight group-hover:text-[#1A73E8] transition-colors leading-snug">
+          <div className="flex flex-col gap-1.5 text-left">
+            <div className="flex items-center justify-between gap-1">
+              <h3 className="text-lg sm:text-xl font-extrabold text-[#202124] tracking-tight group-hover:text-[#1A73E8] transition-colors leading-snug">
                 {event.title}
               </h3>
               {isAdmin && (
-                <span className="text-[11px] font-bold text-[#1A73E8] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center sm:justify-end gap-1 shrink-0">
-                  <span>Edit in Panel</span>
+                <span className="font-mono text-[11px] font-bold text-[#1A73E8] flex items-center gap-1 shrink-0">
+                  <span>EDIT</span>
                   <ExternalLink className="h-3 w-3" />
                 </span>
               )}
             </div>
-            <p className="text-xs sm:text-[13px] text-[#5F6368] leading-relaxed line-clamp-2 max-w-sm">
+            <p className="text-xs text-[#5F6368] leading-relaxed line-clamp-2">
               {event.description}
             </p>
           </div>
 
-          {/* Live Specs Frosted Capsule */}
-          <div className="flex items-center justify-center sm:justify-start gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/85 px-3.5 py-1 text-[11px] font-bold text-[#3C4043] shadow-2xs backdrop-blur-md">
-              <span className="flex items-center gap-1 mr-0.5" aria-hidden="true">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#EA4335]" />
-                <span className="h-1.5 w-1.5 rounded-full bg-[#FBBC04]" />
-                <span className="h-1.5 w-1.5 rounded-full bg-[#34A853]" />
-                <span className="h-1.5 w-1.5 rounded-full bg-[#4285F4]" />
-              </span>
+          {/* Live Specs Structured Chip */}
+          <div className="flex items-center justify-start gap-2">
+            <span className="inline-flex items-center gap-1.5 border border-[#DADCE0] bg-[#F8F9FA] px-3 py-1 font-mono text-[11px] font-bold text-[#3C4043]">
+              <Sparkles className="h-3 w-3 text-[#FBBC04]" />
               <span>{specsBadge}</span>
             </span>
           </div>
 
           {/* Primary Action Button Deck (Enter Game + Leaderboard Podium Shortcut) */}
-          <div onClick={(e) => e.stopPropagation()} className="pt-2 flex items-center gap-2.5">
+          <div onClick={(e) => e.stopPropagation()} className="pt-2 flex items-center gap-2">
             {isLive ? (
               <Link
                 href={targetHref}
                 onClick={() => {
                   void soundManager.unlock()
                 }}
-                className={`relative flex h-13 sm:h-14 flex-1 items-center justify-center gap-2.5 rounded-2xl sm:rounded-[22px] bg-gradient-to-r ${btnGradient} text-sm sm:text-base font-extrabold text-white shadow-lg ${btnShadow} hover:brightness-105 active:scale-[0.98] transition-all overflow-hidden group/btn`}
+                className={`relative flex h-12 flex-1 items-center justify-center gap-2 font-mono text-xs sm:text-sm font-extrabold uppercase tracking-wider text-white border transition-all active:translate-y-0.5 shadow-xs overflow-hidden ${
+                  isWeb
+                    ? 'border-[#1765CC] bg-[#1A73E8] hover:bg-[#1557B0]'
+                    : isMentis
+                    ? 'border-[#B06000] bg-[#EA4335] hover:bg-[#D93025]'
+                    : 'border-[#137333] bg-[#1E8E3E] hover:bg-[#137333]'
+                }`}
               >
-                {/* Button top gloss highlight */}
-                <div className="absolute top-0 inset-x-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent pointer-events-none" />
                 <span>{buttonText}</span>
-                <ArrowRight className="h-4 w-4 sm:h-4.5 sm:w-4.5 group-hover/btn:translate-x-1.5 transition-transform" />
+                <ArrowRight className="h-4 w-4" />
               </Link>
             ) : (
               <button
                 type="button"
                 disabled
-                className="flex h-13 sm:h-14 flex-1 items-center justify-center gap-2 rounded-2xl sm:rounded-[22px] border border-[#DADCE0] bg-[#F1F3F4]/90 text-xs sm:text-sm font-bold text-[#80868B] cursor-not-allowed shadow-2xs backdrop-blur-md"
+                className="flex h-12 flex-1 items-center justify-center gap-2 border border-[#DADCE0] bg-[#F1F3F4] font-mono text-xs font-bold uppercase tracking-wider text-[#80868B] cursor-not-allowed"
               >
                 <Lock className="h-4 w-4" />
-                <span>Challenge Locked by Host</span>
+                <span>CHALLENGE LOCKED BY HOST</span>
               </button>
             )}
 
             {/* Golden Trophy Leaderboard Podium Shortcut */}
             <Link
               href={leaderboardHref}
-              className="relative flex h-13 w-13 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-2xl sm:rounded-[22px] border border-[#FBBC04]/50 bg-gradient-to-b from-[#FFFDF5] to-[#FEF7E0] text-[#B06000] hover:bg-[#FEF0C7] hover:border-[#FBBC04] hover:scale-105 active:scale-95 transition-all shadow-xs group/trophy"
+              className="relative flex h-12 w-12 shrink-0 items-center justify-center border border-[#FBBC04] bg-[#FEF7E0] text-[#B06000] hover:bg-[#FBBC04] hover:text-[#202124] transition-all shadow-xs"
               title="View live standings & victory podium"
             >
-              <Trophy className="h-5 w-5 sm:h-6 sm:w-6 text-[#FBBC04] drop-shadow-sm group-hover/trophy:scale-110 group-hover/trophy:rotate-6 transition-transform" />
+              <Trophy className="h-5 w-5 text-[#FBBC04] drop-shadow-sm" />
             </Link>
           </div>
 
@@ -481,20 +440,20 @@ export function DualQuizSection({
           {isAdmin && (
             <div
               onClick={(e) => e.stopPropagation()}
-              className="mt-3 pt-3.5 border-t border-[#DADCE0]/60 flex flex-col gap-2.5"
+              className="mt-2 pt-3 border-t border-[#DADCE0] flex flex-col gap-2"
             >
               <div className="flex items-center justify-between text-xs">
-                <span className="text-[#3C4043] font-bold flex items-center gap-1.5">
-                  <Sliders className="h-3.5 w-3.5 text-[#1A73E8]" />
+                <span className="text-[#3C4043] font-mono font-bold flex items-center gap-1.5 uppercase text-[11px]">
+                  <Sliders className="h-3 w-3 text-[#1A73E8]" />
                   <span>Host Realtime Controls</span>
                 </span>
                 <Link
                   href={adminPanelHref}
-                  className="text-[11px] font-bold text-[#1A73E8] hover:underline flex items-center gap-1.5 group/link"
+                  className="font-mono text-[11px] font-bold text-[#1A73E8] hover:underline flex items-center gap-1"
                 >
                   <Maximize2 className="h-3 w-3" />
-                  <span>Open Full Studio</span>
-                  <span className="group-hover/link:translate-x-0.5 transition-transform">➔</span>
+                  <span>Studio</span>
+                  <span>➔</span>
                 </Link>
               </div>
 
@@ -503,10 +462,10 @@ export function DualQuizSection({
                   type="button"
                   disabled={isUpdating}
                   onClick={() => toggleEventLock(event, isLive, setEvent)}
-                  className={`flex items-center justify-center gap-2 rounded-2xl py-2.5 px-3 text-xs font-bold border transition-all cursor-pointer active:scale-95 shadow-2xs ${
+                  className={`flex items-center justify-center gap-1.5 py-2 px-3 font-mono text-xs font-bold uppercase tracking-wider border transition-all cursor-pointer active:translate-y-0.5 shadow-2xs ${
                     isLive
-                      ? 'border-[#EA4335]/30 bg-[#FCE8E6] text-[#C5221F] hover:bg-[#FAD2CF]'
-                      : 'border-[#34A853]/30 bg-[#E6F4EA] text-[#137333] hover:bg-[#CEEAD6]'
+                      ? 'border-[#B31412] bg-[#FCE8E6] text-[#C5221F] hover:bg-[#FAD2CF]'
+                      : 'border-[#137333] bg-[#E6F4EA] text-[#137333] hover:bg-[#CEEAD6]'
                   }`}
                 >
                   {isLive ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
@@ -516,11 +475,11 @@ export function DualQuizSection({
                 <button
                   type="button"
                   onClick={() => handleOpenBroadcastReview(event.slug, event.title)}
-                  className="flex items-center justify-center gap-2 rounded-2xl bg-[#FEF7E0] border border-[#FBBC04]/50 py-2.5 px-3 text-xs font-bold text-[#B06000] hover:bg-[#FEEFC3] active:scale-95 transition-all shadow-2xs cursor-pointer"
-                  title="Review leaderboard, delete invalid participants, and broadcast winners ceremony"
+                  className="flex items-center justify-center gap-1.5 bg-[#FEF7E0] border border-[#FBBC04] py-2 px-3 font-mono text-xs font-bold text-[#B06000] uppercase tracking-wider hover:bg-[#FBBC04] hover:text-[#202124] active:translate-y-0.5 transition-all shadow-2xs cursor-pointer"
+                  title="Review leaderboard and broadcast ceremony"
                 >
                   <Trophy className="h-3.5 w-3.5 text-[#FBBC04]" />
-                  <span>Broadcast Winner</span>
+                  <span>Broadcast</span>
                 </button>
               </div>
             </div>
@@ -550,21 +509,21 @@ export function DualQuizSection({
       {/* Section Header */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white shadow-2xs border border-white/80">
+          <div className="flex h-8 w-8 items-center justify-center bg-white shadow-2xs border border-[#DADCE0]">
             <span className="flex items-center gap-1" aria-hidden="true">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#4285F4]" />
-              <span className="h-1.5 w-1.5 rounded-full bg-[#EA4335]" />
-              <span className="h-1.5 w-1.5 rounded-full bg-[#FBBC04]" />
-              <span className="h-1.5 w-1.5 rounded-full bg-[#34A853]" />
+              <span className="h-1.5 w-1.5 bg-[#4285F4]" />
+              <span className="h-1.5 w-1.5 bg-[#EA4335]" />
+              <span className="h-1.5 w-1.5 bg-[#FBBC04]" />
+              <span className="h-1.5 w-1.5 bg-[#34A853]" />
             </span>
           </div>
-          <h2 className="text-[20px] font-black tracking-tight text-[#202124]">
-            Games & Live Arenas
+          <h2 className="text-[19px] font-extrabold tracking-tight text-[#202124] uppercase font-mono">
+            LIVE CHALLENGE ARENAS
           </h2>
         </div>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 border border-white/90 px-3 py-1 text-[11px] font-bold text-[#1967D2] shadow-2xs backdrop-blur-md">
-          <span className="h-2 w-2 rounded-full bg-[#34A853] animate-ping" />
-          <span>Ready to Play</span>
+        <span className="inline-flex items-center gap-1.5 bg-white border border-[#34A853] px-2.5 py-1 font-mono text-[11px] font-bold text-[#137333] shadow-2xs">
+          <span className="h-2 w-2 bg-[#34A853] animate-pulse" />
+          <span>REALTIME SYNC</span>
         </span>
       </div>
 

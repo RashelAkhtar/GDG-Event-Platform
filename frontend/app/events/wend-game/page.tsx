@@ -506,10 +506,10 @@ export default function WendGamePage() {
         <div className="w-full flex items-center justify-between mb-2 gap-2">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/70 px-3.5 py-1 text-xs font-semibold text-[#5F6368] shadow-2xs backdrop-blur-md hover:bg-white hover:text-[#202124] transition-all"
+            className="inline-flex items-center gap-1.5 border border-[#DADCE0] bg-white px-3 py-1 font-mono text-xs font-bold text-[#5F6368] shadow-2xs hover:bg-[#F8F9FA] hover:text-[#202124] transition-all cursor-pointer"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            <span>All Challenges</span>
+            <span>ALL CHALLENGES</span>
           </Link>
 
           <div className="flex items-center gap-2">
@@ -517,33 +517,33 @@ export default function WendGamePage() {
             {/* Live Admin-Configured Countdown Timer */}
             {!completedSession && (
               <div
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold shadow-2xs backdrop-blur-md transition-all ${
+                className={`inline-flex items-center gap-1.5 border px-3 py-1 font-mono text-xs font-bold shadow-2xs transition-all ${
                   timeLeft <= 15
-                    ? 'bg-[#FCE8E6] border border-[#EA4335]/50 text-[#C5221F] animate-pulse'
+                    ? 'bg-[#FCE8E6] border-[#EA4335] text-[#C5221F]'
                     : timeLeft <= allocatedTimeSeconds * 0.4
-                    ? 'bg-[#FEF7E0] border border-[#FBBC04]/50 text-[#B06000]'
-                    : 'bg-white/90 border border-[#1A73E8]/30 text-[#1967D2]'
+                    ? 'bg-[#FEF7E0] border-[#FBBC04] text-[#B06000]'
+                    : 'bg-white border-[#1A73E8] text-[#1967D2]'
                 }`}
                 title={`Round Time Limit set by Host: ${allocatedTimeSeconds}s`}
               >
-                <Clock className={`h-3.5 w-3.5 ${timeLeft <= 15 ? 'animate-bounce text-[#EA4335]' : 'text-[#1A73E8]'}`} />
+                <Clock className={`h-3.5 w-3.5 ${timeLeft <= 15 ? 'text-[#EA4335]' : 'text-[#1A73E8]'}`} />
                 <span className="font-mono">{formatTimer(timeLeft)}</span>
                 <span className="hidden sm:inline text-[10px] opacity-75">/ {allocatedTimeSeconds}s</span>
               </div>
             )}
 
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-[#137333] border border-[#34A853]/30 shadow-2xs backdrop-blur-md">
-              <span className="h-2 w-2 rounded-full bg-[#34A853] animate-pulse" />
-              <span>{foundWordIds.size} / {board.targetWords.length} Words</span>
+            <span className="inline-flex items-center gap-1.5 bg-white px-3 py-1 font-mono text-xs font-bold text-[#137333] border border-[#34A853] shadow-2xs">
+              <span className="h-2 w-2 bg-[#34A853] animate-pulse" />
+              <span>{foundWordIds.size} / {board.targetWords.length} WORDS</span>
             </span>
           </div>
         </div>
 
         {/* Live Countdown Progress Bar (Reflecting admin-configured time) */}
         {!completedSession && !isLocked && (
-          <div className="w-full h-1.5 bg-[#E8EAED] rounded-full overflow-hidden mb-3">
+          <div className="w-full h-1 bg-[#E8EAED] overflow-hidden mb-3">
             <div
-              className={`h-full transition-all duration-1000 rounded-full ${
+              className={`h-full transition-all duration-1000 ${
                 timeLeft <= 15
                   ? 'bg-[#EA4335]'
                   : timeLeft <= allocatedTimeSeconds * 0.4

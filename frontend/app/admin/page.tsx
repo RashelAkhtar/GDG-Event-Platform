@@ -55,7 +55,6 @@ import {
   Eye,
   EyeOff,
 } from 'lucide-react'
-import { AnimatedLockToggle } from '@/components/ui/AnimatedLockToggle'
 import { SecurityNotificationBell } from '@/components/security/SecurityNotificationBell'
 
 function formatDuration(ms: number): string {
@@ -778,22 +777,22 @@ function AdminPageContent() {
           </div>
         )}
 
-        {/* Floating Segmented Control Bar with Google Theme & Active Glow */}
-        <div className="mb-6 p-1.5 rounded-2xl border border-[#DADCE0]/80 bg-white/80 backdrop-blur-xl shadow-xs">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+        {/* Structured Segmented Control Bar (Zero Border Radius, High-Precision Tabs) */}
+        <div className="mb-6 border border-[#DADCE0] bg-white p-1 shadow-xs">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1">
             <button
               type="button"
               onClick={() => navigateToPanel('locks')}
-              className={`group flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 text-xs font-bold transition-all duration-200 cursor-pointer ${
+              className={`group flex items-center justify-center gap-2 py-2.5 px-3 font-mono text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                 activeTab === 'locks'
-                  ? 'bg-gradient-to-r from-[#1A73E8] to-[#1557B0] text-white shadow-md shadow-[#1A73E8]/25 scale-[1.01]'
-                  : 'text-[#5F6368] hover:text-[#202124] hover:bg-[#F1F3F4]/80'
+                  ? 'bg-[#1A73E8] text-white shadow-xs'
+                  : 'text-[#5F6368] hover:text-[#202124] hover:bg-[#F1F3F4]'
               }`}
             >
-              <span className={`flex h-5 w-5 items-center justify-center rounded-lg text-[10px] font-black transition-colors ${
+              <span className={`flex h-4.5 w-4.5 items-center justify-center font-mono text-[10px] font-black ${
                 activeTab === 'locks' ? 'bg-white/20 text-white' : 'bg-[#E8F0FE] text-[#1967D2]'
               }`}>
-                1
+                01
               </span>
               <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />
               <span className="truncate">Div Locks & Arenas</span>
@@ -802,16 +801,16 @@ function AdminPageContent() {
             <button
               type="button"
               onClick={() => navigateToPanel('quiz', selectedSlug)}
-              className={`group flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 text-xs font-bold transition-all duration-200 cursor-pointer ${
+              className={`group flex items-center justify-center gap-2 py-2.5 px-3 font-mono text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                 activeTab === 'quiz'
-                  ? 'bg-gradient-to-r from-[#1E8E3E] to-[#137333] text-white shadow-md shadow-[#34A853]/25 scale-[1.01]'
-                  : 'text-[#5F6368] hover:text-[#202124] hover:bg-[#F1F3F4]/80'
+                  ? 'bg-[#1E8E3E] text-white shadow-xs'
+                  : 'text-[#5F6368] hover:text-[#202124] hover:bg-[#F1F3F4]'
               }`}
             >
-              <span className={`flex h-5 w-5 items-center justify-center rounded-lg text-[10px] font-black transition-colors ${
+              <span className={`flex h-4.5 w-4.5 items-center justify-center font-mono text-[10px] font-black ${
                 activeTab === 'quiz' ? 'bg-white/20 text-white' : 'bg-[#E6F4EA] text-[#137333]'
               }`}>
-                2
+                02
               </span>
               <ListOrdered className="h-3.5 w-3.5 shrink-0" />
               <span className="truncate">Quiz & Questions</span>
@@ -820,16 +819,16 @@ function AdminPageContent() {
             <button
               type="button"
               onClick={() => navigateToPanel('wend')}
-              className={`group flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 text-xs font-bold transition-all duration-200 cursor-pointer ${
+              className={`group flex items-center justify-center gap-2 py-2.5 px-3 font-mono text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                 activeTab === 'wend'
-                  ? 'bg-gradient-to-r from-[#D93025] to-[#B31412] text-white shadow-md shadow-[#EA4335]/25 scale-[1.01]'
-                  : 'text-[#5F6368] hover:text-[#202124] hover:bg-[#F1F3F4]/80'
+                  ? 'bg-[#D93025] text-white shadow-xs'
+                  : 'text-[#5F6368] hover:text-[#202124] hover:bg-[#F1F3F4]'
               }`}
             >
-              <span className={`flex h-5 w-5 items-center justify-center rounded-lg text-[10px] font-black transition-colors ${
+              <span className={`flex h-4.5 w-4.5 items-center justify-center font-mono text-[10px] font-black ${
                 activeTab === 'wend' ? 'bg-white/20 text-white' : 'bg-[#FCE8E6] text-[#C5221F]'
               }`}>
-                3
+                03
               </span>
               <Grid className="h-3.5 w-3.5 shrink-0" />
               <span className="truncate">Wend 8×8 Studio</span>
@@ -838,16 +837,16 @@ function AdminPageContent() {
             <button
               type="button"
               onClick={() => navigateToPanel('winners')}
-              className={`group flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 text-xs font-bold transition-all duration-200 cursor-pointer ${
+              className={`group flex items-center justify-center gap-2 py-2.5 px-3 font-mono text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                 activeTab === 'winners'
-                  ? 'bg-gradient-to-r from-[#FBBC04] to-[#F29900] text-[#202124] shadow-md shadow-[#FBBC04]/30 scale-[1.01]'
-                  : 'text-[#5F6368] hover:text-[#202124] hover:bg-[#F1F3F4]/80'
+                  ? 'bg-[#FBBC04] text-[#202124] shadow-xs'
+                  : 'text-[#5F6368] hover:text-[#202124] hover:bg-[#F1F3F4]'
               }`}
             >
-              <span className={`flex h-5 w-5 items-center justify-center rounded-lg text-[10px] font-black transition-colors ${
+              <span className={`flex h-4.5 w-4.5 items-center justify-center font-mono text-[10px] font-black ${
                 activeTab === 'winners' ? 'bg-black/15 text-[#202124]' : 'bg-[#FEF7E0] text-[#B06000]'
               }`}>
-                4
+                04
               </span>
               <Crown className="h-3.5 w-3.5 shrink-0 text-[#B06000]" />
               <span className="truncate">Winner Ceremony</span>
@@ -861,37 +860,39 @@ function AdminPageContent() {
         {activeTab === 'locks' && (
           <div className="flex flex-col gap-6 animate-in fade-in duration-200">
             {/* Panel Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white/70 backdrop-blur-md p-4 sm:p-5 rounded-3xl border border-[#DADCE0]/80 shadow-2xs">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 sm:p-5 border border-[#DADCE0] shadow-xs">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#E8F0FE] text-[#1967D2]">
+                  <span className="flex h-7 w-7 items-center justify-center bg-[#E8F0FE] text-[#1967D2] border border-[#1A73E8]/30">
                     <SlidersHorizontal className="h-4 w-4" />
                   </span>
-                  <h2 className="text-lg sm:text-xl font-bold tracking-tight text-[#202124]">
-                    Quiz & Game Div Locks (Real-Time Control)
+                  <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-[#202124] uppercase font-mono">
+                    Arena Track Locks & Controls
                   </h2>
                 </div>
                 <p className="mt-1 text-xs text-[#5F6368]">
-                  Toggle padlock or switch to lock/unlock tracks in real time. Click any card to edit that challenge arena and questions in the admin panel.
+                  Toggle arena locks in real-time over WebSockets. Click any card to jump directly into the full studio editor.
                 </p>
               </div>
               <div className="flex items-center gap-2 self-start sm:self-auto">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E6F4EA] border border-[#34A853]/30 px-3 py-1.5 text-xs font-bold text-[#137333] shadow-2xs">
-                  <span className="h-2 w-2 rounded-full bg-[#34A853] animate-pulse" />
-                  <span>Real-Time WebSocket Synced</span>
+                <span className="inline-flex items-center gap-1.5 bg-[#E6F4EA] border border-[#34A853] px-3 py-1.5 font-mono text-xs font-bold text-[#137333] shadow-2xs">
+                  <span className="h-2 w-2 bg-[#34A853] animate-pulse" />
+                  <span>WEBSOCKET LIVE</span>
                 </span>
               </div>
             </div>
 
-            {/* 3 Arena Track Cards */}
+            {/* 3 Arena Track Cards - Simple, Aesthetic, Structured & Zero Border Radius */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {[
                 {
                   slug: 'web-dev-quiz' as const,
                   event: webEvent,
                   isLive: isWebLive,
-                  trackTag: 'Top Div • Web Track',
-                  tagBg: 'bg-[#E8F0FE] text-[#1967D2] border border-[#1A73E8]/20',
+                  trackIndex: '01',
+                  trackTag: 'WEB DEV SPRINT',
+                  stripeColor: 'bg-[#1A73E8]',
+                  tagBg: 'bg-[#E8F0FE] text-[#1967D2] border-[#1A73E8]/30',
                   accentHover: 'hover:border-[#1A73E8]',
                   icon: Globe,
                   meta: `${api.getQuestionsForSlug('web-dev-quiz').length} Questions • Fast Blitz`,
@@ -903,8 +904,10 @@ function AdminPageContent() {
                   slug: 'mentis-quiz' as const,
                   event: mentisEvent,
                   isLive: isMentisLive,
-                  trackTag: 'Bottom Div • Mentis Track',
-                  tagBg: 'bg-[#FEF7E0] text-[#B06000] border border-[#FBBC04]/40',
+                  trackIndex: '02',
+                  trackTag: 'MENTIS CHALLENGE',
+                  stripeColor: 'bg-[#FBBC04]',
+                  tagBg: 'bg-[#FEF7E0] text-[#B06000] border-[#FBBC04]/50',
                   accentHover: 'hover:border-[#FBBC04]',
                   icon: Brain,
                   meta: `${api.getQuestionsForSlug('mentis-quiz').length} Questions • Logic & AI`,
@@ -916,8 +919,10 @@ function AdminPageContent() {
                   slug: 'wend-game' as const,
                   event: wendEvent,
                   isLive: isWendLive,
-                  trackTag: 'Wend Track • Word Puzzle',
-                  tagBg: 'bg-[#E6F4EA] text-[#137333] border border-[#34A853]/30',
+                  trackIndex: '03',
+                  trackTag: 'WEND WORD ARENA',
+                  stripeColor: 'bg-[#34A853]',
+                  tagBg: 'bg-[#E6F4EA] text-[#137333] border-[#34A853]/40',
                   accentHover: 'hover:border-[#34A853]',
                   icon: Gamepad2,
                   meta: `8×8 Matrix • ${wendBoard.targetWords.length} Target Words`,
@@ -926,7 +931,7 @@ function AdminPageContent() {
                   jumpLabel: 'Open 8×8 Studio',
                 },
               ].map((track) => {
-                const { slug, event, isLive, trackTag, tagBg, accentHover, icon: Icon, meta, actionTitle, jumpTab, jumpLabel } = track
+                const { slug, event, isLive, trackIndex, trackTag, stripeColor, tagBg, accentHover, icon: Icon, meta, actionTitle, jumpTab, jumpLabel } = track
                 const isUpdating = updatingId === event._id
 
                 return (
@@ -935,37 +940,41 @@ function AdminPageContent() {
                     onClick={() => {
                       navigateToPanel(jumpTab, slug !== 'wend-game' ? slug : undefined)
                     }}
-                    className={`group relative flex flex-col justify-between rounded-3xl border transition-all duration-300 p-5 bg-white/90 backdrop-blur-md shadow-xs hover:shadow-lg hover:-translate-y-0.5 cursor-pointer ${
+                    className={`group relative flex flex-col justify-between border bg-white p-5 shadow-xs transition-all duration-200 hover:shadow-md cursor-pointer ${
                       isLive
-                        ? 'border-[#34A853]/50 ring-1 ring-[#34A853]/20 ' + accentHover
+                        ? 'border-[#34A853] ring-1 ring-[#34A853]/30 ' + accentHover
                         : 'border-[#DADCE0] hover:border-[#1A73E8]'
                     }`}
                     title={`Click to open ${actionTitle} editor in panel`}
                   >
-                    <div>
-                      {/* Top Header: Track Tag & Lock/Unlock Switch */}
-                      <div className="flex items-center justify-between gap-2 mb-3">
-                        <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold ${tagBg}`}>
-                          <Icon className="h-3 w-3" />
-                          <span>{trackTag}</span>
-                        </span>
+                    {/* Top Accent Stripe */}
+                    <div className={`absolute top-0 inset-x-0 h-1 ${stripeColor}`} />
 
-                        <div className="flex items-center gap-2">
-                          {/* Dedicated Full Studio Pill Button */}
+                    <div>
+                      {/* Top Header: Track Tag, Studio Button, Live/Locked Pill */}
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <div className={`inline-flex items-center gap-1.5 border px-2.5 py-1 font-mono text-[11px] font-bold tracking-wider ${tagBg}`}>
+                          <span className="opacity-75">{trackIndex} •</span>
+                          <Icon className="h-3.5 w-3.5" />
+                          <span>{trackTag}</span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          {/* Dedicated Studio Button */}
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation()
                               navigateToPanel(jumpTab, slug !== 'wend-game' ? slug : undefined)
                             }}
-                            className="inline-flex items-center gap-1.5 rounded-full border border-[#1A73E8]/40 bg-white/95 px-3 py-1 text-xs font-bold text-[#1967D2] shadow-2xs hover:bg-[#E8F0FE] hover:border-[#1A73E8] hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                            className="inline-flex items-center gap-1 border border-[#1A73E8] bg-white px-2.5 py-1 font-mono text-[11px] font-bold text-[#1967D2] shadow-2xs hover:bg-[#1A73E8] hover:text-white transition-all cursor-pointer"
                             title={`Open full ${actionTitle} studio`}
                           >
-                            <Maximize2 className="h-3.5 w-3.5 text-[#1967D2]" />
-                            <span>Studio</span>
+                            <Maximize2 className="h-3 w-3" />
+                            <span>STUDIO</span>
                           </button>
 
-                          {/* Interactive Lock/Unlock Pill Switch */}
+                          {/* Interactive Lock/Unlock Switch */}
                           <button
                             type="button"
                             disabled={isUpdating}
@@ -974,78 +983,95 @@ function AdminPageContent() {
                               handleToggleDivLock(slug, isLive)
                             }}
                             title={isLive ? 'Click to switch to LOCKED' : 'Click to switch to UNLOCKED'}
-                            className={`group/switch inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-2xs ${
+                            className={`inline-flex items-center gap-1.5 border px-2.5 py-1 font-mono text-[11px] font-bold transition-all cursor-pointer shadow-2xs ${
                               isLive
-                                ? 'bg-[#E6F4EA] border border-[#34A853]/50 text-[#137333] hover:bg-[#CEEAD6]'
-                                : 'bg-[#F1F3F4] border border-[#DADCE0] text-[#5F6368] hover:bg-[#E8EAED]'
+                                ? 'border-[#34A853] bg-[#E6F4EA] text-[#137333] hover:bg-[#CEEAD6]'
+                                : 'border-[#DADCE0] bg-[#F1F3F4] text-[#5F6368] hover:bg-[#E8EAED]'
                             }`}
                           >
                             {isLive ? (
                               <>
-                                <span className="h-2 w-2 rounded-full bg-[#34A853] animate-pulse" />
-                                <span>LIVE NOW</span>
-                                <span className="ml-0.5 inline-flex h-4 w-7 items-center rounded-full bg-[#34A853] px-0.5 transition-colors">
-                                  <span className="h-3 w-3 translate-x-3 rounded-full bg-white shadow-xs transition-transform" />
-                                </span>
+                                <span className="h-2 w-2 bg-[#34A853] animate-pulse" />
+                                <span>LIVE</span>
                               </>
                             ) : (
                               <>
-                                <Lock className="h-3 w-3" />
+                                <Lock className="h-3 w-3 text-[#5F6368]" />
                                 <span>LOCKED</span>
-                                <span className="ml-0.5 inline-flex h-4 w-7 items-center rounded-full bg-[#BDC1C6] px-0.5 transition-colors">
-                                  <span className="h-3 w-3 translate-x-0 rounded-full bg-white shadow-xs transition-transform" />
-                                </span>
                               </>
                             )}
                           </button>
                         </div>
                       </div>
 
-                      {/* Animated Padlock Illustration with Soft Ambient Radial Aura */}
-                      <div className="my-3 flex justify-center relative">
-                        <div className={`absolute inset-0 rounded-full blur-2xl -z-10 pointer-events-none transition-opacity ${
-                          isLive ? 'bg-gradient-to-r from-[#34A853]/15 to-[#4285F4]/15 opacity-80' : 'bg-gradient-to-r from-[#EA4335]/15 to-[#FBBC04]/15 opacity-80'
-                        }`} />
-                        <AnimatedLockToggle
-                          id={`admin-lock-${slug}`}
-                          checked={isLive}
-                          isAdmin={true}
+                      {/* Structured Arena Status & Padlock Bar */}
+                      <div className={`my-3.5 flex items-center justify-between border p-3 transition-colors ${
+                        isLive ? 'border-[#34A853]/40 bg-[#F4FBF6]' : 'border-[#DADCE0] bg-[#F8F9FA]'
+                      }`}>
+                        <div className="flex items-center gap-3">
+                          <div className={`flex h-10 w-10 shrink-0 items-center justify-center border font-mono ${
+                            isLive
+                              ? 'border-[#34A853] bg-[#1E8E3E] text-white'
+                              : 'border-[#EA4335] bg-[#D93025] text-white'
+                          }`}>
+                            {isLive ? <Unlock className="h-5 w-5" /> : <Lock className="h-5 w-5" />}
+                          </div>
+                          <div>
+                            <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#5F6368]">
+                              {isLive ? 'STATUS: UNLOCKED' : 'STATUS: LOCKED'}
+                            </p>
+                            <p className="text-xs font-bold text-[#202124]">
+                              {isLive ? 'Live Submissions Active' : 'Access Restricted by Host'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
                           disabled={isUpdating}
-                          onChange={() => handleToggleDivLock(slug, isLive)}
-                          size="md"
-                          title={isLive ? 'Click lock to switch to LOCKED' : 'Click lock to switch to UNLOCKED'}
-                        />
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleToggleDivLock(slug, isLive)
+                          }}
+                          className={`px-3 py-1 font-mono text-xs font-bold border transition-all cursor-pointer ${
+                            isLive
+                              ? 'border-[#EA4335] bg-white text-[#EA4335] hover:bg-[#EA4335] hover:text-white'
+                              : 'border-[#34A853] bg-white text-[#34A853] hover:bg-[#34A853] hover:text-white'
+                          }`}
+                        >
+                          {isLive ? 'SWITCH LOCK' : 'GO LIVE'}
+                        </button>
                       </div>
 
-                      {/* Div Content */}
+                      {/* Card Content */}
                       <div className="mt-2 flex flex-col items-start text-left">
                         <div className="flex items-center justify-between w-full">
-                          <h3 className="text-base font-bold text-[#202124] group-hover:text-[#1A73E8] transition-colors">
+                          <h3 className="text-base font-extrabold text-[#202124] group-hover:text-[#1A73E8] transition-colors">
                             {event.title}
                           </h3>
-                          <span className="text-[#5F6368] group-hover:text-[#1A73E8] group-hover:translate-x-0.5 transition-all text-xs font-semibold flex items-center gap-1">
-                            <span>Edit</span>
-                            <ArrowRight className="h-3.5 w-3.5" />
+                          <span className="text-[#5F6368] group-hover:text-[#1A73E8] group-hover:translate-x-0.5 transition-all text-xs font-bold flex items-center gap-1 font-mono">
+                            <span>EDIT</span>
+                            <ArrowRight className="h-3 w-3" />
                           </span>
                         </div>
-                        <p className="text-xs text-[#5F6368] mt-1 leading-relaxed line-clamp-2">
+                        <p className="text-xs text-[#5F6368] mt-1.5 leading-relaxed line-clamp-2">
                           {event.description}
                         </p>
-                        <div className="mt-3 flex items-center justify-between w-full gap-2 pt-2 border-t border-[#F1F3F4]">
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#5F6368]">
+                        <div className="mt-3 flex items-center justify-between w-full gap-2 pt-2.5 border-t border-[#DADCE0]">
+                          <span className="inline-flex items-center gap-1.5 font-mono text-[11px] font-semibold text-[#5F6368]">
                             <Sparkles className="h-3 w-3 text-[#FBBC04]" />
                             <span>{meta}</span>
                           </span>
-                          <span className="inline-flex items-center gap-1 rounded-full bg-[#E8F0FE] px-2.5 py-0.5 text-[10px] font-bold text-[#1967D2] border border-[#1A73E8]/20 group-hover:bg-[#1A73E8] group-hover:text-white transition-all shadow-2xs">
+                          <span className="inline-flex items-center gap-1 border border-[#1A73E8]/30 bg-[#E8F0FE] px-2 py-0.5 font-mono text-[10px] font-bold text-[#1967D2] uppercase tracking-wider group-hover:bg-[#1A73E8] group-hover:text-white transition-all shadow-2xs">
                             <SlidersHorizontal className="h-2.5 w-2.5" />
-                            <span>Edit in Panel</span>
+                            <span>EDIT PANEL</span>
                           </span>
                         </div>
                       </div>
                     </div>
 
                     {/* Bottom Action Controls Deck */}
-                    <div className="mt-5 flex flex-col gap-2 pt-3 border-t border-[#F1F3F4]">
+                    <div className="mt-5 flex flex-col gap-2 pt-3 border-t border-[#DADCE0]">
                       {/* Primary Lock/Unlock Action Button */}
                       <button
                         type="button"
@@ -1054,14 +1080,14 @@ function AdminPageContent() {
                           e.stopPropagation()
                           handleToggleDivLock(slug, isLive)
                         }}
-                        className={`flex h-11 items-center justify-center gap-2 rounded-2xl text-xs font-bold transition-all active:scale-[0.98] shadow-sm cursor-pointer ${
+                        className={`flex h-11 items-center justify-center gap-2 border font-mono text-xs font-extrabold uppercase tracking-wider transition-all active:translate-y-0.5 shadow-xs cursor-pointer ${
                           isLive
-                            ? 'bg-gradient-to-r from-[#EA4335] to-[#D93025] text-white hover:from-[#D93025] hover:to-[#C5221F] shadow-[#EA4335]/25'
-                            : 'bg-gradient-to-r from-[#34A853] to-[#1E8E3E] text-white hover:from-[#1E8E3E] hover:to-[#137333] shadow-[#34A853]/25'
+                            ? 'border-[#B31412] bg-[#D93025] text-white hover:bg-[#B31412]'
+                            : 'border-[#137333] bg-[#1E8E3E] text-white hover:bg-[#137333]'
                         }`}
                       >
                         {isLive ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
-                        <span>{isLive ? `Lock ${actionTitle} (Switch to Locked)` : `Unlock ${actionTitle} (Go Live)`}</span>
+                        <span>{isLive ? `LOCK ${actionTitle.toUpperCase()} (LOCKED)` : `UNLOCK ${actionTitle.toUpperCase()} (LIVE)`}</span>
                       </button>
 
                       {/* Broadcast Winner Trigger */}
@@ -1071,11 +1097,11 @@ function AdminPageContent() {
                           e.stopPropagation()
                           navigateToPanel('winners', slug !== 'wend-game' ? slug : undefined)
                         }}
-                        className="flex h-10 items-center justify-center gap-2 rounded-2xl border border-[#FBBC04]/50 bg-[#FEF7E0] text-xs font-bold text-[#B06000] hover:bg-[#FFF8E1] active:scale-95 transition-all shadow-2xs cursor-pointer"
+                        className="flex h-10 items-center justify-center gap-2 border border-[#FBBC04] bg-[#FEF7E0] font-mono text-xs font-bold text-[#B06000] uppercase tracking-wider hover:bg-[#FBBC04] hover:text-[#202124] transition-all shadow-2xs cursor-pointer"
                         title="Open Leaderboard to inspect, delete users, and broadcast winners"
                       >
                         <Trophy className="h-4 w-4 text-[#FBBC04]" />
-                        <span>Broadcast Winner</span>
+                        <span>BROADCAST WINNERS</span>
                       </button>
 
                       {/* Jump Shortcut Link */}
@@ -1085,7 +1111,7 @@ function AdminPageContent() {
                           e.stopPropagation()
                           navigateToPanel(jumpTab, slug !== 'wend-game' ? slug : undefined)
                         }}
-                        className="mt-1 flex items-center justify-center gap-1 text-[11px] font-semibold text-[#5F6368] hover:text-[#1A73E8] transition-colors py-1"
+                        className="mt-1 flex items-center justify-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-[#5F6368] hover:text-[#1A73E8] transition-colors py-1 cursor-pointer"
                       >
                         <span>{jumpLabel}</span>
                         <span>➔</span>
@@ -1104,13 +1130,13 @@ function AdminPageContent() {
         {activeTab === 'quiz' && (
           <div className="flex flex-col gap-6 animate-in fade-in duration-200">
             {/* Header & Quiz Switcher */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white/70 backdrop-blur-md p-4 sm:p-5 rounded-3xl border border-[#DADCE0]/80 shadow-2xs">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 sm:p-5 border border-[#DADCE0] shadow-xs">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#E6F4EA] text-[#137333]">
+                  <span className="flex h-7 w-7 items-center justify-center bg-[#E6F4EA] text-[#137333] border border-[#34A853]/30">
                     <ListOrdered className="h-4 w-4" />
                   </span>
-                  <h2 className="text-lg sm:text-xl font-bold tracking-tight text-[#202124]">
+                  <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-[#202124] uppercase font-mono">
                     Quiz Questions & Answer Keys
                   </h2>
                 </div>
@@ -1120,13 +1146,13 @@ function AdminPageContent() {
               </div>
 
               {/* Event Switcher Segmented Control */}
-              <div className="flex items-center gap-1.5 rounded-2xl border border-[#DADCE0] bg-[#F8F9FA] p-1 shadow-2xs self-start sm:self-auto">
+              <div className="flex items-center gap-1 border border-[#DADCE0] bg-[#F8F9FA] p-1 shadow-2xs self-start sm:self-auto font-mono text-xs font-bold">
                 <button
                   type="button"
                   onClick={() => handleSelectQuizTrack('web-dev-quiz')}
-                  className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer ${
                     selectedSlug === 'web-dev-quiz'
-                      ? 'bg-white text-[#1967D2] shadow-xs border border-[#1A73E8]/30'
+                      ? 'bg-white text-[#1967D2] shadow-xs border border-[#1A73E8]'
                       : 'text-[#5F6368] hover:text-[#202124]'
                   }`}
                 >
@@ -1136,9 +1162,9 @@ function AdminPageContent() {
                 <button
                   type="button"
                   onClick={() => handleSelectQuizTrack('mentis-quiz')}
-                  className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer ${
                     selectedSlug === 'mentis-quiz'
-                      ? 'bg-white text-[#B06000] shadow-xs border border-[#FBBC04]/50'
+                      ? 'bg-white text-[#B06000] shadow-xs border border-[#FBBC04]'
                       : 'text-[#5F6368] hover:text-[#202124]'
                   }`}
                 >
@@ -1647,13 +1673,13 @@ function AdminPageContent() {
         {activeTab === 'wend' && (
           <div className="flex flex-col gap-6 animate-in fade-in duration-200">
             {/* Header & Reset Button */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white/70 backdrop-blur-md p-4 sm:p-5 rounded-3xl border border-[#DADCE0]/80 shadow-2xs">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 sm:p-5 border border-[#DADCE0] shadow-xs">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#FCE8E6] text-[#C5221F]">
+                  <span className="flex h-7 w-7 items-center justify-center bg-[#FCE8E6] text-[#C5221F] border border-[#EA4335]/30">
                     <Grid className="h-4 w-4" />
                   </span>
-                  <h2 className="text-lg sm:text-xl font-bold tracking-tight text-[#202124]">
+                  <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-[#202124] uppercase font-mono">
                     Wend Snake Board Studio
                   </h2>
                 </div>
@@ -1665,7 +1691,7 @@ function AdminPageContent() {
               <button
                 type="button"
                 onClick={handleResetToReferenceBoard}
-                className="inline-flex items-center gap-1.5 rounded-full border border-[#DADCE0] bg-white px-4 py-2 text-xs font-bold text-[#1A73E8] shadow-2xs hover:bg-[#E8F0FE] active:scale-95 transition-all self-start sm:self-auto cursor-pointer"
+                className="inline-flex items-center gap-1.5 border border-[#DADCE0] bg-white px-4 py-2 font-mono text-xs font-bold text-[#1A73E8] shadow-2xs hover:bg-[#E8F0FE] transition-all self-start sm:self-auto cursor-pointer"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 <span>{'Reset Reference "H & I" Board'}</span>
@@ -1673,14 +1699,14 @@ function AdminPageContent() {
             </div>
 
             {/* Wend Word Arena Settings & Information */}
-            <div className="rounded-3xl border border-[#DADCE0]/90 bg-white/95 backdrop-blur-md p-5 sm:p-6 shadow-xs">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 pb-3 border-b border-[#F1F3F4]">
+            <div className="border border-[#DADCE0] bg-white p-5 sm:p-6 shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 pb-3 border-b border-[#DADCE0]">
                 <div className="flex items-center gap-2.5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#E6F4EA] text-[#137333]">
+                  <div className="flex h-9 w-9 items-center justify-center border border-[#34A853] bg-[#E6F4EA] text-[#137333]">
                     <Edit3 className="h-4.5 w-4.5" />
                   </div>
                   <div>
-                    <h3 className="text-sm sm:text-base font-bold text-[#202124]">
+                    <h3 className="text-sm sm:text-base font-extrabold text-[#202124] uppercase font-mono">
                       Wend Word Arena Information
                     </h3>
                     <p className="text-[11px] text-[#5F6368]">
@@ -1692,7 +1718,7 @@ function AdminPageContent() {
                   type="button"
                   disabled={savingTrackEdit}
                   onClick={() => handleSaveTrackMetadata('wend-game')}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#34A853] to-[#1E8E3E] px-4 py-2 text-xs font-bold text-white shadow-xs hover:from-[#1E8E3E] hover:to-[#137333] active:scale-95 transition-all self-start sm:self-auto cursor-pointer"
+                  className="inline-flex items-center gap-1.5 border border-[#137333] bg-[#1E8E3E] px-4 py-2 font-mono text-xs font-extrabold text-white uppercase tracking-wider hover:bg-[#137333] transition-all self-start sm:self-auto cursor-pointer shadow-xs"
                 >
                   <Check className="h-3.5 w-3.5" />
                   <span>{savingTrackEdit ? 'Saving...' : 'Save Arena Details'}</span>
@@ -2121,13 +2147,13 @@ function AdminPageContent() {
         {activeTab === 'winners' && (
           <div className="flex flex-col gap-6 animate-in fade-in duration-200">
             {/* Header & Track Selector */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white/70 backdrop-blur-md p-4 sm:p-5 rounded-3xl border border-[#DADCE0]/80 shadow-2xs">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 sm:p-5 border border-[#DADCE0] shadow-xs">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#FEF7E0] text-[#B06000]">
+                  <span className="flex h-7 w-7 items-center justify-center bg-[#FEF7E0] text-[#B06000] border border-[#FBBC04]/50">
                     <Crown className="h-4 w-4 text-[#FBBC04]" />
                   </span>
-                  <h2 className="text-lg sm:text-xl font-bold tracking-tight text-[#202124]">
+                  <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-[#202124] uppercase font-mono">
                     Automated Winner Announcement (3rd → 2nd → 1st)
                   </h2>
                 </div>
@@ -2137,13 +2163,13 @@ function AdminPageContent() {
               </div>
 
               {/* Track Selector */}
-              <div className="flex items-center gap-1.5 rounded-2xl border border-[#DADCE0] bg-[#F8F9FA] p-1 shadow-2xs self-start sm:self-auto">
+              <div className="flex items-center gap-1 border border-[#DADCE0] bg-[#F8F9FA] p-1 shadow-2xs self-start sm:self-auto font-mono text-xs font-bold">
                 <button
                   type="button"
                   onClick={() => handleSelectWinnersTrack('web-dev-quiz')}
-                  className={`inline-flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
                     selectedSlug === 'web-dev-quiz'
-                      ? 'bg-white text-[#1967D2] shadow-xs border border-[#1A73E8]/30'
+                      ? 'bg-white text-[#1967D2] shadow-xs border border-[#1A73E8]'
                       : 'text-[#5F6368] hover:text-[#202124]'
                   }`}
                 >
@@ -2153,9 +2179,9 @@ function AdminPageContent() {
                 <button
                   type="button"
                   onClick={() => handleSelectWinnersTrack('mentis-quiz')}
-                  className={`inline-flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
                     selectedSlug === 'mentis-quiz'
-                      ? 'bg-white text-[#B06000] shadow-xs border border-[#FBBC04]/50'
+                      ? 'bg-white text-[#B06000] shadow-xs border border-[#FBBC04]'
                       : 'text-[#5F6368] hover:text-[#202124]'
                   }`}
                 >
@@ -2165,9 +2191,9 @@ function AdminPageContent() {
                 <button
                   type="button"
                   onClick={() => handleSelectWinnersTrack('wend-game')}
-                  className={`inline-flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
                     selectedSlug === 'wend-game'
-                      ? 'bg-white text-[#137333] shadow-xs border border-[#34A853]/30'
+                      ? 'bg-white text-[#137333] shadow-xs border border-[#34A853]'
                       : 'text-[#5F6368] hover:text-[#202124]'
                   }`}
                 >
@@ -2178,20 +2204,20 @@ function AdminPageContent() {
             </div>
 
             {/* Broadcast Stage Action Banner */}
-            <div className="relative overflow-hidden rounded-3xl border-2 border-[#FBBC04] bg-gradient-to-br from-[#FFF9E6] via-[#FEF7E0] to-[#FFF3CD] p-6 sm:p-8 text-center shadow-md">
+            <div className="relative overflow-hidden border-2 border-[#FBBC04] bg-[#FFF9E6] p-6 sm:p-8 text-center shadow-xs">
               <div className="relative z-10 flex flex-col items-center">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FBBC04] text-[#202124] shadow-md shadow-[#FBBC04]/40 mb-3 animate-bounce">
-                  <Crown className="h-7 w-7 fill-current" />
+                <div className="flex h-12 w-12 items-center justify-center border border-[#FBBC04] bg-[#FBBC04] text-[#202124] shadow-xs mb-3">
+                  <Crown className="h-6 w-6 fill-current" />
                 </div>
-                <h3 className="text-xl sm:text-2xl font-black text-[#202124] tracking-tight">
+                <h3 className="text-xl sm:text-2xl font-black text-[#202124] tracking-tight uppercase font-mono">
                   Ready to Broadcast Official Winners Ceremony?
                 </h3>
                 <p className="text-xs sm:text-sm text-[#5F6368] max-w-xl mx-auto mt-2 mb-4 leading-relaxed font-medium">
-                  Broadcasting triggers the dramatic 5-4-3-2-1 suspense sequence, reveals 3rd place, 2nd place, 1st place champion with golden confetti, and opens the victory leaderboard live on ALL connected screens!
+                  Broadcasting triggers the suspense countdown sequence, reveals 3rd place, 2nd place, 1st place champion with golden fanfare, and opens the victory leaderboard live on ALL connected screens!
                 </p>
 
                 {/* Timeline Step Sequence Indicator */}
-                <div className="mb-5 flex flex-wrap items-center justify-center gap-1.5 text-[11px] font-bold text-[#5F6368] bg-white/80 backdrop-blur-md px-4 py-2 rounded-2xl border border-[#DADCE0]/80 shadow-2xs">
+                <div className="mb-5 flex flex-wrap items-center justify-center gap-1.5 font-mono text-[11px] font-bold text-[#5F6368] bg-white px-4 py-2 border border-[#DADCE0] shadow-2xs">
                   <span className="text-[#1A73E8]">1. 5s Countdown</span>
                   <span>➔</span>
                   <span className="text-[#E37400]">2. 3rd Place</span>
@@ -2204,16 +2230,16 @@ function AdminPageContent() {
                 </div>
 
                 {/* WebSocket Health Badge */}
-                <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-xs font-bold shadow-2xs border border-[#DADCE0]">
+                <div className="mb-4 inline-flex items-center gap-2 bg-white px-4 py-1.5 font-mono text-xs font-bold shadow-2xs border border-[#DADCE0]">
                   {connected ? (
                     <>
-                      <span className="h-2 w-2 rounded-full bg-[#34A853] animate-pulse" />
-                      <span className="text-[#137333]">WebSocket Connected & Live</span>
+                      <span className="h-2 w-2 bg-[#34A853] animate-pulse" />
+                      <span className="text-[#137333]">WEBSOCKET CONNECTED & LIVE</span>
                     </>
                   ) : (
                     <>
-                      <span className="h-2 w-2 rounded-full bg-[#EA4335]" />
-                      <span className="text-[#C5221F]">WebSocket Local / Channel Standby</span>
+                      <span className="h-2 w-2 bg-[#EA4335]" />
+                      <span className="text-[#C5221F]">WEBSOCKET LOCAL / STANDBY</span>
                     </>
                   )}
                 </div>

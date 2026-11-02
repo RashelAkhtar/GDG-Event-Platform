@@ -28,12 +28,12 @@ export default function HomePage() {
   }, [])
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F9FA] text-[#202124] relative overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-[#F8F9FA] text-[#202124] relative overflow-hidden bg-tech-grid">
       {/* Background Ambient Aurora Gradient Glow */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-40 -left-40 h-[500px] w-[500px] rounded-full bg-[#4285F4]/10 blur-3xl animate-aurora" />
-        <div className="absolute top-1/2 -right-40 h-[500px] w-[500px] rounded-full bg-[#FBBC04]/10 blur-3xl animate-aurora" style={{ animationDelay: '-5s' }} />
-        <div className="absolute -bottom-40 left-1/3 h-[500px] w-[500px] rounded-full bg-[#34A853]/10 blur-3xl animate-aurora" style={{ animationDelay: '-10s' }} />
+        <div className="absolute -top-40 -left-40 h-[500px] w-[500px] bg-[#4285F4]/10 blur-3xl animate-aurora" />
+        <div className="absolute top-1/2 -right-40 h-[500px] w-[500px] bg-[#FBBC04]/10 blur-3xl animate-aurora" style={{ animationDelay: '-5s' }} />
+        <div className="absolute -bottom-40 left-1/3 h-[500px] w-[500px] bg-[#34A853]/10 blur-3xl animate-aurora" style={{ animationDelay: '-10s' }} />
       </div>
 
       {/* 1. Google Authentication & App Bar */}
@@ -42,8 +42,8 @@ export default function HomePage() {
       <main className="relative z-10 mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pt-6 pb-16 sm:px-6 select-none" onContextMenu={(e) => e.preventDefault()}>
         {/* Minimal Hero Header */}
         <section className="text-center select-none">
-          <h1 className="text-[28px] sm:text-[34px] font-semibold tracking-tight text-[#202124] leading-tight select-none">
-            Learn, Compete & Build
+          <h1 className="text-[26px] sm:text-[32px] font-extrabold tracking-tight text-[#202124] leading-tight select-none uppercase font-mono">
+            Learn • Compete • Build
           </h1>
         </section>
 
@@ -65,34 +65,34 @@ export default function HomePage() {
         </section>
 
         {/* Leaderboards Quick Access Bar */}
-        <section className="mt-8 flex items-center justify-between rounded-3xl border border-white/80 bg-white/85 p-4 shadow-2xs backdrop-blur-md transition-all hover:shadow-sm">
+        <section className="mt-8 flex items-center justify-between border border-[#DADCE0] bg-white p-4 shadow-xs">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#FEF7E0] text-[#FBBC04] shadow-2xs">
-              <Trophy className="h-5 w-5" />
+            <div className="flex h-10 w-10 items-center justify-center border border-[#FBBC04] bg-[#FEF7E0] text-[#B06000]">
+              <Trophy className="h-5 w-5 text-[#FBBC04]" />
             </div>
             <div>
-              <h4 className="text-xs sm:text-sm font-semibold text-[#202124]">Live Leaderboards</h4>
-              <p className="text-[11px] text-[#5F6368]">Scores & Duration Tiebreakers</p>
+              <h4 className="font-mono text-xs sm:text-sm font-bold uppercase tracking-wider text-[#202124]">Live Leaderboards</h4>
+              <p className="text-[11px] text-[#5F6368]">Live Tie-Breaker Standings</p>
             </div>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2">
             <Link
               href={`/events/${webEvent.slug}/leaderboard`}
-              className="rounded-full bg-[#E8F0FE] px-3 py-1.5 text-xs font-semibold text-[#1967D2] hover:bg-[#D2E3FC] transition-all hover:scale-105 active:scale-95"
+              className="border border-[#1A73E8] bg-[#E8F0FE] px-3 py-1 font-mono text-xs font-bold text-[#1967D2] hover:bg-[#1A73E8] hover:text-white transition-all cursor-pointer shadow-2xs"
             >
-              Web
+              WEB
             </Link>
             <Link
               href={`/events/${mentisEvent.slug}/leaderboard`}
-              className="rounded-full bg-[#FEF7E0] px-3 py-1.5 text-xs font-semibold text-[#B06000] hover:bg-[#FEEFC3] transition-all hover:scale-105 active:scale-95"
+              className="border border-[#FBBC04] bg-[#FEF7E0] px-3 py-1 font-mono text-xs font-bold text-[#B06000] hover:bg-[#FBBC04] hover:text-[#202124] transition-all cursor-pointer shadow-2xs"
             >
-              Mentis
+              MENTIS
             </Link>
             <Link
               href="/events/wend-game/leaderboard"
-              className="rounded-full bg-[#E6F4EA] px-3 py-1.5 text-xs font-semibold text-[#137333] hover:bg-[#CEEAD6] transition-all hover:scale-105 active:scale-95"
+              className="border border-[#34A853] bg-[#E6F4EA] px-3 py-1 font-mono text-xs font-bold text-[#137333] hover:bg-[#34A853] hover:text-white transition-all cursor-pointer shadow-2xs"
             >
-              Wend
+              WEND
             </Link>
           </div>
         </section>

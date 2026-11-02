@@ -82,47 +82,47 @@ export function LocalGameCountdown({
       </div>
 
       {/* GDG Event Title Badge */}
-      <div className="relative z-10 mb-8 flex items-center gap-2 rounded-full border border-white/80 bg-white/85 px-6 py-2.5 shadow-sm backdrop-blur-md animate-float">
+      <div className="relative z-10 mb-8 flex items-center gap-2 border border-[#DADCE0] bg-white px-5 py-2 shadow-xs backdrop-blur-md">
         <span className="flex items-center gap-1.5" aria-hidden="true">
-          <span className="h-2.5 w-2.5 rounded-full bg-[#EA4335] animate-ping" />
-          <span className="h-2.5 w-2.5 rounded-full bg-[#FBBC04]" />
-          <span className="h-2.5 w-2.5 rounded-full bg-[#34A853]" />
-          <span className="h-2.5 w-2.5 rounded-full bg-[#4285F4]" />
+          <span className="h-2 w-2 bg-[#EA4335] animate-pulse" />
+          <span className="h-2 w-2 bg-[#FBBC04]" />
+          <span className="h-2 w-2 bg-[#34A853]" />
+          <span className="h-2 w-2 bg-[#4285F4]" />
         </span>
-        <span className="text-xs font-bold uppercase tracking-wider text-[#3C4043]">
-          Starting Game • {gameTitle}
+        <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#3C4043]">
+          STARTING ARENA • {gameTitle}
         </span>
       </div>
 
-      {/* Giant Animated Countdown Number with Concentric Radar Waves */}
+      {/* Giant Animated Countdown Number with Concentric Square Radar Waves */}
       <div className="relative z-10 flex h-64 w-64 items-center justify-center">
         <div
-          className="absolute inset-0 rounded-full border-2 animate-ripple-1 pointer-events-none"
+          className="absolute inset-0 border-2 animate-ripple-1 pointer-events-none"
           style={{ borderColor: currentColor }}
         />
         <div
-          className="absolute inset-0 rounded-full border-2 animate-ripple-2 pointer-events-none"
+          className="absolute inset-0 border-2 animate-ripple-2 pointer-events-none"
           style={{ borderColor: currentColor }}
         />
         <div
-          className="absolute inset-0 rounded-full border-2 animate-ripple-3 pointer-events-none"
+          className="absolute inset-0 border-2 animate-ripple-3 pointer-events-none"
           style={{ borderColor: currentColor }}
         />
 
         <div
-          className="relative flex h-48 w-48 items-center justify-center rounded-full border-[5px] bg-white shadow-2xl transition-all duration-300 ring-8 ring-white/60"
-          style={{ borderColor: currentColor, boxShadow: `0 20px 50px -10px ${currentColor}55` }}
+          className="relative flex h-48 w-48 items-center justify-center border-4 bg-white shadow-2xl transition-all duration-300 ring-4 ring-black/5"
+          style={{ borderColor: currentColor, boxShadow: `0 16px 40px -10px ${currentColor}44` }}
         >
           {count > 0 ? (
             <span
               key={count}
-              className="text-8xl sm:text-9xl font-black tracking-tighter select-none animate-count-pop drop-shadow-sm"
+              className="font-mono text-8xl sm:text-9xl font-black tracking-tighter select-none animate-count-pop drop-shadow-sm"
               style={{ color: currentColor }}
             >
               {count}
             </span>
           ) : (
-            <span className="text-6xl sm:text-7xl font-black tracking-tight text-[#10B981] select-none animate-count-pop">
+            <span className="font-mono text-6xl sm:text-7xl font-black tracking-tight text-[#1E8E3E] select-none animate-count-pop">
               GO!
             </span>
           )}
@@ -130,14 +130,14 @@ export function LocalGameCountdown({
       </div>
 
       <div className="relative z-10 mt-8 text-center flex flex-col items-center">
-        <p className="text-base font-bold text-[#202124]">Get Ready!</p>
+        <p className="font-mono text-base font-extrabold uppercase tracking-wider text-[#202124]">GET READY</p>
         <p className="text-xs text-[#5F6368] mt-1 font-medium">
           Challenge begins when the countdown reaches GO
         </p>
 
         {/* Mobile Sound Assist Pill */}
-        <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-black/5 px-3 py-1 text-[11px] font-semibold text-[#5F6368] backdrop-blur-md">
-          <span>{audioUnlocked ? '🔊 Game Audio Active' : '🔊 Tap screen to enable game sound'}</span>
+        <div className="mt-4 inline-flex items-center gap-1.5 border border-[#DADCE0] bg-white px-3 py-1 font-mono text-[11px] font-semibold text-[#5F6368] shadow-2xs">
+          <span>{audioUnlocked ? '🔊 GAME AUDIO ACTIVE' : '🔊 TAP SCREEN TO ENABLE AUDIO'}</span>
         </div>
       </div>
     </div>
