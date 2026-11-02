@@ -46,7 +46,14 @@ const WebSocketContext = createContext<WebSocketContextType>({
   subscribeToUserLeave: () => () => {},
 })
 
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:5000/ws'
+const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000/api/v1'
+const defaultWsUrl = new URL(configuredApiUrl)
+defaultWsUrl.protocol = defaultWsUrl.protocol === 'https:' ? 'wss:' : 'ws:'
+defaultWsUrl.pathname = '/ws'
+defaultWsUrl.search = ''
+defaultWsUrl.hash = ''
+
+const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? defaultWsUrl.toString()
 
 export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   const [connected, setConnected] = useState(false)

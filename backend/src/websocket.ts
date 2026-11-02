@@ -38,11 +38,22 @@ class EventWebSocketService {
   };
 
   public init(server: HttpServer) {
-    const allowedOrigins = new Set([
-      process.env.CLIENT_URL || 'http://localhost:3000',
-      'http://localhost:3000',
-      'http://localhost:5173',
-    ]);
+    const allowedOrigins = new Set(
+      [
+        process.env.CLIENT_URL || 'http://localhost:3000',
+        ...(process.env.CLIENT_URLS || '').split(','),
+        'http://localhost:3000',
+        'http://localhost:5173',
+      ]
+        .map((url) => {
+          try {
+            return new URL(url.trim()).origin;
+          } catch {
+            return null;
+          }
+        })
+        .filter((origin): origin is string => origin !== null)
+    );
 
     this.wss = new WebSocketServer({
       server,
