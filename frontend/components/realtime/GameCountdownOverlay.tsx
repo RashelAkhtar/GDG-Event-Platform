@@ -46,7 +46,11 @@ export function GameCountdownOverlay() {
   const currentColor = VIBRANT_COUNTDOWN_COLORS[colorIndex]
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/95 backdrop-blur-xl transition-all">
+    <div
+      onClick={() => void soundManager.unlock()}
+      onTouchStart={() => void soundManager.unlock()}
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/95 backdrop-blur-xl transition-all cursor-pointer"
+    >
       {/* Background Multi-color Aurora Mesh */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div

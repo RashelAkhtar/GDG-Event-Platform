@@ -2,6 +2,7 @@
 
 import React, { useRef, useState, useCallback, useEffect, useMemo } from 'react'
 import { GridCell, DiscoveredWordRecord, WEND_PASTEL_PALETTE, WendWordColor } from '@/lib/api'
+import { soundManager } from '@/lib/sound'
 
 interface WendSnakeGridProps {
   grid: GridCell[][]
@@ -118,6 +119,9 @@ export function WendSnakeGrid({
   )
 
   const handlePointerDown = (row: number, col: number, e: React.PointerEvent) => {
+    // Prime and unlock audio pipeline on initial touch
+    void soundManager.unlock()
+
     const cell = grid[row]?.[col]
     if (!cell || cell.type === 'OBSTACLE') return
 

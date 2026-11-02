@@ -15,6 +15,20 @@ export function LocalGameCountdown({
   onComplete: () => void
 }) {
   const [count, setCount] = useState(5)
+  const [audioUnlocked, setAudioUnlocked] = useState(soundManager.isAudioUnlocked())
+
+  useEffect(() => {
+    const unsub = soundManager.subscribe((unlocked) => {
+      setAudioUnlocked(unlocked)
+    })
+    return () => unsub()
+  }, [])
+
+  const handleInteractiveUnlock = () => {
+    void soundManager.unlock().then(() => {
+      setAudioUnlocked(true)
+    })
+  }
 
   useEffect(() => {
     try {
@@ -54,7 +68,11 @@ export function LocalGameCountdown({
   const currentColor = VIBRANT_COUNTDOWN_COLORS[colorIndex]
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/95 backdrop-blur-xl transition-all animate-in fade-in duration-300">
+    <div
+      onClick={handleInteractiveUnlock}
+      onTouchStart={handleInteractiveUnlock}
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/95 backdrop-blur-xl transition-all animate-in fade-in duration-300 cursor-pointer"
+    >
       {/* Background Multi-color Aurora Mesh */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div
@@ -111,11 +129,16 @@ export function LocalGameCountdown({
         </div>
       </div>
 
-      <div className="relative z-10 mt-8 text-center">
+      <div className="relative z-10 mt-8 text-center flex flex-col items-center">
         <p className="text-base font-bold text-[#202124]">Get Ready!</p>
         <p className="text-xs text-[#5F6368] mt-1 font-medium">
           Challenge begins when the countdown reaches GO
         </p>
+
+        {/* Mobile Sound Assist Pill */}
+        <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-black/5 px-3 py-1 text-[11px] font-semibold text-[#5F6368] backdrop-blur-md">
+          <span>{audioUnlocked ? '🔊 Game Audio Active' : '🔊 Tap screen to enable game sound'}</span>
+        </div>
       </div>
     </div>
   )

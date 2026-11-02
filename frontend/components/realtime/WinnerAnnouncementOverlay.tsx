@@ -184,7 +184,11 @@ function WinnerAnnouncementStage({ ceremony }: { ceremony: CeremonyData }) {
 
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-between overflow-y-auto bg-[#070B14]/98 p-4 sm:p-6 backdrop-blur-3xl text-white selection:bg-fuchsia-500 selection:text-white">
+    <div
+      onClick={() => void soundManager.unlock()}
+      onTouchStart={() => void soundManager.unlock()}
+      className="fixed inset-0 z-50 flex flex-col items-center justify-between overflow-y-auto bg-[#070B14]/98 p-4 sm:p-6 backdrop-blur-3xl text-white selection:bg-fuchsia-500 selection:text-white"
+    >
       {/* Cinematic Ambient Multi-Color Aurora Mesh & Laser Flares */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-40 h-[500px] w-[500px] rounded-full bg-blue-600/20 blur-[130px] animate-aurora" />

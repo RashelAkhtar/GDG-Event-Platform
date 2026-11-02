@@ -9,6 +9,7 @@ import { LocalGameCountdown } from '@/components/realtime/LocalGameCountdown'
 import { useAuth } from '@/context/AuthContext'
 import { useWebSocket } from '@/context/WebSocketContext'
 import { soundManager } from '@/lib/sound'
+import { SoundToggle } from '@/components/sound/SoundToggle'
 import {
   api,
   GdgEvent,
@@ -339,6 +340,7 @@ function QuizRunnerContent() {
   }, [currentIndex, questions, completedSession, loading, isCountingDown, handleSubmitQuiz])
 
   const handleSelectOption = (optionIndex: number) => {
+    void soundManager.unlock()
     soundManager.playQuizOption()
     setSelectedAnswers((prev) => ({
       ...prev,
@@ -386,10 +388,13 @@ function QuizRunnerContent() {
             <ArrowLeft className="h-3.5 w-3.5" />
             <span>Exit Quiz</span>
           </Link>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-[#1A73E8]/20 bg-[#E8F0FE]/90 px-3.5 py-1 text-xs font-bold text-[#1967D2] shadow-2xs backdrop-blur-md">
-            <Sparkles className="h-3 w-3 text-[#1A73E8]" />
-            <span>{event?.title}</span>
-          </span>
+          <div className="flex items-center gap-2">
+            <SoundToggle />
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#1A73E8]/20 bg-[#E8F0FE]/90 px-3.5 py-1 text-xs font-bold text-[#1967D2] shadow-2xs backdrop-blur-md">
+              <Sparkles className="h-3 w-3 text-[#1A73E8]" />
+              <span>{event?.title}</span>
+            </span>
+          </div>
         </div>
 
         {/* --- AESTHETIC WAIT MESSAGE & SESSION INFO SCREEN --- */}

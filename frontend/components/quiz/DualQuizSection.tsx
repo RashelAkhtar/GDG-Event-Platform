@@ -12,6 +12,7 @@ import {
   RankedParticipant,
 } from '@/lib/api'
 import { AnimatedLockToggle } from '@/components/ui/AnimatedLockToggle'
+import { soundManager } from '@/lib/sound'
 import {
   Globe,
   Brain,
@@ -445,6 +446,9 @@ export function DualQuizSection({
             {isLive ? (
               <Link
                 href={targetHref}
+                onClick={() => {
+                  void soundManager.unlock()
+                }}
                 className={`relative flex h-13 sm:h-14 flex-1 items-center justify-center gap-2.5 rounded-2xl sm:rounded-[22px] bg-gradient-to-r ${btnGradient} text-sm sm:text-base font-extrabold text-white shadow-lg ${btnShadow} hover:brightness-105 active:scale-[0.98] transition-all overflow-hidden group/btn`}
               >
                 {/* Button top gloss highlight */}

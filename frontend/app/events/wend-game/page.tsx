@@ -15,6 +15,7 @@ import {
 import { useAuth } from '@/context/AuthContext'
 import { useWebSocket } from '@/context/WebSocketContext'
 import { soundManager } from '@/lib/sound'
+import { SoundToggle } from '@/components/sound/SoundToggle'
 import { LockedIllustration } from '@/components/ui/LockIllustrations'
 import { WendSnakeGrid } from '@/components/wend/WendSnakeGrid'
 import { WendWordBank } from '@/components/wend/WendWordBank'
@@ -512,6 +513,7 @@ export default function WendGamePage() {
           </Link>
 
           <div className="flex items-center gap-2">
+            <SoundToggle />
             {/* Live Admin-Configured Countdown Timer */}
             {!completedSession && (
               <div
