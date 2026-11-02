@@ -352,9 +352,14 @@ class EventWebSocketService {
       }
 
       case 'START_WINNER_CEREMONY': {
+        const enrichedPayload = {
+          ...message.payload,
+          broadcastId: message.payload?.broadcastId || `ceremony_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+          timestamp: Date.now(),
+        };
         this.broadcast({
           type: 'START_WINNER_CEREMONY',
-          payload: message.payload,
+          payload: enrichedPayload,
         });
         break;
       }

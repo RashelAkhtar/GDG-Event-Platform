@@ -1077,7 +1077,7 @@ export default function AdminPage() {
                           className="flex h-9 items-center justify-center gap-1.5 rounded-full bg-[#FEF7E0] border border-[#FBBC04]/50 text-xs font-semibold text-[#B06000] hover:bg-[#FFF8E1] active:scale-98 transition-all"
                         >
                           <Award className="h-3.5 w-3.5 text-[#FBBC04]" />
-                          <span>Announce Winners</span>
+                          <span>Replay Announcement</span>
                         </button>
                       </div>
                     </div>
@@ -1290,7 +1290,7 @@ export default function AdminPage() {
                           className="flex h-9 items-center justify-center gap-1.5 rounded-full bg-[#FEF7E0] border border-[#FBBC04]/50 text-xs font-semibold text-[#B06000] hover:bg-[#FFF8E1] active:scale-98 transition-all"
                         >
                           <Award className="h-3.5 w-3.5 text-[#FBBC04]" />
-                          <span>Announce Winners</span>
+                          <span>Replay Announcement</span>
                         </button>
                       </div>
                     </div>
@@ -1503,7 +1503,7 @@ export default function AdminPage() {
                           className="flex h-9 items-center justify-center gap-1.5 rounded-full bg-[#FEF7E0] border border-[#FBBC04]/50 text-xs font-semibold text-[#B06000] hover:bg-[#FFF8E1] active:scale-98 transition-all"
                         >
                           <Award className="h-3.5 w-3.5 text-[#FBBC04]" />
-                          <span>Announce Winners</span>
+                          <span>Replay Announcement</span>
                         </button>
                       </div>
                     </div>

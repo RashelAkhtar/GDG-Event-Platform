@@ -957,7 +957,7 @@ export function DualQuizSection({
                     className="flex items-center justify-center gap-1 rounded-full bg-[#FEF7E0] border border-[#FBBC04]/40 py-1.5 px-2 text-[11px] font-semibold text-[#B06000] hover:bg-[#FEEFC3] active:scale-95 transition-all cursor-pointer"
                   >
                     <Award className="h-3 w-3 text-[#FBBC04]" />
-                    <span>Ceremony</span>
+                    <span>Replay Announcement</span>
                   </button>
                 </div>
               </div>

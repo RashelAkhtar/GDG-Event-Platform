@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { useWebSocket } from '@/context/WebSocketContext'
+import { useWebSocket, CeremonyData } from '@/context/WebSocketContext'
+import { useAuth } from '@/context/AuthContext'
 import { soundManager } from '@/lib/sound'
 import { Trophy, Crown, Medal, Award, Sparkles, X, Clock, Zap, Home, ArrowRight } from 'lucide-react'
 import confetti from 'canvas-confetti'
@@ -28,18 +29,32 @@ function formatDuration(ms: number): string {
 }
 
 export function WinnerAnnouncementOverlay() {
+  const { activeCeremony } = useWebSocket()
+  if (!activeCeremony) return null
+  const ceremonyKey = activeCeremony.broadcastId || activeCeremony.gameSlug
+
+  return (
+    <WinnerAnnouncementStage
+      key={ceremonyKey}
+      ceremony={activeCeremony}
+    />
+  )
+}
+
+function WinnerAnnouncementStage({ ceremony }: { ceremony: CeremonyData }) {
   const router = useRouter()
-  const { activeCeremony, closeCeremony } = useWebSocket()
+  const { closeCeremony, sendWinnerCeremonyStart } = useWebSocket()
+  const { user } = useAuth()
   const [step, setStep] = useState<CeremonyStep>('COUNTDOWN_3RD')
   const [countdown, setCountdown] = useState<number>(5)
   const [revealedItemsCount, setRevealedItemsCount] = useState<number>(0)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
-  const winners = activeCeremony?.winners || []
+  const winners = ceremony.winners || []
   const first = winners.find((w) => w.rank === 1)
   const second = winners.find((w) => w.rank === 2)
   const third = winners.find((w) => w.rank === 3)
-  const fullLeaderboard = activeCeremony?.fullLeaderboard || []
+  const fullLeaderboard = ceremony.fullLeaderboard || []
 
   // Fire celebratory fireworks / confetti against the dark cinematic canvas
   const fireBurst = (colors = CELEBRATION_COLORS, particleCount = 100) => {
@@ -55,9 +70,9 @@ export function WinnerAnnouncementOverlay() {
 
   // Sequence controller: Dynamic adaptive stages (3rd -> 2nd -> 1st) with crisp SFX
   useEffect(() => {
-    if (!activeCeremony) return
+    if (!ceremony) return
     if (typeof window !== 'undefined') {
-      localStorage.setItem(`gdg_ceremony_revealed_${activeCeremony.gameSlug}`, 'true')
+      localStorage.setItem(`gdg_ceremony_revealed_${ceremony.gameSlug}`, 'true')
     }
 
     const hasThird = Boolean(third)
@@ -151,7 +166,7 @@ export function WinnerAnnouncementOverlay() {
       clearTimeout(initTimer)
       if (intervalRef.current) clearInterval(intervalRef.current)
     }
-  }, [activeCeremony, third, second])
+  }, [ceremony, third, second])
 
   // Staggered reveal of ranklist rows in SHOWCASE_ALL stage
   useEffect(() => {
@@ -167,7 +182,6 @@ export function WinnerAnnouncementOverlay() {
     }
   }, [step, fullLeaderboard.length])
 
-  if (!activeCeremony) return null
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-between overflow-y-auto bg-[#070B14]/98 p-4 sm:p-6 backdrop-blur-3xl text-white selection:bg-fuchsia-500 selection:text-white">
@@ -190,7 +204,7 @@ export function WinnerAnnouncementOverlay() {
             <span className="h-2 w-2 rounded-full bg-[#4285F4]" />
           </span>
           <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
-            {activeCeremony.gameTitle} • Victory Broadcast
+            {ceremony.gameTitle} • Victory Broadcast
           </span>
         </div>
 
@@ -635,8 +649,28 @@ export function WinnerAnnouncementOverlay() {
             ))}
           </div>
 
-          {/* Bottom Actions with ONLY Redirect Home Button (No Replay Ceremony Button) */}
-          <div className="mt-8 flex items-center justify-center">
+          {/* Bottom Actions: Admin gets Replay Announcement, Participants get Redirect Home */}
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            {user?.role === 'ADMIN' && (
+              <button
+                type="button"
+                onClick={() => {
+                  sendWinnerCeremonyStart({
+                    gameSlug: ceremony.gameSlug,
+                    gameTitle: ceremony.gameTitle,
+                    winners: ceremony.winners,
+                    fullLeaderboard: ceremony.fullLeaderboard,
+                    broadcastId: `ceremony_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+                    timestamp: Date.now(),
+                  })
+                }}
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-amber-400/50 bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-yellow-500/20 px-6 py-3.5 text-sm font-bold text-amber-300 shadow-[0_0_25px_rgba(245,158,11,0.3)] hover:shadow-[0_0_35px_rgba(245,158,11,0.5)] hover:scale-105 active:scale-95 transition-all cursor-pointer backdrop-blur-xl"
+              >
+                <Sparkles className="h-4 w-4 text-amber-400" />
+                <span>Replay Announcement</span>
+              </button>
+            )}
+
             <button
               onClick={() => {
                 closeCeremony()

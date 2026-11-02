@@ -21,6 +21,8 @@ export interface CeremonyData {
   gameTitle: string
   winners: CeremonyWinner[]
   fullLeaderboard: LeaderboardEntry[]
+  broadcastId?: string
+  timestamp?: number
 }
 
 
@@ -279,7 +281,13 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
           break
         }
         case 'START_WINNER_CEREMONY': {
-          setActiveCeremony(payload as unknown as CeremonyData)
+          const raw = payload as unknown as CeremonyData
+          const enriched: CeremonyData = {
+            ...raw,
+            broadcastId: raw?.broadcastId || `ceremony_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+            timestamp: raw?.timestamp || Date.now(),
+          }
+          setActiveCeremony(enriched)
           break
         }
         case 'RESET_GAME_LEADERBOARD': {
@@ -541,10 +549,16 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
 
   const sendWinnerCeremonyStart = useCallback(
     (ceremonyData: CeremonyData) => {
-      setActiveCeremony(ceremonyData)
+      const broadcastId = ceremonyData.broadcastId || `ceremony_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
+      const enriched: CeremonyData = {
+        ...ceremonyData,
+        broadcastId,
+        timestamp: Date.now(),
+      }
+      setActiveCeremony(enriched)
       broadcastMessage({
         type: 'START_WINNER_CEREMONY',
-        payload: ceremonyData,
+        payload: enriched,
       })
     },
     [broadcastMessage]
