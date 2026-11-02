@@ -12,7 +12,6 @@ import {
   WendWord,
   WendBoardConfig,
   findWordPathInGrid,
-  DEFAULT_WEND_BOARD,
   CeremonyWinner,
   RankedParticipant,
   LeaderboardEntry,
@@ -21,6 +20,10 @@ import { useWebSocket } from '@/context/WebSocketContext'
 import { useAuth } from '@/context/AuthContext'
 import {
   ShieldCheck,
+  Globe,
+  Brain,
+  Gamepad2,
+  SlidersHorizontal,
   Lock,
   Unlock,
   Plus,
@@ -32,30 +35,24 @@ import {
   Award,
   Play,
   Trophy,
-  Type,
   ListOrdered,
   Sparkles,
   Trash2,
   Edit2,
   Edit3,
-  Sliders,
-  Send,
   UserCheck,
   RefreshCw,
   Crown,
   Medal,
   Rocket,
   Grid,
-  Layers,
   RotateCcw,
   Check,
   X,
   Zap,
   Eye,
   EyeOff,
-  CornerDownLeft,
 } from 'lucide-react'
-import { LockedIllustration, UnlockedIllustration } from '@/components/ui/LockIllustrations'
 import { AnimatedLockToggle } from '@/components/ui/AnimatedLockToggle'
 import { SecurityNotificationBell } from '@/components/security/SecurityNotificationBell'
 
@@ -752,83 +749,155 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* 4 Dedicated Navigation Control Panels */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
-          <button
-            onClick={() => setActiveTab('locks')}
-            className={`flex items-center justify-center gap-2 rounded-2xl p-3 text-xs font-semibold border transition-all ${
-              activeTab === 'locks'
-                ? 'bg-[#1A73E8] text-white border-[#1A73E8] shadow-xs'
-                : 'bg-white text-[#3C4043] border-[#DADCE0] hover:bg-[#F8F9FA]'
-            }`}
-          >
-            <Sliders className="h-4 w-4" />
-            <span>1. Div Lock & Start</span>
-          </button>
+        {/* Floating Segmented Control Bar with Google Theme & Active Glow */}
+        <div className="mb-6 p-1.5 rounded-2xl border border-[#DADCE0]/80 bg-white/80 backdrop-blur-xl shadow-xs">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+            <button
+              type="button"
+              onClick={() => setActiveTab('locks')}
+              className={`group flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 text-xs font-bold transition-all duration-200 cursor-pointer ${
+                activeTab === 'locks'
+                  ? 'bg-gradient-to-r from-[#1A73E8] to-[#1557B0] text-white shadow-md shadow-[#1A73E8]/25 scale-[1.01]'
+                  : 'text-[#5F6368] hover:text-[#202124] hover:bg-[#F1F3F4]/80'
+              }`}
+            >
+              <span className={`flex h-5 w-5 items-center justify-center rounded-lg text-[10px] font-black transition-colors ${
+                activeTab === 'locks' ? 'bg-white/20 text-white' : 'bg-[#E8F0FE] text-[#1967D2]'
+              }`}>
+                1
+              </span>
+              <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">Div Locks & Arenas</span>
+            </button>
 
-          <button
-            onClick={() => setActiveTab('quiz')}
-            className={`flex items-center justify-center gap-2 rounded-2xl p-3 text-xs font-semibold border transition-all ${
-              activeTab === 'quiz'
-                ? 'bg-[#1A73E8] text-white border-[#1A73E8] shadow-xs'
-                : 'bg-white text-[#3C4043] border-[#DADCE0] hover:bg-[#F8F9FA]'
-            }`}
-          >
-            <ListOrdered className="h-4 w-4" />
-            <span>2. Quiz & Answers</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('quiz')}
+              className={`group flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 text-xs font-bold transition-all duration-200 cursor-pointer ${
+                activeTab === 'quiz'
+                  ? 'bg-gradient-to-r from-[#1E8E3E] to-[#137333] text-white shadow-md shadow-[#34A853]/25 scale-[1.01]'
+                  : 'text-[#5F6368] hover:text-[#202124] hover:bg-[#F1F3F4]/80'
+              }`}
+            >
+              <span className={`flex h-5 w-5 items-center justify-center rounded-lg text-[10px] font-black transition-colors ${
+                activeTab === 'quiz' ? 'bg-white/20 text-white' : 'bg-[#E6F4EA] text-[#137333]'
+              }`}>
+                2
+              </span>
+              <ListOrdered className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">Quiz & Questions</span>
+            </button>
 
-          <button
-            onClick={() => setActiveTab('wend')}
-            className={`flex items-center justify-center gap-2 rounded-2xl p-3 text-xs font-semibold border transition-all ${
-              activeTab === 'wend'
-                ? 'bg-[#1A73E8] text-white border-[#1A73E8] shadow-xs'
-                : 'bg-white text-[#3C4043] border-[#DADCE0] hover:bg-[#F8F9FA]'
-            }`}
-          >
-            <Type className="h-4 w-4" />
-            <span>3. Wend Game Words</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('wend')}
+              className={`group flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 text-xs font-bold transition-all duration-200 cursor-pointer ${
+                activeTab === 'wend'
+                  ? 'bg-gradient-to-r from-[#D93025] to-[#B31412] text-white shadow-md shadow-[#EA4335]/25 scale-[1.01]'
+                  : 'text-[#5F6368] hover:text-[#202124] hover:bg-[#F1F3F4]/80'
+              }`}
+            >
+              <span className={`flex h-5 w-5 items-center justify-center rounded-lg text-[10px] font-black transition-colors ${
+                activeTab === 'wend' ? 'bg-white/20 text-white' : 'bg-[#FCE8E6] text-[#C5221F]'
+              }`}>
+                3
+              </span>
+              <Grid className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">Wend 8×8 Studio</span>
+            </button>
 
-          <button
-            onClick={() => setActiveTab('winners')}
-            className={`flex items-center justify-center gap-2 rounded-2xl p-3 text-xs font-semibold border transition-all ${
-              activeTab === 'winners'
-                ? 'bg-[#FBBC04] text-[#202124] border-[#FBBC04] shadow-xs font-bold'
-                : 'bg-white text-[#3C4043] border-[#DADCE0] hover:bg-[#F8F9FA]'
-            }`}
-          >
-            <Crown className="h-4 w-4 text-[#FBBC04]" />
-            <span>4. Winner Ceremony</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('winners')}
+              className={`group flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 text-xs font-bold transition-all duration-200 cursor-pointer ${
+                activeTab === 'winners'
+                  ? 'bg-gradient-to-r from-[#FBBC04] to-[#F29900] text-[#202124] shadow-md shadow-[#FBBC04]/30 scale-[1.01]'
+                  : 'text-[#5F6368] hover:text-[#202124] hover:bg-[#F1F3F4]/80'
+              }`}
+            >
+              <span className={`flex h-5 w-5 items-center justify-center rounded-lg text-[10px] font-black transition-colors ${
+                activeTab === 'winners' ? 'bg-black/15 text-[#202124]' : 'bg-[#FEF7E0] text-[#B06000]'
+              }`}>
+                4
+              </span>
+              <Crown className="h-3.5 w-3.5 shrink-0 text-[#B06000]" />
+              <span className="truncate">Winner Ceremony</span>
+            </button>
+          </div>
         </div>
 
         {/* ======================================================== */}
         {/* PANEL 1: DIV LOCK / UNLOCK & LIVE COUNTDOWN LAUNCHER    */}
         {/* ======================================================== */}
         {activeTab === 'locks' && (
-          <div className="flex flex-col gap-5 animate-in fade-in duration-200">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="flex flex-col gap-6 animate-in fade-in duration-200">
+            {/* Panel Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white/70 backdrop-blur-md p-4 sm:p-5 rounded-3xl border border-[#DADCE0]/80 shadow-2xs">
               <div>
-                <h2 className="text-xl font-normal tracking-tight text-[#202124]">
-                  Quiz & Game Div Locks (Real-Time Mobile Control)
-                </h2>
-                <p className="mt-0.5 text-xs text-[#5F6368]">
-                  Click the lock/unlock switch or padlock to toggle immediately. Click directly on any div card to edit its title and description.
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#E8F0FE] text-[#1967D2]">
+                    <SlidersHorizontal className="h-4 w-4" />
+                  </span>
+                  <h2 className="text-lg sm:text-xl font-bold tracking-tight text-[#202124]">
+                    Quiz & Game Div Locks (Real-Time Control)
+                  </h2>
+                </div>
+                <p className="mt-1 text-xs text-[#5F6368]">
+                  Toggle padlock or switch to lock/unlock tracks in real time. Click card body to edit track title and description.
                 </p>
               </div>
-              <span className="self-start sm:self-auto inline-flex items-center gap-1.5 rounded-full bg-[#E8F0FE] px-3 py-1 text-[11px] font-semibold text-[#1967D2]">
-                <span className="h-2 w-2 rounded-full bg-[#34A853] animate-pulse" />
-                Live WebSocket Synced
-              </span>
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E6F4EA] border border-[#34A853]/30 px-3 py-1.5 text-xs font-bold text-[#137333] shadow-2xs">
+                  <span className="h-2 w-2 rounded-full bg-[#34A853] animate-pulse" />
+                  <span>Real-Time WebSocket Synced</span>
+                </span>
+              </div>
             </div>
 
+            {/* 3 Arena Track Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {/* Top Div: Web Quiz Track */}
-              {(() => {
-                const slug = 'web-dev-quiz' as const
-                const event = webEvent
-                const isLive = isWebLive
+              {[
+                {
+                  slug: 'web-dev-quiz' as const,
+                  event: webEvent,
+                  isLive: isWebLive,
+                  trackTag: 'Top Div • Web Track',
+                  tagBg: 'bg-[#E8F0FE] text-[#1967D2] border border-[#1A73E8]/20',
+                  accentHover: 'hover:border-[#1A73E8]',
+                  icon: Globe,
+                  meta: `${api.getQuestionsForSlug('web-dev-quiz').length} Questions • Fast Blitz`,
+                  actionTitle: 'Web Dev Sprint',
+                  jumpTab: 'quiz' as const,
+                  jumpLabel: 'Manage Questions',
+                },
+                {
+                  slug: 'mentis-quiz' as const,
+                  event: mentisEvent,
+                  isLive: isMentisLive,
+                  trackTag: 'Bottom Div • Mentis Track',
+                  tagBg: 'bg-[#FEF7E0] text-[#B06000] border border-[#FBBC04]/40',
+                  accentHover: 'hover:border-[#FBBC04]',
+                  icon: Brain,
+                  meta: `${api.getQuestionsForSlug('mentis-quiz').length} Questions • Logic & AI`,
+                  actionTitle: 'Mentis Mind Challenge',
+                  jumpTab: 'quiz' as const,
+                  jumpLabel: 'Manage Questions',
+                },
+                {
+                  slug: 'wend-game' as const,
+                  event: wendEvent,
+                  isLive: isWendLive,
+                  trackTag: 'Wend Track • Word Puzzle',
+                  tagBg: 'bg-[#E6F4EA] text-[#137333] border border-[#34A853]/30',
+                  accentHover: 'hover:border-[#34A853]',
+                  icon: Gamepad2,
+                  meta: `8×8 Matrix • ${wendBoard.targetWords.length} Target Words`,
+                  actionTitle: 'Wend Word Arena',
+                  jumpTab: 'wend' as const,
+                  jumpLabel: 'Open 8×8 Studio',
+                },
+              ].map((track) => {
+                const { slug, event, isLive, trackTag, tagBg, accentHover, icon: Icon, meta, actionTitle, jumpTab, jumpLabel } = track
                 const isEditing = editingDivSlug === slug
                 const isUpdating = updatingId === event._id
 
@@ -838,23 +907,24 @@ export default function AdminPage() {
                     onClick={() => {
                       if (!isEditing) handleStartEditDiv(slug)
                     }}
-                    className={`group relative flex flex-col justify-between rounded-3xl border transition-all duration-300 p-5 shadow-2xs ${
+                    className={`group relative flex flex-col justify-between rounded-3xl border transition-all duration-300 p-5 bg-white/90 backdrop-blur-md shadow-xs hover:shadow-md cursor-pointer ${
                       isEditing
-                        ? 'border-[#1A73E8] bg-[#F8F9FA] ring-2 ring-[#1A73E8]/20'
+                        ? 'border-[#1A73E8] ring-4 ring-[#1A73E8]/15 bg-white cursor-default'
                         : isLive
-                        ? 'border-[#34A853]/40 bg-white ring-1 ring-[#34A853]/15 hover:shadow-md cursor-pointer hover:border-[#34A853]'
-                        : 'border-[#DADCE0] bg-white hover:border-[#BDC1C6] hover:shadow-sm cursor-pointer'
+                        ? 'border-[#34A853]/50 ring-1 ring-[#34A853]/20 ' + accentHover
+                        : 'border-[#DADCE0] hover:border-[#BDC1C6]'
                     }`}
-                    title={!isEditing ? 'Click on div to edit title & description' : undefined}
+                    title={!isEditing ? 'Click card to edit title & description' : undefined}
                   >
                     <div>
                       {/* Top Header: Track Tag & Lock/Unlock Switch */}
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="rounded-full bg-[#E8F0FE] px-2.5 py-1 text-[11px] font-semibold text-[#1967D2]">
-                          Top Div • Web Track
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold ${tagBg}`}>
+                          <Icon className="h-3 w-3" />
+                          <span>{trackTag}</span>
                         </span>
 
-                        {/* Interactive Lock/Unlock Switch Pill */}
+                        {/* Interactive Lock/Unlock Pill Switch */}
                         <button
                           type="button"
                           disabled={isUpdating}
@@ -863,17 +933,17 @@ export default function AdminPage() {
                             handleToggleDivLock(slug, isLive)
                           }}
                           title={isLive ? 'Click to switch to LOCKED' : 'Click to switch to UNLOCKED'}
-                          className={`group/switch inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold shadow-2xs transition-all cursor-pointer hover:scale-105 active:scale-95 ${
+                          className={`group/switch inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-2xs ${
                             isLive
-                              ? 'bg-[#E6F4EA] border border-[#34A853]/40 text-[#137333] hover:bg-[#CEEAD6]'
+                              ? 'bg-[#E6F4EA] border border-[#34A853]/50 text-[#137333] hover:bg-[#CEEAD6]'
                               : 'bg-[#F1F3F4] border border-[#DADCE0] text-[#5F6368] hover:bg-[#E8EAED]'
                           }`}
                         >
                           {isLive ? (
                             <>
                               <span className="h-2 w-2 rounded-full bg-[#34A853] animate-pulse" />
-                              <span>UNLOCKED</span>
-                              <span className="ml-1 inline-flex h-4 w-7 items-center rounded-full bg-[#34A853] px-0.5 transition-colors">
+                              <span>LIVE NOW</span>
+                              <span className="ml-0.5 inline-flex h-4 w-7 items-center rounded-full bg-[#34A853] px-0.5 transition-colors">
                                 <span className="h-3 w-3 translate-x-3 rounded-full bg-white shadow-xs transition-transform" />
                               </span>
                             </>
@@ -881,7 +951,7 @@ export default function AdminPage() {
                             <>
                               <Lock className="h-3 w-3" />
                               <span>LOCKED</span>
-                              <span className="ml-1 inline-flex h-4 w-7 items-center rounded-full bg-[#BDC1C6] px-0.5 transition-colors">
+                              <span className="ml-0.5 inline-flex h-4 w-7 items-center rounded-full bg-[#BDC1C6] px-0.5 transition-colors">
                                 <span className="h-3 w-3 translate-x-0 rounded-full bg-white shadow-xs transition-transform" />
                               </span>
                             </>
@@ -889,8 +959,11 @@ export default function AdminPage() {
                         </button>
                       </div>
 
-                      {/* Interactive Padlock Illustration (Click to Switch Lock/Unlock) */}
-                      <div className="my-3 flex justify-center">
+                      {/* Animated Padlock Illustration with Soft Ambient Radial Aura */}
+                      <div className="my-3 flex justify-center relative">
+                        <div className={`absolute inset-0 rounded-full blur-2xl -z-10 pointer-events-none transition-opacity ${
+                          isLive ? 'bg-gradient-to-r from-[#34A853]/15 to-[#4285F4]/15 opacity-80' : 'bg-gradient-to-r from-[#EA4335]/15 to-[#FBBC04]/15 opacity-80'
+                        }`} />
                         <AnimatedLockToggle
                           id={`admin-lock-${slug}`}
                           checked={isLive}
@@ -902,98 +975,58 @@ export default function AdminPage() {
                         />
                       </div>
 
-                      {/* Div Content: ONLY IF CLICKED -> Inline Editor */}
+                      {/* Div Content: Normal View vs Inline Editor */}
                       {isEditing ? (
                         <div
                           onClick={(e) => e.stopPropagation()}
-                          className="mt-2 rounded-2xl border border-[#1A73E8]/30 bg-white p-3.5 shadow-sm text-left animate-in zoom-in-95"
+                          className="mt-2 rounded-2xl border border-[#1A73E8]/40 bg-white p-4 shadow-sm text-left animate-in zoom-in-95"
                         >
-                          <div className="flex items-center justify-between mb-2.5 pb-1.5 border-b border-[#DADCE0]">
+                          <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#DADCE0]">
                             <span className="text-[11px] font-bold text-[#1A73E8] uppercase tracking-wider flex items-center gap-1.5">
-                              <Edit3 className="h-3 w-3" />
+                              <Edit3 className="h-3.5 w-3.5" />
                               Edit Div Content
                             </span>
-                            <span className="text-[10px] font-medium text-[#5F6368]">Live Edit</span>
+                            <span className="text-[10px] font-semibold text-[#5F6368] bg-[#F1F3F4] px-2 py-0.5 rounded-full">Live Synced</span>
                           </div>
 
-                          <div className="space-y-2.5 text-left">
+                          <div className="space-y-3 text-left">
                             <div>
-                              <label className="block text-[10px] font-semibold text-[#5F6368] mb-1">Track Title</label>
+                              <label className="block text-[10px] font-bold text-[#3C4043] uppercase tracking-wider mb-1">
+                                Track Title
+                              </label>
                               <input
                                 type="text"
                                 value={editDivTitle}
                                 onChange={(e) => setEditDivTitle(e.target.value)}
-                                className="w-full rounded-xl border border-[#DADCE0] bg-white px-3 py-1.5 text-xs font-semibold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                                className="w-full rounded-xl border border-[#DADCE0] bg-[#F8F9FA] px-3 py-2 text-xs font-bold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:bg-white"
                                 placeholder="Enter track title"
                                 autoFocus
                               />
                             </div>
 
                             <div>
-                              <label className="block text-[10px] font-semibold text-[#5F6368] mb-1">Description</label>
+                              <label className="block text-[10px] font-bold text-[#3C4043] uppercase tracking-wider mb-1">
+                                Description
+                              </label>
                               <textarea
-                                rows={2}
+                                rows={3}
                                 value={editDivDescription}
                                 onChange={(e) => setEditDivDescription(e.target.value)}
-                                className="w-full rounded-xl border border-[#DADCE0] bg-white p-2 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                                className="w-full rounded-xl border border-[#DADCE0] bg-[#F8F9FA] p-2.5 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:bg-white leading-relaxed"
                                 placeholder="Enter track description"
                               />
                             </div>
 
-                            <div className="pt-2 border-t border-[#DADCE0]">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setActiveTab('quiz')
-                                  setSelectedSlug(slug)
-                                }}
-                                className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#E8F0FE] border border-[#1A73E8]/30 py-1.5 px-3 text-xs font-semibold text-[#1967D2] hover:bg-[#D2E3FC] transition-colors"
-                              >
-                                <Sliders className="h-3.5 w-3.5" />
-                                <span>Manipulate Questions & Answers ({api.getQuestionsForSlug(slug).length}) ➔</span>
-                              </button>
-                            </div>
-
-                            <div className="pt-2 border-t border-[#DADCE0]">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setActiveTab('quiz')
-                                  setSelectedSlug(slug)
-                                }}
-                                className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#FEF7E0] border border-[#FBBC04]/40 py-1.5 px-3 text-xs font-semibold text-[#B06000] hover:bg-[#FFF8E1] transition-colors"
-                              >
-                                <Sliders className="h-3.5 w-3.5" />
-                                <span>Manipulate Questions & Answers ({api.getQuestionsForSlug(slug).length}) ➔</span>
-                              </button>
-                            </div>
-
-                            <div className="pt-2 border-t border-[#DADCE0]">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setActiveTab('wend')
-                                }}
-                                className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#E6F4EA] border border-[#34A853]/40 py-1.5 px-3 text-xs font-semibold text-[#137333] hover:bg-[#CEEAD6] transition-colors"
-                              >
-                                <Sliders className="h-3.5 w-3.5" />
-                                <span>Manipulate Words & Snake Grid Studio ({wendBoard.targetWords.length}) ➔</span>
-                              </button>
-                            </div>
-
-                            <div className="flex items-center justify-end gap-2 pt-1">
+                            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#F1F3F4]">
                               <button
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation()
                                   handleCancelEditDiv()
                                 }}
-                                className="inline-flex items-center gap-1 rounded-full border border-[#DADCE0] bg-white px-3 py-1 text-[11px] font-medium text-[#5F6368] hover:bg-[#F1F3F4]"
+                                className="inline-flex items-center gap-1 rounded-full border border-[#DADCE0] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#5F6368] hover:bg-[#F1F3F4] transition-colors"
                               >
-                                <X className="h-3 w-3" />
+                                <X className="h-3.5 w-3.5" />
                                 <span>Cancel</span>
                               </button>
                               <button
@@ -1003,37 +1036,44 @@ export default function AdminPage() {
                                   e.stopPropagation()
                                   handleSaveDivEdit(slug)
                                 }}
-                                className="inline-flex items-center gap-1.5 rounded-full bg-[#1A73E8] px-3.5 py-1 text-[11px] font-semibold text-white shadow-xs hover:bg-[#1765CC] active:scale-95"
+                                className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#1A73E8] to-[#1557B0] px-4 py-1.5 text-xs font-bold text-white shadow-sm hover:from-[#1765CC] hover:to-[#104D96] active:scale-95 transition-all"
                               >
-                                <Check className="h-3 w-3" />
+                                <Check className="h-3.5 w-3.5" />
                                 <span>{savingDivEdit ? 'Saving...' : 'Save Div'}</span>
                               </button>
                             </div>
                           </div>
                         </div>
                       ) : (
-                        <div className="mt-1 flex flex-col items-start">
-                          <div className="flex items-center gap-1.5 w-full">
-                            <h3 className="text-base font-semibold text-[#202124] group-hover:text-[#1A73E8] transition-colors">
+                        <div className="mt-2 flex flex-col items-start text-left">
+                          <div className="flex items-center justify-between w-full">
+                            <h3 className="text-base font-bold text-[#202124] group-hover:text-[#1A73E8] transition-colors">
                               {event.title}
                             </h3>
-                            <span className="opacity-0 group-hover:opacity-100 transition-opacity text-[#1A73E8] ml-auto">
+                            <span className="opacity-0 group-hover:opacity-100 transition-opacity text-[#1A73E8] ml-1">
                               <Edit3 className="h-3.5 w-3.5" />
                             </span>
                           </div>
                           <p className="text-xs text-[#5F6368] mt-1 leading-relaxed line-clamp-2">
                             {event.description}
                           </p>
-                          <div className="mt-2.5 flex items-center gap-1.5 rounded-full bg-[#F1F3F4] px-2.5 py-0.5 text-[10px] font-medium text-[#5F6368] group-hover:bg-[#E8F0FE] group-hover:text-[#1A73E8] transition-colors">
-                            <Edit2 className="h-2.5 w-2.5" />
-                            <span>Click div to edit title & description</span>
+                          <div className="mt-3 flex items-center justify-between w-full gap-2 pt-2 border-t border-[#F1F3F4]">
+                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#5F6368]">
+                              <Sparkles className="h-3 w-3 text-[#FBBC04]" />
+                              <span>{meta}</span>
+                            </span>
+                            <span className="inline-flex items-center gap-1 rounded-full bg-[#F1F3F4] px-2.5 py-0.5 text-[10px] font-semibold text-[#5F6368] group-hover:bg-[#E8F0FE] group-hover:text-[#1A73E8] transition-colors">
+                              <Edit2 className="h-2.5 w-2.5" />
+                              <span>Click to edit</span>
+                            </span>
                           </div>
                         </div>
                       )}
                     </div>
 
-                    {/* Bottom Action Controls */}
+                    {/* Bottom Action Controls Deck */}
                     <div className="mt-5 flex flex-col gap-2 pt-3 border-t border-[#F1F3F4]">
+                      {/* Primary Lock/Unlock Action Button */}
                       <button
                         type="button"
                         disabled={isUpdating}
@@ -1041,24 +1081,25 @@ export default function AdminPage() {
                           e.stopPropagation()
                           handleToggleDivLock(slug, isLive)
                         }}
-                        className={`flex h-10 items-center justify-center gap-2 rounded-full text-xs font-semibold transition-all active:scale-98 shadow-xs ${
+                        className={`flex h-11 items-center justify-center gap-2 rounded-2xl text-xs font-bold transition-all active:scale-[0.98] shadow-sm cursor-pointer ${
                           isLive
-                            ? 'bg-[#EA4335] text-white hover:bg-[#D93025]'
-                            : 'bg-[#34A853] text-white hover:bg-[#1E8E3E]'
+                            ? 'bg-gradient-to-r from-[#EA4335] to-[#D93025] text-white hover:from-[#D93025] hover:to-[#C5221F] shadow-[#EA4335]/25'
+                            : 'bg-gradient-to-r from-[#34A853] to-[#1E8E3E] text-white hover:from-[#1E8E3E] hover:to-[#137333] shadow-[#34A853]/25'
                         }`}
                       >
-                        {isLive ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
-                        <span>{isLive ? 'Lock Web Div (Switch to Locked)' : 'Unlock Web Div (Switch to Live)'}</span>
+                        {isLive ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                        <span>{isLive ? `Lock ${actionTitle} (Switch to Locked)` : `Unlock ${actionTitle} (Go Live)`}</span>
                       </button>
 
+                      {/* Quick Secondary Controls Row */}
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation()
-                            handleStart5sCountdown(slug, 'Web Dev Sprint')
+                            handleStart5sCountdown(slug, actionTitle)
                           }}
-                          className="flex h-9 items-center justify-center gap-1.5 rounded-full border border-[#1A73E8] bg-white text-xs font-semibold text-[#1A73E8] hover:bg-[#E8F0FE] active:scale-98 transition-all"
+                          className="flex h-9 items-center justify-center gap-1.5 rounded-xl border border-[#1A73E8]/30 bg-[#E8F0FE] text-xs font-bold text-[#1967D2] hover:bg-[#D2E3FC] active:scale-95 transition-all shadow-2xs"
                         >
                           <Play className="h-3 w-3 fill-current" />
                           <span>5s Countdown</span>
@@ -1070,442 +1111,32 @@ export default function AdminPage() {
                             e.stopPropagation()
                             handleBroadcastWinnerCeremony(slug)
                           }}
-                          className="flex h-9 items-center justify-center gap-1.5 rounded-full bg-[#FEF7E0] border border-[#FBBC04]/50 text-xs font-semibold text-[#B06000] hover:bg-[#FFF8E1] active:scale-98 transition-all"
+                          className="flex h-9 items-center justify-center gap-1.5 rounded-xl border border-[#FBBC04]/50 bg-[#FEF7E0] text-xs font-bold text-[#B06000] hover:bg-[#FFF8E1] active:scale-95 transition-all shadow-2xs"
                         >
                           <Award className="h-3.5 w-3.5 text-[#FBBC04]" />
-                          <span>Replay Announcement</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })()}
-
-              {/* Bottom Div: Mentis Quiz Track */}
-              {(() => {
-                const slug = 'mentis-quiz' as const
-                const event = mentisEvent
-                const isLive = isMentisLive
-                const isEditing = editingDivSlug === slug
-                const isUpdating = updatingId === event._id
-
-                return (
-                  <div
-                    key={slug}
-                    onClick={() => {
-                      if (!isEditing) handleStartEditDiv(slug)
-                    }}
-                    className={`group relative flex flex-col justify-between rounded-3xl border transition-all duration-300 p-5 shadow-2xs ${
-                      isEditing
-                        ? 'border-[#1A73E8] bg-[#F8F9FA] ring-2 ring-[#1A73E8]/20'
-                        : isLive
-                        ? 'border-[#34A853]/40 bg-white ring-1 ring-[#34A853]/15 hover:shadow-md cursor-pointer hover:border-[#34A853]'
-                        : 'border-[#DADCE0] bg-white hover:border-[#BDC1C6] hover:shadow-sm cursor-pointer'
-                    }`}
-                    title={!isEditing ? 'Click on div to edit title & description' : undefined}
-                  >
-                    <div>
-                      {/* Top Header: Track Tag & Lock/Unlock Switch */}
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="rounded-full bg-[#FEF7E0] px-2.5 py-1 text-[11px] font-semibold text-[#B06000]">
-                          Bottom Div • Mentis Track
-                        </span>
-
-                        {/* Interactive Lock/Unlock Switch Pill */}
-                        <button
-                          type="button"
-                          disabled={isUpdating}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleToggleDivLock(slug, isLive)
-                          }}
-                          title={isLive ? 'Click to switch to LOCKED' : 'Click to switch to UNLOCKED'}
-                          className={`group/switch inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold shadow-2xs transition-all cursor-pointer hover:scale-105 active:scale-95 ${
-                            isLive
-                              ? 'bg-[#E6F4EA] border border-[#34A853]/40 text-[#137333] hover:bg-[#CEEAD6]'
-                              : 'bg-[#F1F3F4] border border-[#DADCE0] text-[#5F6368] hover:bg-[#E8EAED]'
-                          }`}
-                        >
-                          {isLive ? (
-                            <>
-                              <span className="h-2 w-2 rounded-full bg-[#34A853] animate-pulse" />
-                              <span>UNLOCKED</span>
-                              <span className="ml-1 inline-flex h-4 w-7 items-center rounded-full bg-[#34A853] px-0.5 transition-colors">
-                                <span className="h-3 w-3 translate-x-3 rounded-full bg-white shadow-xs transition-transform" />
-                              </span>
-                            </>
-                          ) : (
-                            <>
-                              <Lock className="h-3 w-3" />
-                              <span>LOCKED</span>
-                              <span className="ml-1 inline-flex h-4 w-7 items-center rounded-full bg-[#BDC1C6] px-0.5 transition-colors">
-                                <span className="h-3 w-3 translate-x-0 rounded-full bg-white shadow-xs transition-transform" />
-                              </span>
-                            </>
-                          )}
+                          <span>Announce Winners</span>
                         </button>
                       </div>
 
-                      {/* Interactive Padlock Illustration (Click to Switch Lock/Unlock) */}
-                      <div className="my-3 flex justify-center">
-                        <AnimatedLockToggle
-                          id={`admin-lock-${slug}`}
-                          checked={isLive}
-                          isAdmin={true}
-                          disabled={isUpdating}
-                          onChange={() => handleToggleDivLock(slug, isLive)}
-                          size="md"
-                          title={isLive ? 'Click lock to switch to LOCKED' : 'Click lock to switch to UNLOCKED'}
-                        />
-                      </div>
-
-                      {/* Div Content: ONLY IF CLICKED -> Inline Editor */}
-                      {isEditing ? (
-                        <div
-                          onClick={(e) => e.stopPropagation()}
-                          className="mt-2 rounded-2xl border border-[#1A73E8]/30 bg-white p-3.5 shadow-sm text-left animate-in zoom-in-95"
-                        >
-                          <div className="flex items-center justify-between mb-2.5 pb-1.5 border-b border-[#DADCE0]">
-                            <span className="text-[11px] font-bold text-[#1A73E8] uppercase tracking-wider flex items-center gap-1.5">
-                              <Edit3 className="h-3 w-3" />
-                              Edit Div Content
-                            </span>
-                            <span className="text-[10px] font-medium text-[#5F6368]">Live Edit</span>
-                          </div>
-
-                          <div className="space-y-2.5 text-left">
-                            <div>
-                              <label className="block text-[10px] font-semibold text-[#5F6368] mb-1">Track Title</label>
-                              <input
-                                type="text"
-                                value={editDivTitle}
-                                onChange={(e) => setEditDivTitle(e.target.value)}
-                                className="w-full rounded-xl border border-[#DADCE0] bg-white px-3 py-1.5 text-xs font-semibold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
-                                placeholder="Enter track title"
-                                autoFocus
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-[10px] font-semibold text-[#5F6368] mb-1">Description</label>
-                              <textarea
-                                rows={2}
-                                value={editDivDescription}
-                                onChange={(e) => setEditDivDescription(e.target.value)}
-                                className="w-full rounded-xl border border-[#DADCE0] bg-white p-2 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
-                                placeholder="Enter track description"
-                              />
-                            </div>
-
-                            <div className="flex items-center justify-end gap-2 pt-1">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleCancelEditDiv()
-                                }}
-                                className="inline-flex items-center gap-1 rounded-full border border-[#DADCE0] bg-white px-3 py-1 text-[11px] font-medium text-[#5F6368] hover:bg-[#F1F3F4]"
-                              >
-                                <X className="h-3 w-3" />
-                                <span>Cancel</span>
-                              </button>
-                              <button
-                                type="button"
-                                disabled={savingDivEdit}
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleSaveDivEdit(slug)
-                                }}
-                                className="inline-flex items-center gap-1.5 rounded-full bg-[#1A73E8] px-3.5 py-1 text-[11px] font-semibold text-white shadow-xs hover:bg-[#1765CC] active:scale-95"
-                              >
-                                <Check className="h-3 w-3" />
-                                <span>{savingDivEdit ? 'Saving...' : 'Save Div'}</span>
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="mt-1 flex flex-col items-start">
-                          <div className="flex items-center gap-1.5 w-full">
-                            <h3 className="text-base font-semibold text-[#202124] group-hover:text-[#1A73E8] transition-colors">
-                              {event.title}
-                            </h3>
-                            <span className="opacity-0 group-hover:opacity-100 transition-opacity text-[#1A73E8] ml-auto">
-                              <Edit3 className="h-3.5 w-3.5" />
-                            </span>
-                          </div>
-                          <p className="text-xs text-[#5F6368] mt-1 leading-relaxed line-clamp-2">
-                            {event.description}
-                          </p>
-                          <div className="mt-2.5 flex items-center gap-1.5 rounded-full bg-[#F1F3F4] px-2.5 py-0.5 text-[10px] font-medium text-[#5F6368] group-hover:bg-[#E8F0FE] group-hover:text-[#1A73E8] transition-colors">
-                            <Edit2 className="h-2.5 w-2.5" />
-                            <span>Click div to edit title & description</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Bottom Action Controls */}
-                    <div className="mt-5 flex flex-col gap-2 pt-3 border-t border-[#F1F3F4]">
+                      {/* Jump Shortcut Link */}
                       <button
                         type="button"
-                        disabled={isUpdating}
                         onClick={(e) => {
                           e.stopPropagation()
-                          handleToggleDivLock(slug, isLive)
+                          setActiveTab(jumpTab)
+                          if (slug !== 'wend-game') {
+                            setSelectedSlug(slug)
+                          }
                         }}
-                        className={`flex h-10 items-center justify-center gap-2 rounded-full text-xs font-semibold transition-all active:scale-98 shadow-xs ${
-                          isLive
-                            ? 'bg-[#EA4335] text-white hover:bg-[#D93025]'
-                            : 'bg-[#34A853] text-white hover:bg-[#1E8E3E]'
-                        }`}
+                        className="mt-1 flex items-center justify-center gap-1 text-[11px] font-semibold text-[#5F6368] hover:text-[#1A73E8] transition-colors py-1"
                       >
-                        {isLive ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
-                        <span>{isLive ? 'Lock Mentis Div (Switch to Locked)' : 'Unlock Mentis Div (Switch to Live)'}</span>
+                        <span>{jumpLabel}</span>
+                        <span>➔</span>
                       </button>
-
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleStart5sCountdown(slug, 'Mentis Mind Challenge')
-                          }}
-                          className="flex h-9 items-center justify-center gap-1.5 rounded-full border border-[#1A73E8] bg-white text-xs font-semibold text-[#1A73E8] hover:bg-[#E8F0FE] active:scale-98 transition-all"
-                        >
-                          <Play className="h-3 w-3 fill-current" />
-                          <span>5s Countdown</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleBroadcastWinnerCeremony(slug)
-                          }}
-                          className="flex h-9 items-center justify-center gap-1.5 rounded-full bg-[#FEF7E0] border border-[#FBBC04]/50 text-xs font-semibold text-[#B06000] hover:bg-[#FFF8E1] active:scale-98 transition-all"
-                        >
-                          <Award className="h-3.5 w-3.5 text-[#FBBC04]" />
-                          <span>Replay Announcement</span>
-                        </button>
-                      </div>
                     </div>
                   </div>
                 )
-              })()}
-
-              {/* Third Div: Wend Word Puzzle Track */}
-              {(() => {
-                const slug = 'wend-game' as const
-                const event = wendEvent
-                const isLive = isWendLive
-                const isEditing = editingDivSlug === slug
-                const isUpdating = updatingId === event._id
-
-                return (
-                  <div
-                    key={slug}
-                    onClick={() => {
-                      if (!isEditing) handleStartEditDiv(slug)
-                    }}
-                    className={`group relative flex flex-col justify-between rounded-3xl border transition-all duration-300 p-5 shadow-2xs ${
-                      isEditing
-                        ? 'border-[#1A73E8] bg-[#F8F9FA] ring-2 ring-[#1A73E8]/20'
-                        : isLive
-                        ? 'border-[#34A853]/40 bg-white ring-1 ring-[#34A853]/15 hover:shadow-md cursor-pointer hover:border-[#34A853]'
-                        : 'border-[#DADCE0] bg-white hover:border-[#BDC1C6] hover:shadow-sm cursor-pointer'
-                    }`}
-                    title={!isEditing ? 'Click on div to edit title & description' : undefined}
-                  >
-                    <div>
-                      {/* Top Header: Track Tag & Lock/Unlock Switch */}
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="rounded-full bg-[#E6F4EA] px-2.5 py-1 text-[11px] font-semibold text-[#137333]">
-                          Wend Track • Word Puzzle
-                        </span>
-
-                        {/* Interactive Lock/Unlock Switch Pill */}
-                        <button
-                          type="button"
-                          disabled={isUpdating}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleToggleDivLock(slug, isLive)
-                          }}
-                          title={isLive ? 'Click to switch to LOCKED' : 'Click to switch to UNLOCKED'}
-                          className={`group/switch inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold shadow-2xs transition-all cursor-pointer hover:scale-105 active:scale-95 ${
-                            isLive
-                              ? 'bg-[#E6F4EA] border border-[#34A853]/40 text-[#137333] hover:bg-[#CEEAD6]'
-                              : 'bg-[#F1F3F4] border border-[#DADCE0] text-[#5F6368] hover:bg-[#E8EAED]'
-                          }`}
-                        >
-                          {isLive ? (
-                            <>
-                              <span className="h-2 w-2 rounded-full bg-[#34A853] animate-pulse" />
-                              <span>UNLOCKED</span>
-                              <span className="ml-1 inline-flex h-4 w-7 items-center rounded-full bg-[#34A853] px-0.5 transition-colors">
-                                <span className="h-3 w-3 translate-x-3 rounded-full bg-white shadow-xs transition-transform" />
-                              </span>
-                            </>
-                          ) : (
-                            <>
-                              <Lock className="h-3 w-3" />
-                              <span>LOCKED</span>
-                              <span className="ml-1 inline-flex h-4 w-7 items-center rounded-full bg-[#BDC1C6] px-0.5 transition-colors">
-                                <span className="h-3 w-3 translate-x-0 rounded-full bg-white shadow-xs transition-transform" />
-                              </span>
-                            </>
-                          )}
-                        </button>
-                      </div>
-
-                      {/* Interactive Padlock Illustration (Click to Switch Lock/Unlock) */}
-                      <div className="my-3 flex justify-center">
-                        <AnimatedLockToggle
-                          id={`admin-lock-${slug}`}
-                          checked={isLive}
-                          isAdmin={true}
-                          disabled={isUpdating}
-                          onChange={() => handleToggleDivLock(slug, isLive)}
-                          size="md"
-                          title={isLive ? 'Click lock to switch to LOCKED' : 'Click lock to switch to UNLOCKED'}
-                        />
-                      </div>
-
-                      {/* Div Content: ONLY IF CLICKED -> Inline Editor */}
-                      {isEditing ? (
-                        <div
-                          onClick={(e) => e.stopPropagation()}
-                          className="mt-2 rounded-2xl border border-[#1A73E8]/30 bg-white p-3.5 shadow-sm text-left animate-in zoom-in-95"
-                        >
-                          <div className="flex items-center justify-between mb-2.5 pb-1.5 border-b border-[#DADCE0]">
-                            <span className="text-[11px] font-bold text-[#1A73E8] uppercase tracking-wider flex items-center gap-1.5">
-                              <Edit3 className="h-3 w-3" />
-                              Edit Div Content
-                            </span>
-                            <span className="text-[10px] font-medium text-[#5F6368]">Live Edit</span>
-                          </div>
-
-                          <div className="space-y-2.5 text-left">
-                            <div>
-                              <label className="block text-[10px] font-semibold text-[#5F6368] mb-1">Track Title</label>
-                              <input
-                                type="text"
-                                value={editDivTitle}
-                                onChange={(e) => setEditDivTitle(e.target.value)}
-                                className="w-full rounded-xl border border-[#DADCE0] bg-white px-3 py-1.5 text-xs font-semibold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
-                                placeholder="Enter track title"
-                                autoFocus
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-[10px] font-semibold text-[#5F6368] mb-1">Description</label>
-                              <textarea
-                                rows={2}
-                                value={editDivDescription}
-                                onChange={(e) => setEditDivDescription(e.target.value)}
-                                className="w-full rounded-xl border border-[#DADCE0] bg-white p-2 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
-                                placeholder="Enter track description"
-                              />
-                            </div>
-
-                            <div className="flex items-center justify-end gap-2 pt-1">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleCancelEditDiv()
-                                }}
-                                className="inline-flex items-center gap-1 rounded-full border border-[#DADCE0] bg-white px-3 py-1 text-[11px] font-medium text-[#5F6368] hover:bg-[#F1F3F4]"
-                              >
-                                <X className="h-3 w-3" />
-                                <span>Cancel</span>
-                              </button>
-                              <button
-                                type="button"
-                                disabled={savingDivEdit}
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleSaveDivEdit(slug)
-                                }}
-                                className="inline-flex items-center gap-1.5 rounded-full bg-[#1A73E8] px-3.5 py-1 text-[11px] font-semibold text-white shadow-xs hover:bg-[#1765CC] active:scale-95"
-                              >
-                                <Check className="h-3 w-3" />
-                                <span>{savingDivEdit ? 'Saving...' : 'Save Div'}</span>
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="mt-1 flex flex-col items-start">
-                          <div className="flex items-center gap-1.5 w-full">
-                            <h3 className="text-base font-semibold text-[#202124] group-hover:text-[#1A73E8] transition-colors">
-                              {event.title}
-                            </h3>
-                            <span className="opacity-0 group-hover:opacity-100 transition-opacity text-[#1A73E8] ml-auto">
-                              <Edit3 className="h-3.5 w-3.5" />
-                            </span>
-                          </div>
-                          <p className="text-xs text-[#5F6368] mt-1 leading-relaxed line-clamp-2">
-                            {event.description}
-                          </p>
-                          <div className="mt-2.5 flex items-center gap-1.5 rounded-full bg-[#F1F3F4] px-2.5 py-0.5 text-[10px] font-medium text-[#5F6368] group-hover:bg-[#E8F0FE] group-hover:text-[#1A73E8] transition-colors">
-                            <Edit2 className="h-2.5 w-2.5" />
-                            <span>Click div to edit title & description</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Bottom Action Controls */}
-                    <div className="mt-5 flex flex-col gap-2 pt-3 border-t border-[#F1F3F4]">
-                      <button
-                        type="button"
-                        disabled={isUpdating}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleToggleDivLock(slug, isLive)
-                        }}
-                        className={`flex h-10 items-center justify-center gap-2 rounded-full text-xs font-semibold transition-all active:scale-98 shadow-xs ${
-                          isLive
-                            ? 'bg-[#EA4335] text-white hover:bg-[#D93025]'
-                            : 'bg-[#34A853] text-white hover:bg-[#1E8E3E]'
-                        }`}
-                      >
-                        {isLive ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
-                        <span>{isLive ? 'Lock Wend Div (Switch to Locked)' : 'Unlock Wend Div (Switch to Live)'}</span>
-                      </button>
-
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleStart5sCountdown(slug, 'Wend Word Arena')
-                          }}
-                          className="flex h-9 items-center justify-center gap-1.5 rounded-full border border-[#1A73E8] bg-white text-xs font-semibold text-[#1A73E8] hover:bg-[#E8F0FE] active:scale-98 transition-all"
-                        >
-                          <Play className="h-3 w-3 fill-current" />
-                          <span>5s Countdown</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleBroadcastWinnerCeremony(slug)
-                          }}
-                          className="flex h-9 items-center justify-center gap-1.5 rounded-full bg-[#FEF7E0] border border-[#FBBC04]/50 text-xs font-semibold text-[#B06000] hover:bg-[#FFF8E1] active:scale-98 transition-all"
-                        >
-                          <Award className="h-3.5 w-3.5 text-[#FBBC04]" />
-                          <span>Replay Announcement</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })()}
+              })}
             </div>
           </div>
         )}
@@ -1516,180 +1147,262 @@ export default function AdminPage() {
         {activeTab === 'quiz' && (
           <div className="flex flex-col gap-6 animate-in fade-in duration-200">
             {/* Header & Quiz Switcher */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white/70 backdrop-blur-md p-4 sm:p-5 rounded-3xl border border-[#DADCE0]/80 shadow-2xs">
               <div>
-                <h2 className="text-xl font-normal tracking-tight text-[#202124]">
-                  Quiz Questions & Answer Keys
-                </h2>
-                <p className="text-xs text-[#5F6368]">
-                  Manage the number of questions, question text, and designate correct vs. wrong answers.
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#E6F4EA] text-[#137333]">
+                    <ListOrdered className="h-4 w-4" />
+                  </span>
+                  <h2 className="text-lg sm:text-xl font-bold tracking-tight text-[#202124]">
+                    Quiz Questions & Answer Keys
+                  </h2>
+                </div>
+                <p className="mt-1 text-xs text-[#5F6368]">
+                  Manage questions, multiple-choice options, designated answer keys, points, and timers.
                 </p>
               </div>
 
-              {/* Event Switcher */}
-              <div className="flex items-center gap-2 rounded-2xl border border-[#DADCE0] bg-white p-1">
+              {/* Event Switcher Segmented Control */}
+              <div className="flex items-center gap-1.5 rounded-2xl border border-[#DADCE0] bg-[#F8F9FA] p-1 shadow-2xs self-start sm:self-auto">
                 <button
+                  type="button"
                   onClick={() => handleSelectQuizTrack('web-dev-quiz')}
-                  className={`rounded-xl px-3 py-1.5 text-xs font-medium transition-all ${
+                  className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer ${
                     selectedSlug === 'web-dev-quiz'
-                      ? 'bg-[#E8F0FE] text-[#1967D2]'
+                      ? 'bg-white text-[#1967D2] shadow-xs border border-[#1A73E8]/30'
                       : 'text-[#5F6368] hover:text-[#202124]'
                   }`}
                 >
-                  Web Dev Sprint
+                  <Globe className="h-3.5 w-3.5" />
+                  <span>Web Dev Sprint</span>
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleSelectQuizTrack('mentis-quiz')}
-                  className={`rounded-xl px-3 py-1.5 text-xs font-medium transition-all ${
+                  className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer ${
                     selectedSlug === 'mentis-quiz'
-                      ? 'bg-[#FEF7E0] text-[#B06000]'
+                      ? 'bg-white text-[#B06000] shadow-xs border border-[#FBBC04]/50'
                       : 'text-[#5F6368] hover:text-[#202124]'
                   }`}
                 >
-                  Mentis Challenge
+                  <Brain className="h-3.5 w-3.5" />
+                  <span>Mentis Challenge</span>
                 </button>
               </div>
             </div>
 
-            {/* Questions Metric Card */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-2xl border border-[#DADCE0] bg-white p-4 text-center">
-                <span className="text-2xl font-bold text-[#1A73E8]">{questionsList.length}</span>
-                <span className="mt-0.5 block text-xs text-[#5F6368]">Total Questions</span>
+            {/* Questions KPI Metric Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+              <div className="relative overflow-hidden rounded-3xl border border-[#DADCE0]/80 bg-white/90 backdrop-blur-md p-4 sm:p-5 shadow-xs hover:shadow-md transition-all">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-[#1A73E8]" />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="block text-2xl sm:text-3xl font-black text-[#1A73E8] tracking-tight">
+                      {questionsList.length}
+                    </span>
+                    <span className="mt-1 block text-xs font-semibold text-[#5F6368]">Total Questions</span>
+                  </div>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#E8F0FE] text-[#1967D2]">
+                    <HelpCircle className="h-5 w-5" />
+                  </div>
+                </div>
               </div>
-              <div className="rounded-2xl border border-[#DADCE0] bg-white p-4 text-center">
-                <span className="text-2xl font-bold text-[#34A853]">
-                  {questionsList.reduce((acc, q) => acc + (q.points || 100), 0)}
-                </span>
-                <span className="mt-0.5 block text-xs text-[#5F6368]">Total Points</span>
+
+              <div className="relative overflow-hidden rounded-3xl border border-[#DADCE0]/80 bg-white/90 backdrop-blur-md p-4 sm:p-5 shadow-xs hover:shadow-md transition-all">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-[#34A853]" />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="block text-2xl sm:text-3xl font-black text-[#34A853] tracking-tight">
+                      {questionsList.reduce((acc, q) => acc + (q.points || 100), 0)}
+                    </span>
+                    <span className="mt-1 block text-xs font-semibold text-[#5F6368]">Total Track Points</span>
+                  </div>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#E6F4EA] text-[#137333]">
+                    <Trophy className="h-5 w-5" />
+                  </div>
+                </div>
               </div>
-              <div className="rounded-2xl border border-[#DADCE0] bg-white p-4 text-center">
-                <span className="text-2xl font-bold text-[#B06000]">
-                  {questionsList.reduce((acc, q) => acc + (q.timeLimitSeconds || 30), 0)}s
-                </span>
-                <span className="mt-0.5 block text-xs text-[#5F6368]">Total Duration</span>
+
+              <div className="relative overflow-hidden rounded-3xl border border-[#DADCE0]/80 bg-white/90 backdrop-blur-md p-4 sm:p-5 shadow-xs hover:shadow-md transition-all">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-[#FBBC04]" />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="block text-2xl sm:text-3xl font-black text-[#B06000] tracking-tight">
+                      {questionsList.reduce((acc, q) => acc + (q.timeLimitSeconds || 30), 0)}s
+                    </span>
+                    <span className="mt-1 block text-xs font-semibold text-[#5F6368]">
+                      Total Duration ({Math.ceil(questionsList.reduce((acc, q) => acc + (q.timeLimitSeconds || 30), 0) / 60)}m)
+                    </span>
+                  </div>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FEF7E0] text-[#B06000]">
+                    <Clock className="h-5 w-5" />
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Question Creator Form */}
-            <div className="rounded-3xl border border-[#DADCE0] bg-white p-6 shadow-2xs">
-              <div className="flex items-center gap-2 mb-4">
-                <HelpCircle className="h-5 w-5 text-[#1A73E8]" />
-                <h3 className="text-base font-semibold text-[#202124]">
-                  Add Question #{questionsList.length + 1}
-                </h3>
+            <div className="rounded-3xl border border-[#DADCE0]/90 bg-white/95 backdrop-blur-md p-5 sm:p-6 shadow-xs">
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#F1F3F4]">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E8F0FE] text-[#1967D2]">
+                    <Plus className="h-4.5 w-4.5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm sm:text-base font-bold text-[#202124]">
+                      Add Question #{questionsList.length + 1}
+                    </h3>
+                    <p className="text-[11px] text-[#5F6368]">
+                      For {selectedSlug === 'web-dev-quiz' ? 'Web Dev Sprint' : 'Mentis Challenge'} track
+                    </p>
+                  </div>
+                </div>
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#E8F0FE] border border-[#1A73E8]/20 px-3 py-1 text-xs font-bold text-[#1967D2]">
+                  <Sparkles className="h-3 w-3 text-[#FBBC04]" />
+                  <span>Pool Builder</span>
+                </span>
               </div>
 
               <form onSubmit={handleAddQuestion} className="flex flex-col gap-4 text-xs">
                 <div>
-                  <label className="block font-medium text-[#3C4043] mb-1">Question Prompt</label>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-[#3C4043] mb-1.5">
+                    Question Prompt
+                  </label>
                   <textarea
                     rows={2}
                     value={questionText}
                     onChange={(e) => setQuestionText(e.target.value)}
-                    placeholder="Enter question text..."
-                    className="w-full rounded-2xl border border-[#DADCE0] p-3 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                    placeholder="Enter the question prompt here (e.g. Which CSS property triggers GPU hardware acceleration?)..."
+                    className="w-full rounded-2xl border border-[#DADCE0] bg-[#F8F9FA] p-3 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:bg-white leading-relaxed"
                     required
                   />
                 </div>
 
                 {/* 4 Options with explicit Correct / Wrong selector */}
                 <div>
-                  <label className="block font-medium text-[#3C4043] mb-1.5">
-                    Options & Answer Key (select the green radio button for the CORRECT answer):
-                  </label>
-                  <div className="flex flex-col gap-2.5">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-[#3C4043]">
+                      Answer Options (Select the green radio button for the CORRECT answer)
+                    </label>
+                    <span className="text-[10px] font-semibold text-[#137333]">
+                      Option {String.fromCharCode(65 + correctOptionIndex)} is marked correct
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     {options.map((opt, idx) => {
                       const isCorrect = correctOptionIndex === idx
+                      const letter = String.fromCharCode(65 + idx)
                       return (
                         <div
                           key={idx}
-                          className={`flex items-center gap-2.5 rounded-2xl border p-2 transition-all ${
-                            isCorrect ? 'border-[#34A853] bg-[#E6F4EA]/40 ring-1 ring-[#34A853]' : 'border-[#DADCE0] bg-white'
+                          onClick={() => setCorrectOptionIndex(idx)}
+                          className={`flex items-center gap-2.5 rounded-2xl border p-2.5 transition-all cursor-pointer ${
+                            isCorrect
+                              ? 'border-[#34A853] bg-[#E6F4EA]/50 ring-2 ring-[#34A853]/25 shadow-xs'
+                              : 'border-[#DADCE0] bg-white hover:border-[#BDC1C6]'
                           }`}
                         >
-                          <label className="flex items-center gap-1.5 cursor-pointer pl-1">
+                          <div className="flex items-center gap-2 pl-1">
                             <input
                               type="radio"
                               name="correctAnswer"
                               checked={isCorrect}
                               onChange={() => setCorrectOptionIndex(idx)}
-                              className="h-4 w-4 text-[#34A853] focus:ring-[#34A853]"
+                              className="h-4 w-4 text-[#34A853] focus:ring-[#34A853] cursor-pointer"
                             />
                             <span
-                              className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                                isCorrect ? 'bg-[#34A853] text-white' : 'bg-[#FCE8E6] text-[#C5221F]'
+                              className={`flex h-6 w-6 items-center justify-center rounded-lg text-xs font-black ${
+                                isCorrect ? 'bg-[#34A853] text-white shadow-xs' : 'bg-[#F1F3F4] text-[#5F6368]'
                               }`}
                             >
-                              {isCorrect ? 'CORRECT' : 'WRONG'}
+                              {letter}
                             </span>
-                          </label>
+                          </div>
 
                           <input
                             type="text"
                             value={opt}
+                            onClick={(e) => e.stopPropagation()}
                             onChange={(e) => {
                               const next = [...options]
                               next[idx] = e.target.value
                               setOptions(next)
                             }}
-                            placeholder={`Option ${String.fromCharCode(65 + idx)} text`}
-                            className="flex-1 bg-transparent px-2 py-1 text-xs text-[#202124] focus:outline-none"
+                            placeholder={`Option ${letter} answer text...`}
+                            className="flex-1 bg-transparent px-2 py-1 text-xs text-[#202124] focus:outline-none font-medium"
                             required
                           />
+
+                          {isCorrect && (
+                            <span className="rounded-full bg-[#34A853] px-2 py-0.5 text-[9px] font-bold text-white shrink-0">
+                              CORRECT
+                            </span>
+                          )}
                         </div>
                       )
                     })}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                   <div>
-                    <label className="block font-medium text-[#3C4043] mb-1">Points</label>
-                    <div className="flex items-center gap-1.5 rounded-xl border border-[#DADCE0] px-3 py-1.5">
-                      <Award className="h-3.5 w-3.5 text-[#FBBC04]" />
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-[#3C4043] mb-1">
+                      Points Awarded
+                    </label>
+                    <div className="flex items-center gap-2 rounded-xl border border-[#DADCE0] bg-[#F8F9FA] px-3 py-2">
+                      <Award className="h-4 w-4 text-[#FBBC04] shrink-0" />
                       <input
                         type="number"
                         value={points}
                         onChange={(e) => setPoints(Number(e.target.value))}
-                        className="w-full text-xs text-[#202124] focus:outline-none"
+                        className="w-full text-xs font-bold text-[#202124] bg-transparent focus:outline-none"
                         min={10}
                         step={10}
                       />
+                      <span className="text-[11px] font-semibold text-[#5F6368]">pts</span>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block font-medium text-[#3C4043] mb-1">Time Limit (Sec)</label>
-                    <div className="flex items-center gap-1.5 rounded-xl border border-[#DADCE0] px-3 py-1.5">
-                      <Clock className="h-3.5 w-3.5 text-[#5F6368]" />
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-[#3C4043] mb-1">
+                      Question Timer Limit
+                    </label>
+                    <div className="flex items-center gap-2 rounded-xl border border-[#DADCE0] bg-[#F8F9FA] px-3 py-2">
+                      <Clock className="h-4 w-4 text-[#5F6368] shrink-0" />
                       <input
                         type="number"
                         value={timeLimitSeconds}
                         onChange={(e) => setTimeLimitSeconds(Number(e.target.value))}
-                        className="w-full text-xs text-[#202124] focus:outline-none"
+                        className="w-full text-xs font-bold text-[#202124] bg-transparent focus:outline-none"
                         min={5}
                         max={300}
                       />
+                      <span className="text-[11px] font-semibold text-[#5F6368]">seconds</span>
                     </div>
                   </div>
                 </div>
 
                 <button
                   type="submit"
-                  className="mt-2 flex h-11 items-center justify-center gap-2 rounded-full bg-[#1A73E8] text-xs font-medium text-white shadow-xs hover:bg-[#1765CC] active:scale-98 transition-all"
+                  className="mt-2 flex h-11 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#1A73E8] to-[#1557B0] text-xs font-bold text-white shadow-md hover:from-[#1765CC] hover:to-[#104D96] active:scale-[0.98] transition-all cursor-pointer"
                 >
                   <Plus className="h-4 w-4" />
-                  <span>Save Question #{questionsList.length + 1}</span>
+                  <span>Save Question #{questionsList.length + 1} to Question Bank</span>
                 </button>
               </form>
             </div>
 
-            {/* Existing Questions Pool */}
-            <div>
-              <h3 className="text-sm font-semibold text-[#202124] mb-3">
-                Active Questions ({questionsList.length}) for {selectedSlug.toUpperCase()}
-              </h3>
+            {/* Active Questions Pool */}
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between px-1">
+                <h3 className="text-sm font-bold text-[#202124] flex items-center gap-2">
+                  <span>Active Questions Pool ({questionsList.length})</span>
+                  <span className="rounded-full bg-[#E8F0FE] text-[#1967D2] px-2.5 py-0.5 text-[10px] font-bold">
+                    {selectedSlug === 'web-dev-quiz' ? 'Web Dev Sprint' : 'Mentis Challenge'}
+                  </span>
+                </h3>
+              </div>
 
               <div className="flex flex-col gap-3">
                 {questionsList.map((q, qIdx) => {
@@ -1700,76 +1413,76 @@ export default function AdminPage() {
                       <div
                         key={q._id || qIdx}
                         onClick={(e) => e.stopPropagation()}
-                        className="flex flex-col rounded-2xl border-2 border-[#1A73E8] bg-[#F8F9FA] p-4 shadow-sm animate-in zoom-in-95"
+                        className="flex flex-col rounded-3xl border-2 border-[#1A73E8] bg-white p-5 shadow-md animate-in zoom-in-95"
                       >
-                        <div className="flex items-center justify-between pb-2 mb-3 border-b border-[#DADCE0]">
+                        <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-[#DADCE0]">
                           <span className="text-xs font-bold text-[#1A73E8] uppercase tracking-wider flex items-center gap-1.5">
-                            <Edit3 className="h-3.5 w-3.5" />
+                            <Edit3 className="h-4 w-4" />
                             Editing Question #{qIdx + 1}
                           </span>
-                          <span className="text-[10px] font-medium text-[#5F6368]">Click save to commit</span>
+                          <span className="text-[10px] font-semibold text-[#5F6368] bg-[#F1F3F4] px-2.5 py-0.5 rounded-full">
+                            Click save to commit
+                          </span>
                         </div>
 
                         <div className="space-y-3">
                           <div>
-                            <label className="block text-[11px] font-semibold text-[#3C4043] mb-1">
+                            <label className="block text-[11px] font-bold text-[#3C4043] uppercase tracking-wider mb-1">
                               Question Prompt
                             </label>
                             <textarea
                               rows={2}
                               value={editQText}
                               onChange={(e) => setEditQText(e.target.value)}
-                              className="w-full rounded-xl border border-[#DADCE0] bg-white p-2.5 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
-                              placeholder="Enter question text..."
+                              className="w-full rounded-xl border border-[#DADCE0] bg-[#F8F9FA] p-2.5 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:bg-white"
+                              placeholder="Enter question prompt..."
                               autoFocus
                             />
                           </div>
 
                           <div>
-                            <label className="block text-[11px] font-semibold text-[#3C4043] mb-1.5">
-                              Options & Correct Answer (select green radio for correct):
+                            <label className="block text-[11px] font-bold text-[#3C4043] uppercase tracking-wider mb-1.5">
+                              Options & Correct Key (select green radio for correct):
                             </label>
-                            <div className="flex flex-col gap-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                               {editQOptions.map((opt, optIdx) => {
                                 const isCorrect = editQCorrectIndex === optIdx
+                                const letter = String.fromCharCode(65 + optIdx)
                                 return (
                                   <div
                                     key={optIdx}
-                                    className={`flex items-center gap-2.5 rounded-xl border p-2 transition-all ${
+                                    onClick={() => setEditQCorrectIndex(optIdx)}
+                                    className={`flex items-center gap-2 rounded-xl border p-2 transition-all cursor-pointer ${
                                       isCorrect
-                                        ? 'border-[#34A853] bg-[#E6F4EA]/40 ring-1 ring-[#34A853]'
+                                        ? 'border-[#34A853] bg-[#E6F4EA]/50 ring-2 ring-[#34A853]/20 shadow-xs'
                                         : 'border-[#DADCE0] bg-white'
                                     }`}
                                   >
-                                    <label className="flex items-center gap-1.5 cursor-pointer pl-1">
-                                      <input
-                                        type="radio"
-                                        name={`editCorrect_${q._id}`}
-                                        checked={isCorrect}
-                                        onChange={() => setEditQCorrectIndex(optIdx)}
-                                        className="h-4 w-4 text-[#34A853] focus:ring-[#34A853]"
-                                      />
-                                      <span
-                                        className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                                          isCorrect
-                                            ? 'bg-[#34A853] text-white'
-                                            : 'bg-[#FCE8E6] text-[#C5221F]'
-                                        }`}
-                                      >
-                                        {isCorrect ? 'CORRECT' : 'WRONG'}
-                                      </span>
-                                    </label>
-
+                                    <input
+                                      type="radio"
+                                      name={`editCorrect_${q._id}`}
+                                      checked={isCorrect}
+                                      onChange={() => setEditQCorrectIndex(optIdx)}
+                                      className="h-4 w-4 text-[#34A853] focus:ring-[#34A853]"
+                                    />
+                                    <span
+                                      className={`flex h-5 w-5 items-center justify-center rounded text-[10px] font-black ${
+                                        isCorrect ? 'bg-[#34A853] text-white' : 'bg-[#F1F3F4] text-[#5F6368]'
+                                      }`}
+                                    >
+                                      {letter}
+                                    </span>
                                     <input
                                       type="text"
                                       value={opt}
+                                      onClick={(e) => e.stopPropagation()}
                                       onChange={(e) => {
                                         const next = [...editQOptions]
                                         next[optIdx] = e.target.value
                                         setEditQOptions(next)
                                       }}
-                                      placeholder={`Option ${String.fromCharCode(65 + optIdx)} text`}
-                                      className="flex-1 bg-transparent px-2 py-1 text-xs text-[#202124] focus:outline-none"
+                                      placeholder={`Option ${letter} text`}
+                                      className="flex-1 bg-transparent px-1 py-0.5 text-xs text-[#202124] focus:outline-none font-medium"
                                     />
                                   </div>
                                 )
@@ -1777,16 +1490,18 @@ export default function AdminPage() {
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-2 gap-3 pt-1">
                             <div>
-                              <label className="block text-[10px] font-semibold text-[#3C4043] mb-1">Points</label>
-                              <div className="flex items-center gap-1.5 rounded-xl border border-[#DADCE0] bg-white px-3 py-1.5">
+                              <label className="block text-[10px] font-bold text-[#3C4043] uppercase tracking-wider mb-1">
+                                Points
+                              </label>
+                              <div className="flex items-center gap-1.5 rounded-xl border border-[#DADCE0] bg-[#F8F9FA] px-3 py-1.5">
                                 <Award className="h-3.5 w-3.5 text-[#FBBC04]" />
                                 <input
                                   type="number"
                                   value={editQPoints}
                                   onChange={(e) => setEditQPoints(Number(e.target.value))}
-                                  className="w-full text-xs text-[#202124] focus:outline-none"
+                                  className="w-full text-xs font-bold text-[#202124] bg-transparent focus:outline-none"
                                   min={10}
                                   step={10}
                                 />
@@ -1794,14 +1509,16 @@ export default function AdminPage() {
                             </div>
 
                             <div>
-                              <label className="block text-[10px] font-semibold text-[#3C4043] mb-1">Time Limit (Sec)</label>
-                              <div className="flex items-center gap-1.5 rounded-xl border border-[#DADCE0] bg-white px-3 py-1.5">
+                              <label className="block text-[10px] font-bold text-[#3C4043] uppercase tracking-wider mb-1">
+                                Time Limit (Sec)
+                              </label>
+                              <div className="flex items-center gap-1.5 rounded-xl border border-[#DADCE0] bg-[#F8F9FA] px-3 py-1.5">
                                 <Clock className="h-3.5 w-3.5 text-[#5F6368]" />
                                 <input
                                   type="number"
                                   value={editQTimeLimit}
                                   onChange={(e) => setEditQTimeLimit(Number(e.target.value))}
-                                  className="w-full text-xs text-[#202124] focus:outline-none"
+                                  className="w-full text-xs font-bold text-[#202124] bg-transparent focus:outline-none"
                                   min={5}
                                   max={300}
                                 />
@@ -1813,7 +1530,7 @@ export default function AdminPage() {
                             <button
                               type="button"
                               onClick={handleCancelEditQuestion}
-                              className="inline-flex items-center gap-1 rounded-full border border-[#DADCE0] bg-white px-3.5 py-1.5 text-xs font-medium text-[#5F6368] hover:bg-[#F1F3F4]"
+                              className="inline-flex items-center gap-1 rounded-full border border-[#DADCE0] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#5F6368] hover:bg-[#F1F3F4]"
                             >
                               <X className="h-3.5 w-3.5" />
                               <span>Cancel</span>
@@ -1821,10 +1538,10 @@ export default function AdminPage() {
                             <button
                               type="button"
                               onClick={() => handleSaveEditQuestion(q._id)}
-                              className="inline-flex items-center gap-1.5 rounded-full bg-[#1A73E8] px-4 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-[#1765CC] active:scale-95"
+                              className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#1A73E8] to-[#1557B0] px-4 py-1.5 text-xs font-bold text-white shadow-xs hover:from-[#1765CC] hover:to-[#104D96] active:scale-95"
                             >
                               <Check className="h-3.5 w-3.5" />
-                              <span>Save Question</span>
+                              <span>Commit Question</span>
                             </button>
                           </div>
                         </div>
@@ -1836,63 +1553,73 @@ export default function AdminPage() {
                     <div
                       key={q._id || qIdx}
                       onClick={() => handleStartEditQuestion(q)}
-                      className="group/q flex flex-col rounded-2xl border border-[#DADCE0] bg-white p-4 shadow-2xs hover:border-[#1A73E8]/50 hover:shadow-xs transition-all cursor-pointer"
-                      title="Click on div to edit this question"
+                      className="group/q flex flex-col rounded-3xl border border-[#DADCE0]/80 bg-white/90 backdrop-blur-md p-4 sm:p-5 shadow-xs hover:border-[#1A73E8]/60 hover:shadow-md transition-all cursor-pointer"
+                      title="Click question card to edit prompt & answers"
                     >
                       <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-start gap-2.5">
-                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#E8F0FE] text-xs font-bold text-[#1967D2]">
+                        <div className="flex items-start gap-3">
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-[#E8F0FE] text-xs font-black text-[#1967D2]">
                             #{qIdx + 1}
                           </span>
                           <div>
-                            <p className="text-xs font-medium text-[#202124] leading-relaxed group-hover/q:text-[#1A73E8] transition-colors">
+                            <p className="text-xs sm:text-sm font-bold text-[#202124] leading-relaxed group-hover/q:text-[#1A73E8] transition-colors">
                               {q.questionText}
                             </p>
-                            <span className="mt-1 inline-flex items-center gap-1 text-[10px] font-medium text-[#1A73E8] opacity-0 group-hover/q:opacity-100 transition-opacity">
+                            <span className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-[#1A73E8] opacity-0 group-hover/q:opacity-100 transition-opacity">
                               <Edit2 className="h-2.5 w-2.5" />
-                              Click div to edit prompt & answers
+                              Click card to edit question & options
                             </span>
                           </div>
                         </div>
 
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation()
                             handleDeleteQuestion(q._id)
                           }}
                           title="Delete question"
-                          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#EA4335] hover:bg-[#FCE8E6] transition-colors"
+                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#EA4335] hover:bg-[#FCE8E6] transition-colors"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
 
                       {/* Options with correct/wrong highlighting */}
-                      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 pl-8">
+                      <div className="mt-3.5 grid grid-cols-1 sm:grid-cols-2 gap-2 pl-0 sm:pl-10">
                         {q.options.map((opt, optIdx) => {
                           const isCorrect = q.correctOptionIndex === optIdx
+                          const letter = String.fromCharCode(65 + optIdx)
                           return (
                             <div
                               key={optIdx}
-                              className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs ${
+                              className={`flex items-center gap-2 rounded-xl px-3 py-2 text-xs transition-all ${
                                 isCorrect
-                                  ? 'bg-[#E6F4EA] border border-[#34A853]/50 text-[#137333] font-semibold'
-                                  : 'bg-[#F8F9FA] text-[#5F6368]'
+                                  ? 'bg-[#E6F4EA] border border-[#34A853]/50 text-[#137333] font-bold shadow-2xs'
+                                  : 'bg-[#F8F9FA] text-[#5F6368] font-medium border border-transparent'
                               }`}
                             >
-                              <span className="text-[10px] font-bold">
-                                {String.fromCharCode(65 + optIdx)}:
+                              <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] font-black ${
+                                isCorrect ? 'bg-[#34A853] text-white' : 'bg-[#E8EAED] text-[#3C4043]'
+                              }`}>
+                                {letter}
                               </span>
                               <span className="truncate">{opt}</span>
-                              {isCorrect && <CheckCircle2 className="h-3.5 w-3.5 ml-auto text-[#34A853]" />}
+                              {isCorrect && <CheckCircle2 className="h-4 w-4 ml-auto text-[#34A853] shrink-0" />}
                             </div>
                           )
                         })}
                       </div>
 
-                      <div className="mt-3 flex items-center justify-between pl-8 pt-2 border-t border-[#F1F3F4] text-[11px] text-[#5F6368]">
-                        <span>Award: <strong>{q.points || 100} pts</strong></span>
-                        <span>Timer: <strong>{q.timeLimitSeconds || 30}s</strong></span>
+                      <div className="mt-3.5 flex items-center justify-between pl-0 sm:pl-10 pt-2.5 border-t border-[#F1F3F4] text-[11px] text-[#5F6368]">
+                        <span className="inline-flex items-center gap-1 font-semibold">
+                          <Award className="h-3 w-3 text-[#FBBC04]" />
+                          <span>Award: <strong>{q.points || 100} pts</strong></span>
+                        </span>
+                        <span className="inline-flex items-center gap-1 font-semibold">
+                          <Clock className="h-3 w-3 text-[#5F6368]" />
+                          <span>Timer Limit: <strong>{q.timeLimitSeconds || 30}s</strong></span>
+                        </span>
                       </div>
                     </div>
                   )
@@ -1908,27 +1635,33 @@ export default function AdminPage() {
         {activeTab === 'wend' && (
           <div className="flex flex-col gap-6 animate-in fade-in duration-200">
             {/* Header & Reset Button */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white/70 backdrop-blur-md p-4 sm:p-5 rounded-3xl border border-[#DADCE0]/80 shadow-2xs">
               <div>
-                <h2 className="text-xl font-normal tracking-tight text-[#202124]">
-                  Wend Snake Board Studio
-                </h2>
-                <p className="text-xs text-[#5F6368]">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#FCE8E6] text-[#C5221F]">
+                    <Grid className="h-4 w-4" />
+                  </span>
+                  <h2 className="text-lg sm:text-xl font-bold tracking-tight text-[#202124]">
+                    Wend Snake Board Studio
+                  </h2>
+                </div>
+                <p className="mt-1 text-xs text-[#5F6368]">
                   Design the 8×8 letter grid, draw obstacle cutout shapes (such as the letter H & I blocks), and manage target words.
                 </p>
               </div>
 
               <button
+                type="button"
                 onClick={handleResetToReferenceBoard}
-                className="inline-flex items-center gap-1.5 rounded-full border border-[#DADCE0] bg-white px-4 py-2 text-xs font-semibold text-[#1A73E8] shadow-2xs hover:bg-[#E8F0FE] active:scale-95 transition-all self-start sm:self-auto"
+                className="inline-flex items-center gap-1.5 rounded-full border border-[#DADCE0] bg-white px-4 py-2 text-xs font-bold text-[#1A73E8] shadow-2xs hover:bg-[#E8F0FE] active:scale-95 transition-all self-start sm:self-auto cursor-pointer"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
-                <span>{'Reset to Reference "H & I" Board'}</span>
+                <span>{'Reset Reference "H & I" Board'}</span>
               </button>
             </div>
 
             {/* Wend Round Duration & Live Timer Controller */}
-            <div className="rounded-3xl border border-[#DADCE0] bg-white p-5 sm:p-6 shadow-2xs">
+            <div className="rounded-3xl border border-[#DADCE0]/80 bg-white/90 backdrop-blur-md p-5 sm:p-6 shadow-xs">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-[#F1F3F4]">
                 <div className="flex items-center gap-2.5">
                   <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#E6F4EA] text-[#137333] shadow-2xs">
@@ -1936,15 +1669,15 @@ export default function AdminPage() {
                   </div>
                   <div>
                     <h3 className="text-sm sm:text-base font-bold text-[#202124]">
-                      Wend Round Duration & Countdown Timer (Set by Host)
+                      Wend Round Duration & Countdown Timer (Host Control)
                     </h3>
                     <p className="text-xs text-[#5F6368]">
-                      This timer dictates the active round length for participants playing Wend Word Arena, enforcing an active countdown instead of an open stopwatch.
+                      Dictates the round length for participants playing Wend Word Arena, enforcing an active countdown instead of an open stopwatch.
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E8F0FE] border border-[#1A73E8]/30 px-3 py-1 text-xs font-bold text-[#1967D2]">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E8F0FE] border border-[#1A73E8]/30 px-3.5 py-1.5 text-xs font-bold text-[#1967D2] shadow-2xs">
                     <Clock className="h-3.5 w-3.5" />
                     <span>Active Limit: {wendBoard.timeLimitSeconds || 120}s ({formatDuration((wendBoard.timeLimitSeconds || 120) * 1000)})</span>
                   </span>
@@ -1953,7 +1686,7 @@ export default function AdminPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
                 <div className="md:col-span-7 flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-semibold text-[#5F6368] mr-1">Quick Presets:</span>
+                  <span className="text-xs font-bold text-[#5F6368] mr-1">Quick Presets:</span>
                   {[
                     { label: '60s (1m)', val: 60 },
                     { label: '90s (1.5m)', val: 90 },
@@ -1965,7 +1698,7 @@ export default function AdminPage() {
                       key={preset.val}
                       type="button"
                       onClick={() => handleSetWendTimeLimit(preset.val)}
-                      className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all active:scale-95 cursor-pointer ${
+                      className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition-all active:scale-95 cursor-pointer ${
                         (wendBoard.timeLimitSeconds || 120) === preset.val
                           ? 'bg-[#137333] text-white shadow-xs'
                           : 'border border-[#DADCE0] bg-[#F8F9FA] text-[#3C4043] hover:bg-white hover:border-[#137333]'
@@ -1977,7 +1710,7 @@ export default function AdminPage() {
                 </div>
 
                 <div className="md:col-span-5 flex items-center gap-2">
-                  <label className="text-xs font-semibold text-[#5F6368] shrink-0">Custom Seconds:</label>
+                  <label className="text-xs font-bold text-[#5F6368] shrink-0">Custom Seconds:</label>
                   <input
                     type="number"
                     min={15}
@@ -1985,22 +1718,22 @@ export default function AdminPage() {
                     step={15}
                     value={wendBoard.timeLimitSeconds || 120}
                     onChange={(e) => handleSetWendTimeLimit(Number(e.target.value))}
-                    className="w-24 rounded-xl border border-[#DADCE0] bg-white px-3 py-1.5 text-xs font-bold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#34A853]"
+                    className="w-24 rounded-xl border border-[#DADCE0] bg-[#F8F9FA] px-3 py-1.5 text-xs font-bold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#34A853] focus:bg-white"
                   />
-                  <span className="text-xs text-[#5F6368]">sec</span>
+                  <span className="text-xs font-semibold text-[#5F6368]">seconds</span>
                 </div>
               </div>
             </div>
 
             {/* Visual 8x8 Grid Editor Card */}
-            <div className="rounded-3xl border border-[#DADCE0] bg-white p-5 sm:p-6 shadow-2xs">
+            <div className="rounded-3xl border border-[#DADCE0]/80 bg-white/90 backdrop-blur-md p-5 sm:p-6 shadow-xs">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-[#F1F3F4]">
                 <div className="flex items-center gap-2">
                   <Grid className="h-5 w-5 text-[#1A73E8]" />
                   <div>
-                    <span className="text-sm font-bold text-[#202124]">Interactive 8×8 Grid Layout</span>
+                    <span className="text-sm sm:text-base font-bold text-[#202124]">Interactive 8×8 Grid Layout</span>
                     <p className="text-[11px] text-[#5F6368]">
-                      Click any box or use arrows to navigate. Type letters directly to fill and advance.
+                      Click any cell or use arrows to navigate. Type letters directly to fill and advance. Double-click to toggle obstacles.
                     </p>
                   </div>
                 </div>
@@ -2009,19 +1742,21 @@ export default function AdminPage() {
                 <div className="flex items-center gap-2">
                   {previewWordId && (
                     <button
+                      type="button"
                       onClick={() => {
                         setPreviewWordId(null)
                         setPreviewWordPath(null)
                       }}
-                      className="inline-flex items-center gap-1 rounded-full bg-[#FEF7E0] border border-[#FBBC04]/50 px-3 py-1 text-xs font-semibold text-[#B06000] hover:bg-[#FEEFC3] transition-colors"
+                      className="inline-flex items-center gap-1 rounded-full bg-[#FEF7E0] border border-[#FBBC04]/50 px-3 py-1.5 text-xs font-bold text-[#B06000] hover:bg-[#FEEFC3] transition-colors shadow-2xs cursor-pointer"
                     >
                       <EyeOff className="h-3.5 w-3.5" />
                       <span>Clear Path Preview</span>
                     </button>
                   )}
                   <button
+                    type="button"
                     onClick={handleResetToReferenceBoard}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-[#DADCE0] bg-white px-3 py-1 text-xs font-semibold text-[#5F6368] hover:text-[#1A73E8] hover:bg-[#F8F9FA] transition-all"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[#DADCE0] bg-white px-3 py-1.5 text-xs font-bold text-[#5F6368] hover:text-[#1A73E8] hover:bg-[#F8F9FA] transition-all shadow-2xs cursor-pointer"
                   >
                     <RotateCcw className="h-3 w-3" />
                     <span>Reset Board</span>
@@ -2030,86 +1765,86 @@ export default function AdminPage() {
               </div>
 
               {/* 8x8 Grid Canvas (Centered Clean Studio) */}
-              <div className="flex flex-col items-center justify-center w-full py-2">
+              <div className="flex flex-col items-center justify-center w-full py-3">
                 <div
                   tabIndex={0}
                   onKeyDown={handleGridKeyDown}
-                  className="relative aspect-square w-full max-w-[380px] sm:max-w-[420px] rounded-2xl border-2 border-[#3C4043] bg-white p-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8]/50"
+                  className="relative aspect-square w-full max-w-[380px] sm:max-w-[420px] rounded-3xl border-2 border-[#3C4043] bg-[#F8F9FA] p-3 shadow-md focus:outline-none focus:ring-4 focus:ring-[#1A73E8]/30"
                 >
-                    <div
-                      className="grid h-full w-full gap-1 sm:gap-1.5"
-                      style={{
-                        gridTemplateColumns: `repeat(${wendBoard.cols}, minmax(0, 1fr))`,
-                        gridTemplateRows: `repeat(${wendBoard.rows}, minmax(0, 1fr))`,
-                      }}
-                    >
-                      {wendBoard.grid.map((rowArr, r) =>
-                        rowArr.map((cell, c) => {
-                          const isFocused = focusedCell.r === r && focusedCell.c === c
-                          const isObstacle = cell.type === 'OBSTACLE'
-                          const letter = cell.letter || ''
-                          const isEmpty = !isObstacle && !letter
+                  <div
+                    className="grid h-full w-full gap-1.5"
+                    style={{
+                      gridTemplateColumns: `repeat(${wendBoard.cols}, minmax(0, 1fr))`,
+                      gridTemplateRows: `repeat(${wendBoard.rows}, minmax(0, 1fr))`,
+                    }}
+                  >
+                    {wendBoard.grid.map((rowArr, r) =>
+                      rowArr.map((cell, c) => {
+                        const isFocused = focusedCell.r === r && focusedCell.c === c
+                        const isObstacle = cell.type === 'OBSTACLE'
+                        const letter = cell.letter || ''
+                        const isEmpty = !isObstacle && !letter
 
-                          // Preview path check
-                          const previewIdx = previewWordPath
-                            ? previewWordPath.findIndex((p) => p.row === r && p.col === c)
-                            : -1
-                          const isInPreview = previewIdx !== -1
+                        // Preview path check
+                        const previewIdx = previewWordPath
+                          ? previewWordPath.findIndex((p) => p.row === r && p.col === c)
+                          : -1
+                        const isInPreview = previewIdx !== -1
 
-                          return (
-                            <div
-                              key={`admin-cell-${r}-${c}`}
-                              onClick={() => setFocusedCell({ r, c })}
-                              onDoubleClick={() => handleToggleCellType(r, c)}
-                              className={`relative flex items-center justify-center rounded-lg font-black text-sm sm:text-base transition-all select-none cursor-pointer ${
-                                isObstacle
-                                  ? 'bg-[#3C4043] text-[#70757A] border border-[#202124] shadow-inner'
-                                  : isInPreview
-                                  ? 'bg-[#E6F4EA] border-2 border-[#34A853] text-[#137333] shadow-xs'
-                                  : isEmpty
-                                  ? 'border-2 border-dashed border-[#DADCE0] bg-[#FAFAFA] text-[#BDC1C6] hover:bg-[#F1F3F4] hover:border-[#1A73E8]/50'
-                                  : 'bg-white text-[#202124] border-2 border-[#DADCE0] shadow-2xs hover:border-[#1A73E8]/60'
-                              } ${
-                                isFocused
-                                  ? 'ring-4 ring-[#1A73E8] border-[#1A73E8] bg-[#E8F0FE] text-[#1A73E8] z-20 scale-105 shadow-md'
-                                  : ''
-                              }`}
-                            >
-                              {/* Preview Step Indicator Badge */}
-                              {isInPreview && (
-                                <span className="absolute top-0.5 right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#34A853] text-[8px] font-black text-white leading-none">
-                                  {previewIdx + 1}
-                                </span>
-                              )}
+                        return (
+                          <div
+                            key={`admin-cell-${r}-${c}`}
+                            onClick={() => setFocusedCell({ r, c })}
+                            onDoubleClick={() => handleToggleCellType(r, c)}
+                            className={`relative flex items-center justify-center rounded-xl font-black text-sm sm:text-base transition-all select-none cursor-pointer ${
+                              isObstacle
+                                ? 'bg-[#202124] text-[#80868B] border border-[#1E293B] shadow-inner'
+                                : isInPreview
+                                ? 'bg-[#E6F4EA] border-2 border-[#34A853] text-[#137333] shadow-xs'
+                                : isEmpty
+                                ? 'border-2 border-dashed border-[#DADCE0] bg-white text-[#BDC1C6] hover:bg-[#F1F3F4] hover:border-[#1A73E8]/50'
+                                : 'bg-white text-[#202124] border border-[#DADCE0] shadow-2xs hover:border-[#1A73E8]/60'
+                            } ${
+                              isFocused
+                                ? 'ring-4 ring-[#1A73E8] border-[#1A73E8] bg-[#E8F0FE] text-[#1A73E8] z-20 scale-105 shadow-md'
+                                : ''
+                            }`}
+                          >
+                            {/* Preview Step Indicator Badge */}
+                            {isInPreview && (
+                              <span className="absolute top-0.5 right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#34A853] text-[8px] font-black text-white leading-none">
+                                {previewIdx + 1}
+                              </span>
+                            )}
 
-                              {/* Obstacle Glyph or Letter */}
-                              {isObstacle ? (
-                                <span className="text-[10px] font-bold text-[#80868B] select-none">#</span>
-                              ) : isEmpty ? (
-                                isFocused ? (
-                                  <span className="h-4 w-0.5 bg-[#1A73E8] animate-pulse rounded-full" />
-                                ) : (
-                                  <span className="text-xs text-[#BDC1C6]">·</span>
-                                )
+                            {/* Obstacle Glyph or Letter */}
+                            {isObstacle ? (
+                              <span className="text-[10px] font-bold text-[#80868B] select-none">#</span>
+                            ) : isEmpty ? (
+                              isFocused ? (
+                                <span className="h-4 w-0.5 bg-[#1A73E8] animate-pulse rounded-full" />
                               ) : (
-                                <span className="relative z-20 pointer-events-none select-none font-black">
-                                  {letter}
-                                </span>
-                              )}
-                            </div>
-                          )
-                        })
-                      )}
-                    </div>
+                                <span className="text-xs text-[#BDC1C6]">·</span>
+                              )
+                            ) : (
+                              <span className="relative z-20 pointer-events-none select-none font-black">
+                                {letter}
+                              </span>
+                            )}
+                          </div>
+                        )
+                      })
+                    )}
                   </div>
                 </div>
               </div>
+            </div>
 
             {/* Target Words Manager & Solvability Checker */}
-            <div className="rounded-3xl border border-[#DADCE0] bg-white p-5 sm:p-6 shadow-2xs">
+            <div className="rounded-3xl border border-[#DADCE0]/80 bg-white/90 backdrop-blur-md p-5 sm:p-6 shadow-xs">
               <div className="flex items-center gap-2 mb-4">
                 <Sparkles className="h-5 w-5 text-[#FBBC04]" />
-                <h3 className="text-base font-semibold text-[#202124]">
+                <h3 className="text-base font-bold text-[#202124]">
                   Target Words to Discover ({wendBoard.targetWords.length})
                 </h3>
               </div>
@@ -2118,31 +1853,35 @@ export default function AdminPage() {
               <form onSubmit={handleAddTargetWord} className="mb-6 flex flex-col gap-3 text-xs">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-medium text-[#3C4043] mb-1">Target Word (All Caps)</label>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-[#3C4043] mb-1">
+                      Target Word (All Caps)
+                    </label>
                     <input
                       type="text"
                       value={newTargetWord}
                       onChange={(e) => setNewTargetWord(e.target.value)}
                       placeholder="e.g. LIGHT, SHIRE, INHI"
-                      className="w-full uppercase tracking-wider rounded-xl border border-[#DADCE0] px-3 py-2 text-xs font-bold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                      className="w-full uppercase tracking-wider rounded-xl border border-[#DADCE0] bg-[#F8F9FA] px-3 py-2 text-xs font-bold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:bg-white"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block font-medium text-[#3C4043] mb-1">Optional Hint / Clue</label>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-[#3C4043] mb-1">
+                      Optional Hint / Clue
+                    </label>
                     <input
                       type="text"
                       value={newTargetHint}
                       onChange={(e) => setNewTargetHint(e.target.value)}
                       placeholder="e.g. Illuminating row across the bottom"
-                      className="w-full rounded-xl border border-[#DADCE0] px-3 py-2 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                      className="w-full rounded-xl border border-[#DADCE0] bg-[#F8F9FA] px-3 py-2 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:bg-white font-medium"
                     />
                   </div>
                 </div>
 
                 <button
                   type="submit"
-                  className="mt-1 inline-flex h-10 items-center justify-center gap-1.5 rounded-full bg-[#1A73E8] text-xs font-semibold text-white shadow-xs hover:bg-[#1765CC] active:scale-95 transition-all self-start px-6"
+                  className="mt-1 inline-flex h-10 items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-[#1A73E8] to-[#1557B0] text-xs font-bold text-white shadow-xs hover:from-[#1765CC] hover:to-[#104D96] active:scale-95 transition-all self-start px-6 cursor-pointer"
                 >
                   <Plus className="h-4 w-4" />
                   <span>Add Target Word</span>
@@ -2161,7 +1900,7 @@ export default function AdminPage() {
                       <div
                         key={tw.id}
                         onClick={(e) => e.stopPropagation()}
-                        className="flex flex-col rounded-2xl border-2 border-[#1A73E8] bg-white p-3.5 shadow-sm animate-in zoom-in-95"
+                        className="flex flex-col rounded-2xl border-2 border-[#1A73E8] bg-white p-4 shadow-sm animate-in zoom-in-95"
                       >
                         <div className="flex items-center justify-between pb-1.5 mb-2.5 border-b border-[#DADCE0]">
                           <span className="text-[11px] font-bold text-[#1A73E8] uppercase tracking-wider flex items-center gap-1.5">
@@ -2172,24 +1911,28 @@ export default function AdminPage() {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                           <div>
-                            <label className="block text-[10px] font-semibold text-[#3C4043] mb-1">Target Word (All Caps)</label>
+                            <label className="block text-[10px] font-bold text-[#3C4043] uppercase tracking-wider mb-1">
+                              Target Word (All Caps)
+                            </label>
                             <input
                               type="text"
                               value={editTargetWordStr}
                               onChange={(e) => setEditTargetWordStr(e.target.value)}
-                              className="w-full uppercase tracking-wider rounded-xl border border-[#DADCE0] bg-[#F8F9FA] px-3 py-1.5 text-xs font-bold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                              className="w-full uppercase tracking-wider rounded-xl border border-[#DADCE0] bg-[#F8F9FA] px-3 py-1.5 text-xs font-bold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:bg-white"
                               placeholder="e.g. LIGHT"
                               autoFocus
                             />
                           </div>
 
                           <div>
-                            <label className="block text-[10px] font-semibold text-[#3C4043] mb-1">Optional Hint / Clue</label>
+                            <label className="block text-[10px] font-bold text-[#3C4043] uppercase tracking-wider mb-1">
+                              Optional Hint / Clue
+                            </label>
                             <input
                               type="text"
                               value={editTargetWordHint}
                               onChange={(e) => setEditTargetWordHint(e.target.value)}
-                              className="w-full rounded-xl border border-[#DADCE0] bg-[#F8F9FA] px-3 py-1.5 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                              className="w-full rounded-xl border border-[#DADCE0] bg-[#F8F9FA] px-3 py-1.5 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:bg-white"
                               placeholder="e.g. Illuminating row across the bottom"
                             />
                           </div>
@@ -2199,7 +1942,7 @@ export default function AdminPage() {
                           <button
                             type="button"
                             onClick={handleCancelEditTargetWord}
-                            className="inline-flex items-center gap-1 rounded-full border border-[#DADCE0] bg-white px-3 py-1 text-[11px] font-medium text-[#5F6368] hover:bg-[#F1F3F4]"
+                            className="inline-flex items-center gap-1 rounded-full border border-[#DADCE0] bg-white px-3 py-1 text-[11px] font-semibold text-[#5F6368] hover:bg-[#F1F3F4]"
                           >
                             <X className="h-3 w-3" />
                             <span>Cancel</span>
@@ -2207,7 +1950,7 @@ export default function AdminPage() {
                           <button
                             type="button"
                             onClick={() => handleSaveEditTargetWord(tw.id)}
-                            className="inline-flex items-center gap-1.5 rounded-full bg-[#1A73E8] px-3.5 py-1 text-[11px] font-semibold text-white shadow-xs hover:bg-[#1765CC] active:scale-95"
+                            className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#1A73E8] to-[#1557B0] px-3.5 py-1 text-[11px] font-bold text-white shadow-xs hover:from-[#1765CC] hover:to-[#104D96] active:scale-95"
                           >
                             <Check className="h-3 w-3" />
                             <span>Save Word</span>
@@ -2226,7 +1969,7 @@ export default function AdminPage() {
                           ? 'border-[#34A853] bg-[#E6F4EA]/40'
                           : 'border-[#DADCE0] bg-[#F8F9FA] hover:border-[#1A73E8]/50 hover:bg-white'
                       }`}
-                      title="Click on div to edit word and hint"
+                      title="Click card to edit word and hint"
                     >
                       <div className="flex items-center gap-3">
                         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-xs font-black text-[#5F6368] border border-[#DADCE0]">
@@ -2259,8 +2002,8 @@ export default function AdminPage() {
                             ) : (
                               <span className="text-[11px] text-[#9AA0A6] italic">No hint provided</span>
                             )}
-                            <span className="text-[10px] font-medium text-[#1A73E8] opacity-0 group-hover/word:opacity-100 transition-opacity">
-                              • Click div to edit
+                            <span className="text-[10px] font-semibold text-[#1A73E8] opacity-0 group-hover/word:opacity-100 transition-opacity">
+                              • Click to edit
                             </span>
                           </div>
                         </div>
@@ -2275,7 +2018,7 @@ export default function AdminPage() {
                             handleTogglePreviewWordPath(tw)
                           }}
                           title={previewWordId === tw.id ? 'Hide preview path' : 'Preview snake path on grid'}
-                          className={`flex h-8 items-center gap-1 rounded-full px-2.5 text-xs font-semibold transition-all ${
+                          className={`flex h-8 items-center gap-1 rounded-full px-3 text-xs font-bold transition-all cursor-pointer ${
                             previewWordId === tw.id
                               ? 'bg-[#34A853] text-white shadow-2xs'
                               : 'bg-white border border-[#DADCE0] text-[#5F6368] hover:text-[#1A73E8] hover:border-[#1A73E8]'
@@ -2286,12 +2029,13 @@ export default function AdminPage() {
                         </button>
 
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation()
                             handleDeleteTargetWord(tw.id)
                           }}
                           title="Delete target word"
-                          className="flex h-8 w-8 items-center justify-center rounded-full text-[#EA4335] hover:bg-[#FCE8E6] transition-colors"
+                          className="flex h-8 w-8 items-center justify-center rounded-full text-[#EA4335] hover:bg-[#FCE8E6] transition-colors cursor-pointer"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -2305,113 +2049,145 @@ export default function AdminPage() {
         )}
 
         {/* ======================================================== */}
-        {/* ======================================================== */}
         {/* PANEL 4: AUTOMATED WINNER CEREMONY PRODUCER (3rd, 2nd, 1st) */}
         {/* ======================================================== */}
         {activeTab === 'winners' && (
           <div className="flex flex-col gap-6 animate-in fade-in duration-200">
             {/* Header & Track Selector */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white/70 backdrop-blur-md p-4 sm:p-5 rounded-3xl border border-[#DADCE0]/80 shadow-2xs">
               <div>
-                <h2 className="text-xl font-normal tracking-tight text-[#202124]">
-                  Automated Winner Announcement (3rd $\rightarrow$ 2nd $\rightarrow$ 1st)
-                </h2>
-                <p className="text-xs text-[#5F6368]">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#FEF7E0] text-[#B06000]">
+                    <Crown className="h-4 w-4 text-[#FBBC04]" />
+                  </span>
+                  <h2 className="text-lg sm:text-xl font-bold tracking-tight text-[#202124]">
+                    Automated Winner Announcement (3rd → 2nd → 1st)
+                  </h2>
+                </div>
+                <p className="mt-1 text-xs text-[#5F6368]">
                   Derived automatically: <strong>1st Priority</strong> = Correct Answers / Score, <strong>2nd Priority</strong> = Faster Completion Time (ms) on ties.
                 </p>
               </div>
 
-              <div className="flex items-center gap-1.5 rounded-2xl border border-[#DADCE0] bg-white p-1 shadow-2xs">
+              {/* Track Selector */}
+              <div className="flex items-center gap-1.5 rounded-2xl border border-[#DADCE0] bg-[#F8F9FA] p-1 shadow-2xs self-start sm:self-auto">
                 <button
+                  type="button"
                   onClick={() => handleSelectWinnersTrack('web-dev-quiz')}
-                  className={`rounded-xl px-2.5 py-1 text-xs font-medium transition-all ${
+                  className={`inline-flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
                     selectedSlug === 'web-dev-quiz'
-                      ? 'bg-[#E8F0FE] text-[#1967D2]'
+                      ? 'bg-white text-[#1967D2] shadow-xs border border-[#1A73E8]/30'
                       : 'text-[#5F6368] hover:text-[#202124]'
                   }`}
                 >
-                  Web Sprint
+                  <Globe className="h-3 w-3" />
+                  <span>Web Sprint</span>
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleSelectWinnersTrack('mentis-quiz')}
-                  className={`rounded-xl px-2.5 py-1 text-xs font-medium transition-all ${
+                  className={`inline-flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
                     selectedSlug === 'mentis-quiz'
-                      ? 'bg-[#FEF7E0] text-[#B06000]'
+                      ? 'bg-white text-[#B06000] shadow-xs border border-[#FBBC04]/50'
                       : 'text-[#5F6368] hover:text-[#202124]'
                   }`}
                 >
-                  Mentis
+                  <Brain className="h-3 w-3" />
+                  <span>Mentis</span>
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleSelectWinnersTrack('wend-game')}
-                  className={`rounded-xl px-2.5 py-1 text-xs font-medium transition-all ${
+                  className={`inline-flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
                     selectedSlug === 'wend-game'
-                      ? 'bg-[#E6F4EA] text-[#137333]'
+                      ? 'bg-white text-[#137333] shadow-xs border border-[#34A853]/30'
                       : 'text-[#5F6368] hover:text-[#202124]'
                   }`}
                 >
-                  Wend Game
+                  <Gamepad2 className="h-3 w-3" />
+                  <span>Wend Game</span>
                 </button>
               </div>
             </div>
 
-            {/* Big Prominent Broadcast Action Button */}
-            <div className="rounded-3xl border-2 border-[#FBBC04] bg-gradient-to-r from-[#FFF8E1] to-[#FEF7E0] p-6 text-center shadow-md">
-              <Crown className="mx-auto h-8 w-8 text-[#FBBC04] mb-2 animate-bounce" />
-              <h3 className="text-lg font-bold text-[#202124]">Ready to Broadcast Official Winners Ceremony?</h3>
-              <p className="text-xs text-[#5F6368] max-w-md mx-auto mt-1 mb-4">
-                Clicking this will broadcast the dramatic 5-4-3-2-1 suspense sequence, reveal 3rd place, 2nd place, 1st place, and unfold the victory ranklist on ALL user screens!
-              </p>
+            {/* Broadcast Stage Action Banner */}
+            <div className="relative overflow-hidden rounded-3xl border-2 border-[#FBBC04] bg-gradient-to-br from-[#FFF9E6] via-[#FEF7E0] to-[#FFF3CD] p-6 sm:p-8 text-center shadow-md">
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FBBC04] text-[#202124] shadow-md shadow-[#FBBC04]/40 mb-3 animate-bounce">
+                  <Crown className="h-7 w-7 fill-current" />
+                </div>
+                <h3 className="text-xl sm:text-2xl font-black text-[#202124] tracking-tight">
+                  Ready to Broadcast Official Winners Ceremony?
+                </h3>
+                <p className="text-xs sm:text-sm text-[#5F6368] max-w-xl mx-auto mt-2 mb-4 leading-relaxed font-medium">
+                  Broadcasting triggers the dramatic 5-4-3-2-1 suspense sequence, reveals 3rd place, 2nd place, 1st place champion with golden confetti, and opens the victory leaderboard live on ALL connected screens!
+                </p>
 
-              {/* WebSocket Connection Health Badge */}
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-xs font-semibold shadow-2xs border border-[#DADCE0]">
-                {connected ? (
-                  <>
-                    <span className="h-2 w-2 rounded-full bg-[#34A853] animate-pulse" />
-                    <span className="text-[#137333]">WebSocket Connected & Live</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="h-2 w-2 rounded-full bg-[#EA4335]" />
-                    <span className="text-[#C5221F]">WebSocket Local / Reconnecting</span>
-                  </>
-                )}
-              </div>
+                {/* Timeline Step Sequence Indicator */}
+                <div className="mb-5 flex flex-wrap items-center justify-center gap-1.5 text-[11px] font-bold text-[#5F6368] bg-white/80 backdrop-blur-md px-4 py-2 rounded-2xl border border-[#DADCE0]/80 shadow-2xs">
+                  <span className="text-[#1A73E8]">1. 5s Countdown</span>
+                  <span>➔</span>
+                  <span className="text-[#E37400]">2. 3rd Place</span>
+                  <span>➔</span>
+                  <span className="text-[#5F6368]">3. 2nd Place</span>
+                  <span>➔</span>
+                  <span className="text-[#B06000]">4. 1st Place Champion</span>
+                  <span>➔</span>
+                  <span className="text-[#137333]">5. Full Victory Standings</span>
+                </div>
 
-              <div>
-                <button
-                  onClick={() => handleBroadcastWinnerCeremony()}
-                  disabled={automatedRanking.winners.length === 0}
-                  className={`inline-flex h-13 items-center justify-center gap-2.5 rounded-full px-8 text-sm font-bold text-white shadow-md transition-all ring-4 ring-[#1A73E8]/20 ${
-                    automatedRanking.winners.length === 0
-                      ? 'bg-[#BDC1C6] cursor-not-allowed opacity-60'
-                      : 'bg-[#1A73E8] hover:bg-[#1765CC] active:scale-95 cursor-pointer'
-                  }`}
-                >
-                  <Rocket className="h-4 w-4" />
-                  <span>Broadcast Winner Announcement ({automatedRanking.winners.length} Winners Ready)</span>
-                </button>
-              </div>
+                {/* WebSocket Health Badge */}
+                <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-xs font-bold shadow-2xs border border-[#DADCE0]">
+                  {connected ? (
+                    <>
+                      <span className="h-2 w-2 rounded-full bg-[#34A853] animate-pulse" />
+                      <span className="text-[#137333]">WebSocket Connected & Live</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="h-2 w-2 rounded-full bg-[#EA4335]" />
+                      <span className="text-[#C5221F]">WebSocket Local / Channel Standby</span>
+                    </>
+                  )}
+                </div>
 
-              {automatedRanking.winners.length === 0 && (
-                <div className="mt-3">
+                <div>
                   <button
-                    onClick={() => handleSimulateTieTest(selectedSlug)}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-1.5 text-xs font-medium text-[#1A73E8] border border-[#DADCE0] hover:bg-[#F8F9FA] shadow-xs active:scale-95 transition-all"
+                    type="button"
+                    onClick={() => handleBroadcastWinnerCeremony()}
+                    disabled={automatedRanking.winners.length === 0}
+                    className={`inline-flex h-13 items-center justify-center gap-2.5 rounded-full px-8 text-sm font-black text-white shadow-lg transition-all active:scale-95 cursor-pointer ${
+                      automatedRanking.winners.length === 0
+                        ? 'bg-[#BDC1C6] cursor-not-allowed opacity-60'
+                        : 'bg-gradient-to-r from-[#1A73E8] via-[#1557B0] to-[#0D47A1] hover:shadow-[#1A73E8]/30 ring-4 ring-[#1A73E8]/20 hover:scale-[1.02]'
+                    }`}
                   >
-                    <Sparkles className="h-3 w-3 text-[#FBBC04]" />
-                    <span>Load Test Participants to Try Broadcast</span>
+                    <Rocket className="h-4.5 w-4.5" />
+                    <span>Broadcast Winner Announcement ({automatedRanking.winners.length} Winners Ready)</span>
                   </button>
                 </div>
-              )}
+
+                {automatedRanking.winners.length === 0 && (
+                  <div className="mt-3.5">
+                    <button
+                      type="button"
+                      onClick={() => handleSimulateTieTest(selectedSlug)}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-1.5 text-xs font-bold text-[#1A73E8] border border-[#DADCE0] hover:bg-[#F8F9FA] shadow-xs active:scale-95 transition-all cursor-pointer"
+                    >
+                      <Sparkles className="h-3.5 w-3.5 text-[#FBBC04]" />
+                      <span>Load Test Participants to Try Broadcast</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Automated Victory Podium (1st, 2nd, 3rd) Derived Mathematically */}
             <div>
               <div className="flex items-center justify-between mb-3 px-1">
                 <div>
-                  <h3 className="text-sm font-semibold text-[#202124] flex items-center gap-2">
-                    <Trophy className="h-4 w-4 text-[#FBBC04]" />
+                  <h3 className="text-base font-bold text-[#202124] flex items-center gap-2">
+                    <Trophy className="h-4.5 w-4.5 text-[#FBBC04]" />
                     <span>Automated Contest Podium (Top 3)</span>
                   </h3>
                   <p className="text-[11px] text-[#5F6368]">
@@ -2421,23 +2197,25 @@ export default function AdminPage() {
               </div>
 
               {automatedRanking.winners.length === 0 ? (
-                <div className="rounded-3xl border border-[#DADCE0] bg-white p-8 text-center shadow-2xs">
+                <div className="rounded-3xl border border-[#DADCE0]/80 bg-white/90 backdrop-blur-md p-8 text-center shadow-xs">
                   <Trophy className="h-10 w-10 text-[#DADCE0] mx-auto mb-2" />
-                  <h4 className="text-sm font-semibold text-[#202124]">No Submissions Recorded Yet for this Track</h4>
-                  <p className="text-xs text-[#5F6368] max-w-md mx-auto mt-1 mb-4">
+                  <h4 className="text-sm font-bold text-[#202124]">No Submissions Recorded Yet for this Track</h4>
+                  <p className="text-xs text-[#5F6368] max-w-md mx-auto mt-1 mb-4 leading-relaxed font-medium">
                     When attendees submit their challenge responses, their scores and completion times will automatically populate the victory podium and tie-breaker standings.
                   </p>
                   <div className="flex items-center justify-center gap-3">
                     <button
+                      type="button"
                       onClick={() => refreshStandings(selectedSlug)}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-[#DADCE0] bg-white px-3.5 py-1.5 text-xs font-medium text-[#3C4043] hover:bg-[#F8F9FA]"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-[#DADCE0] bg-white px-4 py-2 text-xs font-bold text-[#3C4043] hover:bg-[#F8F9FA] cursor-pointer shadow-2xs"
                     >
                       <RefreshCw className="h-3.5 w-3.5" />
                       <span>Refresh</span>
                     </button>
                     <button
+                      type="button"
                       onClick={() => handleSimulateTieTest(selectedSlug)}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-[#1A73E8] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#1765CC] shadow-xs active:scale-95 transition-all"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#1A73E8] to-[#1557B0] px-4 py-2 text-xs font-bold text-white hover:shadow-md shadow-xs active:scale-95 transition-all cursor-pointer"
                     >
                       <Zap className="h-3.5 w-3.5" />
                       <span>Simulate Tie-Breaker Demo</span>
@@ -2445,84 +2223,14 @@ export default function AdminPage() {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {/* 1st Place Card (Grand Champion - Gold) */}
-                  {automatedRanking.winners.find((w) => w.rank === 1) ? (
-                    (() => {
-                      const w1 = automatedRanking.winners.find((w) => w.rank === 1)!
-                      return (
-                        <div className="rounded-3xl border-2 border-[#FBBC04] bg-white p-5 shadow-2xs flex flex-col gap-3 ring-2 ring-[#FBBC04]/20 relative overflow-hidden order-1 md:order-2">
-                          <div className="absolute top-0 right-0 bg-[#FEF7E0] border-b border-l border-[#FBBC04]/40 px-3 py-1 rounded-bl-xl text-[10px] font-extrabold text-[#B06000] uppercase tracking-wider">
-                            Grand Champion
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#FEF7E0] text-xs font-black text-[#B06000]">
-                              1st
-                            </span>
-                            <span className="text-xs font-extrabold text-[#B06000] inline-flex items-center gap-1">
-                              <Crown className="h-3.5 w-3.5 text-[#FBBC04]" />
-                              <span>Gold Medalist</span>
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-3 py-1">
-                            <img
-                              src={w1.avatar}
-                              alt={w1.name}
-                              className="h-14 w-14 rounded-full border-2 border-[#FBBC04] object-cover shadow-sm ring-4 ring-[#FBBC04]/20"
-                            />
-                            <div className="flex flex-col">
-                              <span className="text-sm font-bold text-[#202124]">{w1.name}</span>
-                              <span className="text-[11px] text-[#5F6368]">Rank #1 Standing</span>
-                            </div>
-                          </div>
-
-                          <div className="flex flex-col gap-2 pt-2 border-t border-[#F1F3F4]">
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="text-[#5F6368] font-medium flex items-center gap-1">
-                                <Award className="h-3.5 w-3.5 text-[#1A73E8]" />
-                                <span>Priority 1 (Correct / Score):</span>
-                              </span>
-                              <span className="font-bold text-[#1A73E8] bg-[#E8F0FE] px-2 py-0.5 rounded-full">
-                                {w1.correctCount ?? Math.floor(w1.score / 100)} Correct • {w1.score} pts
-                              </span>
-                            </div>
-
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="text-[#5F6368] font-medium flex items-center gap-1">
-                                <Clock className="h-3.5 w-3.5 text-[#137333]" />
-                                <span>Priority 2 (Duration):</span>
-                              </span>
-                              <span className="font-bold text-[#137333] bg-[#E6F4EA] px-2 py-0.5 rounded-full">
-                                {formatDuration(w1.durationMs)}
-                              </span>
-                            </div>
-
-                            {w1.tieBrokenByTime && (
-                              <div className="mt-1 flex items-center gap-1 rounded-xl bg-[#FEF7E0] border border-[#FBBC04]/40 p-2 text-[10px] font-semibold text-[#B06000]">
-                                <Zap className="h-3 w-3 shrink-0 text-[#FBBC04]" />
-                                <span>Tied on Score • Won 1st Place by Faster Speed!</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )
-                    })()
-                  ) : (
-                    <div className="rounded-3xl border border-dashed border-[#DADCE0] p-6 text-center text-xs text-[#5F6368] order-1 md:order-2 flex flex-col items-center justify-center min-h-[180px]">
-                      <Crown className="h-6 w-6 text-[#DADCE0] mb-1" />
-                      <span>Awaiting 1st Place Participant</span>
-                    </div>
-                  )}
-
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                   {/* 2nd Place Card (Silver Medalist) */}
                   {automatedRanking.winners.find((w) => w.rank === 2) ? (
                     (() => {
                       const w2 = automatedRanking.winners.find((w) => w.rank === 2)!
                       return (
-                        <div className="rounded-3xl border-2 border-[#9AA0A6]/40 bg-white p-5 shadow-2xs flex flex-col gap-3 relative overflow-hidden order-2 md:order-1">
-                          <div className="absolute top-0 right-0 bg-[#F1F3F4] border-b border-l border-[#DADCE0] px-3 py-1 rounded-bl-xl text-[10px] font-bold text-[#5F6368] uppercase tracking-wider">
+                        <div className="rounded-3xl border-2 border-[#9AA0A6]/50 bg-white p-5 shadow-xs flex flex-col gap-3 relative overflow-hidden order-2 md:order-1">
+                          <div className="absolute top-0 right-0 bg-[#F1F3F4] border-b border-l border-[#DADCE0] px-3 py-1 rounded-bl-xl text-[10px] font-black text-[#5F6368] uppercase tracking-wider">
                             Runner-Up
                           </div>
 
@@ -2530,7 +2238,7 @@ export default function AdminPage() {
                             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#F1F3F4] text-xs font-black text-[#5F6368]">
                               2nd
                             </span>
-                            <span className="text-xs font-bold text-[#5F6368] inline-flex items-center gap-1">
+                            <span className="text-xs font-black text-[#5F6368] inline-flex items-center gap-1">
                               <Medal className="h-3.5 w-3.5 text-[#9AA0A6]" />
                               <span>Silver Medalist</span>
                             </span>
@@ -2544,25 +2252,25 @@ export default function AdminPage() {
                             />
                             <div className="flex flex-col">
                               <span className="text-sm font-bold text-[#202124]">{w2.name}</span>
-                              <span className="text-[11px] text-[#5F6368]">Rank #2 Standing</span>
+                              <span className="text-[11px] text-[#5F6368] font-medium">Rank #2 Standing</span>
                             </div>
                           </div>
 
                           <div className="flex flex-col gap-2 pt-2 border-t border-[#F1F3F4]">
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="text-[#5F6368] font-medium flex items-center gap-1">
+                            <div className="flex items-center justify-between text-xs font-medium">
+                              <span className="text-[#5F6368] flex items-center gap-1">
                                 <Award className="h-3.5 w-3.5 text-[#1A73E8]" />
-                                <span>Priority 1 (Correct / Score):</span>
+                                <span>Correct / Score:</span>
                               </span>
                               <span className="font-bold text-[#1A73E8] bg-[#E8F0FE] px-2 py-0.5 rounded-full">
                                 {w2.correctCount ?? Math.floor(w2.score / 100)} Correct • {w2.score} pts
                               </span>
                             </div>
 
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="text-[#5F6368] font-medium flex items-center gap-1">
+                            <div className="flex items-center justify-between text-xs font-medium">
+                              <span className="text-[#5F6368] flex items-center gap-1">
                                 <Clock className="h-3.5 w-3.5 text-[#137333]" />
-                                <span>Priority 2 (Duration):</span>
+                                <span>Duration:</span>
                               </span>
                               <span className="font-bold text-[#137333] bg-[#E6F4EA] px-2 py-0.5 rounded-full">
                                 {formatDuration(w2.durationMs)}
@@ -2570,7 +2278,7 @@ export default function AdminPage() {
                             </div>
 
                             {w2.tieBrokenByTime && (
-                              <div className="mt-1 flex items-center gap-1 rounded-xl bg-[#F8F9FA] border border-[#DADCE0] p-2 text-[10px] font-semibold text-[#5F6368]">
+                              <div className="mt-1 flex items-center gap-1 rounded-xl bg-[#F8F9FA] border border-[#DADCE0] p-2 text-[10px] font-bold text-[#5F6368]">
                                 <Zap className="h-3 w-3 shrink-0 text-[#9AA0A6]" />
                                 <span>Tied on Score • Rank decided by completion time</span>
                               </div>
@@ -2586,13 +2294,83 @@ export default function AdminPage() {
                     </div>
                   )}
 
+                  {/* 1st Place Card (Grand Champion - Gold) */}
+                  {automatedRanking.winners.find((w) => w.rank === 1) ? (
+                    (() => {
+                      const w1 = automatedRanking.winners.find((w) => w.rank === 1)!
+                      return (
+                        <div className="rounded-3xl border-2 border-[#FBBC04] bg-white p-6 shadow-md flex flex-col gap-3 ring-4 ring-[#FBBC04]/20 relative overflow-hidden order-1 md:order-2 scale-[1.02] -translate-y-2">
+                          <div className="absolute top-0 right-0 bg-[#FEF7E0] border-b border-l border-[#FBBC04]/50 px-3.5 py-1 rounded-bl-xl text-[10px] font-black text-[#B06000] uppercase tracking-wider">
+                            Grand Champion
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FEF7E0] text-sm font-black text-[#B06000] shadow-xs">
+                              1st
+                            </span>
+                            <span className="text-xs font-black text-[#B06000] inline-flex items-center gap-1">
+                              <Crown className="h-4 w-4 text-[#FBBC04]" />
+                              <span>Gold Medalist</span>
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-3 py-1">
+                            <img
+                              src={w1.avatar}
+                              alt={w1.name}
+                              className="h-16 w-16 rounded-full border-2 border-[#FBBC04] object-cover shadow-md ring-4 ring-[#FBBC04]/30"
+                            />
+                            <div className="flex flex-col">
+                              <span className="text-base font-black text-[#202124]">{w1.name}</span>
+                              <span className="text-xs text-[#B06000] font-bold">Tournament Champion</span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-2 pt-2 border-t border-[#F1F3F4]">
+                            <div className="flex items-center justify-between text-xs font-medium">
+                              <span className="text-[#5F6368] flex items-center gap-1">
+                                <Award className="h-3.5 w-3.5 text-[#1A73E8]" />
+                                <span>Correct / Score:</span>
+                              </span>
+                              <span className="font-bold text-[#1A73E8] bg-[#E8F0FE] px-2.5 py-0.5 rounded-full">
+                                {w1.correctCount ?? Math.floor(w1.score / 100)} Correct • {w1.score} pts
+                              </span>
+                            </div>
+
+                            <div className="flex items-center justify-between text-xs font-medium">
+                              <span className="text-[#5F6368] flex items-center gap-1">
+                                <Clock className="h-3.5 w-3.5 text-[#137333]" />
+                                <span>Duration:</span>
+                              </span>
+                              <span className="font-bold text-[#137333] bg-[#E6F4EA] px-2.5 py-0.5 rounded-full">
+                                {formatDuration(w1.durationMs)}
+                              </span>
+                            </div>
+
+                            {w1.tieBrokenByTime && (
+                              <div className="mt-1 flex items-center gap-1.5 rounded-xl bg-[#FEF7E0] border border-[#FBBC04]/50 p-2 text-[10px] font-black text-[#B06000]">
+                                <Zap className="h-3.5 w-3.5 shrink-0 text-[#FBBC04]" />
+                                <span>Tied on Score • Won 1st Place by Faster Speed!</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })()
+                  ) : (
+                    <div className="rounded-3xl border border-dashed border-[#DADCE0] p-6 text-center text-xs text-[#5F6368] order-1 md:order-2 flex flex-col items-center justify-center min-h-[180px]">
+                      <Crown className="h-6 w-6 text-[#DADCE0] mb-1" />
+                      <span>Awaiting 1st Place Champion</span>
+                    </div>
+                  )}
+
                   {/* 3rd Place Card (Bronze Medalist) */}
                   {automatedRanking.winners.find((w) => w.rank === 3) ? (
                     (() => {
                       const w3 = automatedRanking.winners.find((w) => w.rank === 3)!
                       return (
-                        <div className="rounded-3xl border-2 border-[#E37400]/40 bg-white p-5 shadow-2xs flex flex-col gap-3 relative overflow-hidden order-3">
-                          <div className="absolute top-0 right-0 bg-[#FBE9E7] border-b border-l border-[#E37400]/30 px-3 py-1 rounded-bl-xl text-[10px] font-bold text-[#E37400] uppercase tracking-wider">
+                        <div className="rounded-3xl border-2 border-[#E37400]/40 bg-white p-5 shadow-xs flex flex-col gap-3 relative overflow-hidden order-3">
+                          <div className="absolute top-0 right-0 bg-[#FBE9E7] border-b border-l border-[#E37400]/30 px-3 py-1 rounded-bl-xl text-[10px] font-black text-[#E37400] uppercase tracking-wider">
                             Bronze
                           </div>
 
@@ -2600,7 +2378,7 @@ export default function AdminPage() {
                             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#FBE9E7] text-xs font-black text-[#E37400]">
                               3rd
                             </span>
-                            <span className="text-xs font-bold text-[#E37400] inline-flex items-center gap-1">
+                            <span className="text-xs font-black text-[#E37400] inline-flex items-center gap-1">
                               <Award className="h-3.5 w-3.5 text-[#E37400]" />
                               <span>Bronze Medalist</span>
                             </span>
@@ -2614,25 +2392,25 @@ export default function AdminPage() {
                             />
                             <div className="flex flex-col">
                               <span className="text-sm font-bold text-[#202124]">{w3.name}</span>
-                              <span className="text-[11px] text-[#5F6368]">Rank #3 Standing</span>
+                              <span className="text-[11px] text-[#5F6368] font-medium">Rank #3 Standing</span>
                             </div>
                           </div>
 
                           <div className="flex flex-col gap-2 pt-2 border-t border-[#F1F3F4]">
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="text-[#5F6368] font-medium flex items-center gap-1">
+                            <div className="flex items-center justify-between text-xs font-medium">
+                              <span className="text-[#5F6368] flex items-center gap-1">
                                 <Award className="h-3.5 w-3.5 text-[#1A73E8]" />
-                                <span>Priority 1 (Correct / Score):</span>
+                                <span>Correct / Score:</span>
                               </span>
                               <span className="font-bold text-[#1A73E8] bg-[#E8F0FE] px-2 py-0.5 rounded-full">
                                 {w3.correctCount ?? Math.floor(w3.score / 100)} Correct • {w3.score} pts
                               </span>
                             </div>
 
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="text-[#5F6368] font-medium flex items-center gap-1">
+                            <div className="flex items-center justify-between text-xs font-medium">
+                              <span className="text-[#5F6368] flex items-center gap-1">
                                 <Clock className="h-3.5 w-3.5 text-[#137333]" />
-                                <span>Priority 2 (Duration):</span>
+                                <span>Duration:</span>
                               </span>
                               <span className="font-bold text-[#137333] bg-[#E6F4EA] px-2 py-0.5 rounded-full">
                                 {formatDuration(w3.durationMs)}
@@ -2640,7 +2418,7 @@ export default function AdminPage() {
                             </div>
 
                             {w3.tieBrokenByTime && (
-                              <div className="mt-1 flex items-center gap-1 rounded-xl bg-[#F8F9FA] border border-[#DADCE0] p-2 text-[10px] font-semibold text-[#5F6368]">
+                              <div className="mt-1 flex items-center gap-1 rounded-xl bg-[#F8F9FA] border border-[#DADCE0] p-2 text-[10px] font-bold text-[#5F6368]">
                                 <Zap className="h-3 w-3 shrink-0 text-[#E37400]" />
                                 <span>Tied on Score • Rank decided by completion time</span>
                               </div>
@@ -2660,38 +2438,41 @@ export default function AdminPage() {
             </div>
 
             {/* Official Ranked Standings & Audit Table */}
-            <div className="rounded-3xl border border-[#DADCE0] bg-white p-6 shadow-2xs">
+            <div className="rounded-3xl border border-[#DADCE0]/80 bg-white/90 backdrop-blur-md p-5 sm:p-6 shadow-xs">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 mb-4 border-b border-[#F1F3F4]">
                 <div>
-                  <h3 className="text-base font-semibold text-[#202124] flex items-center gap-2">
+                  <h3 className="text-base font-bold text-[#202124] flex items-center gap-2">
                     <UserCheck className="h-4 w-4 text-[#1A73E8]" />
                     <span>Official Standings & Tie-Breaker Audit ({automatedRanking.rankedParticipants.length})</span>
                   </h3>
-                  <p className="text-xs text-[#5F6368] mt-0.5">
-                    Strict Two-Tier Algorithm: 1st Priority = Highest Correct Answers/Score $\rightarrow$ 2nd Priority = Lowest Time Taken (ms).
+                  <p className="text-xs text-[#5F6368] mt-0.5 font-medium">
+                    Strict Two-Tier Algorithm: 1st Priority = Highest Correct Answers/Score → 2nd Priority = Lowest Time Taken (ms).
                   </p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
                   <button
+                    type="button"
                     onClick={() => refreshStandings(selectedSlug)}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-[#DADCE0] bg-white px-3 py-1.5 text-xs font-medium text-[#3C4043] hover:bg-[#F8F9FA] transition-colors"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[#DADCE0] bg-white px-3.5 py-1.5 text-xs font-bold text-[#3C4043] hover:bg-[#F8F9FA] transition-colors shadow-2xs cursor-pointer"
                   >
                     <RefreshCw className="h-3.5 w-3.5" />
                     <span>Refresh</span>
                   </button>
                   <button
+                    type="button"
                     onClick={() => handleSimulateTieTest(selectedSlug)}
                     title="Load sample attempts to demonstrate tie-breaking by time"
-                    className="inline-flex items-center gap-1.5 rounded-full border border-[#1A73E8]/40 bg-[#E8F0FE] px-3 py-1.5 text-xs font-semibold text-[#1A73E8] hover:bg-[#D2E3FC] active:scale-95 transition-all"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[#1A73E8]/40 bg-[#E8F0FE] px-3.5 py-1.5 text-xs font-bold text-[#1A73E8] hover:bg-[#D2E3FC] active:scale-95 transition-all shadow-2xs cursor-pointer"
                   >
                     <Zap className="h-3.5 w-3.5" />
                     <span>Simulate Tie-Breaker Demo</span>
                   </button>
                   <button
+                    type="button"
                     onClick={() => handleClearSessions(selectedSlug)}
                     title="Wipe current track session receipts"
-                    className="inline-flex items-center gap-1.5 rounded-full border border-[#EA4335]/30 bg-white px-3 py-1.5 text-xs font-medium text-[#C5221F] hover:bg-[#FCE8E6] transition-colors"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[#EA4335]/30 bg-white px-3.5 py-1.5 text-xs font-bold text-[#C5221F] hover:bg-[#FCE8E6] transition-colors shadow-2xs cursor-pointer"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                     <span>Clear Track</span>
@@ -2702,14 +2483,15 @@ export default function AdminPage() {
               {automatedRanking.rankedParticipants.length === 0 ? (
                 <div className="p-8 text-center text-xs text-[#5F6368]">
                   <HelpCircle className="h-8 w-8 text-[#DADCE0] mx-auto mb-2" />
-                  <p className="font-semibold text-[#202124]">No participant submissions recorded yet for this track</p>
-                  <p className="mt-1">
+                  <p className="font-bold text-[#202124]">No participant submissions recorded yet for this track</p>
+                  <p className="mt-1 font-medium">
                     When attendees submit their responses, their ranked standing will automatically calculate here in real-time.
                   </p>
                   <div className="mt-4">
                     <button
+                      type="button"
                       onClick={() => handleSimulateTieTest(selectedSlug)}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-[#1A73E8] px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#1765CC]"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#1A73E8] to-[#1557B0] px-4 py-2 text-xs font-bold text-white shadow-xs hover:from-[#1765CC] hover:to-[#104D96] cursor-pointer"
                     >
                       <Zap className="h-3.5 w-3.5" />
                       <span>Simulate Tie-Breaker Demo (4 Participants)</span>
@@ -2796,7 +2578,7 @@ export default function AdminPage() {
                           {/* Priority 2 Badge */}
                           <span
                             title="Priority 2: Duration taken"
-                            className="inline-flex items-center gap-1 rounded-full bg-white border border-[#DADCE0] px-3 py-1 text-xs font-semibold text-[#137333]"
+                            className="inline-flex items-center gap-1 rounded-full bg-white border border-[#DADCE0] px-3 py-1 text-xs font-bold text-[#137333]"
                           >
                             <Clock className="h-3.5 w-3.5" />
                             <span>{formatDuration(p.durationMs)}</span>
