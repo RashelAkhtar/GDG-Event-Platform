@@ -205,31 +205,10 @@ export function DualQuizSection({
       ? 'Enter Mentis Challenge'
       : 'Enter Wend Game Arena'
 
-    // Multi-color signature ribbon gradient
-    const trackRibbonGradient = isWeb
-      ? 'from-[#4285F4] via-[#00D2FF] to-[#1A73E8]'
-      : isMentis
-      ? 'from-[#FBBC04] via-[#EA4335] to-[#D93025]'
-      : 'from-[#34A853] via-[#10B981] to-[#0F9D58]'
-
-    // Living background mesh orbs (continuous organic CSS animations)
-    const meshOrb1 = isWeb
-      ? 'bg-[#4285F4]/20 animate-mesh-1'
-      : isMentis
-      ? 'bg-[#FBBC04]/22 animate-mesh-1'
-      : 'bg-[#34A853]/20 animate-mesh-1'
-
-    const meshOrb2 = isWeb
-      ? 'bg-[#00D2FF]/15 animate-mesh-2'
-      : isMentis
-      ? 'bg-[#EA4335]/15 animate-mesh-2'
-      : 'bg-[#10B981]/15 animate-mesh-2'
-
-    const meshOrb3 = isWeb
-      ? 'bg-[#818CF8]/15 animate-mesh-3'
-      : isMentis
-      ? 'bg-[#F97316]/15 animate-mesh-3'
-      : 'bg-[#06B6D4]/15 animate-mesh-3'
+    // Subtle accent line on top of card
+    const topAccentColor = isLive
+      ? 'bg-[#137333]'
+      : 'bg-[#DADCE0]'
 
     // Live question / word count for specs chip
     const activeQuestionsCount =
@@ -240,7 +219,7 @@ export function DualQuizSection({
     const wendLimit = api.getWendBoard().timeLimitSeconds || 120
     const specsBadge =
       type === 'wend'
-        ? `${activeQuestionsCount} Target Words • ${wendLimit}s Round Timer`
+        ? `${activeQuestionsCount} Target Words • ${wendLimit}s Timer`
         : isMentis
         ? `${activeQuestionsCount} Logic & AI Questions • 400 Pts`
         : `${activeQuestionsCount} Frontend Questions • 30s Each • 400 Pts`
@@ -270,32 +249,23 @@ export function DualQuizSection({
     return (
       <div
         onClick={handleCardClick}
-        className={`group relative flex flex-col justify-between overflow-hidden border transition-all duration-300 p-6 sm:p-7 cursor-pointer bg-white ${
+        className={`group relative flex flex-col justify-between overflow-hidden border transition-all duration-300 p-5 sm:p-6 cursor-pointer bg-white ${
           isLive
             ? 'border-[#34A853] shadow-xs hover:shadow-md hover:border-[#1A73E8]'
             : 'border-[#DADCE0] hover:border-[#1A73E8] hover:shadow-xs'
         } ${isAdmin ? 'hover:ring-1 hover:ring-[#1A73E8]' : ''}`}
         title={isAdmin ? 'Click to open Game in Admin Panel' : isLive ? 'Click to play' : 'Challenge Locked'}
       >
-        {/* ======================================================== */}
-        {/* AESTHETIC CSS BACKGROUND ANIMATION: AMBIENT AURORA & GRID */}
-        {/* ======================================================== */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden -z-0">
-          <div className={`absolute -top-16 -right-16 h-56 w-56 blur-3xl opacity-20 transition-colors duration-700 ${meshOrb1}`} />
-          <div className={`absolute top-1/2 -left-16 h-52 w-52 blur-3xl opacity-20 transition-colors duration-700 ${meshOrb2}`} />
-          <div className={`absolute -bottom-16 right-1/4 h-48 w-48 blur-3xl opacity-15 transition-colors duration-700 ${meshOrb3}`} />
-          <div className="absolute inset-0 bg-tech-grid opacity-30" />
-        </div>
+        {/* Subtle Architectural Tech Grid */}
+        <div className="pointer-events-none absolute inset-0 bg-tech-grid opacity-[0.05]" />
 
-        {/* Top Sharp Google Accent Line */}
-        <div className={`absolute top-0 inset-x-0 h-1 bg-gradient-to-r ${trackRibbonGradient}`} />
+        {/* Top Sharp Status Accent Line */}
+        <div className={`absolute top-0 inset-x-0 h-[2.5px] ${topAccentColor}`} />
 
-        <div className="relative z-10 flex flex-col gap-4">
-          {/* Header Row: Track Badge + Studio Button (Admin) + Live Status */}
-          <div className="flex items-center justify-between">
-            <span
-              className={`inline-flex items-center gap-1.5 border px-2.5 py-1 font-mono text-xs font-bold tracking-wider ${accentBg}`}
-            >
+        <div className="relative z-10 flex flex-col gap-3.5">
+          {/* Header Row: Track Badge + Studio Link + Compact Lock Status Pill */}
+          <div className="flex items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-1.5 border border-[#DADCE0] bg-[#F8F9FA] px-2.5 py-1 font-mono text-[11px] font-bold text-[#3C4043] tracking-wider">
               {icon}
               <span>{trackLabel.toUpperCase()}</span>
             </span>
@@ -306,7 +276,7 @@ export function DualQuizSection({
                 <Link
                   href={adminPanelHref}
                   onClick={(e) => e.stopPropagation()}
-                  className="inline-flex items-center gap-1 border border-[#1A73E8] bg-white px-2.5 py-1 font-mono text-[11px] font-bold text-[#1967D2] shadow-2xs hover:bg-[#1A73E8] hover:text-white transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1 border border-[#DADCE0] bg-white px-2 py-1 font-mono text-[10px] font-bold text-[#1A73E8] hover:border-[#1A73E8] hover:bg-[#E8F0FE] transition-all"
                   title="Open Full Game Studio in Admin Command Center"
                 >
                   <Maximize2 className="h-3 w-3" />
@@ -314,121 +284,45 @@ export function DualQuizSection({
                 </Link>
               )}
 
-              {/* Live Now / Locked Pill Indicator */}
-              <span
-                className={`inline-flex items-center gap-1.5 border px-2.5 py-1 font-mono text-[11px] font-bold transition-all ${
-                  isLive
-                    ? 'bg-[#E6F4EA] text-[#137333] border-[#34A853]'
-                    : 'bg-[#F1F3F4] text-[#5F6368] border-[#DADCE0]'
-                }`}
-              >
-                {isLive ? (
-                  <>
-                    <span className="h-2 w-2 bg-[#34A853] animate-pulse" />
-                    <span>LIVE NOW</span>
-                  </>
-                ) : (
-                  <>
-                    <Lock className="h-3 w-3 text-[#5F6368]" />
-                    <span>LOCKED</span>
-                  </>
-                )}
-              </span>
-            </div>
-          </div>
-
-          {/* Centered Prominent Padlock Pedestal with Concentric Aura */}
-          <div className="relative my-2.5 flex items-center justify-center select-none">
-            {/* Ambient dynamic radial halo behind lock */}
-            <div
-              className={`absolute h-28 w-28 blur-xl transition-all duration-700 pointer-events-none ${
-                isLive
-                  ? 'bg-gradient-to-tr from-[#34A853]/25 via-[#4285F4]/20 to-[#34A853]/25'
-                  : 'bg-gradient-to-tr from-[#EA4335]/25 via-[#FBBC04]/15 to-[#EA4335]/25'
-              }`}
-            />
-
-            {/* Concentric radar wave rings */}
-            <div
-              className={`absolute h-22 w-22 border border-dashed pointer-events-none animate-ripple-1 ${
-                isLive ? 'border-[#34A853]/30' : 'border-[#EA4335]/30'
-              }`}
-            />
-            <div
-              className={`absolute h-26 w-26 border pointer-events-none animate-ripple-2 ${
-                isLive ? 'border-[#4285F4]/20' : 'border-[#FBBC04]/20'
-              }`}
-            />
-
-            {/* Pedestal with authentic AnimatedLockToggle */}
-            <div
-              onClick={(e) => {
-                if (isAdmin) {
-                  e.stopPropagation()
-                  toggleEventLock(event, isLive, setEvent)
-                }
-              }}
-              className="relative z-10 p-2 bg-white/95 border border-[#DADCE0] shadow-xs"
-            >
-              <AnimatedLockToggle
-                id={`arena-lock-${event.slug}`}
-                checked={isLive}
-                isLive={isLive}
-                isAdmin={isAdmin}
-                disabled={isUpdating}
-                onChange={() => toggleEventLock(event, isLive, setEvent)}
-                size="lg"
-              />
-            </div>
-          </div>
-
-          {/* Centered Structured Geometric Status Block */}
-          <div className="my-1 flex items-center justify-between border border-[#DADCE0] bg-[#F8F9FA] px-3 py-2.5">
-            <div className="flex items-center gap-3">
-              <div className={`flex h-9 w-9 shrink-0 items-center justify-center border font-mono ${
-                isLive
-                  ? 'border-[#34A853] bg-[#1E8E3E] text-white'
-                  : 'border-[#EA4335] bg-[#D93025] text-white'
-              }`}>
-                {isLive ? <Unlock className="h-4.5 w-4.5" /> : <Lock className="h-4.5 w-4.5" />}
-              </div>
-              <div className="text-left">
-                <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#5F6368]">
-                  {isLive ? 'ARENA STATUS: LIVE & READY' : 'ARENA STATUS: LOCKED'}
-                </p>
-                <p className="text-xs font-bold text-[#202124]">
-                  {isLive ? 'Tap button below to enter battle' : 'Locked by chapter hosts'}
-                </p>
-              </div>
-            </div>
-
-            {isAdmin && (
-              <button
-                type="button"
-                disabled={isUpdating}
+              {/* Compact, Aesthetic Lock Status Toggle */}
+              <div
                 onClick={(e) => {
-                  e.stopPropagation()
-                  toggleEventLock(event, isLive, setEvent)
+                  if (isAdmin) {
+                    e.stopPropagation()
+                    toggleEventLock(event, isLive, setEvent)
+                  }
                 }}
-                className={`px-3 py-1 font-mono text-xs font-bold border transition-all cursor-pointer ${
+                className={`inline-flex items-center gap-1.5 border px-2 py-1 font-mono text-[11px] font-bold transition-all ${
+                  isAdmin ? 'cursor-pointer hover:shadow-2xs' : ''
+                } ${
                   isLive
-                    ? 'border-[#EA4335] bg-white text-[#EA4335] hover:bg-[#EA4335] hover:text-white'
-                    : 'border-[#34A853] bg-white text-[#34A853] hover:bg-[#34A853] hover:text-white'
+                    ? 'border-[#34A853]/40 bg-[#E6F4EA] text-[#137333]'
+                    : 'border-[#DADCE0] bg-[#F1F3F4] text-[#5F6368]'
                 }`}
+                title={isAdmin ? (isLive ? 'Click to switch to LOCKED' : 'Click to GO LIVE') : isLive ? 'Live Arena' : 'Locked Arena'}
               >
-                {isLive ? 'LOCK' : 'GO LIVE'}
-              </button>
-            )}
+                <AnimatedLockToggle
+                  id={`arena-lock-${event.slug}`}
+                  checked={isLive}
+                  isLive={isLive}
+                  isAdmin={isAdmin}
+                  disabled={isUpdating}
+                  onChange={() => toggleEventLock(event, isLive, setEvent)}
+                  size="xs"
+                />
+                <span className="tracking-wider">{isLive ? 'LIVE' : 'LOCKED'}</span>
+              </div>
+            </div>
           </div>
 
           {/* Title & Description */}
-          <div className="flex flex-col gap-1.5 text-left">
+          <div className="flex flex-col gap-1 text-left">
             <div className="flex items-center justify-between gap-1">
               <h3 className="text-lg sm:text-xl font-extrabold text-[#202124] tracking-tight group-hover:text-[#1A73E8] transition-colors leading-snug">
                 {event.title}
               </h3>
               {isAdmin && (
-                <span className="font-mono text-[11px] font-bold text-[#1A73E8] flex items-center gap-1 shrink-0">
+                <span className="font-mono text-[10px] font-bold text-[#1A73E8] flex items-center gap-1 shrink-0">
                   <span>EDIT</span>
                   <ExternalLink className="h-3 w-3" />
                 </span>
@@ -440,22 +334,24 @@ export function DualQuizSection({
           </div>
 
           {/* Live Specs Structured Chip */}
-          <div className="flex items-center justify-start gap-2">
-            <span className="inline-flex items-center gap-1.5 border border-[#DADCE0] bg-[#F8F9FA] px-3 py-1 font-mono text-[11px] font-bold text-[#3C4043]">
-              <Sparkles className="h-3 w-3 text-[#FBBC04]" />
+          <div className="flex items-center justify-start">
+            <span className="inline-flex items-center gap-1.5 border border-[#DADCE0] bg-[#F8F9FA] px-2.5 py-1 font-mono text-[11px] font-medium text-[#3C4043]">
+              <Clock className="h-3 w-3 text-[#5F6368]" />
               <span>{specsBadge}</span>
             </span>
           </div>
+        </div>
 
-          {/* Primary Action Button Deck (Enter Game + Leaderboard Podium Shortcut) */}
-          <div onClick={(e) => e.stopPropagation()} className="pt-2 flex items-center gap-2">
+        {/* Primary Action Button Deck (Enter Game + Leaderboard Shortcut) */}
+        <div onClick={(e) => e.stopPropagation()} className="relative z-10 pt-4 flex flex-col gap-2">
+          <div className="flex items-center gap-2">
             {isLive ? (
               <Link
                 href={enterHref}
                 onClick={() => {
                   void soundManager.unlock()
                 }}
-                className={`relative flex h-12 flex-1 items-center justify-center gap-2 font-mono text-xs sm:text-sm font-extrabold uppercase tracking-wider text-white border transition-all active:translate-y-0.5 shadow-xs overflow-hidden ${
+                className={`relative flex h-11 flex-1 items-center justify-center gap-2 font-mono text-xs sm:text-sm font-extrabold uppercase tracking-wider text-white border transition-all active:translate-y-0.5 shadow-xs overflow-hidden ${
                   isWeb
                     ? 'border-[#1765CC] bg-[#1A73E8] hover:bg-[#1557B0]'
                     : isMentis
@@ -470,20 +366,20 @@ export function DualQuizSection({
               <button
                 type="button"
                 disabled
-                className="flex h-12 flex-1 items-center justify-center gap-2 border border-[#DADCE0] bg-[#F1F3F4] font-mono text-xs font-bold uppercase tracking-wider text-[#80868B] cursor-not-allowed"
+                className="flex h-11 flex-1 items-center justify-center gap-2 border border-[#DADCE0] bg-[#F1F3F4] font-mono text-xs font-bold uppercase tracking-wider text-[#80868B] cursor-not-allowed"
               >
-                <Lock className="h-4 w-4" />
+                <Lock className="h-3.5 w-3.5" />
                 <span>CHALLENGE LOCKED BY HOST</span>
               </button>
             )}
 
-            {/* Golden Trophy Leaderboard Podium Shortcut */}
+            {/* Minimalist Trophy Leaderboard Shortcut */}
             <Link
               href={leaderboardHref}
-              className="relative flex h-12 w-12 shrink-0 items-center justify-center border border-[#FBBC04] bg-[#FEF7E0] text-[#B06000] hover:bg-[#FBBC04] hover:text-[#202124] transition-all shadow-xs"
+              className="relative flex h-11 w-11 shrink-0 items-center justify-center border border-[#DADCE0] bg-white text-[#5F6368] hover:border-[#FBBC04] hover:text-[#B06000] hover:bg-[#FEF7E0] transition-all shadow-xs"
               title="View live standings & victory podium"
             >
-              <Trophy className="h-5 w-5 text-[#FBBC04] drop-shadow-sm" />
+              <Trophy className="h-4 w-4" />
             </Link>
           </div>
 
@@ -491,48 +387,31 @@ export function DualQuizSection({
           {isAdmin && (
             <div
               onClick={(e) => e.stopPropagation()}
-              className="mt-2 pt-3 border-t border-[#DADCE0] flex flex-col gap-2"
+              className="mt-1 pt-2.5 border-t border-[#DADCE0] flex items-center gap-2"
             >
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-[#3C4043] font-mono font-bold flex items-center gap-1.5 uppercase text-[11px]">
-                  <Sliders className="h-3 w-3 text-[#1A73E8]" />
-                  <span>Host Realtime Controls</span>
-                </span>
-                <Link
-                  href={adminPanelHref}
-                  className="font-mono text-[11px] font-bold text-[#1A73E8] hover:underline flex items-center gap-1"
-                >
-                  <Maximize2 className="h-3 w-3" />
-                  <span>Studio</span>
-                  <span>➔</span>
-                </Link>
-              </div>
+              <button
+                type="button"
+                disabled={isUpdating}
+                onClick={() => toggleEventLock(event, isLive, setEvent)}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2.5 font-mono text-[11px] font-bold uppercase tracking-wider border transition-all cursor-pointer active:translate-y-0.5 shadow-2xs ${
+                  isLive
+                    ? 'border-[#B31412] bg-[#FCE8E6] text-[#C5221F] hover:bg-[#FAD2CF]'
+                    : 'border-[#137333] bg-[#E6F4EA] text-[#137333] hover:bg-[#CEEAD6]'
+                }`}
+              >
+                {isLive ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
+                <span>{isLive ? 'Lock Track' : 'Go Live'}</span>
+              </button>
 
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  disabled={isUpdating}
-                  onClick={() => toggleEventLock(event, isLive, setEvent)}
-                  className={`flex items-center justify-center gap-1.5 py-2 px-3 font-mono text-xs font-bold uppercase tracking-wider border transition-all cursor-pointer active:translate-y-0.5 shadow-2xs ${
-                    isLive
-                      ? 'border-[#B31412] bg-[#FCE8E6] text-[#C5221F] hover:bg-[#FAD2CF]'
-                      : 'border-[#137333] bg-[#E6F4EA] text-[#137333] hover:bg-[#CEEAD6]'
-                  }`}
-                >
-                  {isLive ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
-                  <span>{isLive ? 'Lock Track' : 'Unlock Track'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleOpenBroadcastReview(event.slug, event.title)}
-                  className="flex items-center justify-center gap-1.5 bg-[#FEF7E0] border border-[#FBBC04] py-2 px-3 font-mono text-xs font-bold text-[#B06000] uppercase tracking-wider hover:bg-[#FBBC04] hover:text-[#202124] active:translate-y-0.5 transition-all shadow-2xs cursor-pointer"
-                  title="Review leaderboard and broadcast ceremony"
-                >
-                  <Trophy className="h-3.5 w-3.5 text-[#FBBC04]" />
-                  <span>Broadcast</span>
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => handleOpenBroadcastReview(event.slug, event.title)}
+                className="flex-1 flex items-center justify-center gap-1.5 bg-[#FEF7E0] border border-[#FBBC04] py-1.5 px-2.5 font-mono text-[11px] font-bold text-[#B06000] uppercase tracking-wider hover:bg-[#FBBC04] hover:text-[#202124] active:translate-y-0.5 transition-all shadow-2xs cursor-pointer"
+                title="Review leaderboard and broadcast ceremony"
+              >
+                <Trophy className="h-3 w-3 text-[#B06000]" />
+                <span>Broadcast</span>
+              </button>
             </div>
           )}
         </div>
@@ -541,17 +420,10 @@ export function DualQuizSection({
   }
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-md mx-auto relative">
-      {/* Background Living Ambient Glow Mesh for the Games Section */}
-      <div className="pointer-events-none absolute -inset-6 -z-10 overflow-hidden rounded-[48px] opacity-70">
-        <div className="absolute -top-12 -left-12 h-64 w-64 rounded-full bg-[#4285F4]/15 blur-3xl animate-mesh-1" />
-        <div className="absolute top-1/3 -right-12 h-64 w-64 rounded-full bg-[#34A853]/15 blur-3xl animate-mesh-2" />
-        <div className="absolute -bottom-12 left-1/4 h-64 w-64 rounded-full bg-[#FBBC04]/15 blur-3xl animate-mesh-3" />
-      </div>
-
+    <div className="flex flex-col gap-5 w-full max-w-md mx-auto relative">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-full bg-[#137333] text-white px-4 py-2 text-xs font-semibold shadow-xl animate-in fade-in slide-in-from-top-4">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-[#137333] text-white px-4 py-2 text-xs font-semibold shadow-xl border border-white/20 animate-in fade-in slide-in-from-top-4">
           <CheckCircle2 className="h-4 w-4" />
           <span>{toastMessage}</span>
         </div>
@@ -559,16 +431,8 @@ export function DualQuizSection({
 
       {/* Section Header */}
       <div className="flex items-center justify-between px-1">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center bg-white shadow-2xs border border-[#DADCE0]">
-            <span className="flex items-center gap-1" aria-hidden="true">
-              <span className="h-1.5 w-1.5 bg-[#4285F4]" />
-              <span className="h-1.5 w-1.5 bg-[#EA4335]" />
-              <span className="h-1.5 w-1.5 bg-[#FBBC04]" />
-              <span className="h-1.5 w-1.5 bg-[#34A853]" />
-            </span>
-          </div>
-          <h2 className="text-[19px] font-extrabold tracking-tight text-[#202124] uppercase font-mono">
+        <div className="flex items-center gap-2">
+          <h2 className="text-[17px] font-extrabold tracking-tight text-[#202124] uppercase font-mono">
             LIVE CHALLENGE ARENAS
           </h2>
         </div>

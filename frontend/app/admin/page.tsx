@@ -968,67 +968,37 @@ function AdminPageContent() {
                               e.stopPropagation()
                               navigateToPanel(jumpTab, slug !== 'wend-game' ? slug : undefined)
                             }}
-                            className="inline-flex items-center gap-1 border border-[#1A73E8] bg-white px-2.5 py-1 font-mono text-[11px] font-bold text-[#1967D2] shadow-2xs hover:bg-[#1A73E8] hover:text-white transition-all cursor-pointer"
+                            className="inline-flex items-center gap-1 border border-[#DADCE0] bg-white px-2 py-1 font-mono text-[10px] font-bold text-[#1A73E8] hover:border-[#1A73E8] hover:bg-[#E8F0FE] transition-all cursor-pointer"
                             title={`Open full ${actionTitle} studio`}
                           >
                             <Maximize2 className="h-3 w-3" />
                             <span>STUDIO</span>
                           </button>
 
-                          {/* Interactive Lock/Unlock Switch */}
-                          <button
-                            type="button"
-                            disabled={isUpdating}
+                          {/* Compact Aesthetic Lock Toggle Pill */}
+                          <div
                             onClick={(e) => {
                               e.stopPropagation()
                               handleToggleDivLock(slug, isLive)
                             }}
-                            title={isLive ? 'Click to switch to LOCKED' : 'Click to switch to UNLOCKED'}
-                            className={`inline-flex items-center gap-1.5 border px-2.5 py-1 font-mono text-[11px] font-bold transition-all cursor-pointer shadow-2xs ${
+                            className={`inline-flex items-center gap-1.5 border px-2 py-1 font-mono text-[11px] font-bold transition-all cursor-pointer ${
                               isLive
-                                ? 'border-[#34A853] bg-[#E6F4EA] text-[#137333] hover:bg-[#CEEAD6]'
-                                : 'border-[#DADCE0] bg-[#F1F3F4] text-[#5F6368] hover:bg-[#E8EAED]'
+                                ? 'border-[#34A853]/40 bg-[#E6F4EA] text-[#137333]'
+                                : 'border-[#DADCE0] bg-[#F1F3F4] text-[#5F6368]'
                             }`}
+                            title={isLive ? 'Click to switch to LOCKED' : 'Click to GO LIVE'}
                           >
-                            {isLive ? (
-                              <>
-                                <span className="h-2 w-2 bg-[#34A853] animate-pulse" />
-                                <span>LIVE</span>
-                              </>
-                            ) : (
-                              <>
-                                <Lock className="h-3 w-3 text-[#5F6368]" />
-                                <span>LOCKED</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Prominent Center Padlock Toggle with Aura & Radar Waves */}
-                      <div className="relative my-3 flex items-center justify-center select-none">
-                        <div
-                          className={`absolute h-24 w-24 blur-xl transition-all duration-700 pointer-events-none ${
-                            isLive
-                              ? 'bg-gradient-to-tr from-[#34A853]/25 via-[#4285F4]/20 to-[#34A853]/25'
-                              : 'bg-gradient-to-tr from-[#EA4335]/25 via-[#FBBC04]/15 to-[#EA4335]/25'
-                          }`}
-                        />
-                        <div
-                          className={`absolute h-20 w-20 border border-dashed pointer-events-none animate-ripple-1 ${
-                            isLive ? 'border-[#34A853]/30' : 'border-[#EA4335]/30'
-                          }`}
-                        />
-                        <div className="relative z-10 p-2 bg-white/95 border border-[#DADCE0] shadow-xs">
-                          <AnimatedLockToggle
-                            id={`admin-lock-toggle-${slug}`}
-                            checked={isLive}
-                            isLive={isLive}
-                            isAdmin={true}
-                            disabled={isUpdating}
-                            onChange={() => handleToggleDivLock(slug, isLive)}
-                            size="md"
-                          />
+                            <AnimatedLockToggle
+                              id={`admin-lock-toggle-${slug}`}
+                              checked={isLive}
+                              isLive={isLive}
+                              isAdmin={true}
+                              disabled={isUpdating}
+                              onChange={() => handleToggleDivLock(slug, isLive)}
+                              size="xs"
+                            />
+                            <span>{isLive ? 'LIVE' : 'LOCKED'}</span>
+                          </div>
                         </div>
                       </div>
 
