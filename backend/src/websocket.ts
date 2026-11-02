@@ -15,28 +15,53 @@ export interface WsMessage {
     | 'START_WINNER_CEREMONY'
     | 'NEW_WORD_OR_QUESTION'
     | 'RESET_GAME_LEADERBOARD'
+    | 'SUBMIT_ATTEMPT'
+    | 'LEADERBOARD_UPDATE'
+    | 'BUBBLE_IMPULSE'
+    | 'PING'
+    | 'PONG'
     | 'SYNC_STATE';
   payload?: any;
 }
 
-interface ConnectedUser {
-  id: string;
+export interface ConnectedSession {
+  sessionId: string;
+  userId?: string;
   name: string;
   avatar?: string;
   role?: string;
+  device?: 'mobile' | 'desktop' | 'tablet';
   joinedAt: number;
+}
+
+export interface LeaderboardEntryPayload {
+  _id: string;
+  totalScore: number;
+  durationMs: number;
+  submittedAt: string;
+  user?: {
+    _id?: string;
+    name: string;
+    avatar?: string;
+  };
 }
 
 class EventWebSocketService {
   private wss: WebSocketServer | null = null;
-  private users: Map<string, ConnectedUser> = new Map();
-  private socketToUserId: Map<WebSocket, string> = new Map();
-  private socketPrincipals: Map<WebSocket, ConnectedUser> = new Map();
+  private sessions: Map<string, ConnectedSession> = new Map();
+  private socketToSessionId: Map<WebSocket, string> = new Map();
+  private socketPrincipals: Map<WebSocket, ConnectedSession> = new Map();
+  private activeContestAttempts: Map<string, LeaderboardEntryPayload[]> = new Map([
+    ['web-dev-quiz', []],
+    ['mentis-quiz', []],
+    ['wend-game', []],
+  ]);
   private gameStates: Record<string, { isLocked: boolean; status: string }> = {
     'web-dev-quiz': { isLocked: false, status: 'LIVE' },
     'mentis-quiz': { isLocked: true, status: 'UPCOMING' },
     'wend-game': { isLocked: false, status: 'LIVE' },
   };
+  private heartbeatInterval: NodeJS.Timeout | null = null;
 
   public init(server: HttpServer) {
     const allowedOrigins = new Set(
@@ -78,13 +103,13 @@ class EventWebSocketService {
 
       ws.on('close', () => {
         this.socketPrincipals.delete(ws);
-        const userId = this.socketToUserId.get(ws);
-        if (userId) {
-          this.socketToUserId.delete(ws);
-          this.users.delete(userId);
+        const sessId = this.socketToSessionId.get(ws);
+        if (sessId) {
+          this.socketToSessionId.delete(ws);
+          this.sessions.delete(sessId);
           this.broadcast({
             type: 'USER_LEAVE',
-            payload: { id: userId },
+            payload: { id: sessId, sessionId: sessId },
           });
         }
       });
@@ -92,11 +117,21 @@ class EventWebSocketService {
       void this.initializeConnection(ws, request);
     });
 
-    console.log('[WebSocket] Realtime server initialized on path /ws');
+    // Heartbeat ping every 25 seconds to keep LAN and mobile connections alive
+    this.heartbeatInterval = setInterval(() => {
+      if (!this.wss) return;
+      this.wss.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({ type: 'PING' }));
+        }
+      });
+    }, 25000);
+
+    console.log('[WebSocket] Realtime multiplayer server initialized on path /ws');
   }
 
   private async initializeConnection(ws: WebSocket, request: IncomingMessage) {
-    let principal: ConnectedUser | null = null;
+    let principal: ConnectedSession | null = null;
     try {
       principal = await this.authenticateRequest(request);
     } catch (error) {
@@ -107,15 +142,28 @@ class EventWebSocketService {
 
     if (principal) {
       this.socketPrincipals.set(ws, principal);
-      this.users.set(principal.id, principal);
-      this.socketToUserId.set(ws, principal.id);
+      this.sessions.set(principal.sessionId, principal);
+      this.socketToSessionId.set(ws, principal.sessionId);
+    }
+
+    // Convert active leaderboard map to object for client ingestion
+    const leaderboardsObj: Record<string, LeaderboardEntryPayload[]> = {};
+    for (const [slug, entries] of this.activeContestAttempts.entries()) {
+      leaderboardsObj[slug] = entries;
     }
 
     this.sendTo(ws, {
       type: 'SYNC_STATE',
       payload: {
-        users: Array.from(this.users.values()),
+        sessions: Array.from(this.sessions.values()),
+        users: Array.from(this.sessions.values()).map((s) => ({
+          id: s.sessionId,
+          name: s.name,
+          avatar: s.avatar,
+          role: s.role,
+        })),
         gameStates: this.gameStates,
+        leaderboards: leaderboardsObj,
       },
     });
 
@@ -124,7 +172,7 @@ class EventWebSocketService {
     }
   }
 
-  private async authenticateRequest(request: IncomingMessage): Promise<ConnectedUser | null> {
+  private async authenticateRequest(request: IncomingMessage): Promise<ConnectedSession | null> {
     let token: string | undefined;
     try {
       for (const part of (request.headers.cookie || '').split(';')) {
@@ -152,11 +200,20 @@ class EventWebSocketService {
     const user = await User.findById(decoded.userId).select('_id name avatar role');
     if (!user) return null;
 
+    // Detect user-agent device
+    const ua = request.headers['user-agent'] || '';
+    const isMobile = /mobile|iphone|android|ipad/i.test(ua);
+    const device: 'mobile' | 'desktop' = isMobile ? 'mobile' : 'desktop';
+
+    const sessionId = `sess_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
     return {
-      id: user._id.toString(),
+      sessionId,
+      userId: user._id.toString(),
       name: user.name,
       avatar: user.avatar,
       role: user.role,
+      device,
       joinedAt: Date.now(),
     };
   }
@@ -164,16 +221,54 @@ class EventWebSocketService {
   private handleMessage(ws: WebSocket, message: WsMessage) {
     switch (message.type) {
       case 'USER_JOIN': {
-        const { id, name, avatar, role } = message.payload || {};
-        if (id && name) {
-          const userObj: ConnectedUser = { id, name, avatar, role, joinedAt: Date.now() };
-          this.users.set(id, userObj);
-          this.socketToUserId.set(ws, id);
+        const { sessionId, id, name, avatar, role, device } = message.payload || {};
+        const sessId = sessionId || `sess_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        const userObj: ConnectedSession = {
+          sessionId: sessId,
+          userId: id,
+          name: name || 'Participant',
+          avatar: avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name || 'Participant')}`,
+          role: role || 'PARTICIPANT',
+          device: device || 'desktop',
+          joinedAt: Date.now(),
+        };
+
+        this.sessions.set(sessId, userObj);
+        this.socketToSessionId.set(ws, sessId);
+        this.socketPrincipals.set(ws, userObj);
+
+        this.broadcast({
+          type: 'USER_JOIN',
+          payload: userObj,
+        });
+        break;
+      }
+
+      case 'SUBMIT_ATTEMPT': {
+        const { gameSlug, entry } = message.payload || {};
+        if (gameSlug && entry) {
+          const list = this.activeContestAttempts.get(gameSlug) || [];
+          const participantId = entry.user?._id || entry._id;
+          const filtered = list.filter((e) => (e.user?._id || e._id) !== participantId);
+          const updated = [...filtered, entry];
+          // Rank by highest totalScore first, then lowest durationMs
+          updated.sort((a, b) => b.totalScore - a.totalScore || a.durationMs - b.durationMs);
+          this.activeContestAttempts.set(gameSlug, updated);
+
           this.broadcast({
-            type: 'USER_JOIN',
-            payload: userObj,
+            type: 'LEADERBOARD_UPDATE',
+            payload: { gameSlug, leaderboard: updated },
           });
         }
+        break;
+      }
+
+      case 'BUBBLE_IMPULSE': {
+        // Broadcast subtle user flings/scatters in circle bucket
+        this.broadcast({
+          type: 'BUBBLE_IMPULSE',
+          payload: message.payload,
+        });
         break;
       }
 
@@ -208,9 +303,21 @@ class EventWebSocketService {
       }
 
       case 'RESET_GAME_LEADERBOARD': {
+        const gameSlug = message.payload?.gameSlug;
+        if (gameSlug) {
+          this.activeContestAttempts.set(gameSlug, []);
+        } else {
+          for (const key of this.activeContestAttempts.keys()) {
+            this.activeContestAttempts.set(key, []);
+          }
+        }
         this.broadcast({
           type: 'RESET_GAME_LEADERBOARD',
           payload: message.payload,
+        });
+        this.broadcast({
+          type: 'LEADERBOARD_UPDATE',
+          payload: { gameSlug, leaderboard: [] },
         });
         break;
       }
@@ -221,6 +328,11 @@ class EventWebSocketService {
           type: 'NEW_WORD_OR_QUESTION',
           payload: message.payload,
         });
+        break;
+      }
+
+      case 'PONG': {
+        // Heartbeat response from client
         break;
       }
 

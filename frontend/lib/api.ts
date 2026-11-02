@@ -615,7 +615,7 @@ export const api = {
     localStorage.setItem(`gdg_all_sessions_${slug}`, JSON.stringify(sampleSessions))
   },
 
-  getAutomatedRankings(slug: string): {
+  getAutomatedRankings(slug: string, extraEntries?: LeaderboardEntry[]): {
     winners: CeremonyWinner[]
     rankedStandings: LeaderboardEntry[]
     rankedParticipants: RankedParticipant[]
@@ -716,6 +716,49 @@ export const api = {
             score: Math.max(existing.score, score),
             durationMs: Math.min(existing.durationMs || durationMs, durationMs),
           })
+        }
+      }
+    }
+
+    // Ingest extra live/websocket entries
+    if (extraEntries && extraEntries.length > 0) {
+      for (const lb of extraEntries) {
+        const uName = lb.user?.name || 'Participant'
+        const key = (lb.user?._id && lb.user._id.trim()) || uName.trim().toLowerCase()
+        if (!key) continue
+
+        const score = lb.totalScore || 0
+        const durationMs = lb.durationMs || 0
+        const correctCount = Math.floor(score / 100)
+        const submittedAt = lb.submittedAt || new Date().toISOString()
+        const avatar =
+          lb.user?.avatar ||
+          `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(uName)}`
+
+        const existing = participantMap.get(key)
+        if (!existing) {
+          participantMap.set(key, {
+            rank: 0,
+            id: lb._id || key,
+            name: uName,
+            avatar,
+            score,
+            correctCount,
+            totalItems: 5,
+            durationMs,
+            submittedAt,
+          })
+        } else {
+          const isBetter =
+            score > existing.score ||
+            (score === existing.score && durationMs < existing.durationMs)
+          if (isBetter) {
+            participantMap.set(key, {
+              ...existing,
+              score: Math.max(existing.score, score),
+              durationMs: Math.min(existing.durationMs || durationMs, durationMs),
+            })
+          }
         }
       }
     }

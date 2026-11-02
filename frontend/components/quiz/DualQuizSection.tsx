@@ -50,7 +50,7 @@ export function DualQuizSection({
   onStatusChange,
 }: DualQuizSectionProps) {
   const { user } = useAuth()
-  const { gameLockStates, sendLockToggle, sendCountdownStart, sendWinnerCeremonyStart } = useWebSocket()
+  const { gameLockStates, sendLockToggle, sendCountdownStart, sendWinnerCeremonyStart, liveLeaderboards } = useWebSocket()
   const [webEvent, setWebEvent] = useState<GdgEvent>(initialWeb)
   const [mentisEvent, setMentisEvent] = useState<GdgEvent>(initialMentis)
   const [wendEvent, setWendEvent] = useState<GdgEvent>(DEFAULT_WEND_EVENT)
@@ -263,7 +263,8 @@ export function DualQuizSection({
   }
 
   const triggerWinnerCeremony = (slug: string, title: string) => {
-    const { winners, rankedStandings } = api.getAutomatedRankings(slug)
+    const liveEntries = liveLeaderboards[slug] || []
+    const { winners, rankedStandings } = api.getAutomatedRankings(slug, liveEntries)
     if (!winners || winners.length === 0) {
       alert(`No participant attempts recorded yet for "${title}". Play a challenge or check the Admin portal to simulate test submissions!`)
       return

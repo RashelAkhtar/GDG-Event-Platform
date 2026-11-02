@@ -3,13 +3,18 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react'
 import { LeaderboardEntry, CeremonyWinner } from '@/lib/api'
 
-export interface JoinedUser {
-  id: string
+export interface ConnectedSession {
+  sessionId: string
+  userId?: string
   name: string
   avatar?: string
   role?: string
+  device?: 'mobile' | 'desktop' | 'tablet'
   joinedAt?: number
 }
+
+// Backward-compatible alias
+export type JoinedUser = ConnectedSession
 
 export interface CeremonyData {
   gameSlug: string
@@ -20,36 +25,48 @@ export interface CeremonyData {
 
 interface WebSocketContextType {
   connected: boolean
+  currentSessionId: string
+  connectedSessions: ConnectedSession[]
   activeCountdown: { gameSlug: string; count: number } | null
   activeCeremony: CeremonyData | null
   gameLockStates: Record<string, { isLocked: boolean; status: string }>
-  sendUserJoin: (user: JoinedUser) => void
+  liveLeaderboards: Record<string, LeaderboardEntry[]>
+  sendUserJoin: (user: Partial<ConnectedSession>) => void
+  sendSubmitAttempt: (gameSlug: string, entry: LeaderboardEntry) => void
   sendLockToggle: (gameSlug: string, isLocked: boolean, status: string) => void
   sendCountdownStart: (gameSlug: string) => void
   sendWinnerCeremonyStart: (ceremonyData: CeremonyData) => void
   sendLeaderboardReset: (gameSlug: string) => void
+  sendBubbleImpulse: (impulse: { x: number; y: number; senderSessionId?: string }) => void
   closeCeremony: () => void
   reconnect: () => void
-  subscribeToUserJoin: (callback: (user: JoinedUser) => void) => () => void
-  subscribeToUserLeave: (callback: (userId: string) => void) => () => void
+  subscribeToUserJoin: (callback: (session: ConnectedSession) => void) => () => void
+  subscribeToUserLeave: (callback: (sessionId: string) => void) => () => void
   subscribeToLeaderboardReset: (callback: (gameSlug: string) => void) => () => void
+  subscribeToLeaderboardUpdate: (callback: (gameSlug: string, leaderboard: LeaderboardEntry[]) => void) => () => void
 }
 
 const WebSocketContext = createContext<WebSocketContextType>({
   connected: false,
+  currentSessionId: 'sess_init',
+  connectedSessions: [],
   activeCountdown: null,
   activeCeremony: null,
   gameLockStates: {},
+  liveLeaderboards: {},
   sendUserJoin: () => {},
+  sendSubmitAttempt: () => {},
   sendLockToggle: () => {},
   sendCountdownStart: () => {},
   sendWinnerCeremonyStart: () => {},
   sendLeaderboardReset: () => {},
+  sendBubbleImpulse: () => {},
   closeCeremony: () => {},
   reconnect: () => {},
   subscribeToUserJoin: () => () => {},
   subscribeToUserLeave: () => () => {},
   subscribeToLeaderboardReset: () => () => {},
+  subscribeToLeaderboardUpdate: () => () => {},
 })
 
 function getWsUrl(): string {
@@ -61,8 +78,32 @@ function getWsUrl(): string {
   return 'ws://localhost:5000/ws'
 }
 
+function getClientSessionId(): string {
+  if (typeof window === 'undefined') return 'sess_ssr'
+  try {
+    let sid = sessionStorage.getItem('gdg_client_session_id')
+    if (!sid) {
+      sid = `sess_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
+      sessionStorage.setItem('gdg_client_session_id', sid)
+    }
+    return sid
+  } catch {
+    return `sess_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
+  }
+}
+
+function detectDeviceType(): 'mobile' | 'desktop' | 'tablet' {
+  if (typeof window === 'undefined') return 'desktop'
+  const ua = navigator.userAgent || ''
+  if (/tablet|ipad/i.test(ua)) return 'tablet'
+  if (/mobile|iphone|android/i.test(ua)) return 'mobile'
+  return 'desktop'
+}
+
 export function WebSocketProvider({ children }: { children: React.ReactNode }) {
+  const [currentSessionId] = useState<string>(() => getClientSessionId())
   const [connected, setConnected] = useState(false)
+  const [connectedSessions, setConnectedSessions] = useState<ConnectedSession[]>([])
   const [activeCountdown, setActiveCountdown] = useState<{ gameSlug: string; count: number } | null>(null)
   const [activeCeremony, setActiveCeremony] = useState<CeremonyData | null>(null)
   const [gameLockStates, setGameLockStates] = useState<Record<string, { isLocked: boolean; status: string }>>({
@@ -70,19 +111,22 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     'mentis-quiz': { isLocked: true, status: 'UPCOMING' },
     'wend-game': { isLocked: false, status: 'LIVE' },
   })
+  const [liveLeaderboards, setLiveLeaderboards] = useState<Record<string, LeaderboardEntry[]>>({})
 
   const wsRef = useRef<WebSocket | null>(null)
   const broadcastChannelRef = useRef<BroadcastChannel | null>(null)
-  const userJoinSubscribersRef = useRef<Set<(user: JoinedUser) => void>>(new Set())
-  const userLeaveSubscribersRef = useRef<Set<(userId: string) => void>>(new Set())
+  const userJoinSubscribersRef = useRef<Set<(session: ConnectedSession) => void>>(new Set())
+  const userLeaveSubscribersRef = useRef<Set<(sessionId: string) => void>>(new Set())
   const leaderboardResetSubscribersRef = useRef<Set<(gameSlug: string) => void>>(new Set())
+  const leaderboardUpdateSubscribersRef = useRef<Set<(gameSlug: string, leaderboard: LeaderboardEntry[]) => void>>(new Set())
+  const pendingMessagesRef = useRef<{ type: string; payload?: unknown }[]>([])
   const connectFnRef = useRef<(() => void) | null>(null)
 
   // Trigger user join listeners
-  const notifyUserJoined = useCallback((user: JoinedUser) => {
+  const notifyUserJoined = useCallback((session: ConnectedSession) => {
     userJoinSubscribersRef.current.forEach((cb) => {
       try {
-        cb(user)
+        cb(session)
       } catch (err) {
         console.error('Error in user join listener:', err)
       }
@@ -90,10 +134,10 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   // Trigger user leave listeners
-  const notifyUserLeft = useCallback((userId: string) => {
+  const notifyUserLeft = useCallback((sessionId: string) => {
     userLeaveSubscribersRef.current.forEach((cb) => {
       try {
-        cb(userId)
+        cb(sessionId)
       } catch (err) {
         console.error('Error in user leave listener:', err)
       }
@@ -107,6 +151,17 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
         cb(gameSlug)
       } catch (err) {
         console.error('Error in leaderboard reset listener:', err)
+      }
+    })
+  }, [])
+
+  // Trigger leaderboard update listeners
+  const notifyLeaderboardUpdate = useCallback((gameSlug: string, leaderboard: LeaderboardEntry[]) => {
+    leaderboardUpdateSubscribersRef.current.forEach((cb) => {
+      try {
+        cb(gameSlug, leaderboard)
+      } catch (err) {
+        console.error('Error in leaderboard update listener:', err)
       }
     })
   }, [])
@@ -127,39 +182,69 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     }, 1000)
   }, [])
 
-  // Process any incoming WS or BroadcastChannel message
+  // Process incoming WS or BroadcastChannel messages
   const handleIncomingMessage = useCallback(
     (message: { type: string; payload?: unknown }) => {
       const payload = message.payload as Record<string, unknown> | undefined
-      if (!payload) return
+      if (!payload && message.type !== 'PING') return
 
       switch (message.type) {
         case 'USER_JOIN': {
-          notifyUserJoined(payload as unknown as JoinedUser)
+          const rawSession = payload as { sessionId?: string; id?: string; userId?: string; name?: string; avatar?: string; role?: string; device?: 'mobile' | 'desktop' | 'tablet'; joinedAt?: number } | undefined
+          const sid = rawSession?.sessionId || rawSession?.id
+          if (rawSession && sid) {
+            const normalized: ConnectedSession = {
+              sessionId: sid,
+              userId: rawSession.userId,
+              name: rawSession.name || 'Participant',
+              avatar: rawSession.avatar,
+              role: rawSession.role,
+              device: rawSession.device,
+              joinedAt: rawSession.joinedAt,
+            }
+            setConnectedSessions((prev) => {
+              const filtered = prev.filter((s) => s.sessionId !== sid)
+              return [...filtered, normalized]
+            })
+            notifyUserJoined(normalized)
+          }
           break
         }
         case 'USER_LEAVE': {
-          const userId = (payload as { id?: string })?.id
-          if (userId) {
-            notifyUserLeft(userId)
+          const sid = (payload as { sessionId?: string; id?: string })?.sessionId || (payload as { id?: string })?.id
+          if (sid) {
+            setConnectedSessions((prev) => prev.filter((s) => s.sessionId !== sid))
+            notifyUserLeft(sid)
+          }
+          break
+        }
+        case 'LEADERBOARD_UPDATE': {
+          const gameSlug = payload?.gameSlug as string | undefined
+          const leaderboard = payload?.leaderboard as LeaderboardEntry[] | undefined
+          if (gameSlug && Array.isArray(leaderboard)) {
+            setLiveLeaderboards((prev) => ({
+              ...prev,
+              [gameSlug]: leaderboard,
+            }))
+            notifyLeaderboardUpdate(gameSlug, leaderboard)
           }
           break
         }
         case 'GAME_LOCK_TOGGLE': {
-          const gameSlug = payload.gameSlug as string | undefined
+          const gameSlug = payload?.gameSlug as string | undefined
           if (gameSlug) {
             setGameLockStates((prev) => ({
               ...prev,
               [gameSlug]: {
-                isLocked: Boolean(payload.isLocked),
-                status: String(payload.status || 'UPCOMING'),
+                isLocked: Boolean(payload?.isLocked),
+                status: String(payload?.status || 'UPCOMING'),
               },
             }))
           }
           break
         }
         case 'START_COUNTDOWN': {
-          const gameSlug = payload.gameSlug as string | undefined
+          const gameSlug = payload?.gameSlug as string | undefined
           if (gameSlug) {
             runCountdown(gameSlug)
           }
@@ -170,22 +255,44 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
           break
         }
         case 'RESET_GAME_LEADERBOARD': {
-          const gameSlug = payload.gameSlug as string | undefined
+          const gameSlug = payload?.gameSlug as string | undefined
           if (gameSlug) {
+            setLiveLeaderboards((prev) => ({
+              ...prev,
+              [gameSlug]: [],
+            }))
             notifyLeaderboardReset(gameSlug)
           }
           break
         }
         case 'SYNC_STATE': {
-          if (payload.gameStates) {
+          if (payload?.gameStates) {
             setGameLockStates(payload.gameStates as Record<string, { isLocked: boolean; status: string }>)
           }
-          if (Array.isArray(payload.users)) {
-            payload.users.forEach((u: JoinedUser) => {
-              if (u) {
-                notifyUserJoined(u)
-              }
-            })
+          if (Array.isArray(payload?.sessions)) {
+            const sessionsList = payload.sessions as ConnectedSession[]
+            setConnectedSessions(sessionsList)
+            sessionsList.forEach((s) => notifyUserJoined(s))
+          } else if (Array.isArray(payload?.users)) {
+            const rawUsers = payload.users as { sessionId?: string; id?: string; userId?: string; name?: string; avatar?: string; role?: string }[]
+            const mapped: ConnectedSession[] = rawUsers.map((u) => ({
+              sessionId: u.sessionId || u.id || `sess_${Math.random()}`,
+              userId: u.userId || u.id,
+              name: u.name || 'Participant',
+              avatar: u.avatar,
+              role: u.role,
+            }))
+            setConnectedSessions(mapped)
+            mapped.forEach((s) => notifyUserJoined(s))
+          }
+          if (payload?.leaderboards && typeof payload.leaderboards === 'object') {
+            setLiveLeaderboards(payload.leaderboards as Record<string, LeaderboardEntry[]>)
+          }
+          break
+        }
+        case 'PING': {
+          if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+            wsRef.current.send(JSON.stringify({ type: 'PONG' }))
           }
           break
         }
@@ -193,7 +300,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
           break
       }
     },
-    [notifyUserJoined, notifyUserLeft, notifyLeaderboardReset, runCountdown]
+    [notifyUserJoined, notifyUserLeft, notifyLeaderboardReset, notifyLeaderboardUpdate, runCountdown]
   )
 
   const handleIncomingMessageRef = useRef(handleIncomingMessage)
@@ -205,7 +312,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let isMounted = true
 
-    // 1. Cross-tab BroadcastChannel (works even offline or across tabs)
+    // 1. Cross-tab BroadcastChannel (works for local tabs)
     if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
       const channel = new BroadcastChannel('gdg_realtime_channel')
       broadcastChannelRef.current = channel
@@ -227,11 +334,22 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
         wsRef.current = socket
 
         socket.onopen = () => {
+          const currentSocket = wsRef.current
           if (!isMounted) {
-            socket?.close()
+            currentSocket?.close()
             return
           }
           setConnected(true)
+
+          // Flush any buffered outgoing messages immediately
+          if (currentSocket) {
+            while (pendingMessagesRef.current.length > 0) {
+              const msg = pendingMessagesRef.current.shift()
+              if (msg && currentSocket.readyState === WebSocket.OPEN) {
+                currentSocket.send(JSON.stringify(msg))
+              }
+            }
+          }
         }
 
         socket.onmessage = (event) => {
@@ -244,16 +362,16 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
         socket.onclose = () => {
           setConnected(false)
           if (isMounted) {
-            reconnectTimeout = setTimeout(connectWs, 3000)
+            reconnectTimeout = setTimeout(connectWs, 2500)
           }
         }
 
         socket.onerror = () => {
-          // Non-fatal error; onclose will handle reconnection
+          // Non-fatal; onclose will schedule reconnect
         }
       } catch {
         if (isMounted) {
-          reconnectTimeout = setTimeout(connectWs, 3000)
+          reconnectTimeout = setTimeout(connectWs, 2500)
         }
       }
     }
@@ -288,24 +406,62 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  // Dispatch message via WebSocket and BroadcastChannel
+  // Dispatch message via WebSocket (or queue if connecting) and BroadcastChannel
   const broadcastMessage = useCallback((msg: { type: string; payload?: unknown }) => {
-    // Send to WebSocket server if connected
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify(msg))
+    } else {
+      pendingMessagesRef.current.push(msg)
     }
-    // Also send through BroadcastChannel for immediate multi-tab sync
+
     if (broadcastChannelRef.current) {
       broadcastChannelRef.current.postMessage(msg)
     }
   }, [])
 
   const sendUserJoin = useCallback(
-    (user: JoinedUser) => {
-      broadcastMessage({ type: 'USER_JOIN', payload: user })
-      notifyUserJoined(user)
+    (userPayload: Partial<ConnectedSession>) => {
+      const fullSession: ConnectedSession = {
+        sessionId: userPayload.sessionId || currentSessionId,
+        userId: userPayload.userId,
+        name: userPayload.name || 'Participant',
+        avatar: userPayload.avatar,
+        role: userPayload.role || 'PARTICIPANT',
+        device: userPayload.device || detectDeviceType(),
+        joinedAt: Date.now(),
+      }
+
+      setConnectedSessions((prev) => {
+        const filtered = prev.filter((s) => s.sessionId !== fullSession.sessionId)
+        return [...filtered, fullSession]
+      })
+
+      broadcastMessage({ type: 'USER_JOIN', payload: fullSession })
+      notifyUserJoined(fullSession)
     },
-    [broadcastMessage, notifyUserJoined]
+    [broadcastMessage, currentSessionId, notifyUserJoined]
+  )
+
+  const sendSubmitAttempt = useCallback(
+    (gameSlug: string, entry: LeaderboardEntry) => {
+      // Optimistically update local leaderboards state
+      setLiveLeaderboards((prev) => {
+        const current = prev[gameSlug] || []
+        const participantId = entry.user?._id || entry._id
+        const filtered = current.filter((e) => (e.user?._id || e._id) !== participantId)
+        const updated = [...filtered, entry].sort((a, b) => b.totalScore - a.totalScore || a.durationMs - b.durationMs)
+        return {
+          ...prev,
+          [gameSlug]: updated,
+        }
+      })
+
+      broadcastMessage({
+        type: 'SUBMIT_ATTEMPT',
+        payload: { gameSlug, entry },
+      })
+    },
+    [broadcastMessage]
   )
 
   const sendLockToggle = useCallback(
@@ -346,6 +502,10 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
 
   const sendLeaderboardReset = useCallback(
     (gameSlug: string) => {
+      setLiveLeaderboards((prev) => ({
+        ...prev,
+        [gameSlug]: [],
+      }))
       notifyLeaderboardReset(gameSlug)
       broadcastMessage({
         type: 'RESET_GAME_LEADERBOARD',
@@ -355,48 +515,74 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     [broadcastMessage, notifyLeaderboardReset]
   )
 
+  const sendBubbleImpulse = useCallback(
+    (impulse: { x: number; y: number; senderSessionId?: string }) => {
+      broadcastMessage({
+        type: 'BUBBLE_IMPULSE',
+        payload: { ...impulse, senderSessionId: currentSessionId },
+      })
+    },
+    [broadcastMessage, currentSessionId]
+  )
+
   const closeCeremony = useCallback(() => {
     setActiveCeremony(null)
   }, [])
 
-  const subscribeToUserJoin = useCallback((cb: (user: JoinedUser) => void) => {
-    userJoinSubscribersRef.current.add(cb)
+  const subscribeToUserJoin = useCallback((callback: (session: ConnectedSession) => void) => {
+    userJoinSubscribersRef.current.add(callback)
     return () => {
-      userJoinSubscribersRef.current.delete(cb)
+      userJoinSubscribersRef.current.delete(callback)
     }
   }, [])
 
-  const subscribeToUserLeave = useCallback((cb: (userId: string) => void) => {
-    userLeaveSubscribersRef.current.add(cb)
+  const subscribeToUserLeave = useCallback((callback: (sessionId: string) => void) => {
+    userLeaveSubscribersRef.current.add(callback)
     return () => {
-      userLeaveSubscribersRef.current.delete(cb)
+      userLeaveSubscribersRef.current.delete(callback)
     }
   }, [])
 
-  const subscribeToLeaderboardReset = useCallback((cb: (gameSlug: string) => void) => {
-    leaderboardResetSubscribersRef.current.add(cb)
+  const subscribeToLeaderboardReset = useCallback((callback: (gameSlug: string) => void) => {
+    leaderboardResetSubscribersRef.current.add(callback)
     return () => {
-      leaderboardResetSubscribersRef.current.delete(cb)
+      leaderboardResetSubscribersRef.current.delete(callback)
     }
   }, [])
+
+  const subscribeToLeaderboardUpdate = useCallback(
+    (callback: (gameSlug: string, leaderboard: LeaderboardEntry[]) => void) => {
+      leaderboardUpdateSubscribersRef.current.add(callback)
+      return () => {
+        leaderboardUpdateSubscribersRef.current.delete(callback)
+      }
+    },
+    []
+  )
 
   return (
     <WebSocketContext.Provider
       value={{
         connected,
+        currentSessionId,
+        connectedSessions,
         activeCountdown,
         activeCeremony,
         gameLockStates,
+        liveLeaderboards,
         sendUserJoin,
+        sendSubmitAttempt,
         sendLockToggle,
         sendCountdownStart,
         sendWinnerCeremonyStart,
         sendLeaderboardReset,
+        sendBubbleImpulse,
         closeCeremony,
         reconnect,
         subscribeToUserJoin,
         subscribeToUserLeave,
         subscribeToLeaderboardReset,
+        subscribeToLeaderboardUpdate,
       }}
     >
       {children}

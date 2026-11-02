@@ -47,7 +47,7 @@ function formatTimer(totalSecs: number): string {
 
 export default function WendGamePage() {
   const { user } = useAuth()
-  const { gameLockStates, subscribeToLeaderboardReset } = useWebSocket()
+  const { gameLockStates, subscribeToLeaderboardReset, sendSubmitAttempt } = useWebSocket()
   const isLocked = gameLockStates['wend-game']?.isLocked ?? false
 
   const startTimeRef = useRef<number | null>(null)
@@ -93,6 +93,7 @@ export default function WendGamePage() {
       },
     }
     api.recordLocalAttempt('wend-game', attemptEntry)
+    sendSubmitAttempt('wend-game', attemptEntry)
 
     const sessionData: ParticipantSession = {
       sessionId: `sess_wend_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
@@ -111,7 +112,7 @@ export default function WendGamePage() {
     api.saveParticipantSession('wend-game', sessionData)
     setCompletedSession(sessionData)
     showToast(`Time's up! You discovered ${foundWordIds.size} / ${board.targetWords.length} words.`, 'info')
-  }, [allocatedTimeSeconds, board, foundWordIds, user])
+  }, [allocatedTimeSeconds, board, foundWordIds, sendSubmitAttempt, user])
 
   // Countdown timer honoring time set by admin
   useEffect(() => {
@@ -242,6 +243,7 @@ export default function WendGamePage() {
             },
           }
           api.recordLocalAttempt('wend-game', attemptEntry)
+          sendSubmitAttempt('wend-game', attemptEntry)
 
           const sessionData: ParticipantSession = {
             sessionId: `sess_wend_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
@@ -269,7 +271,7 @@ export default function WendGamePage() {
 
       setCurrentWord('')
     },
-    [board, foundWordIds, user]
+    [board, foundWordIds, sendSubmitAttempt, user]
   )
 
   // Undo button handler

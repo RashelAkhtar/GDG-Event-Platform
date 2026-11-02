@@ -61,7 +61,7 @@ function getUnevenFactor(id: string, isUser: boolean): number {
 
 export function CircleBucket() {
   const { user } = useAuth()
-  const { connected, reconnect, sendUserJoin, subscribeToUserJoin, subscribeToUserLeave } = useWebSocket()
+  const { connected, currentSessionId, connectedSessions, reconnect, sendUserJoin, sendBubbleImpulse, subscribeToUserJoin } = useWebSocket()
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const physicsRef = useRef<{ bubbles: Bubble[] }>({ bubbles: [] })
@@ -86,6 +86,7 @@ export function CircleBucket() {
     // Check if bubble already exists
     const existing = physicsRef.current.bubbles.find((b) => b.id === bubbleId)
     if (existing) {
+      if (existing.name !== name) existing.name = name;
       if (avatar && existing.avatar !== avatar) {
         existing.avatar = avatar
         const img = new Image()
@@ -142,51 +143,77 @@ export function CircleBucket() {
       vy: (Math.random() - 0.5) * 10,
       squishX: 0.85,
       squishY: 1.15,
-    }))
+    }));
+    sendBubbleImpulse({ x: 0, y: 0 });
   }
 
-  // Ensure current user's profile is ALWAYS placed in the bucket
+  // Ensure current user / device session is registered
   useEffect(() => {
+    const isMobile = typeof window !== 'undefined' && /mobile|iphone|android|ipad/i.test(navigator.userAgent)
+    const deviceType = isMobile ? 'mobile' : 'desktop'
+
     if (user) {
-      // Remove any temporary guest bubble when authenticated
-      physicsRef.current.bubbles = physicsRef.current.bubbles.filter((b) => b.id !== 'guest-user-self')
-      dropBubble(user.name + ' (You)', user.avatar, true, `user-${user._id}`)
+      dropBubble(user.name + ' (You)', user.avatar, true, `session-${currentSessionId}`)
       sendUserJoin({
-        id: user._id,
+        sessionId: currentSessionId,
+        userId: user._id,
         name: user.name,
         avatar: user.avatar,
         role: user.role,
+        device: deviceType,
       })
     } else {
-      // Drop interactive guest bubble so the bucket is never dead for visitors
-      dropBubble('Guest (You)', 'https://api.dicebear.com/7.x/bottts/svg?seed=Guest', true, 'guest-user-self')
+      const guestName = `Guest (${currentSessionId.slice(-4)})`
+      const guestAvatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${currentSessionId}`
+      dropBubble(`${guestName} (You)`, guestAvatar, true, `session-${currentSessionId}`)
+      sendUserJoin({
+        sessionId: currentSessionId,
+        name: guestName,
+        avatar: guestAvatar,
+        role: 'GUEST',
+        device: deviceType,
+      })
     }
-    setTotalCount(physicsRef.current.bubbles.length)
-  }, [user, dropBubble, sendUserJoin])
+  }, [user, currentSessionId, dropBubble, sendUserJoin])
 
-  // Listen for real participants joining via WebSocket or BroadcastChannel
   useEffect(() => {
-    const unsubscribeJoin = subscribeToUserJoin((newUser) => {
-      const isSelf = user && newUser.id === user._id
-      if (!isSelf) {
-        dropBubble(newUser.name, newUser.avatar, false, `user-${newUser.id}`)
-        setLiveArrivalToast(`${newUser.name} dropped into the bucket!`)
-        setTimeout(() => setLiveArrivalToast(null), 3000)
+    const unsub = subscribeToUserJoin((session) => {
+      if (session.sessionId !== currentSessionId) {
+        setLiveArrivalToast(`${session.name} joined the arena!`)
+        const timer = setTimeout(() => setLiveArrivalToast(null), 3500)
+        return () => clearTimeout(timer)
       }
     })
+    return () => unsub()
+  }, [subscribeToUserJoin, currentSessionId])
 
-    const unsubscribeLeave = subscribeToUserLeave((leftUserId) => {
-      physicsRef.current.bubbles = physicsRef.current.bubbles.filter(
-        (b) => b.id !== `user-${leftUserId}`
-      )
-      setTotalCount(physicsRef.current.bubbles.length)
+  // Synchronize remote participant sessions directly into the physics bucket
+  useEffect(() => {
+    connectedSessions.forEach((sess) => {
+      const isCurrentSession = sess.sessionId === currentSessionId
+      if (isCurrentSession) return // Self bubble already handled
+
+      // Label with secondary device if same user logged in on another device!
+      let displayName = sess.name
+      if (user && sess.userId === user._id) {
+        displayName = `${sess.name} (${sess.device === 'mobile' ? 'Mobile' : '2nd Device'})`
+      } else if (sess.device === 'mobile' && !sess.name.includes('Mobile')) {
+        displayName = `${sess.name} (Mobile)`
+      }
+
+      dropBubble(displayName, sess.avatar, false, `session-${sess.sessionId}`)
     })
 
-    return () => {
-      unsubscribeJoin()
-      unsubscribeLeave()
-    }
-  }, [subscribeToUserJoin, subscribeToUserLeave, user, dropBubble])
+    // Remove any remote bubbles that have disconnected
+    const activeSessionIds = new Set(connectedSessions.map((s) => `session-${s.sessionId}`))
+    activeSessionIds.add(`session-${currentSessionId}`)
+
+    physicsRef.current.bubbles = physicsRef.current.bubbles.filter((b) => {
+      return b.id === `session-${currentSessionId}` || activeSessionIds.has(b.id)
+    })
+
+    setTotalCount(physicsRef.current.bubbles.length)
+  }, [connectedSessions, currentSessionId, user, dropBubble])
 
   // Interactive Drag & Throw Event Handlers
   const getCanvasCoords = (e: React.PointerEvent<HTMLCanvasElement>) => {

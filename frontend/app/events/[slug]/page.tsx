@@ -40,7 +40,7 @@ function QuizRunnerContent() {
   const params = useParams()
   const slug = (params?.slug as string) || 'web-dev-quiz'
   const { user } = useAuth()
-  const { subscribeToLeaderboardReset } = useWebSocket()
+  const { subscribeToLeaderboardReset, sendSubmitAttempt } = useWebSocket()
   const startTimeRef = useRef<number | null>(null)
 
   const [event, setEvent] = useState<GdgEvent | null>(null)
@@ -147,6 +147,7 @@ function QuizRunnerContent() {
         },
       }
       api.recordLocalAttempt(slug, attemptEntry)
+      sendSubmitAttempt(slug, attemptEntry)
 
       try {
         confetti({
@@ -176,7 +177,7 @@ function QuizRunnerContent() {
     } finally {
       setIsSubmitting(false)
     }
-  }, [event, questions, selectedAnswers, slug, user])
+  }, [event, questions, selectedAnswers, sendSubmitAttempt, slug, user])
 
   // Question Timer Countdown
   useEffect(() => {

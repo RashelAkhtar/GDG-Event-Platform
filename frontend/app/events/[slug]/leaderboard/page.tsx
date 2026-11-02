@@ -7,6 +7,7 @@ import { Navbar } from '@/components/ui/Navbar'
 import { Podium } from '@/components/leaderboard/Podium'
 import { RankList } from '@/components/leaderboard/RankList'
 import { api, DEFAULT_LEADERBOARD, LeaderboardEntry } from '@/lib/api'
+import { useWebSocket } from '@/context/WebSocketContext'
 import { ArrowLeft, RefreshCw, Trophy, Home } from 'lucide-react'
 
 function LeaderboardContent() {

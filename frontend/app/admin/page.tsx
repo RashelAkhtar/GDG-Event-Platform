@@ -73,7 +73,7 @@ function formatDuration(ms: number): string {
 
 export default function AdminPage() {
   const { user } = useAuth()
-  const { gameLockStates, sendLockToggle, sendCountdownStart, sendWinnerCeremonyStart, sendLeaderboardReset, connected } = useWebSocket()
+  const { gameLockStates, sendLockToggle, sendCountdownStart, sendWinnerCeremonyStart, sendLeaderboardReset, liveLeaderboards, subscribeToLeaderboardUpdate, connected } = useWebSocket()
 
   const [webEvent, setWebEvent] = useState<GdgEvent>(DEFAULT_WEB_EVENT)
   const [mentisEvent, setMentisEvent] = useState<GdgEvent>(DEFAULT_MENTIS_EVENT)
@@ -151,9 +151,17 @@ export default function AdminPage() {
         }
       }
     } catch {}
-    const rankings = api.getAutomatedRankings(slug)
+    const extraLive = liveLeaderboards[slug] || []
+    const rankings = api.getAutomatedRankings(slug, extraLive)
     setAutomatedRanking(rankings)
   }
+
+  useEffect(() => {
+    const unsub = subscribeToLeaderboardUpdate((updatedSlug) => {
+      refreshStandings(updatedSlug)
+    })
+    return () => unsub()
+  }, [subscribeToLeaderboardUpdate, selectedSlug])
 
   useEffect(() => {
     if (activeTab === 'winners') {
@@ -640,7 +648,8 @@ export default function AdminPage() {
 
   const handleBroadcastWinnerCeremony = (overrideSlug?: string) => {
     const slugToUse = overrideSlug || selectedSlug
-    const currentRankings = api.getAutomatedRankings(slugToUse)
+    const extraLive = liveLeaderboards[slugToUse] || []
+    const currentRankings = api.getAutomatedRankings(slugToUse, extraLive)
 
     if (currentRankings.winners.length === 0) {
       showToast('No participants recorded yet for this challenge. Play a round or click "Simulate Test Submissions" to test!', 'error')
