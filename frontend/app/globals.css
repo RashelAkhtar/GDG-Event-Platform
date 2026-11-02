@@ -374,3 +374,12 @@ body {
   }
 }
 
+/* Mobile Touch Isolation for Touch Games */
+.touch-arena {
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  overscroll-behavior: contain;
+}
+

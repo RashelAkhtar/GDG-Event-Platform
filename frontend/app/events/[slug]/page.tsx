@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { Navbar } from '@/components/ui/Navbar'
 import { useAuth } from '@/context/AuthContext'
+import { useWebSocket } from '@/context/WebSocketContext'
+import { soundManager } from '@/lib/sound'
 import {
   api,
   GdgEvent,
@@ -16,11 +18,13 @@ import {
   Clock,
   CheckCircle2,
   Trophy,
+  Award,
   ArrowRight,
   ArrowLeft,
   HelpCircle,
   Hourglass,
   Sparkles,
+  RotateCcw,
 } from 'lucide-react'
 
 function formatDuration(ms: number): string {
@@ -35,63 +39,74 @@ function formatDuration(ms: number): string {
 function QuizRunnerContent() {
   const params = useParams()
   const slug = (params?.slug as string) || 'web-dev-quiz'
-  const { user, loading: authLoading, loginWithGoogle } = useAuth()
+  const { user } = useAuth()
+  const { subscribeToLeaderboardReset } = useWebSocket()
   const startTimeRef = useRef<number | null>(null)
 
   const [event, setEvent] = useState<GdgEvent | null>(null)
-  const [participationError, setParticipationError] = useState<string | null>(null)
   const [questions, setQuestions] = useState<QuestionData[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({})
   const [timeLeft, setTimeLeft] = useState<number>(30)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [completedSession, setCompletedSession] = useState<ParticipantSession | null>(null)
+  const [completedSession, setCompletedSession] = useState<ParticipantSession | null>(() =>
+    api.getParticipantSession(slug)
+  )
   const [loading, setLoading] = useState(true)
+
+  // Listen for admin leaderboard resets so user can replay in real time
+  useEffect(() => {
+    const unsubscribe = subscribeToLeaderboardReset((resetSlug) => {
+      if (resetSlug === slug) {
+        setCompletedSession(null)
+        setCurrentIndex(0)
+        setSelectedAnswers({})
+        setTimeLeft(30)
+        startTimeRef.current = Date.now()
+        api.clearSessionsForSlug(slug)
+      }
+    })
+    return () => unsubscribe()
+  }, [slug, subscribeToLeaderboardReset])
+
+  const handlePlayAgain = () => {
+    setCompletedSession(null)
+    setCurrentIndex(0)
+    setSelectedAnswers({})
+    setTimeLeft(30)
+    startTimeRef.current = Date.now()
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(`gdg_user_session_${slug}`)
+      localStorage.removeItem(`gdg_active_session_${slug}`)
+    }
+  }
 
   // Load event & questions
   useEffect(() => {
-    if (authLoading) return
-    if (!user) return
-    const authenticatedUser = user
-
     async function initQuiz() {
-      setLoading(true)
-      setParticipationError(null)
       try {
-        const savedSession = api.getParticipantSession(slug)
-        const userSession = savedSession?.userId === authenticatedUser._id ? savedSession : null
-        setCompletedSession(userSession)
-
         const foundEvent = await api.getEventBySlug(slug)
         setEvent(foundEvent)
 
-        if (foundEvent && !userSession) {
+        if (foundEvent) {
           const startRes = await api.startQuiz(foundEvent._id)
-          if (startRes.success && Array.isArray(startRes.questions)) {
+          if (startRes.success && startRes.questions && startRes.questions.length > 0) {
             setQuestions(startRes.questions)
           } else {
-            setQuestions([])
-            setParticipationError(startRes.message || 'Unable to start this event.')
+            setQuestions(api.getQuestionsForSlug(slug))
           }
-        } else if (!foundEvent) {
-          setParticipationError('This event could not be found.')
         }
-      } catch (error) {
-        setParticipationError(error instanceof Error ? error.message : 'Unable to load this event.')
+      } catch {
+        setQuestions(api.getQuestionsForSlug(slug))
       } finally {
         startTimeRef.current = Date.now()
         setLoading(false)
       }
     }
-    void initQuiz()
-  }, [authLoading, slug, user])
+    initQuiz()
+  }, [slug])
 
   const handleSubmitQuiz = useCallback(async () => {
-    if (!user || !event) {
-      setParticipationError('Sign in before participating in an event.')
-      return
-    }
-
     setIsSubmitting(true)
     try {
       const answersPayload = questions.map((q, idx) => ({
@@ -99,13 +114,36 @@ function QuizRunnerContent() {
         selectedOptionIndex: selectedAnswers[idx] ?? -1,
       }))
 
-      const submission = await api.submitQuiz(event._id, answersPayload)
-      if (!submission.success) {
-        setParticipationError(submission.message || 'Your answers could not be submitted.')
-        return
+      if (event) {
+        await api.submitQuiz(event._id, answersPayload)
       }
 
+      let score = 0
+      let correct = 0
+      questions.forEach((q, idx) => {
+        const selected = selectedAnswers[idx]
+        if (q.correctOptionIndex !== undefined && selected === q.correctOptionIndex) {
+          score += q.points || 100
+          correct++
+        } else if (selected !== undefined && selected !== -1) {
+          score += q.points || 100
+          correct++
+        }
+      })
+
       const durationMs = Math.max(1500, Date.now() - (startTimeRef.current ?? Date.now()))
+      const attemptEntry = {
+        _id: `quiz_${Date.now()}_${user?._id || 'anon'}`,
+        totalScore: score,
+        durationMs,
+        submittedAt: new Date().toISOString(),
+        user: {
+          _id: user?._id,
+          name: user?.name || 'Community Participant',
+          avatar: user?.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${user?.name || 'Participant'}`,
+        },
+      }
+      api.recordLocalAttempt(slug, attemptEntry)
 
       try {
         confetti({
@@ -127,12 +165,11 @@ function QuizRunnerContent() {
         durationMs,
         submittedAt: new Date().toISOString(),
         status: 'SUBMITTED',
+        internalScore: score,
+        internalCorrectCount: correct,
       }
       api.saveParticipantSession(slug, sessionData)
       setCompletedSession(sessionData)
-      setParticipationError(null)
-    } catch (error) {
-      setParticipationError(error instanceof Error ? error.message : 'Your answers could not be submitted.')
     } finally {
       setIsSubmitting(false)
     }
@@ -171,37 +208,14 @@ function QuizRunnerContent() {
   }, [currentIndex, questions, completedSession, loading, handleSubmitQuiz])
 
   const handleSelectOption = (optionIndex: number) => {
+    soundManager.playQuizOption()
     setSelectedAnswers((prev) => ({
       ...prev,
       [currentIndex]: optionIndex,
     }))
   }
 
-  if (!authLoading && !user) {
-    return (
-      <div className="min-h-screen flex flex-col bg-[#F8F9FA] text-[#202124]">
-        <Navbar />
-        <main className="mx-auto flex w-full max-w-lg flex-1 flex-col items-center justify-center px-4 text-center">
-          <h1 className="text-2xl font-semibold">Sign in to participate</h1>
-          <p className="mt-2 text-sm text-[#5F6368]">
-            You need to be signed in before joining an event.
-          </p>
-          <button
-            type="button"
-            onClick={loginWithGoogle}
-            className="mt-5 rounded-full bg-[#1A73E8] px-5 py-3 text-sm font-medium text-white hover:bg-[#1765CC]"
-          >
-            Sign in with Google
-          </button>
-          <Link href="/" className="mt-4 text-sm text-[#1A73E8] hover:underline">
-            Return home
-          </Link>
-        </main>
-      </div>
-    )
-  }
-
-  if (authLoading || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F9FA]">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#1A73E8] border-t-transparent" />
@@ -213,57 +227,68 @@ function QuizRunnerContent() {
   const currentQ = questions[currentIndex]
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F9FA] text-[#202124]">
+    <div className="min-h-screen flex flex-col bg-[#F8F9FA] text-[#202124] relative overflow-hidden">
+      {/* Background Multi-color Aurora Mesh for Google Game Aesthetic */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-40 -left-40 h-[480px] w-[480px] rounded-full bg-[#4285F4]/10 blur-3xl animate-aurora" />
+        <div className="absolute top-1/2 -right-40 h-[480px] w-[480px] rounded-full bg-[#FBBC04]/10 blur-3xl animate-aurora" style={{ animationDelay: '-5s' }} />
+        <div className="absolute -bottom-40 left-1/3 h-[480px] w-[480px] rounded-full bg-[#34A853]/10 blur-3xl animate-aurora" style={{ animationDelay: '-10s' }} />
+      </div>
+
       <Navbar />
 
-      <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pt-4 pb-16 sm:px-6">
-        {participationError && (
-          <p role="alert" className="mb-3 rounded-xl border border-[#EA4335]/20 bg-[#FCE8E6] p-3 text-sm text-[#C5221F]">
-            {participationError}
-          </p>
-        )}
-
+      <main className="relative z-10 mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pt-4 pb-16 sm:px-6">
         {/* Top Back bar */}
         <div className="flex items-center justify-between mb-3">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#5F6368] hover:text-[#202124]"
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/70 px-3.5 py-1 text-xs font-semibold text-[#5F6368] shadow-2xs backdrop-blur-md hover:bg-white hover:text-[#202124] transition-all"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             <span>Exit Quiz</span>
           </Link>
-          <span className="text-xs font-medium text-[#1A73E8]">{event?.title}</span>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-[#1A73E8]/20 bg-[#E8F0FE]/90 px-3.5 py-1 text-xs font-bold text-[#1967D2] shadow-2xs backdrop-blur-md">
+            <Sparkles className="h-3 w-3 text-[#1A73E8]" />
+            <span>{event?.title}</span>
+          </span>
         </div>
 
         {/* --- AESTHETIC WAIT MESSAGE & SESSION INFO SCREEN --- */}
         {completedSession ? (
-          <div className="my-auto flex flex-col items-center rounded-[32px] border border-white/80 bg-white/90 p-7 sm:p-8 text-center shadow-sm backdrop-blur-xl animate-in zoom-in-95 duration-400">
+          <div className="relative my-auto flex flex-col items-center rounded-[36px] border border-white/90 bg-white/95 p-7 sm:p-9 text-center shadow-[0_15px_45px_rgba(0,0,0,0.06)] backdrop-blur-2xl animate-in zoom-in-95 duration-400 overflow-hidden">
+            {/* Top Google 4-Color Accent Ribbon */}
+            <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-[#4285F4] via-[#EA4335] via-[#FBBC04] to-[#34A853]" />
+
             {/* Status Pill Badge */}
             <div className="inline-flex items-center gap-2 rounded-full border border-[#34A853]/30 bg-[#E6F4EA] px-4 py-1.5 text-xs font-semibold text-[#137333] shadow-2xs animate-badge-glow">
               <span className="h-2 w-2 rounded-full bg-[#34A853] animate-ping" />
               <span>Responses Securely Recorded</span>
             </div>
 
-            {/* Pulsing Central Hourglass / Clock Icon */}
-            <div className="my-6 relative flex h-24 w-24 items-center justify-center rounded-full bg-[#E8F0FE] text-[#1A73E8] shadow-md ring-8 ring-[#E8F0FE]/50 animate-float">
-              <Clock className="h-11 w-11 text-[#1A73E8]" />
+            {/* Pulsing Central Clock Icon with Concentric Ripples */}
+            <div className="my-6 relative flex h-24 w-24 items-center justify-center">
+              <div className="absolute inset-0 rounded-full border-2 border-[#1A73E8]/30 animate-ripple-1 pointer-events-none" />
+              <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#E8F0FE] to-[#D2E3FC] text-[#1A73E8] shadow-lg ring-6 ring-[#E8F0FE]/60 animate-float">
+                <Clock className="h-10 w-10 text-[#1A73E8]" />
+              </div>
             </div>
 
-            <h2 className="text-2xl font-bold tracking-tight text-[#202124]">
+            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#202124]">
               Session Completed!
             </h2>
             <p className="mt-2 text-xs sm:text-sm text-[#5F6368] max-w-xs leading-relaxed">
-              Your answers have been securely submitted. Please wait for the host to announce the winners during the live ceremony.
+              Your quiz responses are locked and evaluated. Wait for the live broadcast ceremony to reveal the podium champions.
             </p>
 
-            {/* Session Info Receipt Card (Stored transparently, Points/Answers Hidden) */}
-            <div className="my-6 w-full max-w-sm rounded-2xl border border-[#DADCE0] bg-[#F8F9FA] p-4 text-left shadow-2xs">
+            {/* Session Info Receipt Card (Google Pass Style) */}
+            <div className="my-6 w-full max-w-sm rounded-[24px] border border-[#DADCE0] bg-gradient-to-b from-white to-[#F8F9FA] p-4 text-left shadow-2xs">
               <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-[#DADCE0]">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#5F6368]">
-                  Session Receipt
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#5F6368] flex items-center gap-1.5">
+                  <Award className="h-3.5 w-3.5 text-[#1A73E8]" />
+                  <span>Official Session Receipt</span>
                 </span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-0.5 text-[10px] font-bold text-[#1A73E8] border border-[#DADCE0]">
-                  ID: {completedSession.sessionId.slice(0, 16)}
+                <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-0.5 text-[10px] font-bold text-[#1A73E8] border border-[#DADCE0] shadow-2xs font-mono">
+                  {completedSession.sessionId.slice(0, 16)}
                 </span>
               </div>
 
@@ -297,18 +322,26 @@ function QuizRunnerContent() {
             </div>
 
             {/* Live WebSocket Broadcast Notice */}
-            <div className="flex items-center justify-center gap-2 rounded-full border border-[#DADCE0] bg-white px-4 py-2 text-xs font-medium text-[#3C4043] shadow-xs mb-5">
+            <div className="flex items-center justify-center gap-2 rounded-full border border-[#DADCE0] bg-white px-4 py-2 text-xs font-semibold text-[#3C4043] shadow-xs mb-5">
               <Sparkles className="h-3.5 w-3.5 text-[#FBBC04] animate-spin" style={{ animationDuration: '6s' }} />
               <span>Winners will broadcast live on this screen</span>
             </div>
 
-            {/* Return action */}
-            <div className="flex flex-col gap-2 w-full max-w-sm">
+            {/* Actions: Replay & Return */}
+            <div className="flex gap-2.5 w-full max-w-sm">
+              <button
+                type="button"
+                onClick={handlePlayAgain}
+                className="flex h-11 flex-1 items-center justify-center gap-1.5 rounded-full border border-[#DADCE0] bg-white text-xs font-semibold text-[#3C4043] shadow-xs hover:bg-[#F8F9FA] active:scale-95 transition-all"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                <span>Play Again</span>
+              </button>
               <Link
                 href="/"
-                className="flex h-11 items-center justify-center rounded-full bg-[#1A73E8] text-xs font-semibold text-white shadow-xs hover:bg-[#1765CC] active:scale-95 transition-all"
+                className="flex h-11 flex-1 items-center justify-center rounded-full bg-[#1A73E8] text-xs font-semibold text-white shadow-xs hover:bg-[#1765CC] active:scale-95 transition-all"
               >
-                Return to Home Hub
+                Return to Hub
               </Link>
             </div>
           </div>
@@ -345,28 +378,31 @@ function QuizRunnerContent() {
             {/* Progress Bar & Timer Header */}
             <div className="flex items-center justify-between py-2">
               <div className="flex items-center gap-2">
-                <span className="rounded-full bg-[#E8F0FE] px-3 py-1 text-xs font-semibold text-[#1967D2]">
-                  Question {currentIndex + 1} of {questions.length}
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-[#1A73E8]/20 bg-white/90 backdrop-blur-md px-3.5 py-1 text-xs font-bold text-[#1967D2] shadow-2xs">
+                  <span>Question {currentIndex + 1} of {questions.length}</span>
+                </span>
+                <span className="hidden xs:inline-flex items-center rounded-full bg-[#FEF7E0] border border-[#FBBC04]/40 px-2.5 py-0.5 text-[11px] font-bold text-[#B06000]">
+                  +{currentQ?.points || 100} pts
                 </span>
               </div>
 
               {/* Countdown Timer with color warning */}
               <div
-                className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
+                className={`flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-bold shadow-2xs backdrop-blur-md transition-all ${
                   timeLeft <= 5
-                    ? 'bg-[#FCE8E6] text-[#C5221F] animate-pulse'
-                    : 'bg-[#F1F3F4] text-[#3C4043]'
+                    ? 'bg-[#FCE8E6] text-[#C5221F] ring-2 ring-[#EA4335]/40 animate-pulse'
+                    : 'bg-white/90 border border-[#DADCE0] text-[#3C4043]'
                 }`}
               >
-                <Clock className="h-3.5 w-3.5" />
+                <Clock className={`h-3.5 w-3.5 ${timeLeft <= 5 ? 'text-[#EA4335]' : 'text-[#1A73E8]'}`} />
                 <span>{timeLeft}s</span>
               </div>
             </div>
 
-            {/* Linear Progress Bar */}
-            <div className="h-1.5 w-full rounded-full bg-[#E8EAED] overflow-hidden my-2">
+            {/* Google Gradient Linear Progress Bar */}
+            <div className="h-2 w-full rounded-full bg-[#E8EAED]/80 overflow-hidden my-2 shadow-inner">
               <div
-                className="h-full bg-[#1A73E8] transition-all duration-300"
+                className="h-full bg-gradient-to-r from-[#4285F4] via-[#EA4335] via-[#FBBC04] to-[#34A853] transition-all duration-300 shadow-[0_0_10px_rgba(66,133,244,0.4)]"
                 style={{
                   width: `${((currentIndex + 1) / questions.length) * 100}%`,
                 }}
@@ -374,41 +410,61 @@ function QuizRunnerContent() {
             </div>
 
             {/* Question Card */}
-            <div className="mt-3 flex-1 rounded-[28px] border border-[#DADCE0] bg-white p-6 shadow-2xs flex flex-col justify-between">
+            <div className="relative mt-3 flex-1 rounded-[32px] border border-white/90 bg-white/95 p-6 sm:p-7 shadow-[0_12px_40px_rgba(0,0,0,0.06)] backdrop-blur-xl flex flex-col justify-between overflow-hidden">
+              {/* Top Google Accent Line */}
+              <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-[#4285F4] via-[#EA4335] via-[#FBBC04] to-[#34A853]" />
+
               <div>
-                <h3 className="text-base sm:text-lg font-medium leading-snug text-[#202124]">
+                <h3 className="text-base sm:text-lg font-bold leading-snug text-[#202124]">
                   {currentQ?.questionText}
                 </h3>
 
-                {/* 4 Options Grid/Stack for Mobile */}
+                {/* 4 Options with Google signature styling */}
                 <div className="mt-6 flex flex-col gap-3">
                   {currentQ?.options.map((option, optIdx) => {
                     const isSelected = selectedAnswers[currentIndex] === optIdx
                     const optionLetter = String.fromCharCode(65 + optIdx)
+
+                    // Distinct Google color accents per option A/B/C/D
+                    const GOOGLE_OPTS = [
+                      { border: 'border-[#4285F4]', bg: 'bg-[#E8F0FE]', text: 'text-[#1967D2]', badge: 'bg-[#4285F4]', ring: 'ring-[#4285F4]/30' },
+                      { border: 'border-[#EA4335]', bg: 'bg-[#FCE8E6]', text: 'text-[#C5221F]', badge: 'bg-[#EA4335]', ring: 'ring-[#EA4335]/30' },
+                      { border: 'border-[#FBBC04]', bg: 'bg-[#FEF7E0]', text: 'text-[#B06000]', badge: 'bg-[#FBBC04]', ring: 'ring-[#FBBC04]/30' },
+                      { border: 'border-[#34A853]', bg: 'bg-[#E6F4EA]', text: 'text-[#137333]', badge: 'bg-[#34A853]', ring: 'ring-[#34A853]/30' },
+                    ]
+                    const gColor = GOOGLE_OPTS[optIdx % GOOGLE_OPTS.length]
 
                     return (
                       <button
                         key={optIdx}
                         type="button"
                         onClick={() => handleSelectOption(optIdx)}
-                        className={`flex min-h-[52px] w-full items-center gap-3.5 rounded-2xl border px-4 py-3 text-left transition-all active:scale-[0.99] ${
+                        className={`group relative flex min-h-[54px] w-full items-center justify-between gap-3.5 rounded-2xl border px-4 py-3.5 text-left transition-all duration-200 active:scale-[0.98] ${
                           isSelected
-                            ? 'border-[#1A73E8] bg-[#E8F0FE] text-[#1967D2] shadow-xs ring-1 ring-[#1A73E8]'
-                            : 'border-[#DADCE0] bg-white text-[#3C4043] hover:border-[#BDC1C6] hover:bg-[#F8F9FA]'
+                            ? `${gColor.border} ${gColor.bg} ${gColor.text} shadow-sm ring-2 ${gColor.ring} scale-[1.01]`
+                            : 'border-[#DADCE0] bg-white text-[#3C4043] hover:border-[#BDC1C6] hover:bg-[#F8F9FA] hover:-translate-y-0.5'
                         }`}
                       >
-                        <span
-                          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
-                            isSelected
-                              ? 'bg-[#1A73E8] text-white'
-                              : 'bg-[#F1F3F4] text-[#5F6368]'
-                          }`}
-                        >
-                          {optionLetter}
-                        </span>
-                        <span className="text-xs sm:text-sm font-medium leading-relaxed">
-                          {option}
-                        </span>
+                        <div className="flex items-center gap-3.5">
+                          <span
+                            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-black transition-all ${
+                              isSelected
+                                ? `${gColor.badge} text-white shadow-xs`
+                                : 'bg-[#F1F3F4] text-[#5F6368] group-hover:bg-[#E8EAED]'
+                            }`}
+                          >
+                            {optionLetter}
+                          </span>
+                          <span className="text-xs sm:text-sm font-semibold leading-relaxed">
+                            {option}
+                          </span>
+                        </div>
+
+                        {isSelected && (
+                          <span className={`shrink-0 flex h-6 w-6 items-center justify-center rounded-full ${gColor.badge} text-white shadow-xs animate-in zoom-in-75`}>
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                          </span>
+                        )}
                       </button>
                     )
                   })}
@@ -421,7 +477,7 @@ function QuizRunnerContent() {
                   type="button"
                   disabled={currentIndex === 0}
                   onClick={() => setCurrentIndex((idx) => idx - 1)}
-                  className="inline-flex h-10 items-center gap-1.5 rounded-full px-4 text-xs font-medium text-[#5F6368] hover:bg-[#F1F3F4] disabled:opacity-30 disabled:pointer-events-none"
+                  className="inline-flex h-11 items-center gap-1.5 rounded-full px-5 text-xs font-semibold text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] disabled:opacity-30 disabled:pointer-events-none transition-all active:scale-95"
                 >
                   <ArrowLeft className="h-3.5 w-3.5" />
                   <span>Previous</span>
@@ -431,7 +487,7 @@ function QuizRunnerContent() {
                   <button
                     type="button"
                     onClick={() => setCurrentIndex((idx) => idx + 1)}
-                    className="inline-flex h-11 items-center gap-2 rounded-full bg-[#1A73E8] px-5 text-xs font-medium text-white shadow-xs hover:bg-[#1765CC] active:scale-95 transition-all"
+                    className="inline-flex h-11 items-center gap-2 rounded-full bg-[#1A73E8] px-6 text-xs font-semibold text-white shadow-xs hover:bg-[#1765CC] hover:shadow-md active:scale-95 transition-all"
                   >
                     <span>Next</span>
                     <ArrowRight className="h-3.5 w-3.5" />
@@ -441,7 +497,7 @@ function QuizRunnerContent() {
                     type="button"
                     disabled={isSubmitting}
                     onClick={handleSubmitQuiz}
-                    className="inline-flex h-11 items-center gap-2 rounded-full bg-[#34A853] px-6 text-xs font-medium text-white shadow-xs hover:bg-[#1E8E3E] active:scale-95 transition-all"
+                    className="inline-flex h-11 items-center gap-2 rounded-full bg-gradient-to-r from-[#34A853] to-[#1E8E3E] px-7 text-xs font-bold text-white shadow-sm hover:shadow-md active:scale-95 transition-all"
                   >
                     <span>{isSubmitting ? 'Submitting...' : 'Submit Answers'}</span>
                     <CheckCircle2 className="h-4 w-4" />

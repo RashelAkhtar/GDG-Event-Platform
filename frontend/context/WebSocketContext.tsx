@@ -27,9 +27,12 @@ interface WebSocketContextType {
   sendLockToggle: (gameSlug: string, isLocked: boolean, status: string) => void
   sendCountdownStart: (gameSlug: string) => void
   sendWinnerCeremonyStart: (ceremonyData: CeremonyData) => void
+  sendLeaderboardReset: (gameSlug: string) => void
   closeCeremony: () => void
+  reconnect: () => void
   subscribeToUserJoin: (callback: (user: JoinedUser) => void) => () => void
   subscribeToUserLeave: (callback: (userId: string) => void) => () => void
+  subscribeToLeaderboardReset: (callback: (gameSlug: string) => void) => () => void
 }
 
 const WebSocketContext = createContext<WebSocketContextType>({
@@ -41,23 +44,22 @@ const WebSocketContext = createContext<WebSocketContextType>({
   sendLockToggle: () => {},
   sendCountdownStart: () => {},
   sendWinnerCeremonyStart: () => {},
+  sendLeaderboardReset: () => {},
   closeCeremony: () => {},
+  reconnect: () => {},
   subscribeToUserJoin: () => () => {},
   subscribeToUserLeave: () => () => {},
+  subscribeToLeaderboardReset: () => () => {},
 })
 
-const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1'
-const hasAbsoluteApiUrl =
-  configuredApiUrl.startsWith('http://') || configuredApiUrl.startsWith('https://')
-const defaultWsUrl = hasAbsoluteApiUrl ? new URL(configuredApiUrl) : null
-if (defaultWsUrl) {
-  defaultWsUrl.protocol = defaultWsUrl.protocol === 'https:' ? 'wss:' : 'ws:'
-  defaultWsUrl.pathname = '/ws'
-  defaultWsUrl.search = ''
-  defaultWsUrl.hash = ''
+function getWsUrl(): string {
+  if (process.env.NEXT_PUBLIC_WS_URL) return process.env.NEXT_PUBLIC_WS_URL
+  if (typeof window !== 'undefined') {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    return `${protocol}//${window.location.hostname}:5000/ws`
+  }
+  return 'ws://localhost:5000/ws'
 }
-
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? defaultWsUrl?.toString()
 
 export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   const [connected, setConnected] = useState(false)
@@ -73,12 +75,11 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   const broadcastChannelRef = useRef<BroadcastChannel | null>(null)
   const userJoinSubscribersRef = useRef<Set<(user: JoinedUser) => void>>(new Set())
   const userLeaveSubscribersRef = useRef<Set<(userId: string) => void>>(new Set())
+  const leaderboardResetSubscribersRef = useRef<Set<(gameSlug: string) => void>>(new Set())
+  const connectFnRef = useRef<(() => void) | null>(null)
 
   // Trigger user join listeners
   const notifyUserJoined = useCallback((user: JoinedUser) => {
-    // Strictly filter out any admin from user join notifications
-    if (user.role === 'ADMIN' || user.name?.includes('(Admin)')) return
-
     userJoinSubscribersRef.current.forEach((cb) => {
       try {
         cb(user)
@@ -95,6 +96,17 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
         cb(userId)
       } catch (err) {
         console.error('Error in user leave listener:', err)
+      }
+    })
+  }, [])
+
+  // Trigger leaderboard reset listeners
+  const notifyLeaderboardReset = useCallback((gameSlug: string) => {
+    leaderboardResetSubscribersRef.current.forEach((cb) => {
+      try {
+        cb(gameSlug)
+      } catch (err) {
+        console.error('Error in leaderboard reset listener:', err)
       }
     })
   }, [])
@@ -157,13 +169,20 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
           setActiveCeremony(payload as unknown as CeremonyData)
           break
         }
+        case 'RESET_GAME_LEADERBOARD': {
+          const gameSlug = payload.gameSlug as string | undefined
+          if (gameSlug) {
+            notifyLeaderboardReset(gameSlug)
+          }
+          break
+        }
         case 'SYNC_STATE': {
           if (payload.gameStates) {
             setGameLockStates(payload.gameStates as Record<string, { isLocked: boolean; status: string }>)
           }
           if (Array.isArray(payload.users)) {
             payload.users.forEach((u: JoinedUser) => {
-              if (u && u.role !== 'ADMIN' && !u.name?.includes('(Admin)')) {
+              if (u) {
                 notifyUserJoined(u)
               }
             })
@@ -174,7 +193,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
           break
       }
     },
-    [notifyUserJoined, notifyUserLeft, runCountdown]
+    [notifyUserJoined, notifyUserLeft, notifyLeaderboardReset, runCountdown]
   )
 
   const handleIncomingMessageRef = useRef(handleIncomingMessage)
@@ -186,7 +205,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let isMounted = true
 
-    // 1. Cross-tab BroadcastChannel (works even offline or without backend running)
+    // 1. Cross-tab BroadcastChannel (works even offline or across tabs)
     if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
       const channel = new BroadcastChannel('gdg_realtime_channel')
       broadcastChannelRef.current = channel
@@ -200,10 +219,11 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     let reconnectTimeout: NodeJS.Timeout
 
     const connectWs = () => {
-      if (!isMounted || !WS_URL) return
+      if (!isMounted) return
 
       try {
-        socket = new WebSocket(WS_URL)
+        const url = getWsUrl()
+        socket = new WebSocket(url)
         wsRef.current = socket
 
         socket.onopen = () => {
@@ -223,7 +243,6 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
 
         socket.onclose = () => {
           setConnected(false)
-          // Reconnect after 3 seconds if still mounted
           if (isMounted) {
             reconnectTimeout = setTimeout(connectWs, 3000)
           }
@@ -239,6 +258,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
+    connectFnRef.current = connectWs
     connectWs()
 
     return () => {
@@ -254,6 +274,17 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
         }
       }
       broadcastChannelRef.current?.close()
+    }
+  }, [])
+
+  const reconnect = useCallback(() => {
+    if (connectFnRef.current) {
+      if (wsRef.current) {
+        try {
+          wsRef.current.close()
+        } catch {}
+      }
+      connectFnRef.current()
     }
   }, [])
 
@@ -313,6 +344,17 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     [broadcastMessage]
   )
 
+  const sendLeaderboardReset = useCallback(
+    (gameSlug: string) => {
+      notifyLeaderboardReset(gameSlug)
+      broadcastMessage({
+        type: 'RESET_GAME_LEADERBOARD',
+        payload: { gameSlug },
+      })
+    },
+    [broadcastMessage, notifyLeaderboardReset]
+  )
+
   const closeCeremony = useCallback(() => {
     setActiveCeremony(null)
   }, [])
@@ -331,6 +373,13 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
+  const subscribeToLeaderboardReset = useCallback((cb: (gameSlug: string) => void) => {
+    leaderboardResetSubscribersRef.current.add(cb)
+    return () => {
+      leaderboardResetSubscribersRef.current.delete(cb)
+    }
+  }, [])
+
   return (
     <WebSocketContext.Provider
       value={{
@@ -342,9 +391,12 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
         sendLockToggle,
         sendCountdownStart,
         sendWinnerCeremonyStart,
+        sendLeaderboardReset,
         closeCeremony,
+        reconnect,
         subscribeToUserJoin,
         subscribeToUserLeave,
+        subscribeToLeaderboardReset,
       }}
     >
       {children}

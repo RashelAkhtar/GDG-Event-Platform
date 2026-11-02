@@ -25,7 +25,9 @@ app.set("trust proxy", 1);
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   res.vary("Origin");
-  if (origin && allowedOrigins.has(origin)) {
+  const isLanOrLocal =
+    origin && /^http:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)(:\d+)?$/.test(origin);
+  if (origin && (allowedOrigins.has(origin) || isLanOrLocal)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
   }
   res.setHeader("Access-Control-Allow-Credentials", "true");

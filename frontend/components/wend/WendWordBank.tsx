@@ -22,11 +22,11 @@ export function WendWordBank({ targetWords, foundWordIds, wordColorMap }: WendWo
         const color = WEND_PASTEL_PALETTE[colorIdx % WEND_PASTEL_PALETTE.length]
 
         return (
-          <div key={tw.id} className="flex items-center gap-1">
+          <div key={tw.id} className="flex items-center gap-0.5 sm:gap-1 max-w-full overflow-x-auto py-0.5">
             {letters.map((char, idx) => (
               <div
                 key={idx}
-                className={`flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg text-xs sm:text-sm font-black transition-all duration-300 ${
+                className={`flex h-6 w-6 xs:h-7 xs:w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg text-[11px] xs:text-xs sm:text-sm font-black transition-all duration-300 ${
                   isFound
                     ? `${color.bg} ${color.border} ${color.text} border-2 shadow-xs animate-in zoom-in-75`
                     : 'bg-[#F1F3F4] border border-[#DADCE0] text-transparent'

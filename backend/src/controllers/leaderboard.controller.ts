@@ -55,3 +55,24 @@ export const getLeaderboard = async (req: Request, res: Response, next: NextFunc
     next(error);
   }
 };
+
+export const resetLeaderboard = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const eventId = req.params.eventId;
+    if (typeof eventId !== 'string' || !Types.ObjectId.isValid(eventId)) {
+      return res.status(400).json({ success: false, message: 'Invalid event id.' });
+    }
+
+    const result = await QuizAttempt.deleteMany({
+      eventId: new Types.ObjectId(eventId),
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Leaderboard and quiz attempts reset successfully.',
+      deletedAttempts: result.deletedCount,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

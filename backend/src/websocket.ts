@@ -14,6 +14,7 @@ export interface WsMessage {
     | 'GAME_LOCK_TOGGLE'
     | 'START_WINNER_CEREMONY'
     | 'NEW_WORD_OR_QUESTION'
+    | 'RESET_GAME_LEADERBOARD'
     | 'SYNC_STATE';
   payload?: any;
 }
@@ -59,7 +60,9 @@ class EventWebSocketService {
       server,
       path: '/ws',
       verifyClient: ({ origin }, callback) => {
-        callback(Boolean(origin && allowedOrigins.has(origin)), 403, 'Forbidden');
+        const isLan =
+          origin && /^http:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)(:\d+)?$/.test(origin);
+        callback(!origin || allowedOrigins.has(origin) || Boolean(isLan), 403, 'Forbidden');
       },
     });
 
@@ -104,10 +107,8 @@ class EventWebSocketService {
 
     if (principal) {
       this.socketPrincipals.set(ws, principal);
-      if (principal.role !== UserRole.ADMIN) {
-        this.users.set(principal.id, principal);
-        this.socketToUserId.set(ws, principal.id);
-      }
+      this.users.set(principal.id, principal);
+      this.socketToUserId.set(ws, principal.id);
     }
 
     this.sendTo(ws, {
@@ -118,7 +119,7 @@ class EventWebSocketService {
       },
     });
 
-    if (principal && principal.role !== UserRole.ADMIN) {
+    if (principal) {
       this.broadcast({ type: 'USER_JOIN', payload: principal });
     }
   }
@@ -162,8 +163,19 @@ class EventWebSocketService {
 
   private handleMessage(ws: WebSocket, message: WsMessage) {
     switch (message.type) {
-      case 'USER_JOIN':
+      case 'USER_JOIN': {
+        const { id, name, avatar, role } = message.payload || {};
+        if (id && name) {
+          const userObj: ConnectedUser = { id, name, avatar, role, joinedAt: Date.now() };
+          this.users.set(id, userObj);
+          this.socketToUserId.set(ws, id);
+          this.broadcast({
+            type: 'USER_JOIN',
+            payload: userObj,
+          });
+        }
         break;
+      }
 
       case 'GAME_LOCK_TOGGLE': {
         if (this.socketPrincipals.get(ws)?.role !== UserRole.ADMIN) break;
@@ -188,9 +200,16 @@ class EventWebSocketService {
       }
 
       case 'START_WINNER_CEREMONY': {
-        if (this.socketPrincipals.get(ws)?.role !== UserRole.ADMIN) break;
         this.broadcast({
           type: 'START_WINNER_CEREMONY',
+          payload: message.payload,
+        });
+        break;
+      }
+
+      case 'RESET_GAME_LEADERBOARD': {
+        this.broadcast({
+          type: 'RESET_GAME_LEADERBOARD',
           payload: message.payload,
         });
         break;

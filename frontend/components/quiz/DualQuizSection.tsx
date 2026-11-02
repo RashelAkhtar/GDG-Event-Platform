@@ -152,6 +152,13 @@ export function DualQuizSection({
     const targetHref = type === 'wend' ? '/events/wend-game' : `/events/${event.slug}`
     const buttonText = type === 'wend' ? 'Enter Wend Game' : 'Enter Quiz'
 
+    const trackGradient =
+      type === 'web'
+        ? 'from-[#4285F4] to-[#1A73E8]'
+        : type === 'mentis'
+        ? 'from-[#FBBC04] via-[#EA4335] to-[#D93025]'
+        : 'from-[#34A853] to-[#0F9D58]'
+
     return (
       <div
         onClick={() => {
@@ -159,20 +166,23 @@ export function DualQuizSection({
             handleStartEdit(event)
           }
         }}
-        className={`group relative flex flex-col justify-between overflow-hidden rounded-[30px] border transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${
+        className={`group relative flex flex-col justify-between overflow-hidden rounded-[32px] border transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_45px_rgba(0,0,0,0.08)] backdrop-blur-xl ${
           isAdmin && editingEventId !== event._id
             ? 'cursor-pointer hover:border-[#1A73E8]/50 ring-offset-2'
             : ''
         } ${
           isLive
-            ? 'border-[#34A853]/40 bg-white shadow-sm ring-1 ring-[#34A853]/20'
-            : 'border-[#DADCE0] bg-white shadow-2xs hover:border-[#BDC1C6]'
-        } p-6`}
+            ? 'border-white/90 bg-white/95 shadow-[0_10px_35px_rgba(0,0,0,0.05)] ring-1 ring-[#34A853]/25'
+            : 'border-white/80 bg-white/85 shadow-2xs hover:border-[#DADCE0]'
+        } p-6 sm:p-7`}
         title={isAdmin && editingEventId !== event._id ? 'Click on div to edit title & description' : undefined}
       >
+        {/* Top Google Signature Stripe per Track */}
+        <div className={`absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r ${trackGradient}`} />
+
         {/* Top Header: Track Pill & Live/Lock Badge */}
         <div className="flex items-center justify-between">
-          <div className={`flex items-center gap-2 rounded-full px-3.5 py-1 text-xs font-semibold ${accentBg} ${accentText} shadow-2xs`}>
+          <div className={`flex items-center gap-2 rounded-full px-3.5 py-1 text-xs font-bold ${accentBg} ${accentText} shadow-2xs border border-white/80`}>
             {icon}
             <span>{trackLabel}</span>
           </div>
@@ -344,7 +354,13 @@ export function DualQuizSection({
           {isLive ? (
             <Link
               href={targetHref}
-              className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-[#1A73E8] px-5 text-sm font-medium text-white shadow-xs transition-all hover:bg-[#1765CC] hover:shadow-md active:scale-95"
+              className={`flex h-12 flex-1 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold shadow-xs transition-all hover:shadow-md active:scale-95 ${
+                type === 'wend'
+                  ? 'bg-gradient-to-r from-[#34A853] to-[#1E8E3E] text-white hover:from-[#2E7D32] hover:to-[#1B5E20]'
+                  : type === 'mentis'
+                  ? 'bg-gradient-to-r from-[#FBBC04] to-[#E37400] text-white hover:from-[#F9AB00] hover:to-[#D96B00]'
+                  : 'bg-gradient-to-r from-[#1A73E8] to-[#1557B0] text-white hover:from-[#1765CC] hover:to-[#124BA0]'
+              }`}
             >
               <span>{buttonText}</span>
               <ArrowRight className="h-4 w-4" />
@@ -363,7 +379,7 @@ export function DualQuizSection({
           <Link
             href={`/events/${event.slug}/leaderboard`}
             title="View Leaderboard"
-            className="flex h-12 w-12 items-center justify-center rounded-full border border-[#DADCE0] bg-white text-[#5F6368] transition-colors hover:bg-[#F8F9FA] hover:text-[#202124] active:scale-95"
+            className="flex h-12 w-12 items-center justify-center rounded-full border border-white/80 bg-white/90 text-[#5F6368] shadow-2xs transition-all hover:bg-white hover:text-[#202124] hover:shadow-sm active:scale-95"
           >
             <Trophy className="h-5 w-5 text-[#FBBC04]" />
           </Link>

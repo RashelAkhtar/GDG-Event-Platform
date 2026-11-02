@@ -1,8 +1,10 @@
 'use client'
 
 import React, { useEffect, useState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { useWebSocket } from '@/context/WebSocketContext'
-import { Trophy, Crown, Medal, Award, Sparkles, X, Clock, RotateCcw, Zap } from 'lucide-react'
+import { soundManager } from '@/lib/sound'
+import { Trophy, Crown, Medal, Award, Sparkles, X, Clock, RotateCcw, Zap, Home } from 'lucide-react'
 import confetti from 'canvas-confetti'
 
 const GOOGLE_COLORS = ['#4285F4', '#EA4335', '#FBBC04', '#34A853']
@@ -26,6 +28,7 @@ function formatDuration(ms: number): string {
 }
 
 export function WinnerAnnouncementOverlay() {
+  const router = useRouter()
   const { activeCeremony, closeCeremony } = useWebSocket()
   const [step, setStep] = useState<CeremonyStep>('COUNTDOWN_3RD')
   const [countdown, setCountdown] = useState<number>(5)
@@ -50,77 +53,101 @@ export function WinnerAnnouncementOverlay() {
     } catch {}
   }
 
-  // Sequence controller: 5-4-3-2-1 -> 3rd -> 5-4-3-2-1 -> 2nd -> 5-4-3-2-1 -> 1st -> Ranklist
+  // Sequence controller: Dynamic adaptive stages (3rd -> 2nd -> 1st) with crisp SFX
   useEffect(() => {
     if (!activeCeremony) return
 
+    const hasThird = Boolean(third)
+    const hasSecond = Boolean(second)
+    const startStep: CeremonyStep = hasThird
+      ? 'COUNTDOWN_3RD'
+      : hasSecond
+      ? 'COUNTDOWN_2ND'
+      : 'COUNTDOWN_1ST'
+
     const initTimer = setTimeout(() => {
-      setStep('COUNTDOWN_3RD')
+      setStep(startStep)
       setCountdown(5)
       setRevealedItemsCount(0)
+      soundManager.playCountdownTick(5)
     }, 0)
 
-    let currentCount = 5
+    const runCountdownStage = (
+      targetStep: 'COUNTDOWN_3RD' | 'COUNTDOWN_2ND' | 'COUNTDOWN_1ST',
+      onComplete: () => void
+    ) => {
+      setStep(targetStep)
+      setCountdown(5)
+      let c = 5
+      soundManager.playCountdownTick(c)
 
-    // Stage 1: Countdown for 3rd Place
-    intervalRef.current = setInterval(() => {
-      currentCount -= 1
-      if (currentCount >= 1) {
-        setCountdown(currentCount)
-      } else {
-        clearInterval(intervalRef.current!)
+      intervalRef.current = setInterval(() => {
+        c -= 1
+        if (c >= 1) {
+          setCountdown(c)
+          soundManager.playCountdownTick(c)
+        } else {
+          clearInterval(intervalRef.current!)
+          onComplete()
+        }
+      }, 1000)
+    }
+
+    const runGrand1st = () => {
+      runCountdownStage('COUNTDOWN_1ST', () => {
+        setStep('REVEAL_1ST')
+        soundManager.playWinner()
+        fireBurst(GOOGLE_COLORS, 140)
+        setTimeout(() => fireBurst(['#FBBC04', '#FFD700', '#FFA000'], 100), 500)
+
+        setTimeout(() => {
+          setStep('SHOWCASE_ALL')
+          fireBurst(GOOGLE_COLORS, 70)
+        }, 5000)
+      })
+    }
+
+    const runSilver2nd = () => {
+      runCountdownStage('COUNTDOWN_2ND', () => {
+        setStep('REVEAL_2ND')
+        soundManager.playWinner()
+        fireBurst(['#9AA0A6', '#BDC1C6', '#FFFFFF', '#4285F4'], 80)
+
+        setTimeout(() => {
+          runGrand1st()
+        }, 4000)
+      })
+    }
+
+    const runBronze3rd = () => {
+      runCountdownStage('COUNTDOWN_3RD', () => {
         setStep('REVEAL_3RD')
+        soundManager.playWinner()
         fireBurst(['#E37400', '#FF8F00', '#FFE082'], 60)
 
-        // After 4 seconds of 3rd place glory, start countdown for 2nd
         setTimeout(() => {
-          setStep('COUNTDOWN_2ND')
-          setCountdown(5)
-          let c2 = 5
-          intervalRef.current = setInterval(() => {
-            c2 -= 1
-            if (c2 >= 1) {
-              setCountdown(c2)
-            } else {
-              clearInterval(intervalRef.current!)
-              setStep('REVEAL_2ND')
-              fireBurst(['#9AA0A6', '#BDC1C6', '#FFFFFF', '#4285F4'], 80)
-
-              // After 4 seconds of 2nd place glory, start countdown for 1st
-              setTimeout(() => {
-                setStep('COUNTDOWN_1ST')
-                setCountdown(5)
-                let c1 = 5
-                intervalRef.current = setInterval(() => {
-                  c1 -= 1
-                  if (c1 >= 1) {
-                    setCountdown(c1)
-                  } else {
-                    clearInterval(intervalRef.current!)
-                    setStep('REVEAL_1ST')
-                    // Massive Grand Champion Confetti
-                    fireBurst(GOOGLE_COLORS, 140)
-                    setTimeout(() => fireBurst(['#FBBC04', '#FFD700', '#FFA000'], 100), 500)
-
-                    // After 5 seconds, smoothly transition to the complete podium & cascading ranklist
-                    setTimeout(() => {
-                      setStep('SHOWCASE_ALL')
-                      fireBurst(GOOGLE_COLORS, 70)
-                    }, 5000)
-                  }
-                }, 1000)
-              }, 4000)
-            }
-          }, 1000)
+          if (hasSecond) {
+            runSilver2nd()
+          } else {
+            runGrand1st()
+          }
         }, 4000)
-      }
-    }, 1000)
+      })
+    }
+
+    if (hasThird) {
+      runBronze3rd()
+    } else if (hasSecond) {
+      runSilver2nd()
+    } else {
+      runGrand1st()
+    }
 
     return () => {
       clearTimeout(initTimer)
       if (intervalRef.current) clearInterval(intervalRef.current)
     }
-  }, [activeCeremony])
+  }, [activeCeremony, third, second])
 
   // Staggered reveal of ranklist rows in SHOWCASE_ALL stage
   useEffect(() => {
@@ -539,23 +566,29 @@ export function WinnerAnnouncementOverlay() {
             ))}
           </div>
 
-          {/* Bottom Actions */}
-          <div className="mt-8 flex items-center justify-center gap-3">
+          {/* Bottom Actions with Redirect Home Button */}
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <button
               onClick={() => {
-                setStep('COUNTDOWN_3RD')
+                if (third) setStep('COUNTDOWN_3RD')
+                else if (second) setStep('COUNTDOWN_2ND')
+                else setStep('COUNTDOWN_1ST')
                 setCountdown(5)
               }}
-              className="inline-flex items-center gap-2 rounded-full border border-[#DADCE0] bg-white px-5 py-2.5 text-xs font-medium text-[#3C4043] shadow-xs hover:bg-[#F8F9FA] active:scale-95 transition-all"
+              className="inline-flex items-center gap-2 rounded-full border border-[#DADCE0] bg-white px-5 py-2.5 text-xs font-semibold text-[#3C4043] shadow-xs hover:bg-[#F8F9FA] active:scale-95 transition-all"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               <span>Replay Ceremony</span>
             </button>
             <button
-              onClick={closeCeremony}
-              className="inline-flex items-center gap-2 rounded-full bg-[#1A73E8] px-6 py-2.5 text-xs font-medium text-white shadow-xs hover:bg-[#1765CC] active:scale-95 transition-all"
+              onClick={() => {
+                closeCeremony()
+                router.push('/')
+              }}
+              className="inline-flex items-center gap-2 rounded-full bg-[#1A73E8] px-6 py-2.5 text-xs font-semibold text-white shadow-xs hover:bg-[#1765CC] active:scale-95 transition-all"
             >
-              <span>Done</span>
+              <Home className="h-4 w-4" />
+              <span>Redirect Home</span>
             </button>
           </div>
         </div>

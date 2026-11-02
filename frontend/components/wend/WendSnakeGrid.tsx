@@ -188,11 +188,11 @@ export function WendSnakeGrid({
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
-      className="relative mx-auto aspect-square w-full max-w-[340px] sm:max-w-[380px] select-none touch-none rounded-[28px] border-[3px] border-[#3C4043] bg-white p-2.5 shadow-md overflow-hidden"
+      className="relative mx-auto aspect-square w-full max-w-[300px] xs:max-w-[330px] sm:max-w-[380px] select-none touch-none rounded-[28px] sm:rounded-[34px] border border-white/90 bg-white/95 p-2 sm:p-2.5 shadow-[0_15px_45px_rgba(0,0,0,0.08)] ring-1 ring-black/5 backdrop-blur-xl overflow-hidden"
     >
       {/* 8x8 Grid Container */}
       <div
-        className="grid h-full w-full gap-1.5"
+        className="grid h-full w-full gap-1 sm:gap-1.5"
         style={{
           gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
           gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`,
@@ -205,14 +205,14 @@ export function WendSnakeGrid({
             const discovered = discoveredCellsMap.get(`${r}-${c}`)
             const isHint = hintCell && hintCell.row === r && hintCell.col === c
 
-            // Determine styling
-            let cellStyle = 'bg-white hover:bg-[#F8F9FA] text-[#202124] border border-[#DADCE0] shadow-2xs cursor-pointer'
+            // Determine styling with Google tactile aesthetic
+            let cellStyle = 'bg-white hover:bg-[#F8F9FA] text-[#202124] border border-[#E8EAED] shadow-[0_2px_4px_rgba(0,0,0,0.03)] hover:border-[#4285F4]/50 cursor-pointer'
 
             if (isObstacle) {
-              cellStyle = 'bg-[#5F6368] border border-[#3C4043] shadow-inner cursor-not-allowed'
+              cellStyle = 'bg-gradient-to-br from-[#374151] to-[#1F2937] border border-[#111827] shadow-inner cursor-not-allowed'
             } else if (inActive) {
-              // Active dragged path: bright light emerald with green border
-              cellStyle = 'bg-[#C8E6C9] border-2 border-[#34A853] text-[#137333] shadow-sm z-20 scale-[1.02]'
+              // Active dragged path: glowing Google Green
+              cellStyle = 'bg-gradient-to-br from-[#E8F5E9] to-[#C8E6C9] border-2 border-[#34A853] text-[#137333] shadow-[0_0_12px_rgba(52,168,83,0.35)] z-20 scale-[1.04]'
             } else if (discovered) {
               // Discovered word: Persistent light pastel background & matching border
               cellStyle = `${discovered.color.bg} ${discovered.color.border} ${discovered.color.text} border-2 shadow-2xs z-10 font-black`
@@ -224,13 +224,13 @@ export function WendSnakeGrid({
                 id={`wend-cell-${r}-${c}`}
                 data-cell-coord={`${r}-${c}`}
                 onPointerDown={(e) => handlePointerDown(r, c, e)}
-                className={`relative flex items-center justify-center rounded-xl transition-all select-none ${cellStyle} ${
-                  isHint ? 'ring-4 ring-[#FBBC04] animate-pulse z-30' : ''
+                className={`relative flex items-center justify-center rounded-lg sm:rounded-xl transition-all select-none touch-none ${cellStyle} ${
+                  isHint ? 'ring-3 sm:ring-4 ring-[#FBBC04] shadow-[0_0_15px_rgba(251,188,4,0.5)] animate-pulse z-30' : ''
                 }`}
               >
                 {!isObstacle && (
                   <span
-                    className={`relative z-20 pointer-events-none select-none text-base sm:text-lg font-black tracking-tight ${
+                    className={`relative z-20 pointer-events-none select-none text-xs xs:text-sm sm:text-lg font-black tracking-tight ${
                       inActive
                         ? 'text-[#1B5E20]'
                         : discovered

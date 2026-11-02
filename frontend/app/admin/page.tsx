@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
 import {
   api,
   DEFAULT_WEB_EVENT,
@@ -13,6 +12,7 @@ import {
   WendWord,
   WendBoardConfig,
   findWordPathInGrid,
+  DEFAULT_WEND_BOARD,
   CeremonyWinner,
   RankedParticipant,
   LeaderboardEntry,
@@ -39,6 +39,7 @@ import {
   Edit2,
   Edit3,
   Sliders,
+  Send,
   UserCheck,
   RefreshCw,
   Crown,
@@ -56,6 +57,7 @@ import {
   Eye,
   EyeOff,
   Eraser,
+  CornerDownLeft,
 } from 'lucide-react'
 import { LockedIllustration, UnlockedIllustration } from '@/components/ui/LockIllustrations'
 import { AnimatedLockToggle } from '@/components/ui/AnimatedLockToggle'
@@ -70,17 +72,8 @@ function formatDuration(ms: number): string {
 }
 
 export default function AdminPage() {
-  const { user, loading } = useAuth()
-  const pathname = usePathname()
-  const router = useRouter()
-  const { gameLockStates, sendLockToggle, sendCountdownStart, sendWinnerCeremonyStart, connected } = useWebSocket()
-
-  useEffect(() => {
-    if (!loading && user?.role !== 'ADMIN') {
-      const loginPath = pathname.replace(/\/panel\/?$/, '') || '/'
-      router.replace(loginPath)
-    }
-  }, [loading, pathname, router, user])
+  const { user } = useAuth()
+  const { gameLockStates, sendLockToggle, sendCountdownStart, sendWinnerCeremonyStart, sendLeaderboardReset, connected } = useWebSocket()
 
   const [webEvent, setWebEvent] = useState<GdgEvent>(DEFAULT_WEB_EVENT)
   const [mentisEvent, setMentisEvent] = useState<GdgEvent>(DEFAULT_MENTIS_EVENT)
@@ -145,7 +138,19 @@ export default function AdminPage() {
   const [editTargetWordStr, setEditTargetWordStr] = useState('')
   const [editTargetWordHint, setEditTargetWordHint] = useState('')
 
-  const refreshStandings = (slug = selectedSlug) => {
+  const refreshStandings = async (slug = selectedSlug) => {
+    const targetEvent =
+      slug.includes('mentis') ? mentisEvent : slug.includes('wend') ? wendEvent : webEvent
+    try {
+      if (targetEvent?._id) {
+        const backendEntries = await api.getLeaderboard(targetEvent._id, slug)
+        if (Array.isArray(backendEntries) && backendEntries.length > 0) {
+          for (const entry of backendEntries) {
+            api.recordLocalAttempt(slug, entry)
+          }
+        }
+      }
+    } catch {}
     const rankings = api.getAutomatedRankings(slug)
     setAutomatedRanking(rankings)
   }
@@ -165,10 +170,16 @@ export default function AdminPage() {
     showToast('Loaded realistic participants demonstrating Priority 1 (Score) & Priority 2 (Tie-Breaker Time)!')
   }
 
-  const handleClearSessions = (slug = selectedSlug) => {
+  const handleClearSessions = async (slug = selectedSlug) => {
+    const targetEvent =
+      slug.includes('mentis') ? mentisEvent : slug.includes('wend') ? wendEvent : webEvent
+    try {
+      await api.resetLeaderboard(targetEvent._id, slug)
+    } catch {}
     api.clearSessionsForSlug(slug)
+    sendLeaderboardReset(slug)
     refreshStandings(slug)
-    showToast('Cleared all participant sessions and standings for this track.', 'success')
+    showToast('Reset leaderboard & cleared attempts! All participants can now replay.', 'success')
   }
 
   // Load initial events
@@ -621,34 +632,29 @@ export default function AdminPage() {
     refreshStandings(slug)
   }
 
-  const handleBroadcastWinnerCeremony = () => {
-    if (automatedRanking.winners.length === 0) {
+  const handleBroadcastWinnerCeremony = (overrideSlug?: string) => {
+    const slugToUse = overrideSlug || selectedSlug
+    const currentRankings = api.getAutomatedRankings(slugToUse)
+
+    if (currentRankings.winners.length === 0) {
       showToast('No participants recorded yet for this challenge. Play a round or click "Simulate Test Submissions" to test!', 'error')
       return
     }
 
-    const targetTitle = selectedSlug.includes('mentis')
+    const targetTitle = slugToUse.includes('mentis')
       ? 'Mentis Mind Challenge'
-      : selectedSlug.includes('wend')
+      : slugToUse.includes('wend')
       ? 'Wend Word Arena'
       : 'Web Dev Sprint'
 
     sendWinnerCeremonyStart({
-      gameSlug: selectedSlug,
+      gameSlug: slugToUse,
       gameTitle: targetTitle,
-      winners: automatedRanking.winners,
-      fullLeaderboard: automatedRanking.rankedStandings,
+      winners: currentRankings.winners,
+      fullLeaderboard: currentRankings.rankedStandings,
     })
 
-    showToast(`BROADCASTED: Winner Announcement ceremony with ${automatedRanking.winners.length} podium winners is live!`)
-  }
-
-  if (loading || user?.role !== 'ADMIN') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8F9FA]">
-        <div className="h-8 w-8 animate-spin rounded-full border-3 border-[#1A73E8] border-t-transparent" />
-      </div>
-    )
+    showToast(`BROADCASTED VIA SOCKET: Winner Announcement ceremony with ${currentRankings.winners.length} podium winners is live!`)
   }
 
   return (
@@ -671,6 +677,9 @@ export default function AdminPage() {
                 <h1 className="text-sm font-semibold tracking-tight text-[#202124] leading-none">
                   GDG Admin Command Center
                 </h1>
+                <span className="text-[11px] text-[#5F6368]">
+                  Logged in as <strong className="text-[#1A73E8]">aryan.crores@gmail.com</strong>
+                </span>
               </div>
             </div>
           </div>
@@ -964,17 +973,31 @@ export default function AdminPage() {
                         <span>{isLive ? 'Lock Web Div (Switch to Locked)' : 'Unlock Web Div (Switch to Live)'}</span>
                       </button>
 
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleStart5sCountdown(slug, 'Web Dev Sprint')
-                        }}
-                        className="flex h-9 items-center justify-center gap-1.5 rounded-full border border-[#1A73E8] bg-white text-xs font-medium text-[#1A73E8] hover:bg-[#E8F0FE] active:scale-98 transition-all"
-                      >
-                        <Play className="h-3 w-3 fill-current" />
-                        <span>5s Countdown</span>
-                      </button>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleStart5sCountdown(slug, 'Web Dev Sprint')
+                          }}
+                          className="flex h-9 items-center justify-center gap-1.5 rounded-full border border-[#1A73E8] bg-white text-xs font-semibold text-[#1A73E8] hover:bg-[#E8F0FE] active:scale-98 transition-all"
+                        >
+                          <Play className="h-3 w-3 fill-current" />
+                          <span>5s Countdown</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleBroadcastWinnerCeremony(slug)
+                          }}
+                          className="flex h-9 items-center justify-center gap-1.5 rounded-full bg-[#FEF7E0] border border-[#FBBC04]/50 text-xs font-semibold text-[#B06000] hover:bg-[#FFF8E1] active:scale-98 transition-all"
+                        >
+                          <Award className="h-3.5 w-3.5 text-[#FBBC04]" />
+                          <span>Announce Winners</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )
@@ -1163,17 +1186,31 @@ export default function AdminPage() {
                         <span>{isLive ? 'Lock Mentis Div (Switch to Locked)' : 'Unlock Mentis Div (Switch to Live)'}</span>
                       </button>
 
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleStart5sCountdown(slug, 'Mentis Mind Challenge')
-                        }}
-                        className="flex h-9 items-center justify-center gap-1.5 rounded-full border border-[#1A73E8] bg-white text-xs font-medium text-[#1A73E8] hover:bg-[#E8F0FE] active:scale-98 transition-all"
-                      >
-                        <Play className="h-3 w-3 fill-current" />
-                        <span>5s Countdown</span>
-                      </button>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleStart5sCountdown(slug, 'Mentis Mind Challenge')
+                          }}
+                          className="flex h-9 items-center justify-center gap-1.5 rounded-full border border-[#1A73E8] bg-white text-xs font-semibold text-[#1A73E8] hover:bg-[#E8F0FE] active:scale-98 transition-all"
+                        >
+                          <Play className="h-3 w-3 fill-current" />
+                          <span>5s Countdown</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleBroadcastWinnerCeremony(slug)
+                          }}
+                          className="flex h-9 items-center justify-center gap-1.5 rounded-full bg-[#FEF7E0] border border-[#FBBC04]/50 text-xs font-semibold text-[#B06000] hover:bg-[#FFF8E1] active:scale-98 transition-all"
+                        >
+                          <Award className="h-3.5 w-3.5 text-[#FBBC04]" />
+                          <span>Announce Winners</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )
@@ -1362,17 +1399,31 @@ export default function AdminPage() {
                         <span>{isLive ? 'Lock Wend Div (Switch to Locked)' : 'Unlock Wend Div (Switch to Live)'}</span>
                       </button>
 
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleStart5sCountdown(slug, 'Wend Word Arena')
-                        }}
-                        className="flex h-9 items-center justify-center gap-1.5 rounded-full border border-[#1A73E8] bg-white text-xs font-medium text-[#1A73E8] hover:bg-[#E8F0FE] active:scale-98 transition-all"
-                      >
-                        <Play className="h-3 w-3 fill-current" />
-                        <span>5s Countdown</span>
-                      </button>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleStart5sCountdown(slug, 'Wend Word Arena')
+                          }}
+                          className="flex h-9 items-center justify-center gap-1.5 rounded-full border border-[#1A73E8] bg-white text-xs font-semibold text-[#1A73E8] hover:bg-[#E8F0FE] active:scale-98 transition-all"
+                        >
+                          <Play className="h-3 w-3 fill-current" />
+                          <span>5s Countdown</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleBroadcastWinnerCeremony(slug)
+                          }}
+                          className="flex h-9 items-center justify-center gap-1.5 rounded-full bg-[#FEF7E0] border border-[#FBBC04]/50 text-xs font-semibold text-[#B06000] hover:bg-[#FFF8E1] active:scale-98 transition-all"
+                        >
+                          <Award className="h-3.5 w-3.5 text-[#FBBC04]" />
+                          <span>Announce Winners</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )
@@ -2330,18 +2381,47 @@ export default function AdminPage() {
                 Clicking this will broadcast the dramatic 5-4-3-2-1 suspense sequence, reveal 3rd place, 2nd place, 1st place, and unfold the victory ranklist on ALL user screens!
               </p>
 
-              <button
-                onClick={handleBroadcastWinnerCeremony}
-                disabled={automatedRanking.winners.length === 0}
-                className={`inline-flex h-13 items-center justify-center gap-2.5 rounded-full px-8 text-sm font-bold text-white shadow-md transition-all ring-4 ring-[#1A73E8]/20 ${
-                  automatedRanking.winners.length === 0
-                    ? 'bg-[#BDC1C6] cursor-not-allowed opacity-60'
-                    : 'bg-[#1A73E8] hover:bg-[#1765CC] active:scale-95 cursor-pointer'
-                }`}
-              >
-                <Rocket className="h-4 w-4" />
-                <span>Broadcast Winner Announcement ({automatedRanking.winners.length} Winners Ready)</span>
-              </button>
+              {/* WebSocket Connection Health Badge */}
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-xs font-semibold shadow-2xs border border-[#DADCE0]">
+                {connected ? (
+                  <>
+                    <span className="h-2 w-2 rounded-full bg-[#34A853] animate-pulse" />
+                    <span className="text-[#137333]">WebSocket Connected & Live</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="h-2 w-2 rounded-full bg-[#EA4335]" />
+                    <span className="text-[#C5221F]">WebSocket Local / Reconnecting</span>
+                  </>
+                )}
+              </div>
+
+              <div>
+                <button
+                  onClick={() => handleBroadcastWinnerCeremony()}
+                  disabled={automatedRanking.winners.length === 0}
+                  className={`inline-flex h-13 items-center justify-center gap-2.5 rounded-full px-8 text-sm font-bold text-white shadow-md transition-all ring-4 ring-[#1A73E8]/20 ${
+                    automatedRanking.winners.length === 0
+                      ? 'bg-[#BDC1C6] cursor-not-allowed opacity-60'
+                      : 'bg-[#1A73E8] hover:bg-[#1765CC] active:scale-95 cursor-pointer'
+                  }`}
+                >
+                  <Rocket className="h-4 w-4" />
+                  <span>Broadcast Winner Announcement ({automatedRanking.winners.length} Winners Ready)</span>
+                </button>
+              </div>
+
+              {automatedRanking.winners.length === 0 && (
+                <div className="mt-3">
+                  <button
+                    onClick={() => handleSimulateTieTest(selectedSlug)}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-1.5 text-xs font-medium text-[#1A73E8] border border-[#DADCE0] hover:bg-[#F8F9FA] shadow-xs active:scale-95 transition-all"
+                  >
+                    <Sparkles className="h-3 w-3 text-[#FBBC04]" />
+                    <span>Load Test Participants to Try Broadcast</span>
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Automated Victory Podium (1st, 2nd, 3rd) Derived Mathematically */}

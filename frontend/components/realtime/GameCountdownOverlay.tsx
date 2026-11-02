@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useWebSocket } from '@/context/WebSocketContext'
+import { soundManager } from '@/lib/sound'
 import { Rocket, Sparkles, Zap } from 'lucide-react'
 import confetti from 'canvas-confetti'
 
@@ -13,22 +14,27 @@ export function GameCountdownOverlay() {
   const router = useRouter()
 
   useEffect(() => {
-    if (activeCountdown && activeCountdown.count === 0) {
-      try {
-        confetti({
-          particleCount: 80,
-          spread: 80,
-          origin: { y: 0.5 },
-          colors: GOOGLE_COLORS,
-        })
-      } catch {}
+    if (activeCountdown) {
+      if (activeCountdown.count > 0) {
+        soundManager.playCountdownTick(activeCountdown.count)
+      } else if (activeCountdown.count === 0) {
+        soundManager.playWinner()
+        try {
+          confetti({
+            particleCount: 80,
+            spread: 80,
+            origin: { y: 0.5 },
+            colors: GOOGLE_COLORS,
+          })
+        } catch {}
 
-      // Route to game after brief GO flash
-      const timeout = setTimeout(() => {
-        router.push(`/events/${activeCountdown.gameSlug}`)
-      }, 750)
+        // Route to game after brief GO flash
+        const timeout = setTimeout(() => {
+          router.push(`/events/${activeCountdown.gameSlug}`)
+        }, 750)
 
-      return () => clearTimeout(timeout)
+        return () => clearTimeout(timeout)
+      }
     }
   }, [activeCountdown, router])
 
@@ -57,7 +63,7 @@ export function GameCountdownOverlay() {
           <span className="h-2.5 w-2.5 rounded-full bg-[#4285F4]" />
         </span>
         <span className="text-xs font-bold uppercase tracking-wider text-[#3C4043]">
-          Live Quiz Starting • {gameSlug.includes('mentis') ? 'Mentis Track' : 'Web Track'}
+          Live Challenge Starting • {gameSlug.includes('mentis') ? 'Mentis Track' : gameSlug.includes('wend') ? 'Wend Word Arena' : 'Web Track'}
         </span>
       </div>
 

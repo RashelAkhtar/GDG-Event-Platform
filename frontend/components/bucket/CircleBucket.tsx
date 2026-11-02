@@ -46,12 +46,6 @@ function getBaseRadiusForCount(count: number): number {
   return 13
 }
 
-function isUserAdmin(name?: string, id?: string, role?: string, email?: string): boolean {
-  if (role === 'ADMIN') return true
-  const str = `${name || ''} ${id || ''} ${email || ''}`.toLowerCase()
-  return str.includes('admin') || str.includes('aryan.crores@gmail.com')
-}
-
 // Stable hash generating organic unevenness per user
 function getUnevenFactor(id: string, isUser: boolean): number {
   if (isUser) return 1.15 // User's ball is slightly larger and easier to locate
@@ -67,7 +61,7 @@ function getUnevenFactor(id: string, isUser: boolean): number {
 
 export function CircleBucket() {
   const { user } = useAuth()
-  const { connected, sendUserJoin, subscribeToUserJoin, subscribeToUserLeave } = useWebSocket()
+  const { connected, reconnect, sendUserJoin, subscribeToUserJoin, subscribeToUserLeave } = useWebSocket()
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const physicsRef = useRef<{ bubbles: Bubble[] }>({ bubbles: [] })
@@ -80,9 +74,6 @@ export function CircleBucket() {
 
   // Drop a bubble into physics arena with dynamic initial sizing & plunge inside bucket
   const dropBubble = useCallback((name: string, avatar?: string, isUser = false, customId?: string) => {
-    // Strictly guard: never drop admin into the participant bucket
-    if (isUserAdmin(name, customId)) return
-
     const canvas = canvasRef.current
     const width = canvas ? canvas.width : 340
     const height = canvas ? canvas.height : 340
@@ -139,10 +130,7 @@ export function CircleBucket() {
       squishY: 1,
     }
 
-    physicsRef.current.bubbles = [
-      newBubble,
-      ...physicsRef.current.bubbles.filter((b) => !isUserAdmin(b.name, b.id)),
-    ]
+    physicsRef.current.bubbles = [newBubble, ...physicsRef.current.bubbles]
     setTotalCount(physicsRef.current.bubbles.length)
   }, [])
 
@@ -157,14 +145,11 @@ export function CircleBucket() {
     }))
   }
 
-  // Broadcast current authenticated participant via WebSocket (strictly exclude admin)
+  // Ensure current user's profile is ALWAYS placed in the bucket
   useEffect(() => {
-    // Clean any admin bubbles from memory immediately
-    physicsRef.current.bubbles = physicsRef.current.bubbles.filter((b) => !isUserAdmin(b.name, b.id))
-
-    const isAdmin = isUserAdmin(user?.name, user?._id, user?.role, user?.email)
-
-    if (user && !isAdmin) {
+    if (user) {
+      // Remove any temporary guest bubble when authenticated
+      physicsRef.current.bubbles = physicsRef.current.bubbles.filter((b) => b.id !== 'guest-user-self')
       dropBubble(user.name + ' (You)', user.avatar, true, `user-${user._id}`)
       sendUserJoin({
         id: user._id,
@@ -173,10 +158,8 @@ export function CircleBucket() {
         role: user.role,
       })
     } else {
-      // If logged out or if logged in as Admin: do not show in participant bucket
-      physicsRef.current.bubbles = physicsRef.current.bubbles.filter(
-        (b) => !b.isUser && !isUserAdmin(b.name, b.id)
-      )
+      // Drop interactive guest bubble so the bucket is never dead for visitors
+      dropBubble('Guest (You)', 'https://api.dicebear.com/7.x/bottts/svg?seed=Guest', true, 'guest-user-self')
     }
     setTotalCount(physicsRef.current.bubbles.length)
   }, [user, dropBubble, sendUserJoin])
@@ -184,9 +167,6 @@ export function CircleBucket() {
   // Listen for real participants joining via WebSocket or BroadcastChannel
   useEffect(() => {
     const unsubscribeJoin = subscribeToUserJoin((newUser) => {
-      // Strictly exclude admin profiles from participant bucket
-      if (isUserAdmin(newUser.name, newUser.id, newUser.role)) return
-
       const isSelf = user && newUser.id === user._id
       if (!isSelf) {
         dropBubble(newUser.name, newUser.avatar, false, `user-${newUser.id}`)
@@ -197,7 +177,7 @@ export function CircleBucket() {
 
     const unsubscribeLeave = subscribeToUserLeave((leftUserId) => {
       physicsRef.current.bubbles = physicsRef.current.bubbles.filter(
-        (b) => b.id !== `user-${leftUserId}` && !isUserAdmin(b.name, b.id)
+        (b) => b.id !== `user-${leftUserId}`
       )
       setTotalCount(physicsRef.current.bubbles.length)
     })
@@ -225,10 +205,8 @@ export function CircleBucket() {
 
   const findBubbleAt = (x: number, y: number): Bubble | null => {
     const bubbles = physicsRef.current.bubbles
-    // Check in reverse order so top-drawn bubble is picked
     for (let i = bubbles.length - 1; i >= 0; i--) {
       const b = bubbles[i]
-      if (isUserAdmin(b.name, b.id)) continue
       const dx = x - b.x
       const dy = y - b.y
       if (Math.sqrt(dx * dx + dy * dy) <= b.radius * 1.3) {
@@ -241,7 +219,7 @@ export function CircleBucket() {
   const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const coords = getCanvasCoords(e)
     const b = findBubbleAt(coords.x, coords.y)
-    if (b && !isUserAdmin(b.name, b.id)) {
+    if (b) {
       try {
         ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
       } catch {}
@@ -323,7 +301,7 @@ export function CircleBucket() {
       }
 
       const draggedBubble = physicsRef.current.bubbles.find((bubble) => bubble.id === drag.bubbleId)
-      if (draggedBubble && !isUserAdmin(draggedBubble.name, draggedBubble.id)) {
+      if (draggedBubble) {
         setActiveTooltip({
           name: draggedBubble.name,
           x: clampedDomX,
@@ -350,202 +328,150 @@ export function CircleBucket() {
       const b = physicsRef.current.bubbles.find((item) => item.id === drag.bubbleId)
       if (b) {
         b.isDragging = false
-        const h = drag.history
-        if (h.length >= 2) {
-          const oldest = h[0]
-          const newest = h[h.length - 1]
-          const dt = Math.max(12, newest.time - oldest.time)
-          // Compute velocity in pixels per frame (~60fps standard)
-          const rawVx = ((newest.x - oldest.x) / dt) * 16.67
-          const rawVy = ((newest.y - oldest.y) / dt) * 16.67
 
-          // Responsive throw multiplier capped to prevent wall penetration
-          const throwMultiplier = 1.3
-          const maxVelocity = 16
-          b.vx = Math.max(-maxVelocity, Math.min(maxVelocity, rawVx * throwMultiplier))
-          b.vy = Math.max(-maxVelocity, Math.min(maxVelocity, rawVy * throwMultiplier))
+        // Calculate throw momentum velocity from recent drag movements
+        if (drag.history.length >= 2) {
+          const first = drag.history[0]
+          const last = drag.history[drag.history.length - 1]
+          const dt = Math.max(16, last.time - first.time)
+          const vx = ((last.x - first.x) / dt) * 16
+          const vy = ((last.y - first.y) / dt) * 16
 
-          // Squish response to throw force
-          const speed = Math.sqrt(b.vx * b.vx + b.vy * b.vy)
-          if (speed > 5) {
-            b.squishX = 0.8
-            b.squishY = 1.25
-          }
+          // Clamp max fling velocity
+          const maxFling = 16
+          b.vx = Math.max(-maxFling, Math.min(maxFling, vx * 1.25))
+          b.vy = Math.max(-maxFling, Math.min(maxFling, vy * 1.25))
         }
       }
 
       dragRef.current = null
-      setTimeout(() => setActiveTooltip(null), 1600)
+      setActiveTooltip(null)
 
       if (canvasRef.current) {
-        canvasRef.current.style.cursor = 'grab'
+        canvasRef.current.style.cursor = 'default'
       }
     }
   }
 
-  // Main Physics Simulation & Canvas Rendering Loop
+  // Physics simulation loop
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    const render = () => {
-      const width = canvas.width
-      const height = canvas.height
-      const cx = width / 2
-      const cy = height / 2
-      const bucketRadius = width / 2 - 12
+    const width = canvas.width
+    const height = canvas.height
+    const cx = width / 2
+    const cy = height / 2
+    const bucketRadius = width / 2 - 12
 
+    const GRAVITY = 0.28
+    const DAMPING = 0.72
+    const FRICTION = 0.985
+
+    const render = () => {
+      // Clear canvas with crisp transparent layer
       ctx.clearRect(0, 0, width, height)
 
-      // 1. Draw Circular Glass Bucket Background
+      // Draw Circular Glass Bucket Container
       ctx.save()
       ctx.beginPath()
       ctx.arc(cx, cy, bucketRadius, 0, Math.PI * 2)
-      ctx.fillStyle = '#FFFFFF'
+
+      // Subdued ambient bucket background gradient
+      const bgGrad = ctx.createRadialGradient(cx, cy - 20, 10, cx, cy, bucketRadius)
+      bgGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)')
+      bgGrad.addColorStop(0.85, 'rgba(248, 249, 250, 0.90)')
+      bgGrad.addColorStop(1, 'rgba(232, 234, 237, 0.85)')
+      ctx.fillStyle = bgGrad
       ctx.fill()
 
-      // Radial interior gradient
-      const grad = ctx.createRadialGradient(cx, cy - 25, 25, cx, cy, bucketRadius)
-      grad.addColorStop(0, '#FFFFFF')
-      grad.addColorStop(0.8, '#F8F9FA')
-      grad.addColorStop(1, '#ECEFF1')
-      ctx.fillStyle = grad
-      ctx.fill()
-
-      // Frosted glass rim border
+      // Glass rim border
       ctx.lineWidth = 3
       ctx.strokeStyle = '#DADCE0'
       ctx.stroke()
       ctx.restore()
 
-      // Strictly purge any admin bubbles immediately
-      physicsRef.current.bubbles = physicsRef.current.bubbles.filter((b) => !isUserAdmin(b.name, b.id))
       const bubbles = physicsRef.current.bubbles
       const drag = dragRef.current
 
-      // Aesthetic Minimal Empty State when bucket is completely empty
+      // Empty State when bucket is completely empty
       if (bubbles.length === 0) {
         ctx.save()
-
-        // 1. Orbital delicate dashed ring centered in bucket
         ctx.beginPath()
         ctx.arc(cx, cy, 38, 0, Math.PI * 2)
         ctx.strokeStyle = 'rgba(66, 133, 244, 0.22)'
-        ctx.lineWidth = 1.5
-        ctx.setLineDash([4, 4])
+        ctx.lineWidth = 2
+        ctx.setLineDash([6, 6])
         ctx.stroke()
-        ctx.setLineDash([])
 
-        // 2. Translucent center orb with Google 4-color dots
-        ctx.beginPath()
-        ctx.arc(cx, cy, 20, 0, Math.PI * 2)
-        ctx.fillStyle = 'rgba(232, 240, 254, 0.55)'
-        ctx.fill()
+        ctx.font = '500 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        ctx.fillStyle = '#5F6368'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText('Drop in to connect', cx, cy - 6)
 
-        const dotColors = ['#4285F4', '#EA4335', '#FBBC04', '#34A853']
-        const dotOffsets = [
-          { x: -6, y: -6 },
-          { x: 6, y: -6 },
-          { x: 6, y: 6 },
-          { x: -6, y: 6 },
-        ]
-        dotOffsets.forEach((pos, idx) => {
-          ctx.beginPath()
-          ctx.arc(cx + pos.x, cy + pos.y, 3.5, 0, Math.PI * 2)
-          ctx.fillStyle = dotColors[idx]
-          ctx.fill()
-        })
-
+        ctx.font = '400 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        ctx.fillStyle = '#80868B'
+        ctx.fillText('Live profile arena', cx, cy + 12)
         ctx.restore()
       }
 
-      // Physics Constants
-      const gravity = 0.19
-      const damping = 0.982
-      const wallBounce = 0.74 // Elastic wall bouncing
+      // Dynamic Rescaling based on bubble count
       const baseRadius = getBaseRadiusForCount(bubbles.length)
+      for (const b of bubbles) {
+        b.targetRadius = baseRadius * b.unevenFactor
+        b.radius += (b.targetRadius - b.radius) * 0.08
+        b.squishX += (1 - b.squishX) * 0.12
+        b.squishY += (1 - b.squishY) * 0.12
+      }
 
-      // 2. Smooth Radius Scaling & Movement Update
+      // Physics Integration: Gravity, Velocity & Drag
       for (let i = 0; i < bubbles.length; i++) {
         const b = bubbles[i]
 
-        // Smoothly adjust bubble radius towards target based on total population & uneven factor
-        b.targetRadius = baseRadius * b.unevenFactor
-        b.radius += (b.targetRadius - b.radius) * 0.07
-
-        // Smooth restitution for squish/stretch
-        b.squishX += (1 - b.squishX) * 0.14
-        b.squishY += (1 - b.squishY) * 0.14
-
-        // Maximum distance from center to bubble center inside bucket
-        const maxDist = Math.max(1, bucketRadius - b.radius)
-
-        // If bubble is being dragged, spring toward pointer position
-        if (drag && drag.bubbleId === b.id) {
-          b.x += (drag.targetX - b.x) * 0.75
-          b.y += (drag.targetY - b.y) * 0.75
-          b.vx = 0
-          b.vy = 0
-
-          // Strictly clamp dragged bubble inside bucket boundary
-          const dragDx = b.x - cx
-          const dragDy = b.y - cy
-          const dragDist = Math.sqrt(dragDx * dragDx + dragDy * dragDy)
-          if (dragDist > maxDist && dragDist > 0) {
-            b.x = cx + (dragDx / dragDist) * maxDist
-            b.y = cy + (dragDy / dragDist) * maxDist
-          }
+        if (b.isDragging && drag && drag.bubbleId === b.id) {
+          b.vx = (drag.targetX - b.x) * 0.4
+          b.vy = (drag.targetY - b.y) * 0.4
+          b.x = drag.targetX
+          b.y = drag.targetY
         } else {
-          // Normal physics: apply gravity and velocity
-          b.vy += gravity
-          b.vx *= damping
-          b.vy *= damping
-
-          // Brownian gentle float
-          b.vx += (Math.random() - 0.5) * 0.06
-          b.vy += (Math.random() - 0.5) * 0.03
-
-          // Velocity clamp to avoid physics tunneling through circle
-          const speed = Math.sqrt(b.vx * b.vx + b.vy * b.vy)
-          if (speed > 16) {
-            b.vx = (b.vx / speed) * 16
-            b.vy = (b.vy / speed) * 16
-          }
-
+          b.vy += GRAVITY
+          b.vx *= FRICTION
+          b.vy *= FRICTION
           b.x += b.vx
           b.y += b.vy
         }
 
-        // Absolute 360-degree Circular Bucket Containment & Bouncing (Balls NEVER leave the bucket)
+        // Circular Boundary Collision with Floor/Wall Response
         const dx = b.x - cx
         const dy = b.y - cy
         const dist = Math.sqrt(dx * dx + dy * dy)
+        const maxDist = bucketRadius - b.radius
 
         if (dist > maxDist && dist > 0) {
-          const normalX = dx / dist
-          const normalY = dy / dist
+          const nx = dx / dist
+          const ny = dy / dist
 
-          // Clamp firmly inside bucket boundary
-          b.x = cx + normalX * maxDist
-          b.y = cy + normalY * maxDist
+          b.x = cx + nx * maxDist
+          b.y = cy + ny * maxDist
 
-          const normalVelocity = b.vx * normalX + b.vy * normalY
-          if (normalVelocity > 0) {
-            b.vx -= (1 + wallBounce) * normalVelocity * normalX
-            b.vy -= (1 + wallBounce) * normalVelocity * normalY
+          const dot = b.vx * nx + b.vy * ny
+          if (dot > 0) {
+            b.vx = (b.vx - 2 * dot * nx) * DAMPING
+            b.vy = (b.vy - 2 * dot * ny) * DAMPING
 
-            // Dynamic squish on wall collision
-            if (normalVelocity > 2.5) {
-              b.squishX = 1.15
-              b.squishY = 0.85
+            const impactSpeed = Math.abs(dot)
+            if (impactSpeed > 1.2) {
+              b.squishX = Math.max(0.75, 1 - impactSpeed * 0.04)
+              b.squishY = Math.min(1.35, 1 + impactSpeed * 0.04)
             }
           }
         }
       }
 
-      // 3. Bubble-to-Bubble Elastic Collision Resolution
+      // Ball-to-Ball Elastic Collisions
       for (let i = 0; i < bubbles.length; i++) {
         for (let j = i + 1; j < bubbles.length; j++) {
           const b1 = bubbles[i]
@@ -556,42 +482,39 @@ export function CircleBucket() {
           const dist = Math.sqrt(dx * dx + dy * dy)
           const minDist = b1.radius + b2.radius
 
-          if (dist < minDist && dist > 0.001) {
-            const overlap = (minDist - dist) * 0.5
+          if (dist < minDist && dist > 0) {
+            const overlap = (minDist - dist) / 2
             const nx = dx / dist
             const ny = dy / dist
 
-            // Separate overlapping balls
-            if (!b1.isDragging && !b2.isDragging) {
+            if (!b1.isDragging) {
               b1.x -= nx * overlap
               b1.y -= ny * overlap
+            }
+            if (!b2.isDragging) {
               b2.x += nx * overlap
               b2.y += ny * overlap
-            } else if (b1.isDragging) {
-              b2.x += nx * overlap * 2
-              b2.y += ny * overlap * 2
-            } else if (b2.isDragging) {
-              b1.x -= nx * overlap * 2
-              b1.y -= ny * overlap * 2
             }
 
-            // Elastic velocity transfer (ball-pit scatter)
             const kx = b1.vx - b2.vx
             const ky = b1.vy - b2.vy
-            const p = nx * kx + ny * ky
+            const p = 2 * (nx * kx + ny * ky) / 2
 
             if (p > 0) {
-              const impulse = p * 0.82
-              b1.vx -= impulse * nx
-              b1.vy -= impulse * ny
-              b2.vx += impulse * nx
-              b2.vy += impulse * ny
+              if (!b1.isDragging) {
+                b1.vx -= p * nx * DAMPING
+                b1.vy -= p * ny * DAMPING
+              }
+              if (!b2.isDragging) {
+                b2.vx += p * nx * DAMPING
+                b2.vy += p * ny * DAMPING
+              }
             }
           }
         }
       }
 
-      // 4. Render All Bubbles with Specular Reflection & Tactile Highlights (Clipped inside circular bucket)
+      // Render All Bubbles with Circular Clipping
       ctx.save()
       ctx.beginPath()
       ctx.arc(cx, cy, bucketRadius, 0, Math.PI * 2)
@@ -599,7 +522,6 @@ export function CircleBucket() {
 
       for (let i = 0; i < bubbles.length; i++) {
         const b = bubbles[i]
-        if (isUserAdmin(b.name, b.id)) continue
 
         ctx.save()
         ctx.translate(b.x, b.y)
@@ -608,81 +530,74 @@ export function CircleBucket() {
         // Drop shadow for tactile 3D ball sensation
         ctx.save()
         ctx.beginPath()
-        ctx.arc(0, 0, b.radius, 0, Math.PI * 2)
-        ctx.shadowColor = b.isDragging ? 'rgba(26, 115, 232, 0.4)' : 'rgba(60, 64, 67, 0.18)'
-        ctx.shadowBlur = b.isDragging ? 12 : 6
-        ctx.shadowOffsetY = b.isDragging ? 4 : 2
-        ctx.fillStyle = '#FFFFFF'
+        ctx.arc(1.5, 3.5, b.radius, 0, Math.PI * 2)
+        ctx.fillStyle = 'rgba(32, 33, 36, 0.12)'
         ctx.fill()
         ctx.restore()
 
-        // Clip avatar within circular profile ball
-        ctx.save()
+        // Ball body fill
         ctx.beginPath()
-        ctx.arc(0, 0, b.radius - 2, 0, Math.PI * 2)
-        ctx.clip()
+        ctx.arc(0, 0, b.radius, 0, Math.PI * 2)
+        ctx.fillStyle = b.color
+        ctx.fill()
 
-        if (b.imageObj && b.imageObj.complete && b.imageObj.naturalWidth !== 0) {
-          ctx.drawImage(
-            b.imageObj,
-            -b.radius + 2,
-            -b.radius + 2,
-            (b.radius - 2) * 2,
-            (b.radius - 2) * 2
-          )
+        // 3D Spherical Specular Highlight
+        const specGrad = ctx.createRadialGradient(
+          -b.radius * 0.35,
+          -b.radius * 0.35,
+          1,
+          0,
+          0,
+          b.radius
+        )
+        specGrad.addColorStop(0, 'rgba(255, 255, 255, 0.55)')
+        specGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.1)')
+        specGrad.addColorStop(1, 'rgba(0, 0, 0, 0.18)')
+        ctx.fillStyle = specGrad
+        ctx.fill()
+
+        // Avatar Image or Clean Initials Fallback
+        if (b.avatar && b.imageObj && b.imageObj.complete && b.imageObj.naturalWidth > 0) {
+          ctx.save()
+          ctx.beginPath()
+          ctx.arc(0, 0, b.radius - 2.5, 0, Math.PI * 2)
+          ctx.clip()
+          try {
+            ctx.drawImage(
+              b.imageObj,
+              -b.radius + 2.5,
+              -b.radius + 2.5,
+              (b.radius - 2.5) * 2,
+              (b.radius - 2.5) * 2
+            )
+          } catch {}
+          ctx.restore()
         } else {
-          const bgGrad = ctx.createLinearGradient(-b.radius, -b.radius, b.radius, b.radius)
-          if (b.isUser) {
-            bgGrad.addColorStop(0, '#4285F4')
-            bgGrad.addColorStop(1, '#1A73E8')
-          } else {
-            bgGrad.addColorStop(0, b.color)
-            bgGrad.addColorStop(1, b.color)
-          }
-          ctx.fillStyle = bgGrad
-          ctx.fillRect(-b.radius, -b.radius, b.radius * 2, b.radius * 2)
+          // Initials badge
+          const initials = b.name
+            .split(' ')
+            .map((n) => n[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2)
+          ctx.font = `bold ${Math.max(10, Math.floor(b.radius * 0.72))}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`
           ctx.fillStyle = '#FFFFFF'
-          ctx.font = `bold ${Math.max(10, Math.round(b.radius * 0.72))}px sans-serif`
           ctx.textAlign = 'center'
           ctx.textBaseline = 'middle'
-          ctx.fillText(b.name.charAt(0).toUpperCase(), 0, 1)
-        }
-        ctx.restore()
-
-        // Border ring
-        ctx.beginPath()
-        ctx.arc(0, 0, b.radius - 1, 0, Math.PI * 2)
-        ctx.lineWidth = b.isUser ? 3 : 2
-        ctx.strokeStyle = b.isUser ? '#1A73E8' : b.color
-        ctx.stroke()
-
-        // 3D Glass Specular Crescent Reflection
-        ctx.beginPath()
-        ctx.ellipse(-b.radius * 0.28, -b.radius * 0.32, b.radius * 0.36, b.radius * 0.18, -Math.PI / 4, 0, Math.PI * 2)
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
-        ctx.fill()
-
-        // Dragging halo indicator
-        if (b.isDragging) {
-          ctx.beginPath()
-          ctx.arc(0, 0, b.radius + 4, 0, Math.PI * 2)
-          ctx.lineWidth = 2
-          ctx.strokeStyle = '#1A73E8'
-          ctx.setLineDash([4, 3])
-          ctx.stroke()
-          ctx.setLineDash([])
+          ctx.fillText(initials, 0, 0.5)
         }
 
-        // Green Online Status Badge for Authenticated User
+        // Distinctive User Glowing Ring if it's the current user
         if (b.isUser) {
           ctx.beginPath()
-          ctx.arc(0, 0, b.radius + 3, 0, Math.PI * 2)
-          ctx.lineWidth = 1.5
-          ctx.strokeStyle = 'rgba(26, 115, 232, 0.45)'
+          ctx.arc(0, 0, b.radius + 2.5, 0, Math.PI * 2)
+          ctx.lineWidth = 2.5
+          ctx.strokeStyle = '#1A73E8'
           ctx.stroke()
 
+          // Active indicator dot on current user's ball
           ctx.beginPath()
-          ctx.arc(b.radius - 5, -b.radius + 5, 5, 0, Math.PI * 2)
+          ctx.arc(b.radius - 4, -b.radius + 4, 4.5, 0, Math.PI * 2)
           ctx.fillStyle = '#34A853'
           ctx.fill()
           ctx.lineWidth = 1.5
@@ -709,7 +624,7 @@ export function CircleBucket() {
   return (
     <div className="relative flex flex-col items-center">
       {/* Bucket Heading & Counter Pill */}
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mb-3 max-w-full px-2">
         {/* Active Count Pill */}
         <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1 text-xs font-semibold text-[#3C4043] border border-[#DADCE0] shadow-2xs">
           <span
@@ -731,15 +646,27 @@ export function CircleBucket() {
           </button>
         )}
 
-        {/* WebSocket Realtime Indicator */}
-        <span
-          title={connected ? 'WebSocket connected' : 'Local sync mode'}
-          className={`flex h-7 w-7 items-center justify-center rounded-full border border-[#DADCE0] bg-white transition-colors ${
-            connected ? 'text-[#34A853]' : 'text-[#80868B]'
+        {/* Socket Connection Status Pill */}
+        <button
+          type="button"
+          onClick={reconnect}
+          title={connected ? 'Realtime WebSocket Connected' : 'Disconnected. Click to Reconnect'}
+          className={`inline-flex items-center gap-1.5 rounded-full border border-[#DADCE0] bg-white px-3 py-1 text-[11px] font-semibold transition-all active:scale-95 ${
+            connected ? 'text-[#137333] hover:bg-[#E6F4EA]' : 'text-[#C5221F] bg-[#FCE8E6]/60 hover:bg-[#FCE8E6]'
           }`}
         >
-          {connected ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
-        </span>
+          {connected ? (
+            <>
+              <Wifi className="h-3 w-3 text-[#34A853]" />
+              <span className="hidden xs:inline">Live Connected</span>
+            </>
+          ) : (
+            <>
+              <WifiOff className="h-3 w-3 text-[#EA4335]" />
+              <span>Tap to Reconnect</span>
+            </>
+          )}
+        </button>
       </div>
 
       {/* Live Arrival Notification Toast */}
@@ -752,7 +679,7 @@ export function CircleBucket() {
       {/* Circular Bucket Visual Container with Ambient Google Glow */}
       <div
         ref={containerRef}
-        className="relative mx-auto aspect-square w-full max-w-[320px] sm:max-w-[340px]"
+        className="relative mx-auto aspect-square w-full max-w-[300px] xs:max-w-[320px] sm:max-w-[340px]"
       >
         {/* Ambient Google Aurora Glow */}
         <div className="pointer-events-none absolute -inset-3 rounded-full bg-gradient-to-tr from-[#4285F4]/25 via-[#FBBC04]/20 to-[#34A853]/25 blur-xl animate-aurora" />
@@ -771,7 +698,7 @@ export function CircleBucket() {
         </div>
 
         {/* Floating Tooltip Pill following dragged/tapped ball */}
-        {activeTooltip && !isUserAdmin(activeTooltip.name) && (
+        {activeTooltip && (
           <div
             className="pointer-events-none absolute -translate-x-1/2 -translate-y-9 rounded-full bg-[#202124] px-3 py-1 text-[11px] font-medium text-white shadow-lg transition-all animate-in zoom-in-90"
             style={{
@@ -786,4 +713,3 @@ export function CircleBucket() {
     </div>
   )
 }
-
