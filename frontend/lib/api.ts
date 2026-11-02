@@ -62,6 +62,7 @@ export interface ParticipantSession {
   slug?: string
   eventTitle?: string
   userId?: string
+  userEmail?: string
   userName: string
   avatar?: string
   userAvatar?: string
@@ -483,9 +484,19 @@ export const api = {
     }
   },
 
-  saveParticipantSession(slug: string, session: ParticipantSession): void {
+  saveParticipantSession(slug: string, session: ParticipantSession, userKey?: string): void {
     if (typeof window !== 'undefined') {
+      const uKey =
+        userKey ||
+        session.userId ||
+        session.userEmail ||
+        (session.userName ? session.userName.toLowerCase().replace(/\s+/g, '_') : 'guest')
+
+      // Save user-specific unique session receipt
+      localStorage.setItem(`gdg_user_session_${slug}_${uKey}`, JSON.stringify(session))
+      // Also update generic active session with ownership tags
       localStorage.setItem(`gdg_user_session_${slug}`, JSON.stringify(session))
+
       const allKey = `gdg_all_sessions_${slug}`
       const existingStr = localStorage.getItem(allKey)
       let all: ParticipantSession[] = []
@@ -494,14 +505,48 @@ export const api = {
           all = JSON.parse(existingStr)
         } catch {}
       }
-      all = all.filter((s) => s.sessionId !== session.sessionId)
+      all = all.filter(
+        (s) =>
+          s.sessionId !== session.sessionId &&
+          (session.userId && s.userId ? s.userId !== session.userId : true) &&
+          (session.userEmail && s.userEmail ? s.userEmail !== session.userEmail : true)
+      )
       all.push(session)
       localStorage.setItem(allKey, JSON.stringify(all))
     }
   },
 
-  getParticipantSession(slug: string): ParticipantSession | null {
+  getParticipantSession(slug: string, userKey?: string): ParticipantSession | null {
     if (typeof window !== 'undefined') {
+      // 1. If a specific userKey is requested (user._id or user.email)
+      if (userKey) {
+        const userSpecific = localStorage.getItem(`gdg_user_session_${slug}_${userKey}`)
+        if (userSpecific) {
+          try {
+            return JSON.parse(userSpecific)
+          } catch {}
+        }
+
+        // Check if legacy gdg_user_session_${slug} matches this user
+        const stored = localStorage.getItem(`gdg_user_session_${slug}`)
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored) as ParticipantSession
+            const matches =
+              (parsed.userId && parsed.userId === userKey) ||
+              (parsed.userEmail && parsed.userEmail === userKey) ||
+              (parsed.userName && parsed.userName.toLowerCase().replace(/\s+/g, '_') === userKey)
+            if (matches) {
+              return parsed
+            }
+          } catch {}
+        }
+
+        // Different user! Do NOT return another user's session!
+        return null
+      }
+
+      // 2. If no userKey provided, check legacy key
       const stored = localStorage.getItem(`gdg_user_session_${slug}`)
       if (stored) {
         try {
@@ -510,6 +555,21 @@ export const api = {
       }
     }
     return null
+  },
+
+  clearParticipantSession(slug: string, userKey?: string): void {
+    if (typeof window !== 'undefined') {
+      if (userKey) {
+        localStorage.removeItem(`gdg_user_session_${slug}_${userKey}`)
+      }
+      localStorage.removeItem(`gdg_user_session_${slug}`)
+      localStorage.removeItem(`gdg_active_session_${slug}`)
+      localStorage.removeItem(`gdg_quiz_attempt_${slug}`)
+      if (slug === 'wend-game') {
+        localStorage.removeItem('gdg_user_session_wend-game')
+        localStorage.removeItem('gdg_wend_session')
+      }
+    }
   },
 
   getAllSessionsForSlug(slug: string): ParticipantSession[] {

@@ -46,8 +46,8 @@ function formatTimer(totalSecs: number): string {
 }
 
 export default function WendGamePage() {
-  const { user } = useAuth()
-  const { gameLockStates, subscribeToLeaderboardReset, sendSubmitAttempt } = useWebSocket()
+  const { user, loading: authLoading } = useAuth()
+  const { gameLockStates, subscribeToLeaderboardReset, sendSubmitAttempt, currentSessionId } = useWebSocket()
   const isLocked = gameLockStates['wend-game']?.isLocked ?? false
 
   const startTimeRef = useRef<number | null>(null)
@@ -62,9 +62,27 @@ export default function WendGamePage() {
   const [hintClue, setHintClue] = useState<string | null>(null)
   const [shakeInvalid, setShakeInvalid] = useState(false)
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'info' | 'error' } | null>(null)
-  const [completedSession, setCompletedSession] = useState<ParticipantSession | null>(() =>
-    api.getParticipantSession('wend-game')
-  )
+  const [completedSession, setCompletedSession] = useState<ParticipantSession | null>(null)
+
+  // Reactively verify that completedSession belongs to the current logged-in user (not another account)
+  useEffect(() => {
+    if (authLoading) return // Wait for auth resolution
+    const timer = setTimeout(() => {
+      const userIdentifier = user?._id || user?.email || (currentSessionId ? `guest_${currentSessionId}` : 'guest')
+      const existing = api.getParticipantSession('wend-game', userIdentifier)
+
+      if (existing) {
+        const isMine =
+          (user?._id && existing.userId === user._id) ||
+          (user?.email && existing.userEmail === user.email) ||
+          (!user && existing.sessionId?.includes(currentSessionId))
+        setCompletedSession(isMine ? existing : null)
+      } else {
+        setCompletedSession(null)
+      }
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [user, authLoading, currentSessionId])
 
   const showToast = useCallback((text: string, type: 'success' | 'info' | 'error' = 'info') => {
     setToastMessage({ text, type })
@@ -95,11 +113,13 @@ export default function WendGamePage() {
     api.recordLocalAttempt('wend-game', attemptEntry)
     sendSubmitAttempt('wend-game', attemptEntry)
 
+    const userKey = user?._id || user?.email || (currentSessionId ? `guest_${currentSessionId}` : 'guest')
     const sessionData: ParticipantSession = {
       sessionId: `sess_wend_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       eventSlug: 'wend-game',
       eventTitle: board.title || 'Wend Word Puzzle Arena',
       userId: user?._id,
+      userEmail: user?.email,
       userName: user?.name || 'Community Participant',
       userAvatar: user?.avatar,
       totalItems: foundWordIds.size,
@@ -109,10 +129,10 @@ export default function WendGamePage() {
       internalScore: totalPoints,
     }
 
-    api.saveParticipantSession('wend-game', sessionData)
+    api.saveParticipantSession('wend-game', sessionData, userKey)
     setCompletedSession(sessionData)
     showToast(`Time's up! You discovered ${foundWordIds.size} / ${board.targetWords.length} words.`, 'info')
-  }, [allocatedTimeSeconds, board, foundWordIds, sendSubmitAttempt, user])
+  }, [allocatedTimeSeconds, board, currentSessionId, foundWordIds, sendSubmitAttempt, user])
 
   // Countdown timer honoring time set by admin
   useEffect(() => {
@@ -245,11 +265,13 @@ export default function WendGamePage() {
           api.recordLocalAttempt('wend-game', attemptEntry)
           sendSubmitAttempt('wend-game', attemptEntry)
 
+          const userKey = user?._id || user?.email || (currentSessionId ? `guest_${currentSessionId}` : 'guest')
           const sessionData: ParticipantSession = {
             sessionId: `sess_wend_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
             eventSlug: 'wend-game',
             eventTitle: board.title || 'Wend Word Puzzle Arena',
             userId: user?._id,
+            userEmail: user?.email,
             userName: user?.name || 'Community Participant',
             userAvatar: user?.avatar,
             totalItems: board.targetWords.length,
@@ -259,7 +281,7 @@ export default function WendGamePage() {
             internalScore: totalPoints,
           }
 
-          api.saveParticipantSession('wend-game', sessionData)
+          api.saveParticipantSession('wend-game', sessionData, userKey)
           setCompletedSession(sessionData)
           showToast('Grand Puzzle Completed! Responses submitted.', 'success')
         }
@@ -271,7 +293,7 @@ export default function WendGamePage() {
 
       setCurrentWord('')
     },
-    [board, foundWordIds, sendSubmitAttempt, user]
+    [board, currentSessionId, foundWordIds, sendSubmitAttempt, user]
   )
 
   // Undo button handler
@@ -305,6 +327,8 @@ export default function WendGamePage() {
 
   // Reset / Play Again
   const handlePlayAgain = () => {
+    const userKey = user?._id || user?.email || (currentSessionId ? `guest_${currentSessionId}` : 'guest')
+    api.clearParticipantSession('wend-game', userKey)
     setCompletedSession(null)
     setFoundWordIds(new Set())
     setDiscoveredWords([])
@@ -313,9 +337,6 @@ export default function WendGamePage() {
     setBoard(freshBoard)
     setTimeLeft(freshBoard.timeLimitSeconds || 120)
     startTimeRef.current = Date.now()
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('gdg_user_session_wend-game')
-    }
   }
 
   const wordColorMap = React.useMemo(() => {

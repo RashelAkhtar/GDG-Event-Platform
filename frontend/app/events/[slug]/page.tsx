@@ -39,8 +39,8 @@ function formatDuration(ms: number): string {
 function QuizRunnerContent() {
   const params = useParams()
   const slug = (params?.slug as string) || 'web-dev-quiz'
-  const { user } = useAuth()
-  const { subscribeToLeaderboardReset, sendSubmitAttempt } = useWebSocket()
+  const { user, loading: authLoading } = useAuth()
+  const { currentSessionId, subscribeToLeaderboardReset, sendSubmitAttempt } = useWebSocket()
   const startTimeRef = useRef<number | null>(null)
 
   const [event, setEvent] = useState<GdgEvent | null>(null)
@@ -49,9 +49,27 @@ function QuizRunnerContent() {
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({})
   const [timeLeft, setTimeLeft] = useState<number>(30)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [completedSession, setCompletedSession] = useState<ParticipantSession | null>(() =>
-    api.getParticipantSession(slug)
-  )
+  const [completedSession, setCompletedSession] = useState<ParticipantSession | null>(null)
+
+  // Reactively verify that completedSession belongs to the current logged-in user
+  useEffect(() => {
+    if (authLoading) return
+    const timer = setTimeout(() => {
+      const userIdentifier = user?._id || user?.email || (currentSessionId ? `guest_${currentSessionId}` : 'guest')
+      const existing = api.getParticipantSession(slug, userIdentifier)
+
+      if (existing) {
+        const isMine =
+          (user?._id && existing.userId === user._id) ||
+          (user?.email && existing.userEmail === user.email) ||
+          (!user && existing.sessionId?.includes(currentSessionId))
+        setCompletedSession(isMine ? existing : null)
+      } else {
+        setCompletedSession(null)
+      }
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [user, authLoading, slug, currentSessionId])
   const [loading, setLoading] = useState(true)
 
   // Listen for admin leaderboard resets so user can replay in real time
@@ -70,15 +88,13 @@ function QuizRunnerContent() {
   }, [slug, subscribeToLeaderboardReset])
 
   const handlePlayAgain = () => {
+    const userKey = user?._id || user?.email || (currentSessionId ? `guest_${currentSessionId}` : 'guest')
+    api.clearParticipantSession(slug, userKey)
     setCompletedSession(null)
     setCurrentIndex(0)
     setSelectedAnswers({})
     setTimeLeft(30)
     startTimeRef.current = Date.now()
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(`gdg_user_session_${slug}`)
-      localStorage.removeItem(`gdg_active_session_${slug}`)
-    }
   }
 
   // Load event & questions
@@ -158,11 +174,13 @@ function QuizRunnerContent() {
         })
       } catch {}
 
+      const userKey = user?._id || user?.email || (currentSessionId ? `guest_${currentSessionId}` : 'guest')
       const sessionData: ParticipantSession = {
         sessionId: `sess_${Date.now()}_${user?._id || 'guest'}`,
         eventSlug: slug,
         eventTitle: event?.title || 'Quiz Session',
         userId: user?._id,
+        userEmail: user?.email,
         userName: user?.name || 'Community Participant',
         avatar: user?.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${user?.name || 'Participant'}`,
         totalItems: questions.length,
@@ -172,12 +190,12 @@ function QuizRunnerContent() {
         internalScore: score,
         internalCorrectCount: correct,
       }
-      api.saveParticipantSession(slug, sessionData)
+      api.saveParticipantSession(slug, sessionData, userKey)
       setCompletedSession(sessionData)
     } finally {
       setIsSubmitting(false)
     }
-  }, [event, questions, selectedAnswers, sendSubmitAttempt, slug, user])
+  }, [currentSessionId, event, questions, selectedAnswers, sendSubmitAttempt, slug, user])
 
   // Question Timer Countdown
   useEffect(() => {
