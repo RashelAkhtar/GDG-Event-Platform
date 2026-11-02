@@ -3,17 +3,18 @@
 import React from 'react'
 
 export interface AnimatedLockToggleProps {
-  id: string
+  id?: string
   /**
-   * Controlled checked state:
-   * When true: Green (#20cca5) with locked shackle + sparkle rays
-   * When false: Red (#ff5b5b) with open shackle
+   * Status: true when the challenge arena is LIVE (unlocked), false when LOCKED.
+   * Can also be controlled via checked, isLive, or isLocked.
    */
-  checked: boolean
-  onChange?: (nextChecked: boolean) => void
+  checked?: boolean
+  isLive?: boolean
+  isLocked?: boolean
+  onChange?: (nextLive: boolean) => void
   disabled?: boolean
   isAdmin?: boolean
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'sm' | 'md' | 'lg' | 'xl'
   title?: string
   className?: string
   showBadge?: boolean
@@ -22,102 +23,187 @@ export interface AnimatedLockToggleProps {
 }
 
 export function AnimatedLockToggle({
-  id,
+  id = 'lock-toggle',
   checked,
+  isLive,
+  isLocked,
   onChange,
   disabled = false,
   isAdmin = true,
-  size = 'md',
+  size = 'lg',
   title,
   className = '',
   showBadge = false,
   badgeLiveText = 'Live Now',
   badgeLockedText = 'Locked',
 }: AnimatedLockToggleProps) {
-  const sizeStyles = {
-    sm: 'scale-[0.72]',
-    md: 'scale-100',
-    lg: 'scale-[1.25]',
+  // Canonical live state (true = Live & Unlocked, false = Locked)
+  const live =
+    isLive !== undefined
+      ? isLive
+      : isLocked !== undefined
+      ? !isLocked
+      : (checked ?? false)
+
+  const sizeConfig = {
+    sm: { box: 'h-10 w-10', svg: 26 },
+    md: { box: 'h-12 w-12', svg: 32 },
+    lg: { box: 'h-16 w-16', svg: 42 },
+    xl: { box: 'h-20 w-20', svg: 50 },
   }
+
+  const currentSize = sizeConfig[size] || sizeConfig.lg
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     if (!isAdmin || disabled) return
     if (onChange) {
-      onChange(!checked)
+      onChange(!live)
     }
   }
 
+  const tooltipText =
+    title ||
+    (isAdmin
+      ? live
+        ? 'Click to switch to LOCKED'
+        : 'Click to switch to UNLOCKED & GO LIVE'
+      : live
+      ? 'Arena Status: LIVE & Accepting Submissions'
+      : 'Arena Status: LOCKED by Host')
+
   return (
-    <div className={`inline-flex flex-col items-center gap-2 ${className}`}>
-      <div className={`relative ${sizeStyles[size]} origin-center transition-transform`}>
-        <input
-          id={id}
-          type="checkbox"
-          className="inp-lock"
-          checked={checked}
-          disabled={disabled || !isAdmin}
-          onChange={(e) => {
-            if (!isAdmin || disabled) return
-            if (onChange) onChange(e.target.checked)
-          }}
-        />
-        <label
-          htmlFor={isAdmin && !disabled ? id : undefined}
-          onClick={handleClick}
-          title={
-            title ||
-            (isAdmin
-              ? checked
-                ? 'Click to switch lock'
-                : 'Click to switch lock'
-              : checked
-              ? 'Status: Active'
-              : 'Status: Locked')
-          }
-          className={`btn-lock ${!isAdmin || disabled ? 'btn-lock-readonly' : ''}`}
+    <div className={`inline-flex flex-col items-center gap-2 select-none ${className}`}>
+      <button
+        type="button"
+        id={id}
+        onClick={handleClick}
+        disabled={disabled || !isAdmin}
+        title={tooltipText}
+        aria-label={live ? 'Challenge Arena Live (Click to Lock)' : 'Challenge Arena Locked (Click to Unlock)'}
+        aria-pressed={live}
+        className={`relative flex items-center justify-center transition-all duration-300 ${currentSize.box} ${
+          live
+            ? 'bg-[#1E8E3E] border border-[#34A853]/60 shadow-[0_4px_16px_rgba(30,142,62,0.35)]'
+            : 'bg-[#EA4335] border border-[#D93025]/60 shadow-[0_4px_16px_rgba(234,67,53,0.35)]'
+        } ${
+          isAdmin && !disabled
+            ? 'cursor-pointer hover:scale-105 active:scale-95 hover:shadow-lg'
+            : 'cursor-default'
+        }`}
+      >
+        <svg
+          width={currentSize.svg}
+          height={currentSize.svg}
+          viewBox="0 0 44 44"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="overflow-visible block"
+          aria-hidden="true"
         >
-          <svg
-            width="36"
-            height="36"
-            viewBox="-6 0 40 40"
-            className="overflow-visible block"
-            aria-hidden="true"
-          >
-            {/* Padlock Base Body */}
-            <path
-              className="lockb"
-              d="M27 27C27 34.1797 21.1797 40 14 40C6.8203 40 1 34.1797 1 27C1 19.8203 6.8203 14 14 14C21.1797 14 27 19.8203 27 27ZM15.6298 26.5191C16.4544 25.9845 17 25.056 17 24C17 22.3431 15.6569 21 14 21C12.3431 21 11 22.3431 11 24C11 25.056 11.5456 25.9845 12.3702 26.5191L11 32H17L15.6298 26.5191Z"
-            />
-            {/* Padlock Animated Shackle */}
-            <path
-              className="lock"
-              d="M6 21V10C6 5.58172 9.58172 2 14 2V2C18.4183 2 22 5.58172 22 10V21"
-            />
-            {/* Bling Sparkle Ray 1 */}
-            <path className="bling" d="M29 20L31 22" />
-            {/* Bling Sparkle Ray 2 */}
-            <path className="bling" d="M31.5 15H34.5" />
-            {/* Bling Sparkle Ray 3 */}
-            <path className="bling" d="M29 10L31 8" />
-          </svg>
-        </label>
-      </div>
+          {live ? (
+            /* ========================================================= */
+            /* UNLOCKED / LIVE STATE: AUTHENTIC OPEN PADLOCK (🔓)        */
+            /* ========================================================= */
+            <g className="transition-all duration-300">
+              {/* Sparkle Energy Rays (Google Green Arena Live) */}
+              <path
+                d="M33 13L37 15"
+                stroke="#FFFFFF"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                className="animate-pulse"
+              />
+              <path
+                d="M35 8H39"
+                stroke="#FFFFFF"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                className="animate-pulse"
+              />
+              <path
+                d="M33 3L36 1"
+                stroke="#FFFFFF"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                className="animate-pulse"
+              />
+
+              {/* Shackle: Visibly UNLATCHED and OPEN (Right leg stops at y=11 above body socket at y=19) */}
+              <path
+                d="M15 19V11C15 7.134 18.134 4 22 4C25.866 4 29 7.134 29 11V12"
+                stroke="#FFFFFF"
+                strokeWidth="3.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+
+              {/* Solid Padlock Body (x: 10 to 34, y: 19 to 37) */}
+              <rect
+                x="10"
+                y="19"
+                width="24"
+                height="18"
+                rx="2"
+                fill="#FFFFFF"
+              />
+
+              {/* Clean Keyhole Cutout (Green contrast) */}
+              <circle cx="22" cy="26" r="2.2" fill="#1E8E3E" />
+              <path
+                d="M20.9 26.5L19.8 32H24.2L23.1 26.5Z"
+                fill="#1E8E3E"
+              />
+            </g>
+          ) : (
+            /* ========================================================= */
+            /* LOCKED STATE: AUTHENTIC 100% CLOSED PADLOCK (🔒)          */
+            /* ========================================================= */
+            <g className="transition-all duration-300">
+              {/* Shackle: Solidly CLOSED into BOTH left (x=15) and right (x=29) sockets at y=19 */}
+              <path
+                d="M15 19V12C15 8.134 18.134 5 22 5C25.866 5 29 8.134 29 12V19"
+                stroke="#FFFFFF"
+                strokeWidth="3.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+
+              {/* Solid Padlock Body (x: 10 to 34, y: 19 to 37) */}
+              <rect
+                x="10"
+                y="19"
+                width="24"
+                height="18"
+                rx="2"
+                fill="#FFFFFF"
+              />
+
+              {/* Clean Keyhole Cutout (Red contrast) */}
+              <circle cx="22" cy="26" r="2.2" fill="#EA4335" />
+              <path
+                d="M20.9 26.5L19.8 32H24.2L23.1 26.5Z"
+                fill="#EA4335"
+              />
+            </g>
+          )}
+        </svg>
+      </button>
 
       {showBadge && (
         <span
-          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-xs font-semibold shadow-2xs transition-colors ${
-            checked
-              ? 'bg-[#E6F4EA] border border-[#34A853]/30 text-[#137333]'
-              : 'bg-[#FCE8E6] border border-[#EA4335]/30 text-[#C5221F]'
+          className={`inline-flex items-center gap-1.5 border px-2.5 py-0.5 font-mono text-xs font-bold transition-colors ${
+            live
+              ? 'bg-[#E6F4EA] border-[#34A853]/40 text-[#137333]'
+              : 'bg-[#FCE8E6] border-[#EA4335]/40 text-[#C5221F]'
           }`}
         >
           <span
-            className={`h-1.5 w-1.5 rounded-full ${
-              checked ? 'bg-[#34A853] animate-pulse' : 'bg-[#EA4335]'
+            className={`h-1.5 w-1.5 ${
+              live ? 'bg-[#34A853] animate-pulse' : 'bg-[#EA4335]'
             }`}
           />
-          <span>{checked ? badgeLiveText : badgeLockedText}</span>
+          <span>{live ? badgeLiveText : badgeLockedText}</span>
         </span>
       )}
     </div>

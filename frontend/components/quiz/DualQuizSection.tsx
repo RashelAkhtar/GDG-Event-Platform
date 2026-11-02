@@ -337,15 +337,60 @@ export function DualQuizSection({
             </div>
           </div>
 
+          {/* Centered Prominent Padlock Pedestal with Concentric Aura */}
+          <div className="relative my-2.5 flex items-center justify-center select-none">
+            {/* Ambient dynamic radial halo behind lock */}
+            <div
+              className={`absolute h-28 w-28 blur-xl transition-all duration-700 pointer-events-none ${
+                isLive
+                  ? 'bg-gradient-to-tr from-[#34A853]/25 via-[#4285F4]/20 to-[#34A853]/25'
+                  : 'bg-gradient-to-tr from-[#EA4335]/25 via-[#FBBC04]/15 to-[#EA4335]/25'
+              }`}
+            />
+
+            {/* Concentric radar wave rings */}
+            <div
+              className={`absolute h-22 w-22 border border-dashed pointer-events-none animate-ripple-1 ${
+                isLive ? 'border-[#34A853]/30' : 'border-[#EA4335]/30'
+              }`}
+            />
+            <div
+              className={`absolute h-26 w-26 border pointer-events-none animate-ripple-2 ${
+                isLive ? 'border-[#4285F4]/20' : 'border-[#FBBC04]/20'
+              }`}
+            />
+
+            {/* Pedestal with authentic AnimatedLockToggle */}
+            <div
+              onClick={(e) => {
+                if (isAdmin) {
+                  e.stopPropagation()
+                  toggleEventLock(event, isLive, setEvent)
+                }
+              }}
+              className="relative z-10 p-2 bg-white/95 border border-[#DADCE0] shadow-xs"
+            >
+              <AnimatedLockToggle
+                id={`arena-lock-${event.slug}`}
+                checked={isLive}
+                isLive={isLive}
+                isAdmin={isAdmin}
+                disabled={isUpdating}
+                onChange={() => toggleEventLock(event, isLive, setEvent)}
+                size="lg"
+              />
+            </div>
+          </div>
+
           {/* Centered Structured Geometric Status Block */}
-          <div className="my-1 flex items-center justify-between border border-[#DADCE0] bg-[#F8F9FA] p-3">
+          <div className="my-1 flex items-center justify-between border border-[#DADCE0] bg-[#F8F9FA] px-3 py-2.5">
             <div className="flex items-center gap-3">
-              <div className={`flex h-11 w-11 shrink-0 items-center justify-center border font-mono ${
+              <div className={`flex h-9 w-9 shrink-0 items-center justify-center border font-mono ${
                 isLive
                   ? 'border-[#34A853] bg-[#1E8E3E] text-white'
                   : 'border-[#EA4335] bg-[#D93025] text-white'
               }`}>
-                {isLive ? <Unlock className="h-5 w-5" /> : <Lock className="h-5 w-5" />}
+                {isLive ? <Unlock className="h-4.5 w-4.5" /> : <Lock className="h-4.5 w-4.5" />}
               </div>
               <div className="text-left">
                 <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#5F6368]">

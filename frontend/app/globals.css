@@ -252,7 +252,7 @@ body {
   stroke-width: 3.5;
   stroke-linejoin: miter;
   stroke-linecap: square;
-  stroke-dasharray: 36;
+  stroke-dasharray: 48; /* LOCKED: Solid fully-closed shackle */
   transition: all 0.3s ease;
 }
 
@@ -260,8 +260,7 @@ body {
   fill: #fff;
   fill-rule: evenodd;
   clip-rule: evenodd;
-  transform: rotate(6deg);
-  transform-origin: 14px 20px;
+  transform: rotate(0);
   transition: all 0.2s ease;
 }
 
@@ -290,13 +289,13 @@ body {
 
 #inpLock:checked + label svg .lock,
 .inp-lock:checked + .btn-lock svg .lock {
-  stroke-dasharray: 48;
+  stroke-dasharray: 36; /* UNLOCKED: Open shackle with clear gap */
   animation: locked 0.25s linear forwards;
 }
 
 #inpLock:checked + label svg .lockb,
 .inp-lock:checked + .btn-lock svg .lockb {
-  transform: rotate(0);
+  transform: rotate(6deg);
 }
 
 @keyframes bling6132 {

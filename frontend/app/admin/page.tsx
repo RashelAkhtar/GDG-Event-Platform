@@ -56,6 +56,7 @@ import {
   EyeOff,
 } from 'lucide-react'
 import { SecurityNotificationBell } from '@/components/security/SecurityNotificationBell'
+import { AnimatedLockToggle } from '@/components/ui/AnimatedLockToggle'
 
 function formatDuration(ms: number): string {
   if (!ms || ms <= 0) return '0s'
@@ -1004,17 +1005,44 @@ function AdminPageContent() {
                         </div>
                       </div>
 
+                      {/* Prominent Center Padlock Toggle with Aura & Radar Waves */}
+                      <div className="relative my-3 flex items-center justify-center select-none">
+                        <div
+                          className={`absolute h-24 w-24 blur-xl transition-all duration-700 pointer-events-none ${
+                            isLive
+                              ? 'bg-gradient-to-tr from-[#34A853]/25 via-[#4285F4]/20 to-[#34A853]/25'
+                              : 'bg-gradient-to-tr from-[#EA4335]/25 via-[#FBBC04]/15 to-[#EA4335]/25'
+                          }`}
+                        />
+                        <div
+                          className={`absolute h-20 w-20 border border-dashed pointer-events-none animate-ripple-1 ${
+                            isLive ? 'border-[#34A853]/30' : 'border-[#EA4335]/30'
+                          }`}
+                        />
+                        <div className="relative z-10 p-2 bg-white/95 border border-[#DADCE0] shadow-xs">
+                          <AnimatedLockToggle
+                            id={`admin-lock-toggle-${slug}`}
+                            checked={isLive}
+                            isLive={isLive}
+                            isAdmin={true}
+                            disabled={isUpdating}
+                            onChange={() => handleToggleDivLock(slug, isLive)}
+                            size="md"
+                          />
+                        </div>
+                      </div>
+
                       {/* Structured Arena Status & Padlock Bar */}
-                      <div className={`my-3.5 flex items-center justify-between border p-3 transition-colors ${
+                      <div className={`my-3 flex items-center justify-between border p-3 transition-colors ${
                         isLive ? 'border-[#34A853]/40 bg-[#F4FBF6]' : 'border-[#DADCE0] bg-[#F8F9FA]'
                       }`}>
                         <div className="flex items-center gap-3">
-                          <div className={`flex h-10 w-10 shrink-0 items-center justify-center border font-mono ${
+                          <div className={`flex h-9 w-9 shrink-0 items-center justify-center border font-mono ${
                             isLive
                               ? 'border-[#34A853] bg-[#1E8E3E] text-white'
                               : 'border-[#EA4335] bg-[#D93025] text-white'
                           }`}>
-                            {isLive ? <Unlock className="h-5 w-5" /> : <Lock className="h-5 w-5" />}
+                            {isLive ? <Unlock className="h-4.5 w-4.5" /> : <Lock className="h-4.5 w-4.5" />}
                           </div>
                           <div>
                             <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#5F6368]">
