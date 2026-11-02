@@ -38,3 +38,13 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+### Production API and authentication
+
+Configure these Vercel environment variables for the Production environment:
+
+- `NEXT_PUBLIC_API_URL=/api/v1`
+- `BACKEND_API_ORIGIN=https://gdg-event-platform.onrender.com`
+- `NEXT_PUBLIC_WS_URL=wss://gdg-event-platform.onrender.com/ws`
+
+The Next.js rewrite proxies API and OAuth callback requests through the frontend origin. On Render, set `CLIENT_URL` and `CLIENT_URLS` to `https://gdg-event-platform-five.vercel.app`, and set `GOOGLE_CALLBACK_URL` to `https://gdg-event-platform-five.vercel.app/api/v1/auth/google/callback`. Register that exact callback URL in the Google OAuth client. This keeps the HTTP-only auth cookie on the frontend site rather than relying on third-party cookies.

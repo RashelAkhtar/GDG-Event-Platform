@@ -46,14 +46,18 @@ const WebSocketContext = createContext<WebSocketContextType>({
   subscribeToUserLeave: () => () => {},
 })
 
-const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000/api/v1'
-const defaultWsUrl = new URL(configuredApiUrl)
-defaultWsUrl.protocol = defaultWsUrl.protocol === 'https:' ? 'wss:' : 'ws:'
-defaultWsUrl.pathname = '/ws'
-defaultWsUrl.search = ''
-defaultWsUrl.hash = ''
+const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1'
+const hasAbsoluteApiUrl =
+  configuredApiUrl.startsWith('http://') || configuredApiUrl.startsWith('https://')
+const defaultWsUrl = hasAbsoluteApiUrl ? new URL(configuredApiUrl) : null
+if (defaultWsUrl) {
+  defaultWsUrl.protocol = defaultWsUrl.protocol === 'https:' ? 'wss:' : 'ws:'
+  defaultWsUrl.pathname = '/ws'
+  defaultWsUrl.search = ''
+  defaultWsUrl.hash = ''
+}
 
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? defaultWsUrl.toString()
+const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? defaultWsUrl?.toString()
 
 export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   const [connected, setConnected] = useState(false)
@@ -196,7 +200,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     let reconnectTimeout: NodeJS.Timeout
 
     const connectWs = () => {
-      if (!isMounted) return
+      if (!isMounted || !WS_URL) return
 
       try {
         socket = new WebSocket(WS_URL)

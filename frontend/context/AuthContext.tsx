@@ -21,7 +21,7 @@ const AuthContext = createContext<AuthContextType>({
   refreshUser: async () => {},
 })
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000/api/v1'
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1'
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -54,7 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const loginWithGoogle = () => {
-    window.location.href = `${API_BASE}/auth/google`
+    window.location.href = new URL(`${API_BASE}/auth/google`, window.location.origin).toString()
   }
 
   const logout = async () => {
