@@ -199,70 +199,76 @@ export function WinnerAnnouncementOverlay() {
       {/* --- STAGE 1: COUNTDOWN FOR 3RD PRIZE --- */}
       {step === 'COUNTDOWN_3RD' && (
         <div className="relative z-10 my-auto flex flex-col items-center text-center">
-          <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-[#E37400]/30 bg-[#FBE9E7]/80 px-4 py-1.5 text-xs font-bold text-[#E37400] shadow-xs backdrop-blur-md animate-float">
-            <Medal className="h-4 w-4 text-[#E37400]" />
+          <span className="mb-4 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-[#EA580C]/40 bg-gradient-to-r from-[#FFEDD5] to-[#FED7AA] px-4 py-1.5 text-xs font-black uppercase tracking-wider text-[#C2410C] shadow-xs backdrop-blur-md animate-float">
+            <Medal className="h-4 w-4 text-[#EA580C]" />
             <span>Bronze Medal • 3rd Prize Reveal</span>
           </span>
-          <h2 className="text-2xl sm:text-3xl font-light tracking-tight text-[#202124]">
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0F172A]">
             Announcing 3rd Place In
           </h2>
 
           {/* Animated Concentric Radar Wave Container */}
           <div className="relative my-8 flex h-48 w-48 items-center justify-center">
-            <div className="absolute inset-0 rounded-full border-2 border-[#E37400] animate-ripple-1 pointer-events-none" />
-            <div className="absolute inset-0 rounded-full border-2 border-[#E37400] animate-ripple-2 pointer-events-none" />
-            <div className="absolute inset-0 rounded-full border-2 border-[#E37400] animate-ripple-3 pointer-events-none" />
+            <div className="absolute inset-0 rounded-full border-2 border-[#EA580C]/60 shadow-[0_0_20px_rgba(234,88,12,0.4)] animate-ripple-1 pointer-events-none" />
+            <div className="absolute inset-0 rounded-full border-2 border-[#F97316]/50 shadow-[0_0_25px_rgba(249,115,22,0.3)] animate-ripple-2 pointer-events-none" />
+            <div className="absolute inset-0 rounded-full border-2 border-[#FB923C]/40 shadow-[0_0_30px_rgba(251,146,60,0.2)] animate-ripple-3 pointer-events-none" />
 
-            <div className="relative flex h-36 w-36 items-center justify-center rounded-full border-4 border-[#E37400] bg-white shadow-2xl">
+            <div className="relative flex h-36 w-36 items-center justify-center rounded-full border-[3px] border-[#EA580C]/50 bg-white/95 shadow-2xl ring-8 ring-[#EA580C]/15 backdrop-blur-md">
               <span
                 key={countdown}
-                className="text-7xl font-black text-[#E37400] select-none animate-count-pop"
+                className="text-7xl font-black bg-gradient-to-br from-[#EA580C] to-[#C2410C] bg-clip-text text-transparent select-none animate-count-pop drop-shadow-sm"
               >
                 {countdown}
               </span>
             </div>
           </div>
-          <p className="text-xs font-medium text-[#5F6368]">Hold your breath for the bronze podium place...</p>
+          <p className="text-xs font-semibold text-[#64748B]">Hold your breath for the bronze podium place...</p>
         </div>
       )}
 
       {/* --- STAGE 2: 3RD PRIZE WINNER REVEAL --- */}
       {step === 'REVEAL_3RD' && third && (
         <div className="relative z-10 my-auto flex w-full max-w-sm flex-col items-center rounded-[32px] p-8 text-center card-bronze animate-in zoom-in-90 duration-500">
-          <div className="relative mb-5 flex flex-col items-center">
-            <div className="absolute -top-12 flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#E37400] to-[#FF8F00] px-5 py-1.5 text-xs font-bold text-white shadow-lg animate-float">
-              <Medal className="h-4 w-4 text-white" />
-              <span>3rd Prize Winner</span>
-            </div>
+          {/* Top Banner - Non-wrapping */}
+          <div className="absolute -top-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 whitespace-nowrap rounded-full bg-gradient-to-r from-[#EA580C] to-[#F97316] px-5 py-1.5 text-xs font-black uppercase tracking-wider text-white shadow-lg ring-2 ring-white/80 animate-float">
+            <Medal className="h-4 w-4 text-white" />
+            <span>3rd Prize Winner</span>
+          </div>
+
+          <div className="relative mt-2 mb-4 flex flex-col items-center">
             <div className="relative">
-              <img
-                src={third.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=3rd'}
-                alt={third.name}
-                className="h-28 w-28 rounded-full border-4 border-[#E37400] object-cover shadow-xl ring-8 ring-[#E37400]/25"
-              />
-              <span className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-[#E37400] text-sm font-black text-white shadow-md">
+              <div className="relative p-1 rounded-full bg-gradient-to-tr from-[#EA580C] to-[#FB923C] shadow-xl">
+                <img
+                  src={third.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=3rd'}
+                  alt={third.name}
+                  className="h-28 w-28 rounded-full bg-white object-cover"
+                />
+              </div>
+              <span className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#EA580C] to-[#C2410C] text-sm font-black text-white shadow-md ring-2 ring-white">
                 3
               </span>
             </div>
           </div>
-          <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#202124]">{third.name}</h3>
+
+          <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0F172A]">{third.name}</h3>
+
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E37400]/15 border border-[#E37400]/30 px-3.5 py-1 text-xs font-bold text-[#E37400]">
-              <Award className="h-3.5 w-3.5 text-[#E37400]" />
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EA580C]/15 border border-[#EA580C]/35 px-3.5 py-1 text-xs font-black text-[#9A3412] shadow-xs">
+              <Award className="h-3.5 w-3.5 text-[#EA580C]" />
               <span>{third.score} pts</span>
             </span>
-            <span className="flex items-center gap-1 rounded-full bg-white/90 border border-[#DADCE0] px-3 py-1 text-xs font-semibold text-[#137333] shadow-2xs">
-              <Clock className="h-3 w-3" />
-              {formatDuration(third.durationMs)}
+            <span className="flex items-center gap-1 rounded-full bg-white/90 border border-slate-200 px-3 py-1 text-xs font-semibold text-emerald-800 shadow-2xs">
+              <Clock className="h-3 w-3 text-emerald-600" />
+              <span>{formatDuration(third.durationMs)}</span>
             </span>
             {third.tieBrokenByTime && (
-              <span className="flex items-center gap-1 rounded-full bg-[#FEF7E0] border border-[#FBBC04]/40 px-2.5 py-0.5 text-[10px] font-bold text-[#B06000]">
-                <Zap className="h-2.5 w-2.5 text-[#FBBC04]" />
+              <span className="flex items-center gap-1 rounded-full bg-amber-50 border border-amber-300 px-2.5 py-0.5 text-[10px] font-black text-amber-900 shadow-xs">
+                <Zap className="h-2.5 w-2.5 text-amber-600" />
                 <span>Tie-Break by Speed</span>
               </span>
             )}
           </div>
-          <p className="mt-6 text-xs font-medium text-[#5F6368] animate-pulse">
+          <p className="mt-6 text-xs font-medium text-[#64748B] animate-pulse">
             Next: 2nd Prize Silver Countdown...
           </p>
         </div>
@@ -271,153 +277,178 @@ export function WinnerAnnouncementOverlay() {
       {/* --- STAGE 3: COUNTDOWN FOR 2ND PRIZE --- */}
       {step === 'COUNTDOWN_2ND' && (
         <div className="relative z-10 my-auto flex flex-col items-center text-center">
-          <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-[#9AA0A6]/40 bg-white/90 px-4 py-1.5 text-xs font-bold text-[#5F6368] shadow-xs backdrop-blur-md animate-float">
-            <Medal className="h-4 w-4 text-[#5F6368]" />
+          <span className="mb-4 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-sky-400/40 bg-gradient-to-r from-sky-50 to-indigo-50 px-4 py-1.5 text-xs font-black uppercase tracking-wider text-sky-800 shadow-xs backdrop-blur-md animate-float">
+            <Medal className="h-4 w-4 text-sky-600" />
             <span>Silver Medal • 2nd Prize Reveal</span>
           </span>
-          <h2 className="text-2xl sm:text-3xl font-light tracking-tight text-[#202124]">
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0F172A]">
             Announcing 2nd Place In
           </h2>
 
           {/* Animated Concentric Radar Wave Container */}
           <div className="relative my-8 flex h-48 w-48 items-center justify-center">
-            <div className="absolute inset-0 rounded-full border-2 border-[#9AA0A6] animate-ripple-1 pointer-events-none" />
-            <div className="absolute inset-0 rounded-full border-2 border-[#9AA0A6] animate-ripple-2 pointer-events-none" />
-            <div className="absolute inset-0 rounded-full border-2 border-[#9AA0A6] animate-ripple-3 pointer-events-none" />
+            <div className="absolute inset-0 rounded-full border-2 border-sky-500/60 shadow-[0_0_20px_rgba(14,165,233,0.4)] animate-ripple-1 pointer-events-none" />
+            <div className="absolute inset-0 rounded-full border-2 border-indigo-500/50 shadow-[0_0_25px_rgba(99,102,241,0.3)] animate-ripple-2 pointer-events-none" />
+            <div className="absolute inset-0 rounded-full border-2 border-slate-400/40 shadow-[0_0_30px_rgba(148,163,184,0.2)] animate-ripple-3 pointer-events-none" />
 
-            <div className="relative flex h-36 w-36 items-center justify-center rounded-full border-4 border-[#9AA0A6] bg-white shadow-2xl">
+            <div className="relative flex h-36 w-36 items-center justify-center rounded-full border-[3px] border-sky-500/50 bg-white/95 shadow-2xl ring-8 ring-sky-500/15 backdrop-blur-md">
               <span
                 key={countdown}
-                className="text-7xl font-black text-[#5F6368] select-none animate-count-pop"
+                className="text-7xl font-black bg-gradient-to-br from-sky-600 via-indigo-600 to-slate-700 bg-clip-text text-transparent select-none animate-count-pop drop-shadow-sm"
               >
                 {countdown}
               </span>
             </div>
           </div>
-          <p className="text-xs font-medium text-[#5F6368]">Stepping up to the silver podium spot...</p>
+          <p className="text-xs font-semibold text-[#64748B]">Stepping up to the silver podium spot...</p>
         </div>
       )}
 
       {/* --- STAGE 4: 2ND PRIZE WINNER REVEAL --- */}
       {step === 'REVEAL_2ND' && second && (
         <div className="relative z-10 my-auto flex w-full max-w-sm flex-col items-center rounded-[32px] p-8 text-center card-runnerup-silver animate-in zoom-in-90 duration-500">
-          <div className="relative mb-5 flex flex-col items-center">
-            <div className="absolute -top-12 flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#70757A] to-[#9AA0A6] px-5 py-1.5 text-xs font-bold text-white shadow-lg animate-float">
-              <Medal className="h-4 w-4 text-white" />
-              <span>2nd Prize Winner</span>
-            </div>
+          {/* Top Banner - Non-wrapping */}
+          <div className="absolute -top-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 whitespace-nowrap rounded-full bg-gradient-to-r from-[#64748B] via-[#0284C7] to-[#4F46E5] px-5 py-1.5 text-xs font-black uppercase tracking-wider text-white shadow-lg ring-2 ring-white/80 animate-float">
+            <Medal className="h-4 w-4 text-white" />
+            <span>2nd Prize Winner</span>
+          </div>
+
+          <div className="relative mt-2 mb-4 flex flex-col items-center">
             <div className="relative">
-              <img
-                src={second.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=2nd'}
-                alt={second.name}
-                className="h-28 w-28 rounded-full border-4 border-[#9AA0A6] object-cover shadow-xl ring-8 ring-[#9AA0A6]/25"
-              />
-              <span className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-[#9AA0A6] text-sm font-black text-white shadow-md">
+              <div className="relative p-1 rounded-full bg-gradient-to-tr from-sky-400 via-slate-300 to-indigo-500 shadow-xl">
+                <img
+                  src={second.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=2nd'}
+                  alt={second.name}
+                  className="h-28 w-28 rounded-full bg-white object-cover"
+                />
+              </div>
+              <span className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-sky-600 to-indigo-700 text-sm font-black text-white shadow-md ring-2 ring-white">
                 2
               </span>
             </div>
           </div>
-          <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#202124]">{second.name}</h3>
+
+          <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0F172A]">{second.name}</h3>
+
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#1A73E8]/10 border border-[#1A73E8]/30 px-3.5 py-1 text-xs font-bold text-[#1A73E8]">
-              <Award className="h-3.5 w-3.5 text-[#1A73E8]" />
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/15 border border-sky-500/35 px-3.5 py-1 text-xs font-black text-sky-900 shadow-xs">
+              <Award className="h-3.5 w-3.5 text-sky-600" />
               <span>{second.score} pts</span>
             </span>
-            <span className="flex items-center gap-1 rounded-full bg-white/90 border border-[#DADCE0] px-3 py-1 text-xs font-semibold text-[#137333] shadow-2xs">
-              <Clock className="h-3 w-3" />
-              {formatDuration(second.durationMs)}
+            <span className="flex items-center gap-1 rounded-full bg-white/90 border border-slate-200 px-3 py-1 text-xs font-semibold text-emerald-800 shadow-2xs">
+              <Clock className="h-3 w-3 text-emerald-600" />
+              <span>{formatDuration(second.durationMs)}</span>
             </span>
             {second.tieBrokenByTime && (
-              <span className="flex items-center gap-1 rounded-full bg-[#FEF7E0] border border-[#FBBC04]/40 px-2.5 py-0.5 text-[10px] font-bold text-[#B06000]">
-                <Zap className="h-2.5 w-2.5 text-[#FBBC04]" />
+              <span className="flex items-center gap-1 rounded-full bg-amber-50 border border-amber-300 px-2.5 py-0.5 text-[10px] font-black text-amber-900 shadow-xs">
+                <Zap className="h-2.5 w-2.5 text-amber-600" />
                 <span>Tie-Break by Speed</span>
               </span>
             )}
           </div>
-          <p className="mt-6 text-xs font-medium text-[#5F6368] animate-pulse">
+          <p className="mt-6 text-xs font-medium text-[#64748B] animate-pulse">
             Brace yourself for the 1st Place Grand Champion...
           </p>
         </div>
       )}
 
-      {/* --- STAGE 5: COUNTDOWN FOR 1ST PRIZE (GRAND FINALE) --- */}
+      {/* --- STAGE 5: COUNTDOWN FOR 1ST PRIZE (GRAND FINALE - AESTHETIC VIBRANT GRADIENT) --- */}
       {step === 'COUNTDOWN_1ST' && (
         <div className="relative z-10 my-auto flex flex-col items-center text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#FBBC04]/50 bg-gradient-to-r from-[#FEF7E0] to-[#FFF8E1] px-5 py-2 text-xs font-extrabold text-[#B06000] shadow-md animate-float">
-            <Crown className="h-4 w-4 text-[#FBBC04]" />
-            <span className="uppercase tracking-wider">Grand Champion • 1st Prize</span>
-            <Sparkles className="h-3.5 w-3.5 text-[#FBBC04]" />
+          <div className="mb-4 inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-purple-500/30 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 px-5 py-2 text-xs font-black uppercase tracking-widest text-white shadow-[0_10px_25px_rgba(124,58,237,0.4)] ring-2 ring-white/60 animate-float">
+            <Crown className="h-4 w-4 text-amber-300 fill-amber-300" />
+            <span>Grand Champion • 1st Prize Reveal</span>
+            <Sparkles className="h-3.5 w-3.5 text-pink-200 animate-spin" />
           </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#202124]">
+          <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[#0F172A]">
             Who Takes First Place?
           </h2>
 
-          {/* Golden Concentric Radar Wave Container */}
+          {/* Cosmic Electric Concentric Radar Wave Container (No Yellow!) */}
           <div className="relative my-8 flex h-52 w-52 items-center justify-center">
-            <div className="absolute inset-0 rounded-full border-3 border-[#FBBC04] animate-ripple-1 pointer-events-none" />
-            <div className="absolute inset-0 rounded-full border-3 border-[#FBBC04] animate-ripple-2 pointer-events-none" />
-            <div className="absolute inset-0 rounded-full border-3 border-[#FBBC04] animate-ripple-3 pointer-events-none" />
+            <div className="absolute inset-0 rounded-full border-2 border-indigo-500/60 shadow-[0_0_25px_rgba(99,102,241,0.5)] animate-ripple-1 pointer-events-none" />
+            <div className="absolute inset-0 rounded-full border-2 border-purple-500/50 shadow-[0_0_30px_rgba(168,85,247,0.4)] animate-ripple-2 pointer-events-none" />
+            <div className="absolute inset-0 rounded-full border-2 border-pink-500/40 shadow-[0_0_35px_rgba(236,72,153,0.3)] animate-ripple-3 pointer-events-none" />
 
-            <div className="relative flex h-40 w-40 items-center justify-center rounded-full border-[5px] border-[#FBBC04] bg-white shadow-2xl ring-8 ring-[#FBBC04]/20">
+            <div className="relative flex h-40 w-40 items-center justify-center rounded-full border-[3px] border-purple-500/40 bg-gradient-to-br from-white via-slate-50 to-indigo-50/50 shadow-[0_25px_60px_-10px_rgba(124,58,237,0.45),0_0_40px_rgba(236,72,153,0.3)] ring-12 ring-purple-500/15 backdrop-blur-xl">
               <span
                 key={countdown}
-                className="text-8xl font-black text-[#FBBC04] select-none animate-count-pop drop-shadow-sm"
+                className="text-8xl sm:text-9xl font-black tracking-tighter select-none animate-count-pop bg-gradient-to-br from-[#4F46E5] via-[#7C3AED] to-[#EC4899] bg-clip-text text-transparent drop-shadow-[0_10px_20px_rgba(124,58,237,0.35)]"
               >
                 {countdown}
               </span>
             </div>
           </div>
-          <p className="text-xs font-semibold text-[#5F6368]">The ultimate winner is crowned!</p>
+          <div className="flex items-center gap-2 rounded-full bg-indigo-50/90 border border-indigo-200/80 px-4 py-1.5 text-xs font-bold text-indigo-900 shadow-xs backdrop-blur-md animate-pulse">
+            <Zap className="h-3.5 w-3.5 text-indigo-600 fill-indigo-600" />
+            <span>The ultimate victor is crowned!</span>
+          </div>
         </div>
       )}
 
-      {/* --- STAGE 6: 1ST PRIZE GRAND CHAMPION REVEAL --- */}
+      {/* --- STAGE 6: 1ST PRIZE GRAND CHAMPION REVEAL (AESTHETIC & SEXY) --- */}
       {step === 'REVEAL_1ST' && first && (
-        <div className="relative z-10 my-auto flex w-full max-w-md flex-col items-center rounded-[36px] p-9 text-center card-champion-gold animate-in zoom-in-90 duration-700">
+        <div className="relative z-10 my-auto flex w-full max-w-md flex-col items-center rounded-[36px] p-8 sm:p-9 text-center card-champion-gold animate-in zoom-in-90 duration-700">
           {/* Rotating Radiant Halo in Background */}
-          <div className="pointer-events-none absolute -top-16 left-1/2 -translate-x-1/2 h-80 w-80 rounded-full bg-gradient-to-tr from-[#FBBC04]/30 via-[#EA4335]/20 to-[#4285F4]/30 blur-2xl animate-halo-spin" />
+          <div className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 h-96 w-96 rounded-full bg-gradient-to-tr from-[#F59E0B]/35 via-[#EC4899]/30 to-[#6366F1]/35 blur-3xl animate-halo-spin" />
 
-          <div className="relative mb-6 flex flex-col items-center">
-            {/* Radiant Crown Banner */}
-            <div className="absolute -top-14 flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#FBBC04] via-[#EA4335] to-[#4285F4] px-6 py-2 text-xs font-black uppercase tracking-wider text-white shadow-xl animate-float">
-              <Crown className="h-4 w-4" />
-              <span>1st Place • Grand Champion</span>
-            </div>
+          {/* Radiant Crown Banner - Centered, Non-wrapping, Glowing */}
+          <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 whitespace-nowrap rounded-full bg-gradient-to-r from-[#F59E0B] via-[#EC4899] to-[#8B5CF6] px-6 py-2 text-xs font-black uppercase tracking-widest text-white shadow-[0_12px_28px_rgba(236,72,153,0.45)] ring-2 ring-white/80 animate-float">
+            <Crown className="h-4 w-4 text-amber-200 fill-amber-200" />
+            <span>1ST PLACE • GRAND CHAMPION</span>
+            <Sparkles className="h-3.5 w-3.5 text-pink-200 animate-spin" />
+          </div>
 
+          <div className="relative mt-4 mb-5 flex flex-col items-center">
             <div className="relative">
-              <img
-                src={first.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=1st'}
-                alt={first.name}
-                className="h-36 w-36 rounded-full border-[5px] border-[#FBBC04] object-cover shadow-2xl ring-12 ring-[#FBBC04]/35"
-              />
-              <span className="absolute -bottom-1 -right-1 flex h-10 w-10 items-center justify-center rounded-full bg-[#FBBC04] text-white shadow-lg ring-4 ring-white">
-                <Crown className="h-5 w-5 text-white" />
+              {/* Ambient pulsating glow aura behind avatar */}
+              <div className="absolute -inset-2 rounded-full bg-gradient-to-tr from-amber-400 via-rose-500 to-indigo-500 opacity-70 blur-md animate-pulse" />
+
+              {/* Luxury Multi-Color Iridescent Avatar Frame */}
+              <div className="relative p-1.5 rounded-full bg-gradient-to-tr from-amber-400 via-rose-500 to-indigo-500 shadow-2xl">
+                <img
+                  src={first.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=1st'}
+                  alt={first.name}
+                  className="h-32 w-32 sm:h-36 sm:w-36 rounded-full bg-white object-cover shadow-inner"
+                />
+              </div>
+
+              {/* Floating 3D Gold Crown Badge */}
+              <span className="absolute -bottom-1 -right-1 flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-amber-300 via-amber-500 to-yellow-600 text-white shadow-[0_6px_16px_rgba(217,119,6,0.6)] ring-3 ring-white animate-bounce">
+                <Crown className="h-6 w-6 text-white fill-white drop-shadow-sm" />
               </span>
             </div>
           </div>
 
-          <h3 className="text-3xl sm:text-4xl font-black tracking-tight text-[#202124]">{first.name}</h3>
+          <h3 className="text-3xl sm:text-4xl font-black tracking-tight text-[#0F172A] drop-shadow-xs">
+            {first.name}
+          </h3>
 
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2.5">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#FEF7E0] to-[#FFF8E1] border border-[#FBBC04]/50 px-4 py-1.5 text-xs font-black text-[#B06000] shadow-2xs">
-              <Crown className="h-4 w-4 text-[#B06000]" />
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500/15 via-amber-400/20 to-amber-500/15 border border-amber-500/40 px-4 py-1.5 text-xs font-black text-amber-950 shadow-xs backdrop-blur-md">
+              <Crown className="h-4 w-4 text-amber-600 fill-amber-600" />
               <span>{first.score} pts</span>
             </span>
-            <span className="flex items-center gap-1.5 rounded-full bg-white/90 border border-[#DADCE0] px-3.5 py-1.5 text-xs font-bold text-[#137333] shadow-2xs">
-              <Clock className="h-3.5 w-3.5" />
-              {formatDuration(first.durationMs)}
+            <span className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/35 px-4 py-1.5 text-xs font-bold text-emerald-950 shadow-xs backdrop-blur-md">
+              <Clock className="h-3.5 w-3.5 text-emerald-600" />
+              <span>{formatDuration(first.durationMs)}</span>
             </span>
             {first.tieBrokenByTime && (
-              <span className="flex items-center gap-1 rounded-full bg-[#FEF7E0] border border-[#FBBC04]/60 px-3 py-1 text-[11px] font-extrabold text-[#B06000] shadow-xs">
-                <Zap className="h-3 w-3 text-[#FBBC04]" />
+              <span className="flex items-center gap-1 rounded-full bg-gradient-to-r from-purple-500/15 via-indigo-500/15 to-pink-500/15 border border-purple-500/40 px-3.5 py-1 text-[11px] font-black text-purple-950 shadow-xs backdrop-blur-md">
+                <Zap className="h-3.5 w-3.5 text-purple-600 fill-purple-600" />
                 <span>Won 1st Place by Faster Time!</span>
               </span>
             )}
           </div>
 
-          <p className="mt-7 text-xs font-medium text-[#5F6368] animate-pulse">
-            Unfolding the official victory podium & standings...
-          </p>
+          <div className="mt-7 flex flex-col items-center gap-2">
+            <p className="text-xs font-semibold text-[#5F6368] animate-pulse">
+              Unfolding the official victory podium & standings...
+            </p>
+            <div className="h-1.5 w-44 overflow-hidden rounded-full bg-slate-200/80 shadow-inner">
+              <div className="h-full w-full rounded-full bg-gradient-to-r from-[#F59E0B] via-[#EC4899] to-[#8B5CF6] animate-shimmer" />
+            </div>
+          </div>
         </div>
       )}
 

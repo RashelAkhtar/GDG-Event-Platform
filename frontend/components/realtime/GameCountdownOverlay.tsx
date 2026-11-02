@@ -7,7 +7,8 @@ import { soundManager } from '@/lib/sound'
 import { Rocket, Sparkles, Zap } from 'lucide-react'
 import confetti from 'canvas-confetti'
 
-const GOOGLE_COLORS = ['#4285F4', '#EA4335', '#FBBC04', '#34A853']
+const CELEBRATION_COLORS = ['#4285F4', '#EA4335', '#FBBC04', '#34A853', '#8B5CF6', '#EC4899'];
+const VIBRANT_COUNTDOWN_COLORS = ['#2563EB', '#EC4899', '#8B5CF6', '#10B981'];
 
 export function GameCountdownOverlay() {
   const { activeCountdown } = useWebSocket()
@@ -24,7 +25,7 @@ export function GameCountdownOverlay() {
             particleCount: 80,
             spread: 80,
             origin: { y: 0.5 },
-            colors: GOOGLE_COLORS,
+            colors: CELEBRATION_COLORS,
           })
         } catch {}
 
@@ -41,8 +42,8 @@ export function GameCountdownOverlay() {
   if (!activeCountdown) return null
 
   const { count, gameSlug } = activeCountdown
-  const colorIndex = Math.max(0, count) % GOOGLE_COLORS.length
-  const currentColor = GOOGLE_COLORS[colorIndex]
+  const colorIndex = Math.max(0, count) % VIBRANT_COUNTDOWN_COLORS.length
+  const currentColor = VIBRANT_COUNTDOWN_COLORS[colorIndex]
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/95 backdrop-blur-xl transition-all">
