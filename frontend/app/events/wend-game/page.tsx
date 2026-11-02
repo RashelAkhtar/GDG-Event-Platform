@@ -38,6 +38,13 @@ function formatDuration(ms: number): string {
   return `${seconds}s`
 }
 
+function formatTimer(totalSecs: number): string {
+  const s = Math.max(0, Math.floor(totalSecs))
+  const mins = Math.floor(s / 60)
+  const secs = s % 60
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+}
+
 export default function WendGamePage() {
   const { user } = useAuth()
   const { gameLockStates, subscribeToLeaderboardReset } = useWebSocket()
@@ -45,6 +52,9 @@ export default function WendGamePage() {
 
   const startTimeRef = useRef<number | null>(null)
   const [board, setBoard] = useState<WendBoardConfig>(() => api.getWendBoard())
+  const allocatedTimeSeconds = board.timeLimitSeconds || 120
+  const [timeLeft, setTimeLeft] = useState<number>(() => allocatedTimeSeconds)
+  const [isTimeUp, setIsTimeUp] = useState<boolean>(false)
   const [foundWordIds, setFoundWordIds] = useState<Set<string>>(new Set())
   const [discoveredWords, setDiscoveredWords] = useState<DiscoveredWordRecord[]>([])
   const [currentWord, setCurrentWord] = useState<string>('')
@@ -56,9 +66,89 @@ export default function WendGamePage() {
     api.getParticipantSession('wend-game')
   )
 
+  const showToast = useCallback((text: string, type: 'success' | 'info' | 'error' = 'info') => {
+    setToastMessage({ text, type })
+    setTimeout(() => setToastMessage(null), 2500)
+  }, [])
+
   useEffect(() => {
     startTimeRef.current = Date.now()
   }, [])
+
+  // Auto-submit when time set by admin expires
+  const handleTimeUpSubmit = useCallback(() => {
+    setIsTimeUp(true)
+    const durationMs = allocatedTimeSeconds * 1000
+    const totalPoints = foundWordIds.size * 200
+
+    const attemptEntry = {
+      _id: `wend_${Date.now()}_${user?._id || 'anon'}`,
+      totalScore: totalPoints,
+      durationMs,
+      submittedAt: new Date().toISOString(),
+      user: {
+        _id: user?._id,
+        name: user?.name || 'Community Participant',
+        avatar: user?.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${user?.name || 'WendPlayer'}`,
+      },
+    }
+    api.recordLocalAttempt('wend-game', attemptEntry)
+
+    const sessionData: ParticipantSession = {
+      sessionId: `sess_wend_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      eventSlug: 'wend-game',
+      eventTitle: board.title || 'Wend Word Puzzle Arena',
+      userId: user?._id,
+      userName: user?.name || 'Community Participant',
+      userAvatar: user?.avatar,
+      totalItems: foundWordIds.size,
+      durationMs,
+      submittedAt: new Date().toISOString(),
+      status: 'SUBMITTED',
+      internalScore: totalPoints,
+    }
+
+    api.saveParticipantSession('wend-game', sessionData)
+    setCompletedSession(sessionData)
+    showToast(`Time's up! You discovered ${foundWordIds.size} / ${board.targetWords.length} words.`, 'info')
+  }, [allocatedTimeSeconds, board, foundWordIds, user])
+
+  // Countdown timer honoring time set by admin
+  useEffect(() => {
+    if (completedSession || isLocked) return
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer)
+          handleTimeUpSubmit()
+          return 0
+        }
+        if (prev <= 10) {
+          soundManager.playCountdownTick(prev)
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [completedSession, isLocked, handleTimeUpSubmit])
+
+  // Real-time synchronization if admin updates board time limit
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'gdg_wend_board_config') {
+        const fresh = api.getWendBoard()
+        setBoard(fresh)
+        if (!completedSession) {
+          const freshTime = fresh.timeLimitSeconds || 120
+          setTimeLeft(freshTime)
+        }
+      }
+    }
+    window.addEventListener('storage', handleStorage)
+    return () => window.removeEventListener('storage', handleStorage)
+  }, [completedSession])
 
   // Listen for admin leaderboard reset
   useEffect(() => {
@@ -67,6 +157,10 @@ export default function WendGamePage() {
         setCompletedSession(null)
         setFoundWordIds(new Set())
         setDiscoveredWords([])
+        setIsTimeUp(false)
+        const freshBoard = api.getWendBoard()
+        setBoard(freshBoard)
+        setTimeLeft(freshBoard.timeLimitSeconds || 120)
         startTimeRef.current = Date.now()
         if (typeof window !== 'undefined') {
           localStorage.removeItem('gdg_user_session_wend-game')
@@ -76,10 +170,6 @@ export default function WendGamePage() {
     return () => unsubscribe()
   }, [subscribeToLeaderboardReset])
 
-  const showToast = (text: string, type: 'success' | 'info' | 'error' = 'info') => {
-    setToastMessage({ text, type })
-    setTimeout(() => setToastMessage(null), 2500)
-  }
 
   // Confetti helper
   const triggerWinConfetti = () => {
@@ -136,8 +226,9 @@ export default function WendGamePage() {
         // Check if all target words are found!
         if (nextFound.size === board.targetWords.length) {
           soundManager.playWinner()
-          const durationMs = Math.max(1500, Date.now() - (startTimeRef.current ?? Date.now()))
-          const totalPoints = board.targetWords.length * 200
+          const durationMs = Math.max(1500, (allocatedTimeSeconds - timeLeft) * 1000)
+          const timeBonus = Math.floor(timeLeft * 2)
+          const totalPoints = board.targetWords.length * 200 + timeBonus
 
           const attemptEntry = {
             _id: `wend_${Date.now()}_${user?._id || 'anon'}`,
@@ -215,6 +306,10 @@ export default function WendGamePage() {
     setCompletedSession(null)
     setFoundWordIds(new Set())
     setDiscoveredWords([])
+    setIsTimeUp(false)
+    const freshBoard = api.getWendBoard()
+    setBoard(freshBoard)
+    setTimeLeft(freshBoard.timeLimitSeconds || 120)
     startTimeRef.current = Date.now()
     if (typeof window !== 'undefined') {
       localStorage.removeItem('gdg_user_session_wend-game')
@@ -239,8 +334,8 @@ export default function WendGamePage() {
       <Navbar />
 
       <main className="relative z-10 flex-1 flex flex-col items-center justify-between p-3 sm:p-5 max-w-lg mx-auto w-full">
-        {/* Navigation & Live Header */}
-        <div className="w-full flex items-center justify-between mb-2">
+        {/* Navigation & Live Header with Admin Time Limit */}
+        <div className="w-full flex items-center justify-between mb-2 gap-2">
           <Link
             href="/"
             className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/70 px-3.5 py-1 text-xs font-semibold text-[#5F6368] shadow-2xs backdrop-blur-md hover:bg-white hover:text-[#202124] transition-all"
@@ -250,12 +345,46 @@ export default function WendGamePage() {
           </Link>
 
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3.5 py-1 text-xs font-bold text-[#137333] border border-[#34A853]/30 shadow-2xs backdrop-blur-md">
+            {/* Live Admin-Configured Countdown Timer */}
+            {!completedSession && (
+              <div
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold shadow-2xs backdrop-blur-md transition-all ${
+                  timeLeft <= 15
+                    ? 'bg-[#FCE8E6] border border-[#EA4335]/50 text-[#C5221F] animate-pulse'
+                    : timeLeft <= allocatedTimeSeconds * 0.4
+                    ? 'bg-[#FEF7E0] border border-[#FBBC04]/50 text-[#B06000]'
+                    : 'bg-white/90 border border-[#1A73E8]/30 text-[#1967D2]'
+                }`}
+                title={`Round Time Limit set by Host: ${allocatedTimeSeconds}s`}
+              >
+                <Clock className={`h-3.5 w-3.5 ${timeLeft <= 15 ? 'animate-bounce text-[#EA4335]' : 'text-[#1A73E8]'}`} />
+                <span className="font-mono">{formatTimer(timeLeft)}</span>
+                <span className="hidden sm:inline text-[10px] opacity-75">/ {allocatedTimeSeconds}s</span>
+              </div>
+            )}
+
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-[#137333] border border-[#34A853]/30 shadow-2xs backdrop-blur-md">
               <span className="h-2 w-2 rounded-full bg-[#34A853] animate-pulse" />
-              <span>{foundWordIds.size} / {board.targetWords.length} Words Found</span>
+              <span>{foundWordIds.size} / {board.targetWords.length} Words</span>
             </span>
           </div>
         </div>
+
+        {/* Live Countdown Progress Bar (Reflecting admin-configured time) */}
+        {!completedSession && !isLocked && (
+          <div className="w-full h-1.5 bg-[#E8EAED] rounded-full overflow-hidden mb-3">
+            <div
+              className={`h-full transition-all duration-1000 rounded-full ${
+                timeLeft <= 15
+                  ? 'bg-[#EA4335]'
+                  : timeLeft <= allocatedTimeSeconds * 0.4
+                  ? 'bg-[#FBBC04]'
+                  : 'bg-[#34A853]'
+              }`}
+              style={{ width: `${Math.max(0, Math.min(100, (timeLeft / allocatedTimeSeconds) * 100))}%` }}
+            />
+          </div>
+        )}
 
         {/* Toast Notification */}
         {toastMessage && (
@@ -357,8 +486,21 @@ export default function WendGamePage() {
                   <span className="font-semibold text-[#202124]">{completedSession.totalItems} words</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-[#5F6368]">Completion Time:</span>
-                  <span className="font-semibold text-[#137333]">
+                  <span className="text-[#5F6368]">Allocated Game Time:</span>
+                  <span className="font-semibold text-[#1A73E8] flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    <span>{allocatedTimeSeconds}s (Set by Host)</span>
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[#5F6368]">Time Remaining:</span>
+                  <span className={`font-semibold ${timeLeft > 0 ? 'text-[#137333]' : 'text-[#EA4335]'}`}>
+                    {timeLeft > 0 ? `${timeLeft}s remaining` : 'Time Expired (0s)'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[#5F6368]">Time Taken:</span>
+                  <span className="font-semibold text-[#202124]">
                     {formatDuration(completedSession.durationMs)}
                   </span>
                 </div>

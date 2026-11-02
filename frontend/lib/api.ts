@@ -802,6 +802,13 @@ export const api = {
     }
     return DEFAULT_WEND_BOARD
   },
+
+  setWendTimeLimit(seconds: number): WendBoardConfig {
+    const board = api.getWendBoard()
+    const updated: WendBoardConfig = { ...board, timeLimitSeconds: Math.max(10, seconds) }
+    api.saveWendBoard(updated)
+    return updated
+  },
 }
 
 export type CellType = 'LETTER' | 'OBSTACLE'
@@ -854,6 +861,7 @@ export interface WendBoardConfig {
   grid: GridCell[][]
   targetWords: WendTargetWord[]
   difficulty: 'EASY' | 'MEDIUM' | 'HARD'
+  timeLimitSeconds?: number
 }
 
 // 8x8 Reference Board Layout matching user screenshot (H and I cutout obstacles)
@@ -883,6 +891,7 @@ export const DEFAULT_WEND_BOARD: WendBoardConfig = {
   rows: 8,
   cols: 8,
   difficulty: 'MEDIUM',
+  timeLimitSeconds: 120,
   targetWords: DEFAULT_TARGET_WORDS,
   grid: REFERENCE_LETTERS_MATRIX.map((rowArr, r) =>
     rowArr.map((val, c) => ({

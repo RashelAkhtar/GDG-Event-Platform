@@ -626,6 +626,12 @@ export default function AdminPage() {
     showToast('Reset Wend Board to Reference "H & I" Layout!', 'success')
   }
 
+  const handleSetWendTimeLimit = (seconds: number) => {
+    const updated = api.setWendTimeLimit(seconds)
+    setWendBoard(updated)
+    showToast(`Updated Wend round time limit to ${seconds}s (${formatDuration(seconds * 1000)})! Reflects live on user screens.`)
+  }
+
   // --- 4. WINNER CEREMONY BROADCAST (AUTOMATED PODIUM 3rd, 2nd, 1st) ---
   const handleSelectWinnersTrack = (slug: 'web-dev-quiz' | 'mentis-quiz' | 'wend-game') => {
     setSelectedSlug(slug)
@@ -1891,6 +1897,71 @@ export default function AdminPage() {
                 <RotateCcw className="h-3.5 w-3.5" />
                 <span>{'Reset to Reference "H & I" Board'}</span>
               </button>
+            </div>
+
+            {/* Wend Round Duration & Live Timer Controller */}
+            <div className="rounded-3xl border border-[#DADCE0] bg-white p-5 sm:p-6 shadow-2xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-[#F1F3F4]">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#E6F4EA] text-[#137333] shadow-2xs">
+                    <Clock className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm sm:text-base font-bold text-[#202124]">
+                      Wend Round Duration & Countdown Timer (Set by Host)
+                    </h3>
+                    <p className="text-xs text-[#5F6368]">
+                      This timer dictates the active round length for participants playing Wend Word Arena, enforcing an active countdown instead of an open stopwatch.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E8F0FE] border border-[#1A73E8]/30 px-3 py-1 text-xs font-bold text-[#1967D2]">
+                    <Clock className="h-3.5 w-3.5" />
+                    <span>Active Limit: {wendBoard.timeLimitSeconds || 120}s ({formatDuration((wendBoard.timeLimitSeconds || 120) * 1000)})</span>
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                <div className="md:col-span-7 flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-semibold text-[#5F6368] mr-1">Quick Presets:</span>
+                  {[
+                    { label: '60s (1m)', val: 60 },
+                    { label: '90s (1.5m)', val: 90 },
+                    { label: '120s (2m • Standard)', val: 120 },
+                    { label: '180s (3m)', val: 180 },
+                    { label: '300s (5m)', val: 300 },
+                  ].map((preset) => (
+                    <button
+                      key={preset.val}
+                      type="button"
+                      onClick={() => handleSetWendTimeLimit(preset.val)}
+                      className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all active:scale-95 cursor-pointer ${
+                        (wendBoard.timeLimitSeconds || 120) === preset.val
+                          ? 'bg-[#137333] text-white shadow-xs'
+                          : 'border border-[#DADCE0] bg-[#F8F9FA] text-[#3C4043] hover:bg-white hover:border-[#137333]'
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="md:col-span-5 flex items-center gap-2">
+                  <label className="text-xs font-semibold text-[#5F6368] shrink-0">Custom Seconds:</label>
+                  <input
+                    type="number"
+                    min={15}
+                    max={1800}
+                    step={15}
+                    value={wendBoard.timeLimitSeconds || 120}
+                    onChange={(e) => handleSetWendTimeLimit(Number(e.target.value))}
+                    className="w-24 rounded-xl border border-[#DADCE0] bg-white px-3 py-1.5 text-xs font-bold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#34A853]"
+                  />
+                  <span className="text-xs text-[#5F6368]">sec</span>
+                </div>
+              </div>
             </div>
 
             {/* Visual 8x8 Grid Editor Card */}

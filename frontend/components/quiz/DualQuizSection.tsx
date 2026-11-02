@@ -637,6 +637,38 @@ export function DualQuizSection({
               {/* SUB-PANEL 1 (WEND): TARGET WORDS & HINTS */}
               {editTab === 'game' && type === 'wend' && (
                 <div className="space-y-2.5">
+                  {/* Round Time Limit Controller */}
+                  <div className="rounded-xl border border-[#34A853]/30 bg-white p-2.5 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-[#137333] uppercase tracking-wider flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        <span>Round Time Limit (Live User Timer)</span>
+                      </span>
+                      <span className="text-xs font-bold text-[#1A73E8]">
+                        {api.getWendBoard().timeLimitSeconds || 120}s
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1">
+                      {[60, 90, 120, 180].map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => {
+                            api.setWendTimeLimit(s)
+                            showToast(`Set Wend game timer to ${s}s!`)
+                          }}
+                          className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold transition-all cursor-pointer ${
+                            (api.getWendBoard().timeLimitSeconds || 120) === s
+                              ? 'bg-[#137333] text-white'
+                              : 'border border-[#DADCE0] bg-[#F8F9FA] text-[#5F6368] hover:bg-white'
+                          }`}
+                        >
+                          {s}s
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold text-[#137333] uppercase tracking-wider">
                       Wend Target Words ({inlineWendWords.length})

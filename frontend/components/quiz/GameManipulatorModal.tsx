@@ -682,6 +682,54 @@ function GameManipulatorModalInner({
                   </a>
                 </div>
 
+                {/* Wend Round Time Limit (Set by Admin) */}
+                <div className="rounded-2xl border border-[#DADCE0] bg-[#F8F9FA] p-4 text-left">
+                  <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-[#DADCE0]">
+                    <span className="text-xs font-bold text-[#137333] flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5" />
+                      <span>Round Time Limit (Enforces Live User Countdown)</span>
+                    </span>
+                    <span className="text-xs font-bold text-[#1A73E8]">
+                      {wendBoard.timeLimitSeconds || 120}s ({Math.floor((wendBoard.timeLimitSeconds || 120) / 60)}m {((wendBoard.timeLimitSeconds || 120) % 60)}s)
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {[60, 90, 120, 180, 300].map((sec) => (
+                      <button
+                        key={sec}
+                        type="button"
+                        onClick={() => {
+                          const updated = { ...wendBoard, timeLimitSeconds: sec }
+                          setWendBoard(updated)
+                          api.saveWendBoard(updated)
+                          showToast(`Set round timer to ${sec}s!`)
+                        }}
+                        className={`rounded-full px-3 py-1 text-xs font-semibold transition-all cursor-pointer ${
+                          (wendBoard.timeLimitSeconds || 120) === sec
+                            ? 'bg-[#137333] text-white shadow-xs'
+                            : 'border border-[#DADCE0] bg-white text-[#3C4043] hover:bg-[#E8F0FE]'
+                        }`}
+                      >
+                        {sec}s
+                      </button>
+                    ))}
+                    <input
+                      type="number"
+                      min={15}
+                      max={1800}
+                      value={wendBoard.timeLimitSeconds || 120}
+                      onChange={(e) => {
+                        const sec = Math.max(15, Number(e.target.value))
+                        const updated = { ...wendBoard, timeLimitSeconds: sec }
+                        setWendBoard(updated)
+                        api.saveWendBoard(updated)
+                      }}
+                      className="w-20 rounded-xl border border-[#DADCE0] bg-white px-2.5 py-1 text-xs font-bold text-[#202124]"
+                    />
+                    <span className="text-xs text-[#5F6368]">sec</span>
+                  </div>
+                </div>
+
                 <div className="rounded-2xl border border-[#DADCE0] bg-[#F8F9FA] p-4 text-center">
                   <p className="text-xs text-[#5F6368] leading-relaxed mb-3">
                     The 8x8 Wend board features obstacle cutouts and letter matrix. For detailed letter-by-letter board painting, obstacle toggling, and live grid manipulation, open the dedicated Wend Studio.
