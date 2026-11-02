@@ -906,6 +906,50 @@ export default function AdminPage() {
                               />
                             </div>
 
+                            <div className="pt-2 border-t border-[#DADCE0]">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setActiveTab('quiz')
+                                  setSelectedSlug(slug)
+                                }}
+                                className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#E8F0FE] border border-[#1A73E8]/30 py-1.5 px-3 text-xs font-semibold text-[#1967D2] hover:bg-[#D2E3FC] transition-colors"
+                              >
+                                <Sliders className="h-3.5 w-3.5" />
+                                <span>Manipulate Questions & Answers ({api.getQuestionsForSlug(slug).length}) ➔</span>
+                              </button>
+                            </div>
+
+                            <div className="pt-2 border-t border-[#DADCE0]">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setActiveTab('quiz')
+                                  setSelectedSlug(slug)
+                                }}
+                                className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#FEF7E0] border border-[#FBBC04]/40 py-1.5 px-3 text-xs font-semibold text-[#B06000] hover:bg-[#FFF8E1] transition-colors"
+                              >
+                                <Sliders className="h-3.5 w-3.5" />
+                                <span>Manipulate Questions & Answers ({api.getQuestionsForSlug(slug).length}) ➔</span>
+                              </button>
+                            </div>
+
+                            <div className="pt-2 border-t border-[#DADCE0]">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setActiveTab('wend')
+                                }}
+                                className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#E6F4EA] border border-[#34A853]/40 py-1.5 px-3 text-xs font-semibold text-[#137333] hover:bg-[#CEEAD6] transition-colors"
+                              >
+                                <Sliders className="h-3.5 w-3.5" />
+                                <span>Manipulate Words & Snake Grid Studio ({wendBoard.targetWords.length}) ➔</span>
+                              </button>
+                            </div>
+
                             <div className="flex items-center justify-end gap-2 pt-1">
                               <button
                                 type="button"

@@ -88,7 +88,10 @@ function QuizRunnerContent() {
         const foundEvent = await api.getEventBySlug(slug)
         setEvent(foundEvent)
 
-        if (foundEvent) {
+        const localQuestions = api.getQuestionsForSlug(slug)
+        if (localQuestions && localQuestions.length > 0) {
+          setQuestions(localQuestions)
+        } else if (foundEvent) {
           const startRes = await api.startQuiz(foundEvent._id)
           if (startRes.success && startRes.questions && startRes.questions.length > 0) {
             setQuestions(startRes.questions)

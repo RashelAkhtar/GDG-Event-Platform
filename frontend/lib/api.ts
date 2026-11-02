@@ -136,8 +136,82 @@ export const DEFAULT_WEND_EVENT: GdgEvent = {
 }
 
 export const DEFAULT_QUESTIONS: Record<string, QuestionData[]> = {
-  'web-dev-quiz': [],
-  'mentis-quiz': [],
+  'web-dev-quiz': [
+    {
+      _id: 'q_web_1',
+      questionText: 'Which React 19 hook allows reading async resources or promises directly during render?',
+      options: ['use() hook', 'useResource()', 'usePromise()', 'useMemo()'],
+      correctOptionIndex: 0,
+      points: 100,
+      timeLimitSeconds: 30,
+      order: 1,
+    },
+    {
+      _id: 'q_web_2',
+      questionText: 'In Next.js 15 App Router, what is the default caching behavior for fetch requests?',
+      options: ['force-cache', 'no-store (uncached by default)', 'cache-first', 'stale-while-revalidate'],
+      correctOptionIndex: 1,
+      points: 100,
+      timeLimitSeconds: 30,
+      order: 2,
+    },
+    {
+      _id: 'q_web_3',
+      questionText: 'Which CSS property enables GPU hardware acceleration for smooth 60fps animations?',
+      options: ['transform: translateZ(0)', 'position: absolute', 'display: flex', 'float: left'],
+      correctOptionIndex: 0,
+      points: 100,
+      timeLimitSeconds: 30,
+      order: 3,
+    },
+    {
+      _id: 'q_web_4',
+      questionText: 'What protocol upgrade provides bidirectional, full-duplex communication over a single TCP connection?',
+      options: ['HTTP/1.1 Keep-Alive', 'WebSocket (ws://)', 'Server-Sent Events (SSE)', 'DNS over HTTPS'],
+      correctOptionIndex: 1,
+      points: 100,
+      timeLimitSeconds: 30,
+      order: 4,
+    },
+  ],
+  'mentis-quiz': [
+    {
+      _id: 'q_mentis_1',
+      questionText: "What core self-attention mechanism powers Google's Gemini and Transformer architectures?",
+      options: ['Scaled Dot-Product Attention', 'Recurrent Hidden State', 'Convolutional Kernel Filtering', 'Heuristic Search'],
+      correctOptionIndex: 0,
+      points: 100,
+      timeLimitSeconds: 30,
+      order: 1,
+    },
+    {
+      _id: 'q_mentis_2',
+      questionText: 'In algorithm analysis, which data structure provides O(1) average lookup and insertion time?',
+      options: ['Hash Map / Hash Table', 'Binary Search Tree', 'Linked List', 'Min-Heap'],
+      correctOptionIndex: 0,
+      points: 100,
+      timeLimitSeconds: 30,
+      order: 2,
+    },
+    {
+      _id: 'q_mentis_3',
+      questionText: 'What technique dynamically enhances LLM prompt context using vector embeddings similarity?',
+      options: ['RAG (Retrieval-Augmented Generation)', 'Model Pruning', 'Quantization (int8)', 'Backpropagation'],
+      correctOptionIndex: 0,
+      points: 100,
+      timeLimitSeconds: 30,
+      order: 3,
+    },
+    {
+      _id: 'q_mentis_4',
+      questionText: 'What is the worst-case time complexity of standard unoptimized QuickSort?',
+      options: ['O(n log n)', 'O(n²)', 'O(log n)', 'O(n)'],
+      correctOptionIndex: 1,
+      points: 100,
+      timeLimitSeconds: 30,
+      order: 4,
+    },
+  ],
 }
 
 export const DEFAULT_LEADERBOARD: Record<string, LeaderboardEntry[]> = {
