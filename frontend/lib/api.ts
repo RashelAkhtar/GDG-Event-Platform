@@ -583,6 +583,34 @@ export const api = {
     }
   },
 
+  deleteParticipantFromLeaderboard(slug: string, identifier: string, name?: string): void {
+    if (typeof window === 'undefined') return
+    const idClean = identifier.trim().toLowerCase()
+    const nameClean = (name || '').trim().toLowerCase()
+
+    // 1. Remove from all sessions
+    const sessions = api.getAllSessionsForSlug(slug)
+    const filteredSessions = sessions.filter((s) => {
+      const matchId = (s.sessionId && s.sessionId.toLowerCase() === idClean) ||
+                      (s.userId && s.userId.toLowerCase() === idClean)
+      const matchName = (nameClean && s.userName && s.userName.toLowerCase() === nameClean) ||
+                        (s.userName && s.userName.toLowerCase() === idClean)
+      return !matchId && !matchName
+    })
+    localStorage.setItem(`gdg_all_sessions_${slug}`, JSON.stringify(filteredSessions))
+
+    // 2. Remove from local leaderboard
+    const lb = api.getLocalLeaderboard(slug)
+    const filteredLb = lb.filter((e) => {
+      const matchId = (e._id && e._id.toLowerCase() === idClean) ||
+                      (e.user?._id && e.user._id.toLowerCase() === idClean)
+      const matchName = (nameClean && e.user?.name && e.user.name.toLowerCase() === nameClean) ||
+                        (e.user?.name && e.user.name.toLowerCase() === idClean)
+      return !matchId && !matchName
+    })
+    localStorage.setItem(`gdg_leaderboard_${slug}`, JSON.stringify(filteredLb))
+  },
+
   async resetLeaderboard(eventId?: string, slug?: string): Promise<{ success: boolean; message?: string }> {
     if (slug) {
       api.clearSessionsForSlug(slug)

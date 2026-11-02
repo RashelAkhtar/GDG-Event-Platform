@@ -15,6 +15,7 @@ export interface WsMessage {
     | 'START_WINNER_CEREMONY'
     | 'NEW_WORD_OR_QUESTION'
     | 'RESET_GAME_LEADERBOARD'
+    | 'DELETE_LEADERBOARD_ENTRY'
     | 'SUBMIT_ATTEMPT'
     | 'LEADERBOARD_UPDATE'
     | 'BUBBLE_IMPULSE'
@@ -384,6 +385,24 @@ class EventWebSocketService {
           type: 'LEADERBOARD_UPDATE',
           payload: { gameSlug, leaderboard: [] },
         });
+        break;
+      }
+
+      case 'DELETE_LEADERBOARD_ENTRY': {
+        const { gameSlug, participantId, participantName } = message.payload || {};
+        if (gameSlug) {
+          const list = this.activeContestAttempts.get(gameSlug) || [];
+          const filtered = list.filter((e) => {
+            const matchesId = (e.user?._id && e.user._id === participantId) || e._id === participantId;
+            const matchesName = participantName && e.user?.name?.toLowerCase() === participantName.toLowerCase();
+            return !matchesId && !matchesName;
+          });
+          this.activeContestAttempts.set(gameSlug, filtered);
+          this.broadcast({
+            type: 'LEADERBOARD_UPDATE',
+            payload: { gameSlug, leaderboard: filtered },
+          });
+        }
         break;
       }
 

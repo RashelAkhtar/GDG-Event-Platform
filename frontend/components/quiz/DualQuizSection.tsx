@@ -7,6 +7,9 @@ import {
   GdgEvent,
   api,
   DEFAULT_WEND_EVENT,
+  CeremonyWinner,
+  LeaderboardEntry,
+  RankedParticipant,
 } from '@/lib/api'
 import { AnimatedLockToggle } from '@/components/ui/AnimatedLockToggle'
 import {
@@ -22,9 +25,27 @@ import {
   ExternalLink,
   Trophy,
   Maximize2,
+  Trash2,
+  Crown,
+  Medal,
+  Rocket,
+  X,
+  UserCheck,
+  Zap,
+  HelpCircle,
+  Clock,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useWebSocket } from '@/context/WebSocketContext'
+
+function formatDuration(ms: number): string {
+  if (!ms || ms <= 0) return '0s'
+  const seconds = (ms / 1000).toFixed(1)
+  if (ms < 60000) return `${seconds}s`
+  const minutes = Math.floor(ms / 60000)
+  const remainingSecs = Math.floor((ms % 60000) / 1000)
+  return `${minutes}m ${remainingSecs}s`
+}
 
 interface DualQuizSectionProps {
   webEvent: GdgEvent
@@ -39,12 +60,21 @@ export function DualQuizSection({
 }: DualQuizSectionProps) {
   const { user } = useAuth()
   const router = useRouter()
-  const { gameLockStates, sendLockToggle, sendWinnerCeremonyStart, liveLeaderboards } = useWebSocket()
+  const { gameLockStates, sendLockToggle, sendWinnerCeremonyStart, sendDeleteLeaderboardEntry, liveLeaderboards } = useWebSocket()
   const [webEvent, setWebEvent] = useState<GdgEvent>(initialWeb)
   const [mentisEvent, setMentisEvent] = useState<GdgEvent>(initialMentis)
   const [wendEvent, setWendEvent] = useState<GdgEvent>(DEFAULT_WEND_EVENT)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
+
+  // Broadcast Winner Review Modal State
+  const [selectedBroadcastTrack, setSelectedBroadcastTrack] = useState<{ slug: string; title: string } | null>(null)
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
+  const [reviewRankings, setReviewRankings] = useState<{
+    winners: CeremonyWinner[]
+    rankedStandings: LeaderboardEntry[]
+    rankedParticipants: RankedParticipant[]
+  }>({ winners: [], rankedStandings: [], rankedParticipants: [] })
 
   const isAdmin = user?.role === 'ADMIN'
 
@@ -91,30 +121,48 @@ export function DualQuizSection({
     }
   }
 
-  const triggerWinnerCeremony = (slug: string, title: string) => {
-    const liveEntries = liveLeaderboards[slug] || []
-    const rankedStandings = [...liveEntries].sort((a, b) => {
-      const scoreDiff = (b.totalScore ?? 0) - (a.totalScore ?? 0)
-      if (scoreDiff !== 0) return scoreDiff
-      return (a.durationMs || 0) - (b.durationMs || 0)
+  const handleOpenBroadcastReview = (slug: string, title: string) => {
+    setSelectedBroadcastTrack({ slug, title })
+    const extraLive = liveLeaderboards[slug] || []
+    const rankings = api.getAutomatedRankings(slug, extraLive)
+    setReviewRankings(rankings)
+    setIsReviewModalOpen(true)
+  }
+
+  const handleDeleteUserFromLeaderboard = (participantId: string, participantName?: string) => {
+    if (!selectedBroadcastTrack) return
+    api.deleteParticipantFromLeaderboard(selectedBroadcastTrack.slug, participantId, participantName)
+    sendDeleteLeaderboardEntry(selectedBroadcastTrack.slug, participantId, participantName)
+
+    const extraLive = (liveLeaderboards[selectedBroadcastTrack.slug] || []).filter((e) => {
+      const matchId = (e.user?._id && e.user._id === participantId) || e._id === participantId
+      const matchName = participantName && e.user?.name?.toLowerCase() === participantName.toLowerCase()
+      return !matchId && !matchName
     })
+    const updated = api.getAutomatedRankings(selectedBroadcastTrack.slug, extraLive)
+    setReviewRankings(updated)
+    showToast(`Removed "${participantName || 'Participant'}" from leaderboard`)
+  }
 
-    const ceremonyWinners = rankedStandings.slice(0, 3).map((entry, idx) => ({
-      rank: (idx + 1) as 1 | 2 | 3,
-      name: entry.user?.name || 'Participant',
-      avatar: entry.user?.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${idx}`,
-      score: entry.totalScore ?? 0,
-      durationMs: entry.durationMs || 0,
-    }))
+  const handleSimulateTestParticipants = () => {
+    if (!selectedBroadcastTrack) return
+    api.simulateTieTestSessions(selectedBroadcastTrack.slug)
+    const extraLive = liveLeaderboards[selectedBroadcastTrack.slug] || []
+    const updated = api.getAutomatedRankings(selectedBroadcastTrack.slug, extraLive)
+    setReviewRankings(updated)
+    showToast('Loaded demo participants for testing!')
+  }
 
+  const handleStartBroadcast = () => {
+    if (!selectedBroadcastTrack || reviewRankings.winners.length === 0) return
     sendWinnerCeremonyStart({
-      gameSlug: slug,
-      gameTitle: title,
-      winners: ceremonyWinners,
-      fullLeaderboard: rankedStandings,
+      gameSlug: selectedBroadcastTrack.slug,
+      gameTitle: selectedBroadcastTrack.title,
+      winners: reviewRankings.winners,
+      fullLeaderboard: reviewRankings.rankedStandings,
     })
-
-    showToast(`Broadcasted winner ceremony for ${title}!`)
+    setIsReviewModalOpen(false)
+    showToast(`Broadcast winner ceremony for ${selectedBroadcastTrack.title}!`)
   }
 
   const renderQuizCard = (
@@ -463,11 +511,12 @@ export function DualQuizSection({
 
                 <button
                   type="button"
-                  onClick={() => triggerWinnerCeremony(event.slug, event.title)}
+                  onClick={() => handleOpenBroadcastReview(event.slug, event.title)}
                   className="flex items-center justify-center gap-2 rounded-2xl bg-[#FEF7E0] border border-[#FBBC04]/50 py-2.5 px-3 text-xs font-bold text-[#B06000] hover:bg-[#FEEFC3] active:scale-95 transition-all shadow-2xs cursor-pointer"
+                  title="Review leaderboard, delete invalid participants, and broadcast winners ceremony"
                 >
-                  <Award className="h-3.5 w-3.5 text-[#FBBC04]" />
-                  <span>Announce Ceremony</span>
+                  <Trophy className="h-3.5 w-3.5 text-[#FBBC04]" />
+                  <span>Broadcast Winner</span>
                 </button>
               </div>
             </div>
@@ -523,6 +572,205 @@ export function DualQuizSection({
 
       {/* Bottom Div: Mentis Quiz Track */}
       {renderQuizCard(mentisEvent, isMentisLive, setMentisEvent, 'mentis')}
+
+      {/* ======================================================== */}
+      {/* BROADCAST WINNER LEADERBOARD AUDIT & CONTROL MODAL       */}
+      {/* ======================================================== */}
+      {isReviewModalOpen && selectedBroadcastTrack && (
+        <div
+          onClick={() => setIsReviewModalOpen(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-md animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative flex flex-col w-full max-w-xl max-h-[90vh] rounded-[32px] sm:rounded-[36px] border border-white/80 bg-white shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+          >
+            {/* Top Google 4-Color Stripe */}
+            <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-[#4285F4] via-[#EA4335] via-[#FBBC04] to-[#34A853]" />
+
+            {/* Header */}
+            <div className="flex items-start justify-between p-5 pb-3.5 border-b border-[#F1F3F4]">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FEF7E0] border border-[#FBBC04]/40 text-[#B06000] shadow-xs">
+                  <Trophy className="h-6 w-6 text-[#FBBC04]" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-black text-[#202124] tracking-tight">
+                      Broadcast Winners
+                    </h3>
+                    <span className="rounded-full bg-[#E8F0FE] text-[#1967D2] px-2.5 py-0.5 text-[10px] font-bold">
+                      {selectedBroadcastTrack.title}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#5F6368] mt-0.5 font-medium">
+                    Review standings, delete invalid users, then start the live ceremony broadcast.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsReviewModalOpen(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-full text-[#5F6368] hover:bg-[#F1F3F4] transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal Body: Scrollable Standings & Controls */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              {/* Top 3 Podium Cards */}
+              {reviewRankings.winners.length > 0 && (
+                <div className="grid grid-cols-3 gap-2">
+                  {[1, 2, 3].map((pos) => {
+                    const winner = reviewRankings.winners.find((w) => w.rank === pos)
+                    const is1st = pos === 1
+                    const is2nd = pos === 2
+                    const bgClass = is1st
+                      ? 'bg-gradient-to-b from-[#FFFDF5] to-[#FEF7E0] border-[#FBBC04]'
+                      : is2nd
+                      ? 'bg-gradient-to-b from-white to-[#F8F9FA] border-[#BDC1C6]'
+                      : 'bg-gradient-to-b from-white to-[#FFF5EB] border-[#FDBA74]'
+
+                    const badgeClass = is1st
+                      ? 'bg-[#FBBC04] text-[#202124]'
+                      : is2nd
+                      ? 'bg-[#9AA0A6] text-white'
+                      : 'bg-[#E37400] text-white'
+
+                    return (
+                      <div
+                        key={pos}
+                        className={`rounded-2xl border-2 p-2.5 text-center flex flex-col items-center justify-between shadow-2xs ${bgClass}`}
+                      >
+                        <div className="flex flex-col items-center w-full">
+                          <span className={`inline-flex items-center justify-center h-5 w-5 rounded-full text-[10px] font-black shadow-xs mb-1 ${badgeClass}`}>
+                            #{pos}
+                          </span>
+                          {winner ? (
+                            <>
+                              <img
+                                src={winner.avatar}
+                                alt={winner.name}
+                                className="h-8 w-8 rounded-full object-cover border border-white shadow-2xs mb-1"
+                              />
+                              <span className="font-bold text-[#202124] text-xs truncate max-w-full">
+                                {winner.name}
+                              </span>
+                              <span className="text-[10px] font-extrabold text-[#1967D2] mt-0.5">
+                                {winner.score} pts
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-[10px] text-[#80868B] italic my-2">
+                              Awaiting
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              {/* Standings Header */}
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-xs font-bold text-[#202124] flex items-center gap-1.5">
+                  <UserCheck className="h-4 w-4 text-[#1A73E8]" />
+                  <span>Ranked Standings ({reviewRankings.rankedParticipants.length})</span>
+                </span>
+                {reviewRankings.rankedParticipants.length === 0 && (
+                  <button
+                    type="button"
+                    onClick={handleSimulateTestParticipants}
+                    className="inline-flex items-center gap-1 rounded-full bg-[#E8F0FE] px-3 py-1 text-[11px] font-bold text-[#1967D2] hover:bg-[#D2E3FC] cursor-pointer"
+                  >
+                    <Zap className="h-3 w-3" />
+                    <span>Load Demo Participants</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Standings List with Admin Delete */}
+              {reviewRankings.rankedParticipants.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-[#DADCE0] p-6 text-center text-xs text-[#5F6368]">
+                  <HelpCircle className="h-7 w-7 text-[#BDC1C6] mx-auto mb-1.5" />
+                  <p className="font-bold text-[#202124]">No submissions recorded yet for this challenge.</p>
+                  <p className="text-[11px] text-[#5F6368] mt-1 font-medium">
+                    Play a round or click &quot;Load Demo Participants&quot; to test.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2 max-h-56 overflow-y-auto pr-1">
+                  {reviewRankings.rankedParticipants.map((p) => (
+                    <div
+                      key={p.id}
+                      className="flex items-center justify-between p-2.5 rounded-2xl border border-[#DADCE0] bg-white hover:border-[#BDC1C6] transition-all text-xs"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#F1F3F4] text-[10px] font-black text-[#5F6368]">
+                          #{p.rank}
+                        </span>
+                        <img
+                          src={p.avatar}
+                          alt={p.name}
+                          className="h-8 w-8 shrink-0 rounded-full object-cover border border-[#DADCE0]"
+                        />
+                        <div className="min-w-0">
+                          <p className="font-bold text-[#202124] truncate text-xs">{p.name}</p>
+                          <p className="text-[10px] text-[#5F6368] flex items-center gap-1.5">
+                            <span className="text-[#1967D2] font-semibold">{p.score} pts</span>
+                            <span>•</span>
+                            <span className="text-[#137333] font-semibold">{formatDuration(p.durationMs)}</span>
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Admin Delete Action */}
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteUserFromLeaderboard(p.id, p.name)}
+                        className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold text-[#EA4335] hover:bg-[#FCE8E6] transition-colors cursor-pointer shrink-0"
+                        title={`Remove ${p.name} from standings`}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        <span>Delete</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer Actions Deck: Start Broadcast Button */}
+            <div className="p-4 border-t border-[#F1F3F4] bg-[#F8F9FA]/80 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <Link
+                href={`/admin-panel/panel?tab=winners&track=${selectedBroadcastTrack.slug}`}
+                onClick={() => setIsReviewModalOpen(false)}
+                className="text-[11px] font-bold text-[#1A73E8] hover:underline flex items-center gap-1 order-2 sm:order-1"
+              >
+                <span>Full Studio in Admin Panel</span>
+                <ExternalLink className="h-3 w-3" />
+              </Link>
+
+              <button
+                type="button"
+                disabled={reviewRankings.winners.length === 0}
+                onClick={handleStartBroadcast}
+                className={`flex h-11 w-full sm:w-auto items-center justify-center gap-2 rounded-2xl px-6 text-xs sm:text-sm font-extrabold text-white shadow-md transition-all active:scale-95 cursor-pointer order-1 sm:order-2 ${
+                  reviewRankings.winners.length === 0
+                    ? 'bg-[#BDC1C6] cursor-not-allowed opacity-60'
+                    : 'bg-gradient-to-r from-[#1A73E8] via-[#1557B0] to-[#0D47A1] hover:brightness-105 shadow-[#1A73E8]/30 ring-4 ring-[#1A73E8]/20'
+                }`}
+              >
+                <Rocket className="h-4 w-4" />
+                <span>Start Broadcast ({reviewRankings.winners.length} Winners Ready)</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

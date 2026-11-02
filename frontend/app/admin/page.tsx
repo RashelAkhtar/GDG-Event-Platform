@@ -71,7 +71,7 @@ function AdminPageContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { user } = useAuth()
-  const { gameLockStates, sendLockToggle, sendWinnerCeremonyStart, sendLeaderboardReset, sendWendConfigUpdate, liveLeaderboards, subscribeToLeaderboardUpdate, connected } = useWebSocket()
+  const { gameLockStates, sendLockToggle, sendWinnerCeremonyStart, sendLeaderboardReset, sendDeleteLeaderboardEntry, sendWendConfigUpdate, liveLeaderboards, subscribeToLeaderboardUpdate, connected } = useWebSocket()
 
   // Deep linking params (?tab=locks|quiz|wend|winners&track=web-dev-quiz|mentis-quiz)
   const tabParam = searchParams.get('tab') as 'locks' | 'quiz' | 'wend' | 'winners' | null
@@ -662,6 +662,13 @@ function AdminPageContent() {
     refreshStandings(slug)
   }
 
+  const handleDeleteParticipantStanding = (id: string, name?: string) => {
+    api.deleteParticipantFromLeaderboard(selectedSlug, id, name)
+    sendDeleteLeaderboardEntry(selectedSlug, id, name)
+    refreshStandings(selectedSlug)
+    showToast(`Removed "${name || 'Participant'}" from leaderboard`)
+  }
+
   const handleBroadcastWinnerCeremony = (overrideSlug?: string) => {
     const slugToUse = overrideSlug || selectedSlug
     const extraLive = liveLeaderboards[slugToUse] || []
@@ -1057,17 +1064,18 @@ function AdminPageContent() {
                         <span>{isLive ? `Lock ${actionTitle} (Switch to Locked)` : `Unlock ${actionTitle} (Go Live)`}</span>
                       </button>
 
-                      {/* Announce Winners Ceremony Trigger */}
+                      {/* Broadcast Winner Trigger */}
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation()
-                          handleBroadcastWinnerCeremony(slug)
+                          navigateToPanel('winners', slug !== 'wend-game' ? slug : undefined)
                         }}
                         className="flex h-10 items-center justify-center gap-2 rounded-2xl border border-[#FBBC04]/50 bg-[#FEF7E0] text-xs font-bold text-[#B06000] hover:bg-[#FFF8E1] active:scale-95 transition-all shadow-2xs cursor-pointer"
+                        title="Open Leaderboard to inspect, delete users, and broadcast winners"
                       >
-                        <Award className="h-4 w-4 text-[#FBBC04]" />
-                        <span>Announce Winners Ceremony</span>
+                        <Trophy className="h-4 w-4 text-[#FBBC04]" />
+                        <span>Broadcast Winner</span>
                       </button>
 
                       {/* Jump Shortcut Link */}
@@ -2222,7 +2230,7 @@ function AdminPageContent() {
                     }`}
                   >
                     <Rocket className="h-4.5 w-4.5" />
-                    <span>Broadcast Winner Announcement ({automatedRanking.winners.length} Winners Ready)</span>
+                    <span>Start Broadcast ({automatedRanking.winners.length} Winners Ready)</span>
                   </button>
                 </div>
 
@@ -2663,6 +2671,17 @@ function AdminPageContent() {
                               Score Rank
                             </span>
                           )}
+
+                          {/* Admin Delete User from Standings */}
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteParticipantStanding(p.id, p.name)}
+                            title={`Delete ${p.name} from standings`}
+                            className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold text-[#EA4335] hover:bg-[#FCE8E6] transition-colors cursor-pointer shrink-0 border border-[#EA4335]/30 bg-white"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            <span>Delete</span>
+                          </button>
                         </div>
                       </div>
                     )

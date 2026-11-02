@@ -55,6 +55,7 @@ interface WebSocketContextType {
   sendCountdownStart: (gameSlug: string) => void
   sendWinnerCeremonyStart: (ceremonyData: CeremonyData) => void
   sendLeaderboardReset: (gameSlug: string) => void
+  sendDeleteLeaderboardEntry: (gameSlug: string, participantId: string, participantName?: string) => void
   sendWendConfigUpdate: (config: WendBoardConfig) => void
   sendBubbleImpulse: (impulse: { x: number; y: number; senderSessionId?: string }) => void
   securityAlerts: SecurityAlert[]
@@ -84,6 +85,7 @@ const WebSocketContext = createContext<WebSocketContextType>({
   sendCountdownStart: () => {},
   sendWinnerCeremonyStart: () => {},
   sendLeaderboardReset: () => {},
+  sendDeleteLeaderboardEntry: () => {},
   sendWendConfigUpdate: () => {},
   sendBubbleImpulse: () => {},
   securityAlerts: [],
@@ -596,6 +598,29 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     [broadcastMessage, notifyLeaderboardReset]
   )
 
+  const sendDeleteLeaderboardEntry = useCallback(
+    (gameSlug: string, participantId: string, participantName?: string) => {
+      setLiveLeaderboards((prev) => {
+        const list = prev[gameSlug] || []
+        const filtered = list.filter((e) => {
+          const matchId = (e.user?._id && e.user._id === participantId) || e._id === participantId
+          const matchName = participantName && e.user?.name?.toLowerCase() === participantName.toLowerCase()
+          return !matchId && !matchName
+        })
+        return {
+          ...prev,
+          [gameSlug]: filtered,
+        }
+      })
+
+      broadcastMessage({
+        type: 'DELETE_LEADERBOARD_ENTRY',
+        payload: { gameSlug, participantId, participantName },
+      })
+    },
+    [broadcastMessage]
+  )
+
   const sendWendConfigUpdate = useCallback(
     (config: WendBoardConfig) => {
       broadcastMessage({
@@ -695,6 +720,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
         sendCountdownStart,
         sendWinnerCeremonyStart,
         sendLeaderboardReset,
+        sendDeleteLeaderboardEntry,
         sendWendConfigUpdate,
         sendBubbleImpulse,
         securityAlerts,
