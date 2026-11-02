@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { Navbar } from '@/components/ui/Navbar'
 import { ScreenshotWarningModal } from '@/components/security/ScreenshotWarningModal'
+import { LocalGameCountdown } from '@/components/realtime/LocalGameCountdown'
 import {
   api,
   WendBoardConfig,
@@ -56,6 +57,12 @@ export default function WendGamePage() {
   const [board, setBoard] = useState<WendBoardConfig>(() => api.getWendBoard())
   const allocatedTimeSeconds = board.timeLimitSeconds || 120
   const [timeLeft, setTimeLeft] = useState<number>(() => allocatedTimeSeconds)
+  const [isCountingDown, setIsCountingDown] = useState<boolean>(true)
+
+  const handleCountdownComplete = useCallback(() => {
+    setIsCountingDown(false)
+    startTimeRef.current = Date.now()
+  }, [])
 
   const [isTimeUp, setIsTimeUp] = useState<boolean>(false)
   const [foundWordIds, setFoundWordIds] = useState<Set<string>>(new Set())
@@ -162,7 +169,7 @@ export default function WendGamePage() {
 
   // Countdown timer honoring time set by admin
   useEffect(() => {
-    if (completedSession || isLocked) return
+    if (completedSession || isLocked || isCountingDown) return
 
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
@@ -179,7 +186,7 @@ export default function WendGamePage() {
     }, 1000)
 
     return () => clearInterval(timer)
-  }, [completedSession, isLocked, handleTimeUpSubmit])
+  }, [completedSession, isLocked, isCountingDown, handleTimeUpSubmit])
 
   // Real-time synchronization if admin updates board time limit
   useEffect(() => {
@@ -208,7 +215,8 @@ export default function WendGamePage() {
         const freshBoard = api.getWendBoard()
         setBoard(freshBoard)
         setTimeLeft(freshBoard.timeLimitSeconds || 120)
-        startTimeRef.current = Date.now()
+        setIsCountingDown(true)
+        startTimeRef.current = null
         if (typeof window !== 'undefined') {
           localStorage.removeItem('gdg_user_session_wend-game')
         }
@@ -457,6 +465,14 @@ export default function WendGamePage() {
       </div>
 
       <Navbar />
+
+      {/* 5-Second Local Countdown Animation Before Game Start */}
+      {Boolean(!completedSession && !isLocked && !isDisqualified && isCountingDown) && (
+        <LocalGameCountdown
+          gameTitle={board.title || 'Wend Word Arena'}
+          onComplete={handleCountdownComplete}
+        />
+      )}
 
       <main className="relative z-10 flex-1 flex flex-col items-center justify-between p-3 sm:p-5 max-w-lg mx-auto w-full select-none no-copy" onCopy={(e) => { e.preventDefault(); showCopyProhibitedAlert(); }} onCut={(e) => e.preventDefault()} onContextMenu={(e) => e.preventDefault()}>
         {/* Navigation & Live Header with Admin Time Limit */}

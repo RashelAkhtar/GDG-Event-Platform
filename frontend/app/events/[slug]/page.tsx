@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { Navbar } from '@/components/ui/Navbar'
 import { ScreenshotWarningModal } from '@/components/security/ScreenshotWarningModal'
+import { LocalGameCountdown } from '@/components/realtime/LocalGameCountdown'
 import { useAuth } from '@/context/AuthContext'
 import { useWebSocket } from '@/context/WebSocketContext'
 import { soundManager } from '@/lib/sound'
@@ -47,6 +48,12 @@ function QuizRunnerContent() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({})
   const [timeLeft, setTimeLeft] = useState<number>(30)
+  const [isCountingDown, setIsCountingDown] = useState(true)
+
+  const handleCountdownComplete = useCallback(() => {
+    setIsCountingDown(false)
+    startTimeRef.current = Date.now()
+  }, [])
 
   const [screenshotWarningCount, setScreenshotWarningCount] = useState<number>(0)
   const [showScreenshotWarning, setShowScreenshotWarning] = useState<boolean>(false)
@@ -98,7 +105,8 @@ function QuizRunnerContent() {
         setCurrentIndex(0)
         setSelectedAnswers({})
         setTimeLeft(30)
-        startTimeRef.current = Date.now()
+        setIsCountingDown(true)
+        startTimeRef.current = null
         api.clearSessionsForSlug(slug)
       }
     })
@@ -298,7 +306,7 @@ function QuizRunnerContent() {
 
   // Question Timer Countdown
   useEffect(() => {
-    if (completedSession || loading || questions.length === 0) return
+    if (completedSession || loading || questions.length === 0 || isCountingDown) return
 
     const currentQuestion = questions[currentIndex]
     const limit = currentQuestion?.timeLimitSeconds || 30
@@ -326,7 +334,7 @@ function QuizRunnerContent() {
       clearTimeout(resetTimer)
       clearInterval(timer)
     }
-  }, [currentIndex, questions, completedSession, loading, handleSubmitQuiz])
+  }, [currentIndex, questions, completedSession, loading, isCountingDown, handleSubmitQuiz])
 
   const handleSelectOption = (optionIndex: number) => {
     soundManager.playQuizOption()
@@ -357,6 +365,14 @@ function QuizRunnerContent() {
       </div>
 
       <Navbar />
+
+      {/* 5-Second Local Countdown Animation Before Game Start */}
+      {Boolean(!completedSession && !loading && !isDisqualified && questions.length > 0 && isCountingDown) && (
+        <LocalGameCountdown
+          gameTitle={event?.title || 'Quiz Arena'}
+          onComplete={handleCountdownComplete}
+        />
+      )}
 
       <main className="relative z-10 mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pt-4 pb-16 sm:px-6">
         {/* Top Back bar */}

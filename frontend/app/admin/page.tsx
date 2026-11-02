@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, Suspense } from 'react'
 import Link from 'next/link'
+import { useSearchParams, useRouter } from 'next/navigation'
 import {
   api,
   DEFAULT_WEB_EVENT,
@@ -28,12 +29,12 @@ import {
   Unlock,
   Plus,
   ArrowLeft,
+  ArrowRight,
   CheckCircle2,
   AlertCircle,
   HelpCircle,
   Clock,
   Award,
-  Play,
   Trophy,
   ListOrdered,
   Sparkles,
@@ -65,9 +66,15 @@ function formatDuration(ms: number): string {
   return `${minutes}m ${remainingSecs}s`
 }
 
-export default function AdminPage() {
+function AdminPageContent() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
   const { user } = useAuth()
   const { gameLockStates, sendLockToggle, sendCountdownStart, sendWinnerCeremonyStart, sendLeaderboardReset, liveLeaderboards, subscribeToLeaderboardUpdate, connected } = useWebSocket()
+
+  // Deep linking params (?tab=locks|quiz|wend|winners&track=web-dev-quiz|mentis-quiz)
+  const tabParam = searchParams.get('tab') as 'locks' | 'quiz' | 'wend' | 'winners' | null
+  const trackParam = searchParams.get('track')
 
   const [webEvent, setWebEvent] = useState<GdgEvent>(DEFAULT_WEB_EVENT)
   const [mentisEvent, setMentisEvent] = useState<GdgEvent>(DEFAULT_MENTIS_EVENT)
@@ -76,12 +83,15 @@ export default function AdminPage() {
   const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
 
   // Top Tabs: 'locks' | 'quiz' | 'wend' | 'winners'
-  const [activeTab, setActiveTab] = useState<'locks' | 'quiz' | 'wend' | 'winners'>('locks')
+  const [activeTab, setActiveTab] = useState<'locks' | 'quiz' | 'wend' | 'winners'>(() => {
+    if (tabParam && ['locks', 'quiz', 'wend', 'winners'].includes(tabParam)) return tabParam
+    return 'locks'
+  })
 
   // Selected event for question manager
-  const [selectedSlug, setSelectedSlug] = useState<string>('web-dev-quiz')
+  const [selectedSlug, setSelectedSlug] = useState<string>(() => trackParam || 'web-dev-quiz')
   const [questionsList, setQuestionsList] = useState<QuestionData[]>(() =>
-    api.getQuestionsForSlug('web-dev-quiz')
+    api.getQuestionsForSlug(trackParam || 'web-dev-quiz')
   )
 
   // New question form state
@@ -113,11 +123,12 @@ export default function AdminPage() {
     rankedParticipants: RankedParticipant[]
   }>({ winners: [], rankedStandings: [], rankedParticipants: [] })
 
-  // Div Card Inline Editing (Panel 1: Div Locks)
-  const [editingDivSlug, setEditingDivSlug] = useState<string | null>(null)
-  const [editDivTitle, setEditDivTitle] = useState('')
-  const [editDivDescription, setEditDivDescription] = useState('')
-  const [savingDivEdit, setSavingDivEdit] = useState(false)
+  // Track & Arena metadata editing state (for Panel 2 & Panel 3)
+  const [trackEditTitle, setTrackEditTitle] = useState(() => (trackParam === 'mentis-quiz' ? mentisEvent.title : webEvent.title))
+  const [trackEditDesc, setTrackEditDesc] = useState(() => (trackParam === 'mentis-quiz' ? mentisEvent.description : webEvent.description))
+  const [wendArenaTitle, setWendArenaTitle] = useState(() => wendEvent.title)
+  const [wendArenaDesc, setWendArenaDesc] = useState(() => wendEvent.description)
+  const [savingTrackEdit, setSavingTrackEdit] = useState(false)
 
   // Question Inline Editing (Panel 2: Quiz & Answers)
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null)
@@ -241,44 +252,46 @@ export default function AdminPage() {
     }
   }
 
-  const handleStart5sCountdown = (slug: string, title: string) => {
-    sendCountdownStart(slug)
-    showToast(`Broadcasted 5-4-3-2-1 launch countdown for ${title}!`)
+  // Navigation router helper: deep links tabs and tracks cleanly to /admin-panel/panel
+  const navigateToPanel = (tab: 'locks' | 'quiz' | 'wend' | 'winners', track?: string) => {
+    setActiveTab(tab)
+    if (tab === 'quiz') {
+      const targetSlug = track || selectedSlug || 'web-dev-quiz'
+      setSelectedSlug(targetSlug)
+      setQuestionsList(api.getQuestionsForSlug(targetSlug))
+      const target = targetSlug === 'mentis-quiz' ? mentisEvent : webEvent
+      setTrackEditTitle(target.title)
+      setTrackEditDesc(target.description)
+    }
+    const params = new URLSearchParams()
+    params.set('tab', tab)
+    if (track || (tab === 'quiz' && selectedSlug)) {
+      params.set('track', track || selectedSlug)
+    }
+    router.push(`/admin-panel/panel?${params.toString()}`)
   }
 
-  // --- 1.1 INLINE DIV EDITING HANDLERS (PANEL 1) ---
-  const handleStartEditDiv = (slug: 'web-dev-quiz' | 'mentis-quiz' | 'wend-game') => {
-    const target = slug === 'web-dev-quiz' ? webEvent : slug === 'mentis-quiz' ? mentisEvent : wendEvent
-    setEditingDivSlug(slug)
-    setEditDivTitle(target.title)
-    setEditDivDescription(target.description)
-  }
-
-  const handleCancelEditDiv = () => {
-    setEditingDivSlug(null)
-    setEditDivTitle('')
-    setEditDivDescription('')
-  }
-
-  const handleSaveDivEdit = async (slug: 'web-dev-quiz' | 'mentis-quiz' | 'wend-game') => {
+  // --- 1.1 TRACK & ARENA METADATA HANDLERS (PANELS 2 & 3) ---
+  const handleSaveTrackMetadata = async (slug: 'web-dev-quiz' | 'mentis-quiz' | 'wend-game') => {
     const target = slug === 'web-dev-quiz' ? webEvent : slug === 'mentis-quiz' ? mentisEvent : wendEvent
     const setEvent = slug === 'web-dev-quiz' ? setWebEvent : slug === 'mentis-quiz' ? setMentisEvent : setWendEvent
-    setSavingDivEdit(true)
+    const newTitle = slug === 'wend-game' ? wendArenaTitle.trim() : trackEditTitle.trim()
+    const newDesc = slug === 'wend-game' ? wendArenaDesc.trim() : trackEditDesc.trim()
+    setSavingTrackEdit(true)
     try {
-      const updatedTitle = editDivTitle.trim() || target.title
-      const updatedDescription = editDivDescription.trim() || target.description
+      const finalTitle = newTitle || target.title
+      const finalDesc = newDesc || target.description
       await api.updateEventDetails(target._id, {
-        title: updatedTitle,
-        description: updatedDescription,
+        title: finalTitle,
+        description: finalDesc,
       })
-      const updatedEvent: GdgEvent = { ...target, title: updatedTitle, description: updatedDescription }
+      const updatedEvent: GdgEvent = { ...target, title: finalTitle, description: finalDesc }
       setEvent(updatedEvent)
-      setEditingDivSlug(null)
-      showToast(`Saved div updates for "${updatedTitle}"!`)
+      showToast(`Saved settings for "${finalTitle}"!`)
     } catch {
-      showToast('Failed to save div updates', 'error')
+      showToast('Failed to save settings', 'error')
     } finally {
-      setSavingDivEdit(false)
+      setSavingTrackEdit(false)
     }
   }
 
@@ -369,6 +382,10 @@ export default function AdminPage() {
   const handleSelectQuizTrack = (slug: string) => {
     setSelectedSlug(slug)
     setQuestionsList(api.getQuestionsForSlug(slug))
+    const target = slug === 'mentis-quiz' ? mentisEvent : webEvent
+    setTrackEditTitle(target.title)
+    setTrackEditDesc(target.description)
+    router.push(`/admin-panel/panel?tab=quiz&track=${slug}`)
   }
 
   const handleAddQuestion = (e: React.FormEvent) => {
@@ -754,7 +771,7 @@ export default function AdminPage() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
             <button
               type="button"
-              onClick={() => setActiveTab('locks')}
+              onClick={() => navigateToPanel('locks')}
               className={`group flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 text-xs font-bold transition-all duration-200 cursor-pointer ${
                 activeTab === 'locks'
                   ? 'bg-gradient-to-r from-[#1A73E8] to-[#1557B0] text-white shadow-md shadow-[#1A73E8]/25 scale-[1.01]'
@@ -772,7 +789,7 @@ export default function AdminPage() {
 
             <button
               type="button"
-              onClick={() => setActiveTab('quiz')}
+              onClick={() => navigateToPanel('quiz', selectedSlug)}
               className={`group flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 text-xs font-bold transition-all duration-200 cursor-pointer ${
                 activeTab === 'quiz'
                   ? 'bg-gradient-to-r from-[#1E8E3E] to-[#137333] text-white shadow-md shadow-[#34A853]/25 scale-[1.01]'
@@ -790,7 +807,7 @@ export default function AdminPage() {
 
             <button
               type="button"
-              onClick={() => setActiveTab('wend')}
+              onClick={() => navigateToPanel('wend')}
               className={`group flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 text-xs font-bold transition-all duration-200 cursor-pointer ${
                 activeTab === 'wend'
                   ? 'bg-gradient-to-r from-[#D93025] to-[#B31412] text-white shadow-md shadow-[#EA4335]/25 scale-[1.01]'
@@ -808,7 +825,7 @@ export default function AdminPage() {
 
             <button
               type="button"
-              onClick={() => setActiveTab('winners')}
+              onClick={() => navigateToPanel('winners')}
               className={`group flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 text-xs font-bold transition-all duration-200 cursor-pointer ${
                 activeTab === 'winners'
                   ? 'bg-gradient-to-r from-[#FBBC04] to-[#F29900] text-[#202124] shadow-md shadow-[#FBBC04]/30 scale-[1.01]'
@@ -843,7 +860,7 @@ export default function AdminPage() {
                   </h2>
                 </div>
                 <p className="mt-1 text-xs text-[#5F6368]">
-                  Toggle padlock or switch to lock/unlock tracks in real time. Click card body to edit track title and description.
+                  Toggle padlock or switch to lock/unlock tracks in real time. Click any card to edit that challenge arena and questions in the admin panel.
                 </p>
               </div>
               <div className="flex items-center gap-2 self-start sm:self-auto">
@@ -898,23 +915,20 @@ export default function AdminPage() {
                 },
               ].map((track) => {
                 const { slug, event, isLive, trackTag, tagBg, accentHover, icon: Icon, meta, actionTitle, jumpTab, jumpLabel } = track
-                const isEditing = editingDivSlug === slug
                 const isUpdating = updatingId === event._id
 
                 return (
                   <div
                     key={slug}
                     onClick={() => {
-                      if (!isEditing) handleStartEditDiv(slug)
+                      navigateToPanel(jumpTab, slug !== 'wend-game' ? slug : undefined)
                     }}
-                    className={`group relative flex flex-col justify-between rounded-3xl border transition-all duration-300 p-5 bg-white/90 backdrop-blur-md shadow-xs hover:shadow-md cursor-pointer ${
-                      isEditing
-                        ? 'border-[#1A73E8] ring-4 ring-[#1A73E8]/15 bg-white cursor-default'
-                        : isLive
+                    className={`group relative flex flex-col justify-between rounded-3xl border transition-all duration-300 p-5 bg-white/90 backdrop-blur-md shadow-xs hover:shadow-lg hover:-translate-y-0.5 cursor-pointer ${
+                      isLive
                         ? 'border-[#34A853]/50 ring-1 ring-[#34A853]/20 ' + accentHover
-                        : 'border-[#DADCE0] hover:border-[#BDC1C6]'
+                        : 'border-[#DADCE0] hover:border-[#1A73E8]'
                     }`}
-                    title={!isEditing ? 'Click card to edit title & description' : undefined}
+                    title={`Click to open ${actionTitle} editor in panel`}
                   >
                     <div>
                       {/* Top Header: Track Tag & Lock/Unlock Switch */}
@@ -975,100 +989,31 @@ export default function AdminPage() {
                         />
                       </div>
 
-                      {/* Div Content: Normal View vs Inline Editor */}
-                      {isEditing ? (
-                        <div
-                          onClick={(e) => e.stopPropagation()}
-                          className="mt-2 rounded-2xl border border-[#1A73E8]/40 bg-white p-4 shadow-sm text-left animate-in zoom-in-95"
-                        >
-                          <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#DADCE0]">
-                            <span className="text-[11px] font-bold text-[#1A73E8] uppercase tracking-wider flex items-center gap-1.5">
-                              <Edit3 className="h-3.5 w-3.5" />
-                              Edit Div Content
-                            </span>
-                            <span className="text-[10px] font-semibold text-[#5F6368] bg-[#F1F3F4] px-2 py-0.5 rounded-full">Live Synced</span>
-                          </div>
-
-                          <div className="space-y-3 text-left">
-                            <div>
-                              <label className="block text-[10px] font-bold text-[#3C4043] uppercase tracking-wider mb-1">
-                                Track Title
-                              </label>
-                              <input
-                                type="text"
-                                value={editDivTitle}
-                                onChange={(e) => setEditDivTitle(e.target.value)}
-                                className="w-full rounded-xl border border-[#DADCE0] bg-[#F8F9FA] px-3 py-2 text-xs font-bold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:bg-white"
-                                placeholder="Enter track title"
-                                autoFocus
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-[10px] font-bold text-[#3C4043] uppercase tracking-wider mb-1">
-                                Description
-                              </label>
-                              <textarea
-                                rows={3}
-                                value={editDivDescription}
-                                onChange={(e) => setEditDivDescription(e.target.value)}
-                                className="w-full rounded-xl border border-[#DADCE0] bg-[#F8F9FA] p-2.5 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:bg-white leading-relaxed"
-                                placeholder="Enter track description"
-                              />
-                            </div>
-
-                            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#F1F3F4]">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleCancelEditDiv()
-                                }}
-                                className="inline-flex items-center gap-1 rounded-full border border-[#DADCE0] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#5F6368] hover:bg-[#F1F3F4] transition-colors"
-                              >
-                                <X className="h-3.5 w-3.5" />
-                                <span>Cancel</span>
-                              </button>
-                              <button
-                                type="button"
-                                disabled={savingDivEdit}
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleSaveDivEdit(slug)
-                                }}
-                                className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#1A73E8] to-[#1557B0] px-4 py-1.5 text-xs font-bold text-white shadow-sm hover:from-[#1765CC] hover:to-[#104D96] active:scale-95 transition-all"
-                              >
-                                <Check className="h-3.5 w-3.5" />
-                                <span>{savingDivEdit ? 'Saving...' : 'Save Div'}</span>
-                              </button>
-                            </div>
-                          </div>
+                      {/* Div Content */}
+                      <div className="mt-2 flex flex-col items-start text-left">
+                        <div className="flex items-center justify-between w-full">
+                          <h3 className="text-base font-bold text-[#202124] group-hover:text-[#1A73E8] transition-colors">
+                            {event.title}
+                          </h3>
+                          <span className="text-[#5F6368] group-hover:text-[#1A73E8] group-hover:translate-x-0.5 transition-all text-xs font-semibold flex items-center gap-1">
+                            <span>Edit</span>
+                            <ArrowRight className="h-3.5 w-3.5" />
+                          </span>
                         </div>
-                      ) : (
-                        <div className="mt-2 flex flex-col items-start text-left">
-                          <div className="flex items-center justify-between w-full">
-                            <h3 className="text-base font-bold text-[#202124] group-hover:text-[#1A73E8] transition-colors">
-                              {event.title}
-                            </h3>
-                            <span className="opacity-0 group-hover:opacity-100 transition-opacity text-[#1A73E8] ml-1">
-                              <Edit3 className="h-3.5 w-3.5" />
-                            </span>
-                          </div>
-                          <p className="text-xs text-[#5F6368] mt-1 leading-relaxed line-clamp-2">
-                            {event.description}
-                          </p>
-                          <div className="mt-3 flex items-center justify-between w-full gap-2 pt-2 border-t border-[#F1F3F4]">
-                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#5F6368]">
-                              <Sparkles className="h-3 w-3 text-[#FBBC04]" />
-                              <span>{meta}</span>
-                            </span>
-                            <span className="inline-flex items-center gap-1 rounded-full bg-[#F1F3F4] px-2.5 py-0.5 text-[10px] font-semibold text-[#5F6368] group-hover:bg-[#E8F0FE] group-hover:text-[#1A73E8] transition-colors">
-                              <Edit2 className="h-2.5 w-2.5" />
-                              <span>Click to edit</span>
-                            </span>
-                          </div>
+                        <p className="text-xs text-[#5F6368] mt-1 leading-relaxed line-clamp-2">
+                          {event.description}
+                        </p>
+                        <div className="mt-3 flex items-center justify-between w-full gap-2 pt-2 border-t border-[#F1F3F4]">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#5F6368]">
+                            <Sparkles className="h-3 w-3 text-[#FBBC04]" />
+                            <span>{meta}</span>
+                          </span>
+                          <span className="inline-flex items-center gap-1 rounded-full bg-[#E8F0FE] px-2.5 py-0.5 text-[10px] font-bold text-[#1967D2] border border-[#1A73E8]/20 group-hover:bg-[#1A73E8] group-hover:text-white transition-all shadow-2xs">
+                            <SlidersHorizontal className="h-2.5 w-2.5" />
+                            <span>Edit in Panel</span>
+                          </span>
                         </div>
-                      )}
+                      </div>
                     </div>
 
                     {/* Bottom Action Controls Deck */}
@@ -1091,42 +1036,25 @@ export default function AdminPage() {
                         <span>{isLive ? `Lock ${actionTitle} (Switch to Locked)` : `Unlock ${actionTitle} (Go Live)`}</span>
                       </button>
 
-                      {/* Quick Secondary Controls Row */}
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleStart5sCountdown(slug, actionTitle)
-                          }}
-                          className="flex h-9 items-center justify-center gap-1.5 rounded-xl border border-[#1A73E8]/30 bg-[#E8F0FE] text-xs font-bold text-[#1967D2] hover:bg-[#D2E3FC] active:scale-95 transition-all shadow-2xs"
-                        >
-                          <Play className="h-3 w-3 fill-current" />
-                          <span>5s Countdown</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleBroadcastWinnerCeremony(slug)
-                          }}
-                          className="flex h-9 items-center justify-center gap-1.5 rounded-xl border border-[#FBBC04]/50 bg-[#FEF7E0] text-xs font-bold text-[#B06000] hover:bg-[#FFF8E1] active:scale-95 transition-all shadow-2xs"
-                        >
-                          <Award className="h-3.5 w-3.5 text-[#FBBC04]" />
-                          <span>Announce Winners</span>
-                        </button>
-                      </div>
+                      {/* Announce Winners Ceremony Trigger */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleBroadcastWinnerCeremony(slug)
+                        }}
+                        className="flex h-10 items-center justify-center gap-2 rounded-2xl border border-[#FBBC04]/50 bg-[#FEF7E0] text-xs font-bold text-[#B06000] hover:bg-[#FFF8E1] active:scale-95 transition-all shadow-2xs cursor-pointer"
+                      >
+                        <Award className="h-4 w-4 text-[#FBBC04]" />
+                        <span>Announce Winners Ceremony</span>
+                      </button>
 
                       {/* Jump Shortcut Link */}
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation()
-                          setActiveTab(jumpTab)
-                          if (slug !== 'wend-game') {
-                            setSelectedSlug(slug)
-                          }
+                          navigateToPanel(jumpTab, slug !== 'wend-game' ? slug : undefined)
                         }}
                         className="mt-1 flex items-center justify-center gap-1 text-[11px] font-semibold text-[#5F6368] hover:text-[#1A73E8] transition-colors py-1"
                       >
@@ -1237,6 +1165,61 @@ export default function AdminPage() {
                   <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FEF7E0] text-[#B06000]">
                     <Clock className="h-5 w-5" />
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Track Settings & Title/Description Editor */}
+            <div className="rounded-3xl border border-[#DADCE0]/90 bg-white/95 backdrop-blur-md p-5 sm:p-6 shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 pb-3 border-b border-[#F1F3F4]">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E8F0FE] text-[#1967D2]">
+                    <Edit3 className="h-4.5 w-4.5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm sm:text-base font-bold text-[#202124]">
+                      Track Details & Information ({selectedSlug === 'web-dev-quiz' ? 'Web Dev Sprint' : 'Mentis Challenge'})
+                    </h3>
+                    <p className="text-[11px] text-[#5F6368]">
+                      Rename this track and edit its participant challenge overview
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  disabled={savingTrackEdit}
+                  onClick={() => handleSaveTrackMetadata(selectedSlug as 'web-dev-quiz' | 'mentis-quiz')}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#1A73E8] to-[#1557B0] px-4 py-2 text-xs font-bold text-white shadow-xs hover:from-[#1765CC] hover:to-[#104D96] active:scale-95 transition-all self-start sm:self-auto cursor-pointer"
+                >
+                  <Check className="h-3.5 w-3.5" />
+                  <span>{savingTrackEdit ? 'Saving...' : 'Save Track Details'}</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-[#3C4043] mb-1.5">
+                    Track Title
+                  </label>
+                  <input
+                    type="text"
+                    value={trackEditTitle}
+                    onChange={(e) => setTrackEditTitle(e.target.value)}
+                    className="w-full rounded-2xl border border-[#DADCE0] bg-[#F8F9FA] px-3.5 py-2.5 text-xs font-bold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:bg-white"
+                    placeholder="Enter track title"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-[#3C4043] mb-1.5">
+                    Description
+                  </label>
+                  <input
+                    type="text"
+                    value={trackEditDesc}
+                    onChange={(e) => setTrackEditDesc(e.target.value)}
+                    className="w-full rounded-2xl border border-[#DADCE0] bg-[#F8F9FA] px-3.5 py-2.5 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:bg-white"
+                    placeholder="Enter track description"
+                  />
                 </div>
               </div>
             </div>
@@ -1658,6 +1641,61 @@ export default function AdminPage() {
                 <RotateCcw className="h-3.5 w-3.5" />
                 <span>{'Reset Reference "H & I" Board'}</span>
               </button>
+            </div>
+
+            {/* Wend Word Arena Settings & Information */}
+            <div className="rounded-3xl border border-[#DADCE0]/90 bg-white/95 backdrop-blur-md p-5 sm:p-6 shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 pb-3 border-b border-[#F1F3F4]">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#E6F4EA] text-[#137333]">
+                    <Edit3 className="h-4.5 w-4.5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm sm:text-base font-bold text-[#202124]">
+                      Wend Word Arena Information
+                    </h3>
+                    <p className="text-[11px] text-[#5F6368]">
+                      Rename the Wend Arena and update participant challenge instructions
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  disabled={savingTrackEdit}
+                  onClick={() => handleSaveTrackMetadata('wend-game')}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#34A853] to-[#1E8E3E] px-4 py-2 text-xs font-bold text-white shadow-xs hover:from-[#1E8E3E] hover:to-[#137333] active:scale-95 transition-all self-start sm:self-auto cursor-pointer"
+                >
+                  <Check className="h-3.5 w-3.5" />
+                  <span>{savingTrackEdit ? 'Saving...' : 'Save Arena Details'}</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-[#3C4043] mb-1.5">
+                    Arena Title
+                  </label>
+                  <input
+                    type="text"
+                    value={wendArenaTitle}
+                    onChange={(e) => setWendArenaTitle(e.target.value)}
+                    className="w-full rounded-2xl border border-[#DADCE0] bg-[#F8F9FA] px-3.5 py-2.5 text-xs font-bold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#34A853] focus:bg-white"
+                    placeholder="Enter Wend Arena title"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-[#3C4043] mb-1.5">
+                    Description & Instructions
+                  </label>
+                  <input
+                    type="text"
+                    value={wendArenaDesc}
+                    onChange={(e) => setWendArenaDesc(e.target.value)}
+                    className="w-full rounded-2xl border border-[#DADCE0] bg-[#F8F9FA] px-3.5 py-2.5 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#34A853] focus:bg-white"
+                    placeholder="Enter Wend Arena description"
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Wend Round Duration & Live Timer Controller */}
@@ -2615,5 +2653,20 @@ export default function AdminPage() {
         )}
       </main>
     </div>
+  )
+}
+
+export default function AdminPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F9FA]">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#1A73E8] border-t-transparent" />
+          <p className="mt-3 text-xs text-[#5F6368]">Loading Command Center...</p>
+        </div>
+      }
+    >
+      <AdminPageContent />
+    </Suspense>
   )
 }
