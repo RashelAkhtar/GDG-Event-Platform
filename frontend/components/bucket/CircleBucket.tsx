@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useWebSocket } from '@/context/WebSocketContext'
-import { Wifi, WifiOff, RotateCcw } from 'lucide-react'
+import { WifiOff, RotateCcw } from 'lucide-react'
 
 interface Bubble {
   id: string

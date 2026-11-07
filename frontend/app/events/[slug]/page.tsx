@@ -17,18 +17,14 @@ import {
   ParticipantSession,
   DEFAULT_WEB_EVENT,
   DEFAULT_MENTIS_EVENT,
-  DEFAULT_QUESTIONS,
 } from '@/lib/api'
 import confetti from 'canvas-confetti'
 import {
   Clock,
   CheckCircle2,
-  Award,
   ArrowRight,
   Home,
   ArrowLeft,
-  HelpCircle,
-  Sparkles,
 } from 'lucide-react'
 
 function formatDuration(ms: number): string {
@@ -243,7 +239,17 @@ function QuizRunnerContent() {
         setQuestions(updatedQuestions)
       }
     })
-    return () => unsubscribe()
+    const handleSync = (e: Event) => {
+      const detail = (e as CustomEvent)?.detail
+      if (detail && detail.slug === slug && Array.isArray(detail.questions)) {
+        setQuestions(detail.questions)
+      }
+    }
+    window.addEventListener('gdg_questions_sync', handleSync)
+    return () => {
+      unsubscribe()
+      window.removeEventListener('gdg_questions_sync', handleSync)
+    }
   }, [slug, subscribeToQuestionsUpdate])
 
   const handleSubmitQuiz = useCallback(async () => {

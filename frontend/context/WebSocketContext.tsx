@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react'
-import { LeaderboardEntry, CeremonyWinner, WendBoardConfig, api } from '@/lib/api'
+import { LeaderboardEntry, CeremonyWinner, WendBoardConfig, QuestionData, api } from '@/lib/api'
 import { useAuth } from './AuthContext'
 
 export interface ConnectedSession {
@@ -66,12 +66,12 @@ interface WebSocketContextType {
   markSecurityAlertsRead: () => void
   closeCeremony: () => void
   reconnect: () => void
-  sendQuestionsUpdate: (gameSlug: string, questions: any[]) => void
+  sendQuestionsUpdate: (gameSlug: string, questions: QuestionData[]) => void
   subscribeToUserJoin: (callback: (session: ConnectedSession) => void) => () => void
   subscribeToUserLeave: (callback: (sessionId: string) => void) => () => void
   subscribeToLeaderboardReset: (callback: (gameSlug: string) => void) => () => void
   subscribeToLeaderboardUpdate: (callback: (gameSlug: string, leaderboard: LeaderboardEntry[]) => void) => () => void
-  subscribeToQuestionsUpdate: (callback: (gameSlug: string, questions: any[]) => void) => () => void
+  subscribeToQuestionsUpdate: (callback: (gameSlug: string, questions: QuestionData[]) => void) => () => void
 }
 
 const WebSocketContext = createContext<WebSocketContextType>({
@@ -158,7 +158,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   const userLeaveSubscribersRef = useRef<Set<(sessionId: string) => void>>(new Set())
   const leaderboardResetSubscribersRef = useRef<Set<(gameSlug: string) => void>>(new Set())
   const leaderboardUpdateSubscribersRef = useRef<Set<(gameSlug: string, leaderboard: LeaderboardEntry[]) => void>>(new Set())
-  const questionsUpdateSubscribersRef = useRef<Set<(gameSlug: string, questions: any[]) => void>>(new Set())
+  const questionsUpdateSubscribersRef = useRef<Set<(gameSlug: string, questions: QuestionData[]) => void>>(new Set())
   const pendingMessagesRef = useRef<{ type: string; payload?: unknown }[]>([])
   const connectFnRef = useRef<(() => void) | null>(null)
 
@@ -359,7 +359,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
         }
         case 'QUESTIONS_UPDATE': {
           const gameSlug = payload?.gameSlug as string | undefined
-          const questions = payload?.questions as any[] | undefined
+          const questions = payload?.questions as QuestionData[] | undefined
           if (gameSlug && Array.isArray(questions)) {
             if (typeof window !== 'undefined') {
               localStorage.setItem(`gdg_questions_${gameSlug}`, JSON.stringify(questions))
@@ -758,7 +758,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     []
   )
 
-  const sendQuestionsUpdate = useCallback((gameSlug: string, questions: any[]) => {
+  const sendQuestionsUpdate = useCallback((gameSlug: string, questions: QuestionData[]) => {
     broadcastMessage({
       type: 'QUESTIONS_UPDATE',
       payload: {
@@ -771,7 +771,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   }, [broadcastMessage])
 
   const subscribeToQuestionsUpdate = useCallback(
-    (callback: (gameSlug: string, questions: any[]) => void) => {
+    (callback: (gameSlug: string, questions: QuestionData[]) => void) => {
       questionsUpdateSubscribersRef.current.add(callback)
       return () => {
         questionsUpdateSubscribersRef.current.delete(callback)

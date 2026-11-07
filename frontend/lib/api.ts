@@ -401,7 +401,7 @@ export const api = {
         } catch {}
       }
     }
-    return DEFAULT_QUESTIONS[slug] || []
+    return []
   },
 
   async fetchQuestions(slug: string): Promise<QuestionData[]> {

@@ -20,24 +20,16 @@ import {
   LeaderboardEntry,
   RankedParticipant,
 } from '@/lib/api'
-import { AnimatedLockToggle } from '@/components/ui/AnimatedLockToggle'
 import { soundManager } from '@/lib/sound'
 import {
-  Globe,
-  Brain,
   Lock,
   Unlock,
   ArrowRight,
-  Award,
-  Sparkles,
   CheckCircle2,
-  Sliders,
   ExternalLink,
   Trophy,
   Maximize2,
   Trash2,
-  Crown,
-  Medal,
   Rocket,
   X,
   UserCheck,
@@ -217,23 +209,9 @@ export function DualQuizSection({
   ) => {
     const isUpdating = updatingId === event._id
 
-    // Track-specific Google Aesthetic Palette & Mesh Colors
+    // Track-specific metadata
     const isWeb = type === 'web'
     const isMentis = type === 'mentis'
-
-    const accentBg = isWeb
-      ? 'bg-[#E8F0FE]/90 text-[#1967D2] border border-[#1A73E8]/20'
-      : isMentis
-      ? 'bg-[#FEF7E0]/90 text-[#B06000] border border-[#FBBC04]/30'
-      : 'bg-[#E6F4EA]/90 text-[#137333] border border-[#34A853]/25'
-
-    const icon = isWeb ? (
-      <Globe className="h-4 w-4 text-[#1A73E8]" />
-    ) : isMentis ? (
-      <Brain className="h-4 w-4 text-[#EA4335]" />
-    ) : (
-      <Sparkles className="h-4 w-4 text-[#34A853]" />
-    )
 
     const trackLabel = isWeb ? 'Web Track' : isMentis ? 'Mentis Track' : 'Wend Track'
     const targetHref = type === 'wend' ? '/events/wend-game' : `/events/${event.slug}`
@@ -247,11 +225,6 @@ export function DualQuizSection({
       : isMentis
       ? 'Enter Mentis Challenge'
       : 'Enter Wend Game Arena'
-
-    // Subtle accent line on top of card
-    const topAccentColor = isLive
-      ? 'bg-[#137333]'
-      : 'bg-[#DADCE0]'
 
     // Live question / word count strictly based on user-created content
     const activeQuestionsCount =
@@ -307,7 +280,7 @@ export function DualQuizSection({
             <div className="flex items-center gap-2">
               <span className={`h-2 w-2 rounded-full ${accentDot}`} />
               <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-[#6B7280] font-medium">
-                {trackIndex} // {trackLabel}
+                {`${trackIndex} // ${trackLabel}`}
               </span>
             </div>
 

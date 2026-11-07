@@ -9,7 +9,6 @@ import { LocalGameCountdown } from '@/components/realtime/LocalGameCountdown'
 import {
   api,
   WendBoardConfig,
-  DEFAULT_WEND_BOARD,
   findWordPathInGrid,
   ParticipantSession,
   DiscoveredWordRecord,
@@ -24,12 +23,9 @@ import { WendWordBank } from '@/components/wend/WendWordBank'
 import { WendControls } from '@/components/wend/WendControls'
 import confetti from 'canvas-confetti'
 import {
-  Sparkles,
   ArrowLeft,
   Clock,
-  Lock,
   Home,
-  ArrowRight,
 } from 'lucide-react'
 
 const GOOGLE_COLORS = ['#4285F4', '#34A853', '#FBBC04', '#EA4335']
@@ -84,7 +80,6 @@ export default function WendGamePage() {
     startTimeRef.current = Date.now()
   }, [])
 
-  const [isTimeUp, setIsTimeUp] = useState<boolean>(false)
   const [foundWordIds, setFoundWordIds] = useState<Set<string>>(new Set())
   const [discoveredWords, setDiscoveredWords] = useState<DiscoveredWordRecord[]>([])
   const [currentWord, setCurrentWord] = useState<string>('')
@@ -154,7 +149,6 @@ export default function WendGamePage() {
   // Auto-submit when time set by admin expires
   const handleTimeUpSubmit = useCallback(() => {
     if (completedSession) return
-    setIsTimeUp(true)
     const currentFoundWords = foundWordIdsRef.current
     const durationMs = allocatedTimeSeconds * 1000
     const totalPoints = currentFoundWords.size * 200
@@ -257,7 +251,6 @@ export default function WendGamePage() {
         setCompletedSession(null)
         setFoundWordIds(new Set())
         setDiscoveredWords([])
-        setIsTimeUp(false)
         const freshBoard = api.getWendBoard()
         setBoard(freshBoard)
         setTimeLeft(freshBoard.timeLimitSeconds || 120)
@@ -461,7 +454,7 @@ export default function WendGamePage() {
 
       setCurrentWord('')
     },
-    [board, currentSessionId, foundWordIds, sendSubmitAttempt, user]
+    [allocatedTimeSeconds, board, currentSessionId, foundWordIds, sendSubmitAttempt, showToast, timeLeft, user]
   )
 
   // Undo button handler

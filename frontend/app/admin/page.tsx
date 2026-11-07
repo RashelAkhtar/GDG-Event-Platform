@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState, Suspense } from 'react'
+import React, { useEffect, useState, useCallback, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import {
@@ -10,7 +10,6 @@ import {
   DEFAULT_WEND_EVENT,
   GdgEvent,
   QuestionData,
-  WendWord,
   WendBoardConfig,
   findWordPathInGrid,
   CeremonyWinner,
@@ -109,15 +108,8 @@ function AdminPageContent() {
   const [points, setPoints] = useState(100)
   const [timeLimitSeconds, setTimeLimitSeconds] = useState(30)
 
-  // Wend game correct words & Snake Board Studio
-  const [wendWords, setWendWords] = useState<WendWord[]>(() => api.getWendWords())
-  const [newWendWord, setNewWendWord] = useState('')
-  const [newWendClue, setNewWendClue] = useState('')
-  const [newWendPoints, setNewWendPoints] = useState(150)
-
   // Wend Snake Board Studio state
   const [wendBoard, setWendBoard] = useState<WendBoardConfig>(() => api.getWendBoard())
-  const [wendGridEditMode, setWendGridEditMode] = useState<'OBSTACLE' | 'LETTER'>('OBSTACLE')
   const [focusedCell, setFocusedCell] = useState<{ r: number; c: number }>({ r: 0, c: 0 })
   const [previewWordPath, setPreviewWordPath] = useState<{ row: number; col: number }[] | null>(null)
   const [previewWordId, setPreviewWordId] = useState<string | null>(null)
@@ -169,39 +161,42 @@ function AdminPageContent() {
     }
   }, [selectedSlug])
 
-  const refreshStandings = async (slug = selectedSlug) => {
-    const targetEvent =
-      slug.includes('mentis') ? mentisEvent : slug.includes('wend') ? wendEvent : webEvent
-    try {
-      if (targetEvent?._id) {
-        const backendEntries = await api.getLeaderboard(targetEvent._id, slug)
-        if (Array.isArray(backendEntries) && backendEntries.length > 0) {
-          for (const entry of backendEntries) {
-            api.recordLocalAttempt(slug, entry)
+  const refreshStandings = useCallback(
+    async (slug = selectedSlug) => {
+      const targetEvent =
+        slug.includes('mentis') ? mentisEvent : slug.includes('wend') ? wendEvent : webEvent
+      try {
+        if (targetEvent?._id) {
+          const backendEntries = await api.getLeaderboard(targetEvent._id, slug)
+          if (Array.isArray(backendEntries) && backendEntries.length > 0) {
+            for (const entry of backendEntries) {
+              api.recordLocalAttempt(slug, entry)
+            }
           }
         }
-      }
-    } catch {}
-    const extraLive = liveLeaderboards[slug] || []
-    const rankings = api.getAutomatedRankings(slug, extraLive)
-    setAutomatedRanking(rankings)
-  }
+      } catch {}
+      const extraLive = liveLeaderboards[slug] || []
+      const rankings = api.getAutomatedRankings(slug, extraLive)
+      setAutomatedRanking(rankings)
+    },
+    [selectedSlug, mentisEvent, wendEvent, webEvent, liveLeaderboards]
+  )
 
   useEffect(() => {
     const unsub = subscribeToLeaderboardUpdate((updatedSlug) => {
-      refreshStandings(updatedSlug)
+      void refreshStandings(updatedSlug)
     })
     return () => unsub()
-  }, [subscribeToLeaderboardUpdate, selectedSlug])
+  }, [subscribeToLeaderboardUpdate, refreshStandings])
 
   useEffect(() => {
     if (activeTab === 'winners') {
       const timer = setTimeout(() => {
-        refreshStandings(selectedSlug)
+        void refreshStandings(selectedSlug)
       }, 0)
       return () => clearTimeout(timer)
     }
-  }, [activeTab, selectedSlug])
+  }, [activeTab, selectedSlug, refreshStandings])
 
   const handleSimulateTieTest = (slug = selectedSlug) => {
     api.simulateTieTestSessions(slug)
@@ -466,38 +461,6 @@ function AdminPageContent() {
     api.saveQuestionsForSlug(selectedSlug, updated)
     sendQuestionsUpdate(selectedSlug, updated)
     showToast('Question removed from quiz pool')
-  }
-
-  // --- 3. WEND GAME CORRECT WORDS MANAGER ---
-  const handleAddWendWord = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newWendWord.trim() || !newWendClue.trim()) {
-      showToast('Word and clue are required', 'error')
-      return
-    }
-
-    const wordItem: WendWord = {
-      id: `w_${wendWords.length + 1}_${newWendWord.trim().toLowerCase()}`,
-      word: newWendWord.trim().toUpperCase(),
-      clue: newWendClue.trim(),
-      points: Number(newWendPoints),
-      round: wendWords.length + 1,
-    }
-
-    const updated = [...wendWords, wordItem]
-    setWendWords(updated)
-    api.saveWendWords(updated)
-
-    setNewWendWord('')
-    setNewWendClue('')
-    showToast(`Correct word "${wordItem.word}" added for Wend game!`)
-  }
-
-  const handleDeleteWendWord = (id: string) => {
-    const updated = wendWords.filter((w) => w.id !== id)
-    setWendWords(updated)
-    api.saveWendWords(updated)
-    showToast('Word removed from Wend game')
   }
 
   // --- WEND GAME SNAKE BOARD STUDIO HANDLERS ---
