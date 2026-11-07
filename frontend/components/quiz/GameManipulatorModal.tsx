@@ -29,6 +29,7 @@ import {
   Save,
   Layers,
 } from 'lucide-react'
+import { WendBoardAdminStudio } from '@/components/wend/WendBoardAdminStudio'
 
 interface GameManipulatorModalProps {
   event: GdgEvent
@@ -797,20 +798,21 @@ function GameManipulatorModalInner({
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] p-4 text-center">
-                  <p className="text-xs text-[#6B7280] leading-relaxed mb-3">
-                    Active targets loaded into the puzzle word bank. Letter cells can be individually customized in the full 8×8 Studio.
-                  </p>
-                  <div className="flex flex-wrap justify-center gap-2">
-                    {wendBoard.targetWords.map((tw) => (
-                      <span
-                        key={tw.id}
-                        className="rounded-full bg-white border border-[#E5E7EB] px-3 py-1 font-mono text-xs font-medium text-[#111827] shadow-2xs"
-                      >
-                        {tw.word}
-                      </span>
-                    ))}
+                {/* Interactive 8×8 Matrix Studio */}
+                <div className="rounded-2xl border border-[#E5E7EB] bg-[#FAFAFA] p-4 text-center">
+                  <div className="flex items-center justify-between pb-2 mb-3 border-b border-[#E5E7EB]">
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-[#15803D] font-semibold">
+                      Interactive 8×8 Grid Layout
+                    </span>
+                    <span className="text-[10px] text-[#6B7280]">Real-time live sync</span>
                   </div>
+                  <WendBoardAdminStudio
+                    board={wendBoard}
+                    onChange={(updated) => {
+                      setWendBoard(updated)
+                      api.saveWendBoard(updated)
+                    }}
+                  />
                 </div>
               </div>
             </div>

@@ -57,6 +57,7 @@ import {
 } from 'lucide-react'
 import { SecurityNotificationBell } from '@/components/security/SecurityNotificationBell'
 import { AnimatedLockToggle } from '@/components/ui/AnimatedLockToggle'
+import { WendBoardAdminStudio } from '@/components/wend/WendBoardAdminStudio'
 
 function formatDuration(ms: number): string {
   if (!ms || ms <= 0) return '0s'
@@ -104,7 +105,6 @@ function AdminPageContent() {
 
   // Wend Snake Board Studio state
   const [wendBoard, setWendBoard] = useState<WendBoardConfig>(() => api.getWendBoard())
-  const [focusedCell, setFocusedCell] = useState<{ r: number; c: number }>({ r: 0, c: 0 })
   const [previewWordPath, setPreviewWordPath] = useState<{ row: number; col: number }[] | null>(null)
   const [previewWordId, setPreviewWordId] = useState<string | null>(null)
   const [newTargetWord, setNewTargetWord] = useState('')
@@ -458,121 +458,10 @@ function AdminPageContent() {
   }
 
   // --- WEND GAME SNAKE BOARD STUDIO HANDLERS ---
-  const moveFocus = (dr: number, dc: number) => {
-    setFocusedCell((prev) => {
-      let nextR = prev.r + dr
-      let nextC = prev.c + dc
-      // Wrap-around columns across rows
-      if (nextC >= wendBoard.cols) {
-        if (nextR < wendBoard.rows - 1) {
-          nextR += 1
-          nextC = 0
-        } else {
-          nextC = wendBoard.cols - 1
-        }
-      } else if (nextC < 0) {
-        if (nextR > 0) {
-          nextR -= 1
-          nextC = wendBoard.cols - 1
-        } else {
-          nextC = 0
-        }
-      }
-      nextR = Math.max(0, Math.min(wendBoard.rows - 1, nextR))
-      nextC = Math.max(0, Math.min(wendBoard.cols - 1, nextC))
-      return { r: nextR, c: nextC }
-    })
-  }
-
-  const handleToggleCellType = (r: number, c: number) => {
-    const updatedGrid = wendBoard.grid.map((rowArr, rowIdx) =>
-      rowArr.map((cell, colIdx) => {
-        if (rowIdx === r && colIdx === c) {
-          const isObstacle = cell.type === 'OBSTACLE'
-          return {
-            ...cell,
-            type: (isObstacle ? 'LETTER' : 'OBSTACLE') as 'LETTER' | 'OBSTACLE',
-            letter: isObstacle ? cell.letter || '' : undefined,
-          }
-        }
-        return cell
-      })
-    )
-    const updatedBoard = { ...wendBoard, grid: updatedGrid }
+  const handleUpdateBoard = (updatedBoard: WendBoardConfig) => {
     setWendBoard(updatedBoard)
     api.saveWendBoard(updatedBoard)
     sendWendConfigUpdate(updatedBoard)
-  }
-
-  const handleSetCellLetter = (r: number, c: number, letter: string) => {
-    const char = letter.slice(-1).toUpperCase()
-    const updatedGrid = wendBoard.grid.map((rowArr, rowIdx) =>
-      rowArr.map((cell, colIdx) => {
-        if (rowIdx === r && colIdx === c) {
-          return {
-            ...cell,
-            type: 'LETTER' as const,
-            letter: char,
-          }
-        }
-        return cell
-      })
-    )
-    const updatedBoard = { ...wendBoard, grid: updatedGrid }
-    setWendBoard(updatedBoard)
-    api.saveWendBoard(updatedBoard)
-    sendWendConfigUpdate(updatedBoard)
-  }
-
-  const handleClearCell = (r: number, c: number) => {
-    handleSetCellLetter(r, c, '')
-  }
-
-  const handleGridKeyDown = (e: React.KeyboardEvent) => {
-    const targetTag = (e.target as HTMLElement)?.tagName?.toLowerCase()
-    const isTargetInput = targetTag === 'input' || targetTag === 'textarea'
-
-    // If focused on an external form input, do not capture unless navigation arrows
-    if (isTargetInput && !(e.target as HTMLElement)?.classList?.contains('grid-box-input')) {
-      return
-    }
-
-    if (e.key === 'ArrowUp') {
-      e.preventDefault()
-      moveFocus(-1, 0)
-    } else if (e.key === 'ArrowDown') {
-      e.preventDefault()
-      moveFocus(1, 0)
-    } else if (e.key === 'ArrowLeft') {
-      e.preventDefault()
-      moveFocus(0, -1)
-    } else if (e.key === 'ArrowRight') {
-      e.preventDefault()
-      moveFocus(0, 1)
-    } else if (e.key === 'Backspace') {
-      e.preventDefault()
-      const { r, c } = focusedCell
-      const currentCell = wendBoard.grid[r]?.[c]
-      if (currentCell && currentCell.letter) {
-        handleSetCellLetter(r, c, '')
-      } else {
-        moveFocus(0, -1)
-        const prevC = c > 0 ? c - 1 : (r > 0 ? wendBoard.cols - 1 : 0)
-        const prevR = c > 0 ? r : Math.max(0, r - 1)
-        handleSetCellLetter(prevR, prevC, '')
-      }
-    } else if (e.key === 'Delete') {
-      e.preventDefault()
-      handleClearCell(focusedCell.r, focusedCell.c)
-    } else if (e.key === ' ' || e.key === 'Spacebar') {
-      e.preventDefault()
-      handleToggleCellType(focusedCell.r, focusedCell.c)
-    } else if (/^[a-zA-Z]$/.test(e.key)) {
-      e.preventDefault()
-      const char = e.key.toUpperCase()
-      handleSetCellLetter(focusedCell.r, focusedCell.c, char)
-      moveFocus(0, 1)
-    }
   }
 
   const handleTogglePreviewWordPath = (tw: { id: string; word: string }) => {
@@ -1822,117 +1711,26 @@ function AdminPageContent() {
 
             {/* Visual 8x8 Grid Editor Card */}
             <div className="rounded-3xl border border-[#E5E7EB]/80 bg-white/90 backdrop-blur-md p-5 sm:p-6 shadow-xs">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-[#F1F3F4]">
-                <div className="flex items-center gap-2">
-                  <Grid className="h-5 w-5 text-[#1A73E8]" />
-                  <div>
-                    <span className="text-sm sm:text-base font-bold text-[#202124]">Interactive 8×8 Grid Layout</span>
-                    <p className="text-[11px] text-[#5F6368]">
-                      Click any cell or use arrows to navigate. Type letters directly to fill and advance. Double-click to toggle obstacles.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Quick Shortcuts Pill */}
-                <div className="flex items-center gap-2">
-                  {previewWordId && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPreviewWordId(null)
-                        setPreviewWordPath(null)
-                      }}
-                      className="inline-flex items-center gap-1 rounded-full bg-[#FEF7E0] border border-[#FBBC04]/50 px-3 py-1.5 text-xs font-bold text-[#B06000] hover:bg-[#FEEFC3] transition-colors shadow-2xs cursor-pointer"
-                    >
-                      <EyeOff className="h-3.5 w-3.5" />
-                      <span>Clear Path Preview</span>
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={handleResetToReferenceBoard}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] bg-white px-3 py-1.5 text-xs font-bold text-[#5F6368] hover:text-[#1A73E8] hover:bg-[#F8F9FA] transition-all shadow-2xs cursor-pointer"
-                  >
-                    <RotateCcw className="h-3 w-3" />
-                    <span>Reset Board</span>
-                  </button>
+              <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[#F1F3F4]">
+                <Grid className="h-5 w-5 text-[#1A73E8]" />
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold text-[#202124]">Interactive 8×8 Matrix Studio</h3>
+                  <p className="text-[11px] text-[#5F6368]">
+                    Click any cell to type letters or use the obstacle brush to place walls. Changes sync immediately via WebSockets.
+                  </p>
                 </div>
               </div>
 
-              {/* 8x8 Grid Canvas (Centered Clean Studio - Responsive on All Viewports) */}
-              <div className="flex flex-col items-center justify-center w-full py-3">
-                <div
-                  tabIndex={0}
-                  onKeyDown={handleGridKeyDown}
-                  className="relative aspect-square w-full max-w-[320px] xs:max-w-[360px] sm:max-w-[440px] rounded-2xl sm:rounded-3xl border-2 border-[#111827] bg-[#F8F9FA] p-2 sm:p-3.5 shadow-md focus:outline-none focus:ring-4 focus:ring-[#1A73E8]/30"
-                >
-                  <div
-                    className="grid h-full w-full gap-1.5"
-                    style={{
-                      gridTemplateColumns: `repeat(${wendBoard.cols}, minmax(0, 1fr))`,
-                      gridTemplateRows: `repeat(${wendBoard.rows}, minmax(0, 1fr))`,
-                    }}
-                  >
-                    {wendBoard.grid.map((rowArr, r) =>
-                      rowArr.map((cell, c) => {
-                        const isFocused = focusedCell.r === r && focusedCell.c === c
-                        const isObstacle = cell.type === 'OBSTACLE'
-                        const letter = cell.letter || ''
-                        const isEmpty = !isObstacle && !letter
-
-                        // Preview path check
-                        const previewIdx = previewWordPath
-                          ? previewWordPath.findIndex((p) => p.row === r && p.col === c)
-                          : -1
-                        const isInPreview = previewIdx !== -1
-
-                        return (
-                          <div
-                            key={`admin-cell-${r}-${c}`}
-                            onClick={() => setFocusedCell({ r, c })}
-                            onDoubleClick={() => handleToggleCellType(r, c)}
-                            className={`relative flex items-center justify-center rounded-xl font-black text-sm sm:text-base transition-all select-none cursor-pointer ${
-                              isObstacle
-                                ? 'bg-[#202124] text-[#80868B] border border-[#1E293B] shadow-inner'
-                                : isInPreview
-                                ? 'bg-[#E6F4EA] border-2 border-[#34A853] text-[#137333] shadow-xs'
-                                : isEmpty
-                                ? 'border-2 border-dashed border-[#E5E7EB] bg-white text-[#BDC1C6] hover:bg-[#F1F3F4] hover:border-[#1A73E8]/50'
-                                : 'bg-white text-[#202124] border border-[#E5E7EB] shadow-2xs hover:border-[#1A73E8]/60'
-                            } ${
-                              isFocused
-                                ? 'ring-4 ring-[#1A73E8] border-[#1A73E8] bg-[#E8F0FE] text-[#1A73E8] z-20 scale-105 shadow-md'
-                                : ''
-                            }`}
-                          >
-                            {/* Preview Step Indicator Badge */}
-                            {isInPreview && (
-                              <span className="absolute top-0.5 right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#34A853] text-[8px] font-black text-white leading-none">
-                                {previewIdx + 1}
-                              </span>
-                            )}
-
-                            {/* Obstacle Glyph or Letter */}
-                            {isObstacle ? (
-                              <span className="text-[10px] font-bold text-[#80868B] select-none">#</span>
-                            ) : isEmpty ? (
-                              isFocused ? (
-                                <span className="h-4 w-0.5 bg-[#1A73E8] animate-pulse rounded-full" />
-                              ) : (
-                                <span className="text-xs text-[#BDC1C6]">·</span>
-                              )
-                            ) : (
-                              <span className="relative z-20 pointer-events-none select-none font-black">
-                                {letter}
-                              </span>
-                            )}
-                          </div>
-                        )
-                      })
-                    )}
-                  </div>
-                </div>
-              </div>
+              <WendBoardAdminStudio
+                board={wendBoard}
+                onChange={handleUpdateBoard}
+                previewWordPath={previewWordPath}
+                onClearPreview={() => {
+                  setPreviewWordId(null)
+                  setPreviewWordPath(null)
+                }}
+                onResetBoard={handleResetToReferenceBoard}
+              />
             </div>
 
             {/* Target Words Manager & Solvability Checker */}
