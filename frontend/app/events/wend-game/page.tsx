@@ -27,6 +27,7 @@ import {
   Clock,
   Home,
   RotateCcw,
+  Sliders,
 } from 'lucide-react'
 
 const GOOGLE_COLORS = ['#4285F4', '#34A853', '#FBBC04', '#EA4335']
@@ -557,6 +558,16 @@ export default function WendGamePage() {
           </Link>
 
           <div className="flex items-center gap-2">
+            {user?.role === 'ADMIN' && (
+              <Link
+                href="/admin-panel/panel?tab=wend"
+                className="inline-flex items-center gap-1 rounded-full border border-[#1A73E8]/30 bg-[#E8F0FE] px-2.5 py-1 font-mono text-[9px] uppercase tracking-wider text-[#1A73E8] hover:bg-[#D2E3FC] transition-colors"
+                title="Manipulate Wend board in Host Studio"
+              >
+                <Sliders className="h-2.5 w-2.5" />
+                <span>Manipulate</span>
+              </Link>
+            )}
             <SoundToggle />
             {/* Live Admin-Configured Countdown Timer */}
             {!completedSession && (board?.targetWords?.length ?? 0) > 0 && (

@@ -26,6 +26,7 @@ import {
   Home,
   ArrowLeft,
   RotateCcw,
+  Sliders,
 } from 'lucide-react'
 
 function formatDuration(ms: number): string {
@@ -414,6 +415,16 @@ function QuizRunnerContent() {
             <span>Exit Track</span>
           </Link>
           <div className="flex items-center gap-2.5">
+            {user?.role === 'ADMIN' && (
+              <Link
+                href={`/admin-panel/panel?tab=quiz&track=${slug}`}
+                className="inline-flex items-center gap-1 rounded-full border border-[#1A73E8]/30 bg-[#E8F0FE] px-2.5 py-1 font-mono text-[9px] uppercase tracking-wider text-[#1A73E8] hover:bg-[#D2E3FC] transition-colors"
+                title="Manipulate track questions in Host Studio"
+              >
+                <Sliders className="h-2.5 w-2.5" />
+                <span>Manipulate</span>
+              </Link>
+            )}
             <SoundToggle />
             <span className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] bg-white px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-[#111827]">
               <span className="h-1.5 w-1.5 rounded-full bg-[#1A73E8]" />

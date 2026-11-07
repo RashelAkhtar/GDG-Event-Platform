@@ -14,6 +14,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   GdgEvent,
+  QuestionData,
+  WendBoardConfig,
   api,
   DEFAULT_WEND_EVENT,
   CeremonyWinner,
@@ -36,9 +38,11 @@ import {
   Zap,
   HelpCircle,
   Clock,
+  Sliders,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useWebSocket } from '@/context/WebSocketContext'
+import { GameManipulatorModal } from './GameManipulatorModal'
 
 function formatDuration(ms: number): string {
   if (!ms || ms <= 0) return '0s'
@@ -64,8 +68,44 @@ export function DualQuizSection({
 }: DualQuizSectionProps) {
   const { user } = useAuth()
   const router = useRouter()
-  const { gameLockStates, sendLockToggle, sendWinnerCeremonyStart, sendDeleteLeaderboardEntry, liveLeaderboards } = useWebSocket()
+  const {
+    gameLockStates,
+    sendLockToggle,
+    sendWinnerCeremonyStart,
+    sendDeleteLeaderboardEntry,
+    sendQuestionsUpdate,
+    sendWendConfigUpdate,
+    liveLeaderboards,
+  } = useWebSocket()
   const [statusOverrides, setStatusOverrides] = useState<Record<string, 'LIVE' | 'UPCOMING'>>({})
+  const [manipulatingEvent, setManipulatingEvent] = useState<GdgEvent | null>(null)
+
+  const handleOpenManipulator = (event: GdgEvent) => {
+    setManipulatingEvent(event)
+  }
+
+  const handleSaveManipulator = (
+    updatedEvent: GdgEvent,
+    updatedQuestions?: QuestionData[],
+    updatedWendBoard?: WendBoardConfig
+  ) => {
+    if (updatedWendBoard) {
+      sendWendConfigUpdate(updatedWendBoard)
+      setQuestionCounts((prev) => ({
+        ...prev,
+        'wend-game': updatedWendBoard.targetWords?.length || 0,
+      }))
+      showToast(`Updated "${updatedWendBoard.title}" puzzle in database!`)
+    } else if (updatedQuestions) {
+      sendQuestionsUpdate(updatedEvent.slug, updatedQuestions)
+      setQuestionCounts((prev) => ({
+        ...prev,
+        [updatedEvent.slug]: updatedQuestions.length,
+      }))
+      showToast(`Saved ${updatedQuestions.length} questions to database!`)
+    }
+    setManipulatingEvent(null)
+  }
 
   const webEvent = {
     ...initialWeb,
@@ -249,6 +289,10 @@ export function DualQuizSection({
         : `/admin-panel/panel?tab=quiz&track=${event.slug}`
 
     const handleCardClick = () => {
+      if (isAdmin) {
+        handleOpenManipulator(event)
+        return
+      }
       if (!isAuthed) {
         router.push(`/login?redirect=${encodeURIComponent(targetHref)}`)
         return
@@ -271,8 +315,8 @@ export function DualQuizSection({
           isLive
             ? 'border-[#E5E7EB] hover:border-[#111827] hover:shadow-[0_16px_40px_rgba(0,0,0,0.04)]'
             : 'border-[#E5E7EB] hover:border-[#9CA3AF]'
-        }`}
-        title={isLive ? 'Click to enter track' : 'Challenge Locked'}
+        } ${isAdmin ? 'hover:ring-1 hover:ring-[#1A73E8]' : ''}`}
+        title={isAdmin ? 'Click to Manipulate Game' : isLive ? 'Click to enter track' : 'Challenge Locked'}
       >
         <div className="relative z-10 flex flex-col gap-3">
           {/* Header Row: Editorial Track Marker + Lock Status */}
@@ -285,6 +329,21 @@ export function DualQuizSection({
             </div>
 
             <div className="flex items-center gap-2">
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleOpenManipulator(event)
+                  }}
+                  className="inline-flex items-center gap-1 rounded-full border border-[#1A73E8]/30 bg-[#E8F0FE] px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-[#1A73E8] hover:bg-[#D2E3FC] transition-all cursor-pointer"
+                  title="Open Game Content Studio"
+                >
+                  <Sliders className="h-2.5 w-2.5" />
+                  <span>Studio</span>
+                </button>
+              )}
+
               {/* Minimalist Status Indicator */}
               <div
                 className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-wider ${
@@ -320,38 +379,113 @@ export function DualQuizSection({
 
         {/* Action Controls Deck */}
         <div onClick={(e) => e.stopPropagation()} className="relative z-10 pt-4 flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            {isLive ? (
-              <Link
-                href={enterHref}
-                onClick={() => {
-                  void soundManager.unlock()
-                }}
-                className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl text-xs font-medium tracking-wide text-white bg-[#111827] hover:bg-black transition-all active:scale-[0.99] shadow-xs cursor-pointer"
-              >
-                <span suppressHydrationWarning>{isAuthed ? buttonText : `Sign in • ${buttonText}`}</span>
-                <ArrowRight className="h-3.5 w-3.5 text-white/80" />
-              </Link>
-            ) : (
-              <button
-                type="button"
-                disabled
-                className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] font-mono text-[11px] uppercase tracking-wider text-[#9CA3AF] cursor-not-allowed"
-              >
-                <Lock className="h-3 w-3" />
-                <span>Arena Restricted</span>
-              </button>
-            )}
+          {isAdmin ? (
+            <div className="flex flex-col gap-2.5 w-full">
+              <div className="flex items-center gap-2">
+                {/* Primary Manipulate Game Button */}
+                <button
+                  type="button"
+                  onClick={() => handleOpenManipulator(event)}
+                  className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl text-xs font-semibold tracking-wide text-white bg-[#1A73E8] hover:bg-[#1557B0] active:scale-[0.99] transition-all shadow-xs cursor-pointer"
+                  title="Manipulate Questions, Options, Timer & Matrix"
+                >
+                  <Sliders className="h-3.5 w-3.5" />
+                  <span>Manipulate Game</span>
+                </button>
 
-            {/* Minimalist Leaderboard Shortcut */}
-            <Link
-              href={leaderboardHref}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:border-[#111827] transition-all"
-              title="View standings"
-            >
-              <Trophy className="h-3.5 w-3.5" />
-            </Link>
-          </div>
+                {/* Preview Play Arena Button */}
+                <Link
+                  href={enterHref}
+                  onClick={() => {
+                    void soundManager.unlock()
+                  }}
+                  className="flex h-11 px-4 items-center justify-center gap-1.5 rounded-xl border border-[#E5E7EB] bg-white text-xs font-medium text-[#111827] hover:border-[#111827] hover:bg-[#F9FAFB] transition-all cursor-pointer"
+                  title="Preview Arena"
+                >
+                  <span>Play</span>
+                  <ArrowRight className="h-3 w-3" />
+                </Link>
+
+                {/* Standings Shortcut */}
+                <Link
+                  href={leaderboardHref}
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:border-[#111827] transition-all"
+                  title="View standings"
+                >
+                  <Trophy className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+
+              {/* Host Controls Strip */}
+              <div className="flex items-center gap-2 pt-1 border-t border-[#F3F4F6]">
+                <button
+                  type="button"
+                  disabled={isUpdating}
+                  onClick={() => toggleEventLock(event, isLive)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg font-mono text-[10px] uppercase tracking-wider border transition-all cursor-pointer active:scale-[0.98] ${
+                    isLive
+                      ? 'border-[#EA4335]/30 bg-[#FEF2F2] text-[#DC2626] hover:bg-[#FEE2E2]'
+                      : 'border-[#34A853]/30 bg-[#F0FDF4] text-[#16A34A] hover:bg-[#DCFCE7]'
+                  }`}
+                >
+                  {isLive ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
+                  <span>{isLive ? 'Lock Track' : 'Go Live'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleOpenBroadcastReview(event.slug, event.title)}
+                  className="flex-1 flex items-center justify-center gap-1.5 bg-[#FFFBEB] border border-[#FDE68A] py-1.5 px-3 rounded-lg font-mono text-[10px] uppercase tracking-wider text-[#B45309] hover:bg-[#FEF3C7] transition-all cursor-pointer"
+                  title="Broadcast ceremony"
+                >
+                  <Trophy className="h-3 w-3 text-[#B45309]" />
+                  <span>Broadcast</span>
+                </button>
+
+                <Link
+                  href={adminPanelHref}
+                  className="flex items-center justify-center gap-1 py-1.5 px-2.5 rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] font-mono text-[10px] uppercase tracking-wider text-[#4B5563] hover:text-[#111827] hover:border-[#111827] transition-all cursor-pointer"
+                  title="Open in Full Command Center"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  <span>Panel</span>
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              {isLive ? (
+                <Link
+                  href={enterHref}
+                  onClick={() => {
+                    void soundManager.unlock()
+                  }}
+                  className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl text-xs font-medium tracking-wide text-white bg-[#111827] hover:bg-black transition-all active:scale-[0.99] shadow-xs cursor-pointer"
+                >
+                  <span suppressHydrationWarning>{isAuthed ? buttonText : `Sign in • ${buttonText}`}</span>
+                  <ArrowRight className="h-3.5 w-3.5 text-white/80" />
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  disabled
+                  className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] font-mono text-[11px] uppercase tracking-wider text-[#9CA3AF] cursor-not-allowed"
+                >
+                  <Lock className="h-3 w-3" />
+                  <span>Arena Restricted</span>
+                </button>
+              )}
+
+              {/* Minimalist Leaderboard Shortcut */}
+              <Link
+                href={leaderboardHref}
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:border-[#111827] transition-all"
+                title="View standings"
+              >
+                <Trophy className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     )
@@ -586,6 +720,15 @@ export function DualQuizSection({
             </div>
           </div>
         </div>
+      )}
+      {/* Game Content Studio Modal for in-place Admin Manipulation */}
+      {manipulatingEvent && (
+        <GameManipulatorModal
+          isOpen={Boolean(manipulatingEvent)}
+          event={manipulatingEvent}
+          onClose={() => setManipulatingEvent(null)}
+          onSave={handleSaveManipulator}
+        />
       )}
     </div>
   )

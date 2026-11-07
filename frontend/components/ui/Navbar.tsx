@@ -4,7 +4,7 @@ import { useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 import { GdgLogoBadge, GoogleG } from './GoogleBrand'
-import { LogOut, ChevronDown } from 'lucide-react'
+import { LogOut, ChevronDown, Sliders } from 'lucide-react'
 import { ParticipantLoginModal } from '@/components/auth/ParticipantLoginModal'
 
 const emptySubscribe = () => () => {}
@@ -44,7 +44,19 @@ export function Navbar() {
         {/* Auth Actions (Protected against SSR Hydration Mismatch) */}
         <div className="flex items-center gap-2.5" suppressHydrationWarning>
           {mounted && user ? (
-            <div className="relative">
+            <div className="flex items-center gap-2">
+              {user.role === 'ADMIN' && (
+                <Link
+                  href="/admin-panel/panel"
+                  className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-[#1A73E8]/30 bg-[#E8F0FE] px-3 py-1 text-xs font-semibold text-[#1A73E8] hover:bg-[#D2E3FC] transition-all cursor-pointer shadow-2xs"
+                  title="Open Host Command Center"
+                >
+                  <Sliders className="h-3 w-3 text-[#1A73E8]" />
+                  <span>Admin Studio</span>
+                </Link>
+              )}
+
+              <div className="relative">
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
                 className="flex items-center gap-2 rounded-full border border-[#E5E7EB] bg-white py-1 pl-1.5 pr-3 text-xs font-medium text-[#111827] transition-all hover:border-[#111827] focus:outline-none cursor-pointer"
@@ -98,6 +110,7 @@ export function Navbar() {
                 </>
               )}
             </div>
+          </div>
           ) : (
             <div className="flex items-center gap-2">
               <button
