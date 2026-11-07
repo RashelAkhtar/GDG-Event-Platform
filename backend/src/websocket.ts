@@ -87,6 +87,21 @@ class EventWebSocketService {
   private securityAlerts: SecurityAlert[] = [];
   private wendBoardConfig: unknown = null;
   private heartbeatInterval: NodeJS.Timeout | null = null;
+  private lastBubbleImpulseTime = 0;
+  private leaderboardBroadcastTimers: Map<string, NodeJS.Timeout> = new Map();
+
+  private queueLeaderboardBroadcast(gameSlug: string): void {
+    if (this.leaderboardBroadcastTimers.has(gameSlug)) return;
+    const timer = setTimeout(() => {
+      this.leaderboardBroadcastTimers.delete(gameSlug);
+      const updated = this.activeContestAttempts.get(gameSlug) || [];
+      this.broadcast({
+        type: 'LEADERBOARD_UPDATE',
+        payload: { gameSlug, leaderboard: updated },
+      });
+    }, 200);
+    this.leaderboardBroadcastTimers.set(gameSlug, timer);
+  }
 
   public getWendBoardConfig(): unknown {
     return this.wendBoardConfig;
@@ -348,10 +363,8 @@ class EventWebSocketService {
           updated.sort((a, b) => b.totalScore - a.totalScore || a.durationMs - b.durationMs);
           this.activeContestAttempts.set(gameSlug, updated);
 
-          this.broadcast({
-            type: 'LEADERBOARD_UPDATE',
-            payload: { gameSlug, leaderboard: updated },
-          });
+          // Debounced broadcast (200ms batching) ensures sub-second updates without socket thrashing under 300+ submissions
+          this.queueLeaderboardBroadcast(gameSlug);
         }
         break;
       }
@@ -393,11 +406,15 @@ class EventWebSocketService {
       }
 
       case 'BUBBLE_IMPULSE': {
-        // Broadcast subtle user flings/scatters in circle bucket
-        this.broadcast({
-          type: 'BUBBLE_IMPULSE',
-          payload: message.payload,
-        });
+        // Broadcast user flings/scatters in circle bucket with server-side 300ms throttle
+        const now = Date.now();
+        if (now - this.lastBubbleImpulseTime >= 300) {
+          this.lastBubbleImpulseTime = now;
+          this.broadcast({
+            type: 'BUBBLE_IMPULSE',
+            payload: message.payload,
+          });
+        }
         break;
       }
 

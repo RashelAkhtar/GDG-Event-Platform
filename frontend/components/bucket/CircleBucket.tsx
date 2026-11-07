@@ -139,8 +139,16 @@ export function CircleBucket() {
     setTotalCount(physicsRef.current.bubbles.length)
   }, [])
 
-  // Quick Action: Scatter balls inside the bucket
+  const lastScatterRef = useRef<number>(0)
+
+  // Quick Action: Scatter balls inside the bucket with network impulse throttle
   const handleScatter = () => {
+    const now = performance.now()
+    const canSendNetwork = now - lastScatterRef.current >= 1500
+    if (canSendNetwork) {
+      lastScatterRef.current = now
+    }
+
     physicsRef.current.bubbles = physicsRef.current.bubbles.map((b) => ({
       ...b,
       vx: (Math.random() - 0.5) * 10,
@@ -148,7 +156,10 @@ export function CircleBucket() {
       squishX: 0.85,
       squishY: 1.15,
     }));
-    sendBubbleImpulse({ x: 0, y: 0 });
+
+    if (canSendNetwork) {
+      sendBubbleImpulse({ x: 0, y: 0 });
+    }
   }
 
   // Ensure current user / device session is registered
@@ -199,18 +210,23 @@ export function CircleBucket() {
   }, [subscribeToUserJoin, currentSessionId])
 
   // Synchronize remote participant sessions directly into the physics bucket
+  // Optimized for 300+ scale: maintains 60fps by rendering visual subset while tracking true count
   useEffect(() => {
-    connectedSessions.forEach((sess) => {
+    const maxVisualRemoteBubbles = 24
+    const validRemoteSessions = connectedSessions.filter((sess) => {
       const isCurrentSession = sess.sessionId === currentSessionId
-      if (isCurrentSession) return // Self bubble already handled
+      if (isCurrentSession) return false
 
-      // Exclude GDG Admin sessions from appearing as bubbles in CircleBucket
       const isRemoteAdmin =
         sess.role === 'ADMIN' ||
         sess.name?.toLowerCase().includes('admin') ||
         sess.userId === 'admin_master_aryan'
-      if (isRemoteAdmin) return
+      return !isRemoteAdmin
+    })
 
+    const visualRemoteSessions = validRemoteSessions.slice(-maxVisualRemoteBubbles)
+
+    visualRemoteSessions.forEach((sess) => {
       // Label with secondary device if same user logged in on another device!
       let displayName = sess.name
       if (user && sess.userId === user._id) {
@@ -222,15 +238,16 @@ export function CircleBucket() {
       dropBubble(displayName, sess.avatar, false, `session-${sess.sessionId}`)
     })
 
-    // Remove any remote bubbles that have disconnected
-    const activeSessionIds = new Set(connectedSessions.map((s) => `session-${s.sessionId}`))
-    activeSessionIds.add(`session-${currentSessionId}`)
+    // Remove any remote bubbles that have disconnected or aged out of visual subset
+    const activeVisualIds = new Set(visualRemoteSessions.map((s) => `session-${s.sessionId}`))
+    activeVisualIds.add(`session-${currentSessionId}`)
 
     physicsRef.current.bubbles = physicsRef.current.bubbles.filter((b) => {
-      return b.id === `session-${currentSessionId}` || activeSessionIds.has(b.id)
+      return b.id === `session-${currentSessionId}` || activeVisualIds.has(b.id)
     })
 
-    setTotalCount(physicsRef.current.bubbles.length)
+    // Accurately show full arena participant count
+    setTotalCount(Math.max(connectedSessions.length, physicsRef.current.bubbles.length))
   }, [connectedSessions, currentSessionId, user, dropBubble])
 
   // Interactive Drag & Throw Event Handlers
@@ -671,7 +688,7 @@ export function CircleBucket() {
       {/* Minimalist Editorial Status & Counter Row */}
       <div className="flex flex-wrap items-center justify-center gap-2 mb-3.5 max-w-full px-2">
         {/* Active Count Pill */}
-        <span className="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1 font-mono text-[10px] tracking-[0.2em] uppercase text-[#111827] border border-[#E5E7EB] select-none pointer-events-none">
+        <span className="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1 font-mono text-[10px] tracking-[0.2em] uppercase text-[#111827] border border-[#E5E7EB] select-none pointer-events-none shadow-2xs">
           <span
             className={`h-1.5 w-1.5 rounded-full ${
               totalCount > 0 ? 'bg-[#34A853]' : 'bg-[#9CA3AF]'
@@ -684,10 +701,10 @@ export function CircleBucket() {
         {totalCount > 1 && (
           <button
             onClick={handleScatter}
-            title="Disperse bubbles"
-            className="flex h-6 w-6 items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:border-[#111827] transition-all cursor-pointer"
+            title="Disperse bubbles in arena"
+            className="group flex h-6 w-6 items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:border-[#111827] transition-all active:scale-90 cursor-pointer shadow-2xs"
           >
-            <RotateCcw className="h-2.5 w-2.5" />
+            <RotateCcw className="h-2.5 w-2.5 transition-transform duration-300 group-hover:-rotate-90 group-active:-rotate-180" />
           </button>
         )}
 
@@ -696,7 +713,7 @@ export function CircleBucket() {
           type="button"
           onClick={reconnect}
           title={connected ? 'Realtime Connected' : 'Disconnected. Click to Reconnect'}
-          className={`inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] bg-white px-3 py-1 font-mono text-[10px] tracking-wider uppercase transition-all cursor-pointer ${
+          className={`inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] bg-white px-3 py-1 font-mono text-[10px] tracking-wider uppercase transition-all cursor-pointer shadow-2xs ${
             connected ? 'text-[#34A853] hover:border-[#34A853]' : 'text-[#EA4335] hover:border-[#EA4335]'
           }`}
         >
@@ -716,15 +733,15 @@ export function CircleBucket() {
 
       {/* Live Arrival Notification Toast */}
       {liveArrivalToast && (
-        <div className="mb-2.5 animate-in fade-in slide-in-from-top-1 duration-200 rounded-full bg-[#111827] px-3.5 py-1 font-mono text-[10px] tracking-wider uppercase text-white shadow-sm">
+        <div className="mb-2.5 animate-in fade-in slide-in-from-top-1 duration-200 rounded-full bg-[#111827] px-3.5 py-1 font-mono text-[9.5px] tracking-wider uppercase text-white shadow-md border border-neutral-700">
           {liveArrivalToast} joined
         </div>
       )}
 
-      {/* Pristine Circular Vessel */}
+      {/* Pristine Circular Vessel with Concentric Hairline Rings */}
       <div
         ref={containerRef}
-        className="relative mx-auto aspect-square w-full max-w-[280px] xs:max-w-[300px] sm:max-w-[320px] select-none touch-none rounded-full border border-[#E5E7EB] bg-white p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.03)]"
+        className="relative mx-auto aspect-square w-full max-w-[280px] xs:max-w-[305px] sm:max-w-[330px] select-none touch-none rounded-full border border-[#E5E7EB] bg-white p-2 shadow-[0_12px_36px_rgba(0,0,0,0.04)] ring-1 ring-[#F3F4F6] ring-offset-4 ring-offset-[#FAFAFA] transition-all hover:shadow-[0_16px_48px_rgba(0,0,0,0.06)]"
         onContextMenu={(e) => e.preventDefault()}
       >
         <div className="relative h-full w-full rounded-full overflow-hidden bg-[#FAFAFA]">
@@ -746,7 +763,7 @@ export function CircleBucket() {
         {/* Minimalist Floating Tooltip */}
         {activeTooltip && (
           <div
-            className="pointer-events-none absolute -translate-x-1/2 -translate-y-8 rounded-full bg-[#111827] px-3 py-1 font-mono text-[10px] tracking-wider uppercase text-white shadow-lg transition-all animate-in zoom-in-95"
+            className="pointer-events-none absolute -translate-x-1/2 -translate-y-9 rounded-full bg-[#111827] px-3 py-1 font-mono text-[9.5px] tracking-wider uppercase text-white shadow-xl transition-all animate-in zoom-in-95 border border-neutral-700/60"
             style={{
               left: `${Math.max(40, Math.min(280, activeTooltip.x))}px`,
               top: `${Math.max(24, Math.min(290, activeTooltip.y))}px`,

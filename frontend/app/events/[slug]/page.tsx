@@ -10,6 +10,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useWebSocket } from '@/context/WebSocketContext'
 import { soundManager } from '@/lib/sound'
 import { SoundToggle } from '@/components/sound/SoundToggle'
+import { LockedIllustration } from '@/components/ui/LockIllustrations'
 import {
   api,
   GdgEvent,
@@ -50,10 +51,15 @@ function QuizRunnerContent() {
       router.replace(`/login?redirect=${encodeURIComponent(`/events/${slug}`)}`)
     }
   }, [authLoading, user, slug, router])
-  const { currentSessionId, subscribeToLeaderboardReset, sendSubmitAttempt, sendScreenshotViolation, subscribeToQuestionsUpdate } = useWebSocket()
+  const { currentSessionId, subscribeToLeaderboardReset, sendSubmitAttempt, sendScreenshotViolation, subscribeToQuestionsUpdate, gameLockStates } = useWebSocket()
   const startTimeRef = useRef<number | null>(null)
 
   const [event, setEvent] = useState<GdgEvent | null>(() => (slug === 'mentis-quiz' ? DEFAULT_MENTIS_EVENT : DEFAULT_WEB_EVENT))
+  const isLocked = Boolean(
+    gameLockStates[slug]
+      ? gameLockStates[slug].isLocked
+      : event?.status === 'UPCOMING'
+  )
   const [questions, setQuestions] = useState<QuestionData[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({})
@@ -397,7 +403,7 @@ function QuizRunnerContent() {
       <Navbar />
 
       {/* 5-Second Local Countdown Animation Before Game Start */}
-      {Boolean(!completedSession && !loading && !isDisqualified && questions.length > 0 && isCountingDown) && (
+      {Boolean(!completedSession && !loading && !isDisqualified && !isLocked && questions.length > 0 && isCountingDown) && (
         <LocalGameCountdown
           gameTitle={event?.title || 'Quiz Arena'}
           onComplete={handleCountdownComplete}
@@ -433,8 +439,35 @@ function QuizRunnerContent() {
           </div>
         </div>
 
-        {/* --- EDITORIAL COMPLETED SESSION RECEIPT SCREEN --- */}
-        {isMySession && completedSession ? (
+        {/* --- EDITORIAL LOCKED SCREEN WITH LIVE UNLOCK LISTENER --- */}
+        {isLocked ? (
+          <div className="relative my-auto flex flex-col items-center rounded-3xl border border-[#E5E7EB] bg-white p-7 sm:p-10 text-center shadow-[0_12px_40px_rgba(0,0,0,0.03)] animate-in fade-in zoom-in-95 duration-200">
+            <div className="mb-5 flex items-center justify-center">
+              <LockedIllustration size={88} />
+            </div>
+            <span className="font-mono text-[9px] uppercase tracking-[0.24em] text-[#9CA3AF] mb-1">
+              STATUS // RESTRICTED ARENA
+            </span>
+            <h2 className="text-2xl font-normal tracking-[-0.03em] text-[#111827]">
+              {event?.title || 'Challenge Arena'} Locked
+            </h2>
+            <p className="mt-2 text-xs text-[#6B7280] max-w-xs leading-relaxed">
+              This challenge arena is currently locked by the host. As soon as the host unlocks it, your screen will automatically connect and launch the arena countdown.
+            </p>
+            <div className="mt-6 flex flex-col w-full max-w-xs gap-2">
+              <div className="inline-flex items-center justify-center gap-2 py-2 px-3 rounded-full bg-[#FAFAFA] border border-[#E5E7EB] font-mono text-[10px] text-[#6B7280]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#EA4335] animate-pulse" />
+                <span>Awaiting Live Host Broadcast</span>
+              </div>
+              <Link
+                href="/"
+                className="flex h-11 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white text-xs font-medium text-[#111827] hover:border-[#111827] transition-all cursor-pointer"
+              >
+                Return to Hub
+              </Link>
+            </div>
+          </div>
+        ) : isMySession && completedSession ? (
           <div className="relative my-auto flex flex-col items-center rounded-2xl border border-[#E5E7EB] bg-white p-7 sm:p-9 text-center shadow-[0_12px_40px_rgba(0,0,0,0.03)] animate-in fade-in zoom-in-95 duration-200">
             {/* Status Pill Badge */}
             <div className="inline-flex items-center gap-1.5 rounded-full border border-[#34A853]/40 bg-[#F0FDF4] px-3.5 py-1 font-mono text-[10px] tracking-wider uppercase text-[#15803D]">

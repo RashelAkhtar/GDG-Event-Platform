@@ -233,6 +233,14 @@ export const updateEvent = async (req: Request, res: Response, next: NextFunctio
         ...inMemoryEvents[foundFallbackKey],
         ...updates,
       };
+      if (mongoose.connection.readyState === 1) {
+        try {
+          const query = Types.ObjectId.isValid(id) ? { _id: id } : { slug: foundFallbackKey };
+          await Event.findOneAndUpdate(query, { $set: updates }, { upsert: false });
+        } catch (dbErr) {
+          console.warn('[Event] Could not sync event update to MongoDB:', dbErr);
+        }
+      }
       if (updates.status) {
         const isLocked = updates.status !== 'LIVE';
         wsService.setGameState(foundFallbackKey, isLocked, updates.status);

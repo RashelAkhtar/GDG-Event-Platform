@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 
 export interface AnimatedLockToggleProps {
   id?: string
@@ -45,12 +45,14 @@ export function AnimatedLockToggle({
       ? !isLocked
       : (checked ?? false)
 
+  const [isPressing, setIsPressing] = useState(false)
+
   const sizeConfig = {
-    xs: { box: 'h-6 w-6', svg: 14 },
-    sm: { box: 'h-7 w-7 sm:h-8 sm:w-8', svg: 16 },
-    md: { box: 'h-8 w-8 sm:h-9 sm:w-9', svg: 18 },
-    lg: { box: 'h-9 w-9 sm:h-10 sm:w-10', svg: 20 },
-    xl: { box: 'h-11 w-11 sm:h-12 sm:w-12', svg: 24 },
+    xs: { box: 'h-6 w-6', svg: 16, stroke: 2.2, badge: 'text-[9px] px-2 py-0.5' },
+    sm: { box: 'h-8 w-8', svg: 18, stroke: 2.4, badge: 'text-[10px] px-2.5 py-0.5' },
+    md: { box: 'h-9 w-9 sm:h-10 sm:w-10', svg: 22, stroke: 2.6, badge: 'text-xs px-3 py-1' },
+    lg: { box: 'h-11 w-11 sm:h-12 sm:w-12', svg: 26, stroke: 2.8, badge: 'text-xs px-3.5 py-1' },
+    xl: { box: 'h-13 w-13 sm:h-14 sm:w-14', svg: 32, stroke: 3.2, badge: 'text-sm px-4 py-1.5' },
   }
 
   const currentSize = sizeConfig[size] || sizeConfig.sm
@@ -67,117 +69,127 @@ export function AnimatedLockToggle({
     title ||
     (isAdmin
       ? live
-        ? 'Click to switch to LOCKED'
-        : 'Click to switch to UNLOCKED & GO LIVE'
+        ? 'Click to lock arena (Restricted)'
+        : 'Click to unlock arena (Go Live)'
       : live
       ? 'Arena Status: LIVE & Accepting Submissions'
       : 'Arena Status: LOCKED by Host')
 
   return (
-    <div className={`inline-flex items-center gap-1.5 select-none ${className}`}>
+    <div className={`inline-flex items-center gap-2 select-none ${className}`}>
       <button
         type="button"
         id={id}
         onClick={handleClick}
+        onMouseDown={() => setIsPressing(true)}
+        onMouseUp={() => setIsPressing(false)}
+        onMouseLeave={() => setIsPressing(false)}
+        onTouchStart={() => setIsPressing(true)}
+        onTouchEnd={() => setIsPressing(false)}
         disabled={disabled || !isAdmin}
         title={tooltipText}
         aria-label={live ? 'Challenge Arena Live (Click to Lock)' : 'Challenge Arena Locked (Click to Unlock)'}
         aria-pressed={live}
-        className={`relative flex items-center justify-center rounded-xl transition-all duration-200 border ${currentSize.box} ${
+        className={`relative group flex items-center justify-center rounded-xl transition-all duration-300 border ${currentSize.box} ${
           live
-            ? 'bg-[#137333] border-[#0D652D] text-white shadow-xs hover:bg-[#0D652D]'
-            : 'bg-[#C5221F] border-[#B31412] text-white shadow-xs hover:bg-[#B31412]'
+            ? 'bg-[#15803D] hover:bg-[#166534] border-[#166534] text-white shadow-xs shadow-[#15803D]/25'
+            : 'bg-[#DC2626] hover:bg-[#B91C1C] border-[#B91C1C] text-white shadow-xs shadow-[#DC2626]/25'
         } ${
           isAdmin && !disabled
-            ? 'cursor-pointer active:scale-95'
-            : 'cursor-default'
-        }`}
+            ? 'cursor-pointer active:scale-90 hover:scale-105'
+            : 'cursor-default opacity-90'
+        } ${isPressing ? 'scale-90' : ''}`}
       >
+        {/* Subtle radial pulse ring behind lock toggle */}
+        <span
+          className={`absolute -inset-0.5 rounded-xl transition-opacity duration-500 pointer-events-none ${
+            live
+              ? 'bg-[#22C55E]/30 animate-pulse'
+              : 'bg-[#EF4444]/20'
+          } opacity-0 group-hover:opacity-100`}
+        />
+
+        {/* Dynamic SVG Lock Icon with Smooth Keyframe Shackle Action */}
         <svg
           width={currentSize.svg}
           height={currentSize.svg}
-          viewBox="0 0 44 44"
+          viewBox="0 0 32 32"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="overflow-visible block"
+          className="relative z-10 overflow-visible transition-transform duration-300"
           aria-hidden="true"
         >
           {live ? (
             /* ========================================================= */
-            /* UNLOCKED / LIVE STATE: AUTHENTIC OPEN PADLOCK (🔓)        */
+            /* UNLOCKED / LIVE STATE: AUTHENTIC SPRING-OPEN PADLOCK      */
             /* ========================================================= */
-            <g>
-              {/* Subtle Live Accent Sparkle */}
+            <g className="transition-all duration-300">
+              {/* Animated Open Shackle: pops up and pivots open */}
               <path
-                d="M33 12L36 14"
+                d="M10 14V9.5C10 6.186 12.686 3.5 16 3.5C19.314 3.5 22 6.186 22 9.5V10.5"
                 stroke="#FFFFFF"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                className="opacity-90"
-              />
-              <path
-                d="M34 7H37"
-                stroke="#FFFFFF"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                className="opacity-90"
-              />
-
-              {/* Shackle: Visibly UNLATCHED & OPEN (Clear gap above body) */}
-              <path
-                d="M15 19V11C15 7.134 18.134 4 22 4C25.866 4 29 7.134 29 11V12"
-                stroke="#FFFFFF"
-                strokeWidth="3.6"
+                strokeWidth={currentSize.stroke}
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                className="anim-shackle-open"
               />
 
-              {/* Solid Padlock Body */}
+              {/* Padlock Body Chassis */}
               <rect
-                x="10"
-                y="19"
-                width="24"
-                height="18"
-                rx="2"
+                x="6"
+                y="13.5"
+                width="20"
+                height="15"
+                rx="3.5"
                 fill="#FFFFFF"
+                stroke="#FFFFFF"
+                strokeWidth="0.5"
+                className="transition-transform duration-200"
               />
 
-              {/* Clean Keyhole Cutout */}
-              <circle cx="22" cy="26" r="2.2" fill="#137333" />
+              {/* Precision Keyhole Cutout */}
+              <circle cx="16" cy="19.5" r="1.8" fill="#15803D" />
               <path
-                d="M20.9 26.5L19.8 32H24.2L23.1 26.5Z"
-                fill="#137333"
+                d="M15.1 19.8L14.2 24.5H17.8L16.9 19.8Z"
+                fill="#15803D"
               />
+
+              {/* Twinkling Celebration Sparkles */}
+              <circle cx="26" cy="6" r="1.2" fill="#FFFFFF" className="anim-sparkle" />
+              <circle cx="6" cy="7" r="0.9" fill="#FFFFFF" className="anim-sparkle" />
             </g>
           ) : (
             /* ========================================================= */
-            /* LOCKED STATE: AUTHENTIC 100% CLOSED PADLOCK (🔒)          */
+            /* LOCKED STATE: SOLID SHACKLE SECURED FIRMLY                */
             /* ========================================================= */
-            <g>
-              {/* Shackle: Solidly CLOSED into both sockets at y=19 */}
+            <g className="transition-all duration-300">
+              {/* Animated Closed Shackle: securely grounded in both sockets */}
               <path
-                d="M15 19V12C15 8.134 18.134 5 22 5C25.866 5 29 8.134 29 12V19"
+                d="M10 14.5V9.5C10 6.186 12.686 3.5 16 3.5C19.314 3.5 22 6.186 22 9.5V14.5"
                 stroke="#FFFFFF"
-                strokeWidth="3.6"
+                strokeWidth={currentSize.stroke}
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                className="anim-shackle-close"
               />
 
-              {/* Solid Padlock Body */}
+              {/* Padlock Body Chassis */}
               <rect
-                x="10"
-                y="19"
-                width="24"
-                height="18"
-                rx="2"
+                x="6"
+                y="13.5"
+                width="20"
+                height="15"
+                rx="3.5"
                 fill="#FFFFFF"
+                stroke="#FFFFFF"
+                strokeWidth="0.5"
               />
 
-              {/* Clean Keyhole Cutout */}
-              <circle cx="22" cy="26" r="2.2" fill="#C5221F" />
+              {/* Precision Keyhole Cutout */}
+              <circle cx="16" cy="19.5" r="1.8" fill="#DC2626" />
               <path
-                d="M20.9 26.5L19.8 32H24.2L23.1 26.5Z"
-                fill="#C5221F"
+                d="M15.1 19.8L14.2 24.5H17.8L16.9 19.8Z"
+                fill="#DC2626"
               />
             </g>
           )}
@@ -186,15 +198,15 @@ export function AnimatedLockToggle({
 
       {showBadge && (
         <span
-          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${
+          className={`inline-flex items-center gap-1.5 rounded-full font-mono uppercase tracking-wider font-semibold border transition-all duration-200 ${currentSize.badge} ${
             live
-              ? 'bg-[#E6F4EA] border-[#34A853]/40 text-[#137333]'
-              : 'bg-[#FCE8E6] border-[#EA4335]/40 text-[#C5221F]'
+              ? 'bg-[#F0FDF4] border-[#86EFAC] text-[#15803D]'
+              : 'bg-[#FEF2F2] border-[#FECACA] text-[#DC2626]'
           }`}
         >
           <span
-            className={`h-2 w-2 rounded-full ${
-              live ? 'bg-[#34A853] animate-pulse' : 'bg-[#EA4335]'
+            className={`h-1.5 w-1.5 rounded-full ${
+              live ? 'bg-[#22C55E] animate-pulse' : 'bg-[#EF4444]'
             }`}
           />
           <span>{live ? badgeLiveText : badgeLockedText}</span>

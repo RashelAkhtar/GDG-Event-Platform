@@ -90,6 +90,16 @@ export default function WendGamePage() {
         setBoard(fresh)
       }
     })
+    const handleSync = (e: Event) => {
+      const detail = (e as CustomEvent)?.detail
+      if (detail && typeof detail === 'object') {
+        setBoard(detail)
+      }
+    }
+    window.addEventListener('gdg_wend_board_sync', handleSync)
+    return () => {
+      window.removeEventListener('gdg_wend_board_sync', handleSync)
+    }
   }, [])
 
   const allocatedTimeSeconds = board.timeLimitSeconds || 120
@@ -634,22 +644,26 @@ export default function WendGamePage() {
           </div>
         )}
 
-        {/* --- LOCKED OVERLAY --- */}
+        {/* --- LOCKED OVERLAY WITH LIVE BROADCAST LISTENER --- */}
         {isLocked ? (
-          <div className="my-auto flex flex-col items-center rounded-2xl border border-[#E5E7EB] bg-white p-8 text-center max-w-sm w-full">
-            <div className="mb-4 flex items-center justify-center">
-              <LockedIllustration size={80} />
+          <div className="my-auto flex flex-col items-center rounded-3xl border border-[#E5E7EB] bg-white p-7 sm:p-10 text-center max-w-sm w-full mx-auto shadow-[0_12px_40px_rgba(0,0,0,0.03)] animate-in fade-in zoom-in-95 duration-200">
+            <div className="mb-5 flex items-center justify-center">
+              <LockedIllustration size={88} />
             </div>
             <span className="font-mono text-[9px] uppercase tracking-[0.24em] text-[#9CA3AF] mb-1">
-              STATUS // RESTRICTED
+              STATUS // RESTRICTED ARENA
             </span>
-            <h2 className="text-xl font-normal tracking-[-0.03em] text-[#111827]">
+            <h2 className="text-2xl font-normal tracking-[-0.03em] text-[#111827]">
               Wend Word Arena Locked
             </h2>
-            <p className="mt-1.5 text-xs text-[#6B7280] leading-relaxed">
-              The organizer has restricted access to this arena. The grid unlocks automatically when live.
+            <p className="mt-2 text-xs text-[#6B7280] leading-relaxed">
+              The organizer has restricted access to this arena. As soon as the host unlocks it, the puzzle matrix connects automatically.
             </p>
-            <div className="mt-6 flex w-full">
+            <div className="mt-6 flex flex-col w-full gap-2">
+              <div className="inline-flex items-center justify-center gap-2 py-2 px-3 rounded-full bg-[#FAFAFA] border border-[#E5E7EB] font-mono text-[10px] text-[#6B7280]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#EA4335] animate-pulse" />
+                <span>Awaiting Live Host Broadcast</span>
+              </div>
               <Link
                 href="/"
                 className="flex h-11 flex-1 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white text-xs font-medium text-[#111827] hover:border-[#111827] transition-all cursor-pointer"

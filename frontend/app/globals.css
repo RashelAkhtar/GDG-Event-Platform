@@ -235,3 +235,169 @@ svg {
   background: #111827;
   color: #FFFFFF;
 }
+
+/* =========================================================================
+   ANIMATED LOCK & UNLOCK KEYFRAMES & UTILITIES
+   ========================================================================= */
+
+@keyframes lock-shackle-open {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  40% {
+    transform: translateY(-7px) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-8px) rotate(-18deg);
+  }
+  100% {
+    transform: translateY(-6px) rotate(-14deg);
+  }
+}
+
+@keyframes lock-shackle-close {
+  0% {
+    transform: translateY(-6px) rotate(-14deg);
+  }
+  40% {
+    transform: translateY(-8px) rotate(0deg);
+  }
+  80% {
+    transform: translateY(1.5px) rotate(0deg);
+  }
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+@keyframes lock-pulse-glow {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes subtle-float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes ring-expand {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+@keyframes sparkle-twinkle {
+  0%, 100% {
+    transform: scale(0.6) rotate(0deg);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.2) rotate(45deg);
+    opacity: 1;
+  }
+}
+
+.anim-shackle-open {
+  transform-origin: 16px 16px;
+  animation: lock-shackle-open 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.anim-shackle-close {
+  transform-origin: 16px 16px;
+  animation: lock-shackle-close 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.anim-float {
+  animation: subtle-float 3.5s ease-in-out infinite;
+}
+
+.anim-sparkle {
+  animation: sparkle-twinkle 2s ease-in-out infinite;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* =========================================================================
+   SCROLL-LINKED EDITORIAL HIGHLIGHT UTILITIES
+   ========================================================================= */
+
+@keyframes editorial-sheen-sweep {
+  0% {
+    transform: translateX(-120%) skewX(-20deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.5;
+  }
+  60% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateX(220%) skewX(-20deg);
+    opacity: 0;
+  }
+}
+
+@keyframes hairline-sweep-in {
+  0% {
+    width: 0%;
+    opacity: 0;
+  }
+  100% {
+    width: 100%;
+    opacity: 1;
+  }
+}
+
+@keyframes focal-breath {
+  0%, 100% {
+    box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.07);
+  }
+  50% {
+    box-shadow: 0 24px 50px -12px rgba(0, 0, 0, 0.12);
+  }
+}
+
+.anim-sheen {
+  animation: editorial-sheen-sweep 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.anim-hairline {
+  animation: hairline-sweep-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.focal-card-active {
+  border-color: #111827 !important;
+  box-shadow: 0 20px 48px -12px rgba(0, 0, 0, 0.09);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 640px) {
+  .focal-card-active {
+    transform: scale(1.012) translateY(-1px);
+    box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+

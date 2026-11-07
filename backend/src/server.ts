@@ -14,7 +14,7 @@ const startServer = async () => {
   // Initialize Realtime WebSocket Server
   wsService.init(server);
 
-  server.listen(PORT, () => {
+  server.listen(PORT, '0.0.0.0', 1024, () => {
     console.log(`Server running on http://localhost:${PORT}`);
     console.log(`WebSocket server active on ws://localhost:${PORT}/ws`);
   });

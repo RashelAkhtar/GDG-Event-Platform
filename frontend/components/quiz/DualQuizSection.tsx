@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useSyncExternalStore } from 'react'
+import React, { useState, useEffect, useSyncExternalStore, useRef } from 'react'
 
 const emptySubscribe = () => () => {}
 function useMounted() {
@@ -43,6 +43,7 @@ import {
 import { useAuth } from '@/context/AuthContext'
 import { useWebSocket } from '@/context/WebSocketContext'
 import { GameManipulatorModal } from './GameManipulatorModal'
+import { AnimatedLockToggle } from '@/components/ui/AnimatedLockToggle'
 
 function formatDuration(ms: number): string {
   if (!ms || ms <= 0) return '0s'
@@ -131,6 +132,62 @@ export function DualQuizSection({
     rankedStandings: LeaderboardEntry[]
     rankedParticipants: RankedParticipant[]
   }>({ winners: [], rankedStandings: [], rankedParticipants: [] })
+
+  // Scroll-linked focal highlight state for mobile view
+  const [focalTrack, setFocalTrack] = useState<'web' | 'wend' | 'mentis'>('web')
+  const webCardRef = useRef<HTMLDivElement | null>(null)
+  const wendCardRef = useRef<HTMLDivElement | null>(null)
+  const mentisCardRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const handleScroll = () => {
+      // Natural optical center of mobile reading viewport
+      const viewportCenter = window.innerHeight * 0.45
+      let closest: 'web' | 'wend' | 'mentis' = 'web'
+      let minDistance = Infinity
+
+      const trackList: { type: 'web' | 'wend' | 'mentis'; el: HTMLDivElement | null }[] = [
+        { type: 'web', el: webCardRef.current },
+        { type: 'wend', el: wendCardRef.current },
+        { type: 'mentis', el: mentisCardRef.current },
+      ]
+
+      for (const item of trackList) {
+        if (item.el) {
+          const rect = item.el.getBoundingClientRect()
+          const cardCenter = rect.top + rect.height * 0.5
+          const distance = Math.abs(cardCenter - viewportCenter)
+          if (distance < minDistance) {
+            minDistance = distance
+            closest = item.type
+          }
+        }
+      }
+      setFocalTrack((prev) => (prev !== closest ? closest : prev))
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    handleScroll()
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+    }
+  }, [])
+
+  const scrollToTrack = (track: 'web' | 'wend' | 'mentis') => {
+    setFocalTrack(track)
+    const el =
+      track === 'web'
+        ? webCardRef.current
+        : track === 'wend'
+        ? wendCardRef.current
+        : mentisCardRef.current
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }
 
   const mounted = useMounted()
   const [questionCounts, setQuestionCounts] = useState<Record<string, number>>({})
@@ -305,27 +362,61 @@ export function DualQuizSection({
     }
 
     const enterHref = isAuthed ? targetHref : `/login?redirect=${encodeURIComponent(targetHref)}`
-    const trackIndex = isWeb ? '01' : isMentis ? '02' : '03'
-    const accentDot = isWeb ? 'bg-[#1A73E8]' : isMentis ? 'bg-[#FBBC04]' : 'bg-[#34A853]'
+    const isWend = type === 'wend'
+    const trackIndex = isWeb ? '01' : isWend ? '02' : '03'
+    const accentDot = isWeb ? 'bg-[#1A73E8]' : isWend ? 'bg-[#34A853]' : 'bg-[#FBBC04]'
+    const stripeColor = isWeb ? 'bg-[#1A73E8]' : isWend ? 'bg-[#34A853]' : 'bg-[#FBBC04]'
+    const isFocal = focalTrack === type
+    const cardRef = isWeb ? webCardRef : isWend ? wendCardRef : mentisCardRef
 
     return (
       <div
+        ref={cardRef}
+        data-track={type}
         onClick={handleCardClick}
-        className={`group relative flex flex-col justify-between rounded-2xl border transition-all duration-300 p-6 sm:p-7 cursor-pointer bg-white ${
-          isLive
-            ? 'border-[#E5E7EB] hover:border-[#111827] hover:shadow-[0_16px_40px_rgba(0,0,0,0.04)]'
-            : 'border-[#E5E7EB] hover:border-[#9CA3AF]'
+        className={`group relative flex flex-col justify-between rounded-2xl border transition-all duration-500 p-6 sm:p-7 cursor-pointer overflow-hidden ${
+          isFocal
+            ? 'border-[#111827] shadow-[0_20px_48px_-12px_rgba(0,0,0,0.09)] scale-[1.015] sm:scale-100 ring-1 ring-[#111827]/10 bg-white z-10'
+            : 'border-[#E5E7EB] bg-white opacity-85 sm:opacity-100 hover:opacity-100 hover:border-[#9CA3AF] shadow-xs'
         } ${isAdmin ? 'hover:ring-1 hover:ring-[#1A73E8]' : ''}`}
         title={isAdmin ? 'Click to Manipulate Game' : isLive ? 'Click to enter track' : 'Challenge Locked'}
       >
+        {/* Luminous Top Hairline Indicator */}
+        <div
+          className={`absolute top-0 inset-x-0 h-1 transition-all duration-500 rounded-t-2xl ${
+            isFocal ? `${stripeColor} anim-hairline` : 'bg-transparent'
+          }`}
+        />
+
+        {/* Editorial Light Sweep Sheen (Triggers when card enters focus on scroll) */}
+        {isFocal && (
+          <div
+            key={`sheen-${type}`}
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-black/[0.035] to-transparent pointer-events-none anim-sheen rounded-2xl z-20"
+          />
+        )}
+
         <div className="relative z-10 flex flex-col gap-3">
           {/* Header Row: Editorial Track Marker + Lock Status */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <span className={`h-2 w-2 rounded-full ${accentDot}`} />
-              <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-[#6B7280] font-medium">
+              <span className="relative flex h-2.5 w-2.5">
+                {isFocal && (
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${accentDot}`} />
+                )}
+                <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${accentDot}`} />
+              </span>
+              <span className={`font-mono text-[10px] tracking-[0.24em] uppercase font-medium transition-colors ${
+                isFocal ? 'text-[#111827] font-bold' : 'text-[#6B7280]'
+              }`}>
                 {`${trackIndex} // ${trackLabel}`}
               </span>
+              {isFocal && (
+                <span className="inline-flex items-center gap-1 font-mono text-[8px] uppercase tracking-widest text-[#111827] bg-[#F3F4F6] border border-[#E5E7EB] px-2 py-0.5 rounded-full font-bold animate-in fade-in zoom-in-95 duration-200">
+                  <span className="h-1 w-1 rounded-full bg-[#111827]" />
+                  <span>IN FOCUS</span>
+                </span>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
@@ -336,25 +427,27 @@ export function DualQuizSection({
                     e.stopPropagation()
                     handleOpenManipulator(event)
                   }}
-                  className="inline-flex items-center gap-1 rounded-full border border-[#1A73E8]/30 bg-[#E8F0FE] px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-[#1A73E8] hover:bg-[#D2E3FC] transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1 rounded-full border border-[#E5E7EB] bg-white px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-[#111827] hover:border-[#111827] transition-all cursor-pointer shadow-2xs"
                   title="Open Game Content Studio"
                 >
-                  <Sliders className="h-2.5 w-2.5" />
+                  <Sliders className="h-2.5 w-2.5 text-[#1A73E8]" />
                   <span>Studio</span>
                 </button>
               )}
 
-              {/* Minimalist Status Indicator */}
-              <div
-                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-wider ${
-                  isLive
-                    ? 'border-[#34A853]/40 bg-[#F0FDF4] text-[#15803D]'
-                    : 'border-[#E5E7EB] bg-[#F9FAFB] text-[#6B7280]'
-                }`}
-              >
-                <span className={`h-1.5 w-1.5 rounded-full ${isLive ? 'bg-[#34A853] animate-pulse' : 'bg-[#9CA3AF]'}`} />
-                <span>{isLive ? 'Live' : 'Locked'}</span>
-              </div>
+              {/* Animated Lock State Toggle */}
+              <AnimatedLockToggle
+                id={`arena-lock-toggle-${event.slug}`}
+                checked={isLive}
+                isLive={isLive}
+                isAdmin={isAdmin}
+                disabled={isUpdating}
+                onChange={() => toggleEventLock(event, isLive)}
+                size="xs"
+                showBadge={true}
+                badgeLiveText="Live"
+                badgeLockedText="Locked"
+              />
             </div>
           </div>
 
@@ -386,10 +479,10 @@ export function DualQuizSection({
                 <button
                   type="button"
                   onClick={() => handleOpenManipulator(event)}
-                  className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl text-xs font-semibold tracking-wide text-white bg-[#1A73E8] hover:bg-[#1557B0] active:scale-[0.99] transition-all shadow-xs cursor-pointer"
+                  className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl text-xs font-medium tracking-wide text-white bg-[#111827] hover:bg-black active:scale-[0.99] transition-all shadow-xs cursor-pointer"
                   title="Manipulate Questions, Options, Timer & Matrix"
                 >
-                  <Sliders className="h-3.5 w-3.5" />
+                  <Sliders className="h-3.5 w-3.5 text-[#FBBC04]" />
                   <span>Manipulate Game</span>
                 </button>
 
@@ -492,7 +585,7 @@ export function DualQuizSection({
   }
 
   return (
-    <div className="flex flex-col gap-5 w-full max-w-md mx-auto relative">
+    <div className="flex flex-col gap-5 w-full max-w-xl mx-auto relative">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-[#137333] text-white px-4 py-2 text-xs font-semibold shadow-xl border border-white/20 animate-in fade-in slide-in-from-top-4">
@@ -512,6 +605,32 @@ export function DualQuizSection({
           <span className="h-2 w-2 bg-[#34A853] animate-pulse" />
           <span>REALTIME SYNC</span>
         </span>
+      </div>
+
+      {/* Mobile Scroll-Linked Track Navigator Bar */}
+      <div className="flex sm:hidden items-center justify-between p-1 rounded-2xl border border-[#E5E7EB] bg-white/95 backdrop-blur-md shadow-xs sticky top-16 z-30 transition-all duration-300">
+        {[
+          { type: 'web' as const, num: '01', label: 'WEB', dot: 'bg-[#1A73E8]' },
+          { type: 'wend' as const, num: '02', label: 'WEND', dot: 'bg-[#34A853]' },
+          { type: 'mentis' as const, num: '03', label: 'MENTIS', dot: 'bg-[#FBBC04]' },
+        ].map((t) => {
+          const active = focalTrack === t.type
+          return (
+            <button
+              key={t.type}
+              type="button"
+              onClick={() => scrollToTrack(t.type)}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl font-mono text-[10px] uppercase tracking-wider transition-all duration-300 cursor-pointer ${
+                active
+                  ? 'bg-[#111827] text-white shadow-xs font-bold'
+                  : 'text-[#6B7280] hover:text-[#111827]'
+              }`}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${t.dot} ${active ? 'animate-pulse' : ''}`} />
+              <span>{t.num} {t.label}</span>
+            </button>
+          )
+        })}
       </div>
 
       {/* Top Div: Web Quiz Track */}

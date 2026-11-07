@@ -337,7 +337,7 @@ export const api = {
       const res = await fetch(`${API_BASE}/events/${eventId}`, {
         method: 'PATCH',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ status }),
       })
       return res.ok
@@ -351,7 +351,7 @@ export const api = {
       const res = await fetch(`${API_BASE}/events/${eventId}`, {
         method: 'PATCH',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(updates),
       })
       if (typeof window !== 'undefined') {

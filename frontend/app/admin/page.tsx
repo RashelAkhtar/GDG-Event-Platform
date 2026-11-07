@@ -73,20 +73,6 @@ function AdminPageContent() {
   const { user, loading: authLoading } = useAuth()
   const { gameLockStates, sendLockToggle, sendWinnerCeremonyStart, sendLeaderboardReset, sendDeleteLeaderboardEntry, sendQuestionsUpdate, sendWendConfigUpdate, liveLeaderboards, subscribeToLeaderboardUpdate, connected } = useWebSocket()
 
-  // Dedicated Admin Login screen when not authenticated
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#FAFAFA]">
-        <div className="h-8 w-8 animate-spin rounded-full border-3 border-[#111827] border-t-transparent" />
-        <p className="mt-3 font-mono text-xs text-[#6B7280] uppercase tracking-wider">Verifying administrative access...</p>
-      </div>
-    )
-  }
-
-  if (!user || user.role !== 'ADMIN') {
-    return <AdminLoginForm />
-  }
-
   // Deep linking params (?tab=locks|quiz|wend|winners&track=web-dev-quiz|mentis-quiz)
   const tabParam = searchParams.get('tab') as 'locks' | 'quiz' | 'wend' | 'winners' | null
   const trackParam = searchParams.get('track')
@@ -707,18 +693,22 @@ function AdminPageContent() {
     showToast(`BROADCASTED VIA SOCKET: Winner Announcement ceremony with ${currentRankings.winners.length} podium winners is live!`)
   }
 
-  if (authLoading || (!user || user.role !== 'ADMIN')) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#FAFAFA] text-[#111827]">
         <div className="flex flex-col items-center gap-4 p-8 bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_12px_40px_rgba(0,0,0,0.03)] max-w-sm text-center">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#111827] border-t-transparent" />
           <div>
             <h2 className="text-sm font-medium text-[#111827] tracking-tight">Verifying Host Authorization</h2>
-            <p className="text-xs text-[#6B7280] mt-1">Redirecting to administrator authentication</p>
+            <p className="text-xs text-[#6B7280] mt-1">Connecting to command center session...</p>
           </div>
         </div>
       </div>
     )
+  }
+
+  if (!user || user.role !== 'ADMIN') {
+    return <AdminLoginForm />
   }
 
   return (
@@ -727,7 +717,7 @@ function AdminPageContent() {
       <header className="sticky top-0 z-40 border-b border-[#E5E7EB] bg-white/90 backdrop-blur-xl">
         {/* Top Google 4-Color Accent Line */}
         <div className="google-hairline-strip" />
-        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <Link
               href="/"
@@ -768,8 +758,8 @@ function AdminPageContent() {
         </div>
       </header>
 
-      {/* Main Admin Dashboard */}
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 pt-6 pb-20 sm:px-6">
+      {/* Main Admin Dashboard - Full Page & Mobile Fluid */}
+      <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-3 sm:px-6 lg:px-8 pt-6 pb-20">
         {/* Toast Feedback */}
         {feedback && (
           <div
@@ -792,9 +782,9 @@ function AdminPageContent() {
           </div>
         )}
 
-        {/* Structured Segmented Control Bar (Rounded Google Theme, High-Precision Tabs) */}
-        <div className="mb-6 rounded-2xl border border-[#E5E7EB] bg-white p-1.5 shadow-xs">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+        {/* Structured Segmented Control Bar (Horizontal Touch Scroll on Mobile, Grid on Desktop) */}
+        <div className="mb-6 rounded-2xl border border-[#E5E7EB] bg-white p-1.5 shadow-xs overflow-x-auto no-scrollbar">
+          <div className="flex sm:grid sm:grid-cols-4 gap-1.5 min-w-[560px] sm:min-w-0">
             <button
               type="button"
               onClick={() => navigateToPanel('locks')}
@@ -1021,12 +1011,12 @@ function AdminPageContent() {
                         isLive ? 'border-[#34A853]/40 bg-[#F4FBF6]' : 'border-[#E5E7EB] bg-[#F8F9FA]'
                       }`}>
                         <div className="flex items-center gap-3">
-                          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-mono ${
+                          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-mono transition-transform duration-300 ${
                             isLive
-                              ? 'border border-[#34A853]/40 bg-[#34A853] text-white shadow-xs'
-                              : 'border border-[#EA4335]/40 bg-[#EA4335] text-white shadow-xs'
+                              ? 'border border-[#34A853]/40 bg-[#15803D] text-white shadow-xs'
+                              : 'border border-[#EA4335]/40 bg-[#DC2626] text-white shadow-xs'
                           }`}>
-                            {isLive ? <Unlock className="h-4.5 w-4.5" /> : <Lock className="h-4.5 w-4.5" />}
+                            {isLive ? <Unlock className="h-4.5 w-4.5 anim-shackle-open" /> : <Lock className="h-4.5 w-4.5 anim-shackle-close" />}
                           </div>
                           <div>
                             <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#5F6368]">
@@ -1869,12 +1859,12 @@ function AdminPageContent() {
                 </div>
               </div>
 
-              {/* 8x8 Grid Canvas (Centered Clean Studio) */}
+              {/* 8x8 Grid Canvas (Centered Clean Studio - Responsive on All Viewports) */}
               <div className="flex flex-col items-center justify-center w-full py-3">
                 <div
                   tabIndex={0}
                   onKeyDown={handleGridKeyDown}
-                  className="relative aspect-square w-full max-w-[380px] sm:max-w-[420px] rounded-3xl border-2 border-[#3C4043] bg-[#F8F9FA] p-3 shadow-md focus:outline-none focus:ring-4 focus:ring-[#1A73E8]/30"
+                  className="relative aspect-square w-full max-w-[320px] xs:max-w-[360px] sm:max-w-[440px] rounded-2xl sm:rounded-3xl border-2 border-[#111827] bg-[#F8F9FA] p-2 sm:p-3.5 shadow-md focus:outline-none focus:ring-4 focus:ring-[#1A73E8]/30"
                 >
                   <div
                     className="grid h-full w-full gap-1.5"

@@ -321,7 +321,6 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
           if (Array.isArray(payload?.sessions)) {
             const sessionsList = payload.sessions as ConnectedSession[]
             setConnectedSessions(sessionsList)
-            sessionsList.forEach((s) => notifyUserJoined(s))
           } else if (Array.isArray(payload?.users)) {
             const rawUsers = payload.users as { sessionId?: string; id?: string; userId?: string; name?: string; avatar?: string; role?: string }[]
             const mapped: ConnectedSession[] = rawUsers.map((u) => ({
@@ -332,7 +331,6 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
               role: u.role,
             }))
             setConnectedSessions(mapped)
-            mapped.forEach((s) => notifyUserJoined(s))
           }
           if (payload?.leaderboards && typeof payload.leaderboards === 'object') {
             setLiveLeaderboards(payload.leaderboards as Record<string, LeaderboardEntry[]>)

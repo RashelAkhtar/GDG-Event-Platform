@@ -27,6 +27,7 @@ import {
   ExternalLink,
   AlertCircle,
   Save,
+  Layers,
 } from 'lucide-react'
 
 interface GameManipulatorModalProps {
@@ -128,7 +129,7 @@ function GameManipulatorModalInner({
   const handleAddQuestion = () => {
     const newQ: QuestionData = {
       _id: `q_${Date.now()}_${questions.length + 1}`,
-      questionText: 'New Question Prompt — Click here to edit',
+      questionText: 'New Question Prompt — Click here to enter question statement',
       options: ['Option A', 'Option B', 'Option C', 'Option D'],
       correctOptionIndex: 0,
       points: 100,
@@ -143,7 +144,7 @@ function GameManipulatorModalInner({
 
   const handleDeleteQuestion = (indexToDelete: number) => {
     if (questions.length <= 1) {
-      showToast('You must keep at least 1 question for the quiz!', 'error')
+      showToast('You must keep at least 1 question for the arena!', 'error')
       return
     }
     const updated = questions
@@ -155,7 +156,7 @@ function GameManipulatorModalInner({
   }
 
   const handleResetDefaultQuestions = () => {
-    if (confirm('Reset questions to standard Google-themed defaults?')) {
+    if (confirm('Reset questions to standard curated defaults?')) {
       if (typeof window !== 'undefined') {
         localStorage.removeItem(`gdg_questions_${event.slug}`)
       }
@@ -175,7 +176,7 @@ function GameManipulatorModalInner({
       return
     }
     if (wendBoard.targetWords.some((tw) => tw.word.toUpperCase() === wordUpper)) {
-      showToast(`Word "${wordUpper}" is already in target list`, 'error')
+      showToast(`Word "${wordUpper}" is already in target bank`, 'error')
       return
     }
     const newTw: WendTargetWord = {
@@ -213,12 +214,19 @@ function GameManipulatorModalInner({
     showToast('Target word removed')
   }
 
-  // --- Save All & Deploy ---
+  // --- Save All & Deploy Directly to Database & Sockets ---
   const handleSaveAll = () => {
     const updatedEvent: GdgEvent = {
       ...event,
       title: title.trim() || event.title,
       description: description.trim() || event.description,
+    }
+
+    if (updatedEvent.title !== event.title || updatedEvent.description !== event.description) {
+      void api.updateEventDetails(event._id, {
+        title: updatedEvent.title,
+        description: updatedEvent.description,
+      })
     }
 
     if (isWend) {
@@ -237,262 +245,284 @@ function GameManipulatorModalInner({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-6 animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-0 sm:p-4 md:p-6 animate-in fade-in duration-200 select-none"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative flex flex-col w-full max-w-4xl max-h-[92vh] rounded-[28px] sm:rounded-[32px] bg-white text-[#202124] shadow-2xl border border-[#E5E7EB] overflow-hidden"
+        className="relative flex flex-col w-full h-full sm:h-auto sm:max-h-[92vh] sm:max-w-5xl rounded-none sm:rounded-3xl bg-white text-[#111827] shadow-[0_24px_80px_rgba(0,0,0,0.18)] border-0 sm:border sm:border-[#E5E7EB] overflow-hidden"
       >
-        {/* Top Google Quad-Color Header Stripe */}
-        <div className="h-1.5 w-full bg-gradient-to-r from-[#4285F4] via-[#EA4335] via-[#FBBC04] to-[#34A853]" />
+        {/* Top Single Hairline Google 4-Color Accent Strip */}
+        <div className="google-hairline-strip" />
 
-        {/* Modal Header */}
-        <div className="flex items-center justify-between px-5 sm:px-7 py-4 border-b border-[#F1F3F4] bg-[#F8F9FA]/80">
-          <div className="flex items-center gap-3">
-            <div
-              className={`flex h-10 w-10 items-center justify-center rounded-2xl shadow-2xs ${
-                isWend
-                  ? 'bg-[#E6F4EA] text-[#137333]'
-                  : isMentis
-                  ? 'bg-[#FEF7E0] text-[#B06000]'
-                  : 'bg-[#E8F0FE] text-[#1967D2]'
-              }`}
-            >
-              {isWend ? <Sparkles className="h-5 w-5" /> : isMentis ? <Brain className="h-5 w-5" /> : <Globe className="h-5 w-5" />}
+        {/* Modal Masthead */}
+        <div className="flex items-center justify-between px-4 sm:px-7 py-3.5 sm:py-4 border-b border-[#E5E7EB] bg-white">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#FAFAFA] border border-[#E5E7EB] text-[#111827]">
+              {isWend ? (
+                <Sparkles className="h-5 w-5 text-[#34A853]" />
+              ) : isMentis ? (
+                <Brain className="h-5 w-5 text-[#FBBC04]" />
+              ) : (
+                <Globe className="h-5 w-5 text-[#1A73E8]" />
+              )}
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-semibold tracking-tight text-[#202124]">
-                  {title} • Game Content Studio
-                </h2>
-                <span className="hidden sm:inline-flex items-center rounded-full bg-[#1A73E8]/10 px-2 py-0.5 text-[10px] font-bold text-[#1A73E8] uppercase tracking-wider">
-                  Admin Manipulator
+                <span className="font-mono text-[9px] uppercase tracking-[0.24em] text-[#6B7280]">
+                  {isWend ? 'ARENA 03' : isMentis ? 'ARENA 02' : 'ARENA 01'} // CONTENT STUDIO
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#FAFAFA] border border-[#E5E7EB] px-2 py-0.5 font-mono text-[8.5px] uppercase tracking-wider text-[#111827]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#34A853] animate-pulse" />
+                  Live Sync
                 </span>
               </div>
-              <p className="text-xs text-[#5F6368] line-clamp-1">
-                Edit questions, answers, points, and timers. Changes sync immediately to all players.
-              </p>
+              <h2 className="text-base sm:text-lg font-medium tracking-[-0.03em] text-[#111827] truncate mt-0.5">
+                {title}
+              </h2>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <a
               href={isWend ? '/admin-panel/panel?tab=wend' : `/admin-panel/panel?tab=quiz&track=${event.slug}`}
-              className="inline-flex items-center gap-1.5 rounded-full border border-[#1A73E8]/40 bg-[#E8F0FE] px-3.5 py-1.5 text-xs font-bold text-[#1967D2] hover:bg-[#D2E3FC] transition-colors shadow-2xs"
-              title="Open Full Dedicated Studio in Admin Command Center"
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] bg-[#FAFAFA] px-3.5 py-1.5 font-mono text-[11px] uppercase tracking-wider text-[#111827] hover:border-[#111827] hover:bg-white transition-all shadow-2xs"
+              title="Open Full Studio in Command Center"
             >
-              <ExternalLink className="h-3.5 w-3.5 text-[#1967D2]" />
-              <span>Open Full Studio</span>
+              <ExternalLink className="h-3.5 w-3.5 text-[#1A73E8]" />
+              <span>Full Studio</span>
             </a>
             <button
+              type="button"
               onClick={onClose}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] transition-colors cursor-pointer"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-[#6B7280] hover:bg-[#F3F4F6] hover:text-[#111827] transition-all cursor-pointer"
+              title="Close modal"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
         </div>
 
-        {/* Toast alert banner */}
+        {/* Toast Alert Banner */}
         {toast && (
           <div
-            className={`px-5 py-2 text-xs font-medium flex items-center gap-2 border-b transition-all ${
+            className={`px-4 sm:px-7 py-2 text-xs font-medium flex items-center gap-2 border-b transition-all ${
               toast.type === 'success'
-                ? 'bg-[#E6F4EA] text-[#137333] border-[#34A853]/30'
+                ? 'bg-[#F0FDF4] text-[#15803D] border-[#86EFAC]'
                 : toast.type === 'error'
-                ? 'bg-[#FCE8E6] text-[#C5221F] border-[#EA4335]/30'
-                : 'bg-[#E8F0FE] text-[#1967D2] border-[#1A73E8]/30'
+                ? 'bg-[#FEF2F2] text-[#DC2626] border-[#FECACA]'
+                : 'bg-[#EFF6FF] text-[#1D4ED8] border-[#BFDBFE]'
             }`}
           >
             {toast.type === 'success' ? (
-              <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-[#15803D]" />
             ) : (
-              <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+              <AlertCircle className="h-4 w-4 shrink-0 text-[#DC2626]" />
             )}
             <span>{toast.message}</span>
           </div>
         )}
 
-        {/* Sub-Tabs: Questions & Answers | Track Details | Live Preview */}
-        <div className="flex items-center justify-between px-5 sm:px-7 border-b border-[#F1F3F4] bg-white overflow-x-auto no-scrollbar">
-          <div className="flex items-center gap-2 py-2">
+        {/* Studio Sub-Tabs Bar */}
+        <div className="flex items-center justify-between px-4 sm:px-7 border-b border-[#E5E7EB] bg-[#FAFAFA] overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-1.5 py-2">
             <button
+              type="button"
               onClick={() => setActiveTab('questions')}
-              className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-mono text-xs uppercase tracking-wider transition-all cursor-pointer shrink-0 ${
                 activeTab === 'questions'
-                  ? 'bg-[#1A73E8] text-white shadow-xs'
-                  : 'text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124]'
+                  ? 'bg-[#111827] text-white shadow-xs'
+                  : 'text-[#6B7280] hover:bg-white hover:text-[#111827]'
               }`}
             >
-              <Sliders className="h-3.5 w-3.5" />
+              <Sliders className="h-3 w-3" />
               <span>
-                {isWend ? `Target Words (${wendBoard.targetWords.length})` : `Questions & Answers (${questions.length})`}
+                {isWend ? `Target Words (${wendBoard.targetWords.length})` : `Questions (${questions.length})`}
               </span>
             </button>
 
             <button
+              type="button"
               onClick={() => setActiveTab('details')}
-              className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-mono text-xs uppercase tracking-wider transition-all cursor-pointer shrink-0 ${
                 activeTab === 'details'
-                  ? 'bg-[#1A73E8] text-white shadow-xs'
-                  : 'text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124]'
+                  ? 'bg-[#111827] text-white shadow-xs'
+                  : 'text-[#6B7280] hover:bg-white hover:text-[#111827]'
               }`}
             >
-              <span>Track Title & Card Content</span>
+              <Layers className="h-3 w-3" />
+              <span>Track Metadata</span>
             </button>
 
             {!isWend && (
               <button
+                type="button"
                 onClick={() => setActiveTab('preview')}
-                className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-mono text-xs uppercase tracking-wider transition-all cursor-pointer shrink-0 ${
                   activeTab === 'preview'
-                    ? 'bg-[#1A73E8] text-white shadow-xs'
-                    : 'text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124]'
+                    ? 'bg-[#111827] text-white shadow-xs'
+                    : 'text-[#6B7280] hover:bg-white hover:text-[#111827]'
                 }`}
               >
-                <Eye className="h-3.5 w-3.5" />
-                <span>Live Quiz Simulator</span>
+                <Eye className="h-3 w-3" />
+                <span>Live Simulator</span>
               </button>
             )}
           </div>
 
           {!isWend && activeTab === 'questions' && (
-            <div className="hidden sm:flex items-center gap-3 text-xs text-[#5F6368]">
-              <span className="inline-flex items-center gap-1">
-                <Award className="h-3.5 w-3.5 text-[#FBBC04]" />
-                <strong className="text-[#202124]">{totalPoints}</strong> pts total
+            <div className="hidden md:flex items-center gap-3 font-mono text-xs text-[#6B7280]">
+              <span className="inline-flex items-center gap-1 rounded-full border border-[#E5E7EB] bg-white px-2.5 py-0.5">
+                <Award className="h-3 w-3 text-[#FBBC04]" />
+                <strong className="text-[#111827]">{totalPoints}</strong> pts
               </span>
-              <span className="inline-flex items-center gap-1">
-                <Clock className="h-3.5 w-3.5 text-[#1A73E8]" />
-                <strong className="text-[#202124]">{totalSeconds}s</strong> duration
+              <span className="inline-flex items-center gap-1 rounded-full border border-[#E5E7EB] bg-white px-2.5 py-0.5">
+                <Clock className="h-3 w-3 text-[#1A73E8]" />
+                <strong className="text-[#111827]">{totalSeconds}s</strong> pool
               </span>
             </div>
           )}
         </div>
 
         {/* Modal Main Body */}
-        <div className="flex-1 overflow-y-auto p-5 sm:p-7 bg-[#FAFAFA]">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-7 bg-[#FAFAFA]">
           {/* TAB 1: QUESTIONS & ANSWERS (FOR QUIZ TRACKS) */}
           {!isWend && activeTab === 'questions' && (
             <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
               {/* Left Column: Questions List */}
               <div className="md:col-span-5 flex flex-col gap-2.5">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-bold text-[#5F6368] uppercase tracking-wider">
-                    Question Pool ({questions.length})
+                  <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#6B7280]">
+                    QUESTION POOL ({questions.length})
                   </span>
                   <div className="flex items-center gap-1.5">
                     <button
+                      type="button"
                       onClick={handleResetDefaultQuestions}
                       title="Reset to default questions"
-                      className="p-1 rounded-md text-[#5F6368] hover:bg-[#E8EAED] hover:text-[#202124]"
+                      className="p-1 rounded-md text-[#6B7280] hover:bg-white hover:text-[#111827] transition-all cursor-pointer"
                     >
                       <RotateCcw className="h-3.5 w-3.5" />
                     </button>
                     <button
+                      type="button"
                       onClick={handleAddQuestion}
-                      className="inline-flex items-center gap-1 rounded-full bg-[#1A73E8] px-3 py-1 text-xs font-semibold text-white shadow-2xs hover:bg-[#1765CC] active:scale-95 transition-all cursor-pointer"
+                      className="inline-flex items-center gap-1 rounded-full bg-[#111827] px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-white shadow-2xs hover:bg-black active:scale-95 transition-all cursor-pointer"
                     >
-                      <Plus className="h-3.5 w-3.5" />
+                      <Plus className="h-3 w-3" />
                       <span>Add Question</span>
                     </button>
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-2 max-h-[460px] overflow-y-auto pr-1">
-                  {questions.map((q, idx) => {
-                    const isSelected = selectedQIndex === idx
-                    const correctChar = ['A', 'B', 'C', 'D'][q.correctOptionIndex ?? 0]
-                    return (
-                      <div
-                        key={q._id || idx}
-                        onClick={() => setSelectedQIndex(idx)}
-                        className={`group flex items-start justify-between rounded-2xl p-3 border transition-all cursor-pointer ${
-                          isSelected
-                            ? 'border-[#1A73E8] bg-white ring-2 ring-[#1A73E8]/20 shadow-sm'
-                            : 'border-[#E5E7EB] bg-white hover:border-[#BDC1C6] hover:bg-[#F8F9FA]'
-                        }`}
-                      >
-                        <div className="flex items-start gap-2.5 flex-1 min-w-0 pr-2">
-                          <span
-                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${
-                              isSelected
-                                ? 'bg-[#1A73E8] text-white'
-                                : 'bg-[#E8F0FE] text-[#1967D2]'
-                            }`}
-                          >
-                            {idx + 1}
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium text-[#202124] line-clamp-2 leading-snug">
-                              {q.questionText}
-                            </p>
-                            <div className="mt-1.5 flex items-center gap-2 text-[10px] text-[#5F6368]">
-                              <span className="rounded-full bg-[#E6F4EA] px-2 py-0.5 font-bold text-[#137333]">
-                                Ans: {correctChar}
-                              </span>
-                              <span>• {q.points || 100} pts</span>
-                              <span>• {q.timeLimitSeconds || 30}s</span>
+                {questions.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center p-6 rounded-2xl border border-dashed border-[#E5E7EB] bg-white text-center">
+                    <HelpCircle className="h-6 w-6 text-[#9CA3AF] mb-2" />
+                    <p className="font-mono text-[10px] uppercase tracking-wider text-[#6B7280]">No questions in pool</p>
+                    <button
+                      type="button"
+                      onClick={handleAddQuestion}
+                      className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#111827] px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-wider text-white hover:bg-black transition-colors"
+                    >
+                      <Plus className="h-3 w-3" />
+                      <span>Create Question</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2 max-h-[260px] sm:max-h-[460px] overflow-y-auto pr-1">
+                    {questions.map((q, idx) => {
+                      const isSelected = selectedQIndex === idx
+                      const correctChar = ['A', 'B', 'C', 'D'][q.correctOptionIndex ?? 0]
+                      return (
+                        <div
+                          key={q._id || idx}
+                          onClick={() => setSelectedQIndex(idx)}
+                          className={`group flex items-start justify-between rounded-xl p-3 border transition-all cursor-pointer ${
+                            isSelected
+                              ? 'border-[#111827] bg-[#F4F4F5] shadow-xs ring-1 ring-[#111827]/10'
+                              : 'border-[#E5E7EB] bg-white hover:border-[#9CA3AF]'
+                          }`}
+                        >
+                          <div className="flex items-start gap-2.5 flex-1 min-w-0 pr-2">
+                            <span
+                              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg font-mono text-[11px] font-semibold ${
+                                isSelected
+                                  ? 'bg-[#111827] text-white'
+                                  : 'bg-white border border-[#E5E7EB] text-[#4B5563]'
+                              }`}
+                            >
+                              {(idx + 1).toString().padStart(2, '0')}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-normal text-[#111827] line-clamp-2 leading-snug">
+                                {q.questionText}
+                              </p>
+                              <div className="mt-1.5 flex items-center gap-2 font-mono text-[9.5px] text-[#6B7280]">
+                                <span className="rounded-full bg-[#F0FDF4] border border-[#DCFCE7] px-2 py-0.2 font-medium text-[#15803D]">
+                                  Ans: {correctChar}
+                                </span>
+                                <span>• {q.points || 100} pts</span>
+                                <span>• {q.timeLimitSeconds || 30}s</span>
+                              </div>
                             </div>
                           </div>
-                        </div>
 
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleDeleteQuestion(idx)
-                          }}
-                          className="opacity-0 group-hover:opacity-100 p-1 rounded-lg text-[#5F6368] hover:bg-[#FCE8E6] hover:text-[#C5221F] transition-all cursor-pointer"
-                          title="Delete question"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    )
-                  })}
-                </div>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDeleteQuestion(idx)
+                            }}
+                            className="opacity-60 group-hover:opacity-100 p-1 rounded-lg text-[#9CA3AF] hover:bg-[#FEF2F2] hover:text-[#DC2626] transition-all cursor-pointer"
+                            title="Delete question"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Right Column: Active Question Editor */}
-              <div className="md:col-span-7 flex flex-col gap-4 rounded-3xl border border-[#E5E7EB] bg-white p-5 shadow-xs">
+              <div className="md:col-span-7 flex flex-col gap-4 rounded-2xl border border-[#E5E7EB] bg-white p-4 sm:p-6 shadow-xs">
                 {activeQuestion ? (
                   <>
-                    <div className="flex items-center justify-between pb-3 border-b border-[#F1F3F4]">
+                    <div className="flex items-center justify-between pb-3 border-b border-[#F3F4F6]">
                       <div className="flex items-center gap-2">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#1A73E8] text-xs font-bold text-white">
-                          #{selectedQIndex + 1}
+                        <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-[#111827] font-mono text-[11px] font-bold text-white">
+                          #{(selectedQIndex + 1).toString().padStart(2, '0')}
                         </span>
-                        <h3 className="text-sm font-semibold text-[#202124]">
-                          Edit Question Details
+                        <h3 className="text-sm font-medium text-[#111827]">
+                          Question Specification
                         </h3>
                       </div>
-                      <span className="text-[11px] text-[#5F6368]">
-                        Question {selectedQIndex + 1} of {questions.length}
+                      <span className="font-mono text-[10px] uppercase tracking-wider text-[#6B7280]">
+                        {selectedQIndex + 1} OF {questions.length} QUESTIONS
                       </span>
                     </div>
 
                     {/* Question Prompt */}
                     <div>
-                      <label className="block text-xs font-semibold text-[#3C4043] mb-1">
-                        Question Prompt
+                      <label className="block font-mono text-[9.5px] uppercase tracking-wider text-[#6B7280] mb-1.5">
+                        Question Statement
                       </label>
                       <textarea
                         rows={3}
                         value={activeQuestion.questionText}
                         onChange={(e) => handleUpdateActiveQuestion('questionText', e.target.value)}
-                        placeholder="Type the question prompt here..."
-                        className="w-full rounded-2xl border border-[#E5E7EB] bg-white p-3 text-xs sm:text-sm font-medium text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                        placeholder="Type the question prompt statement here..."
+                        className="w-full rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] p-3 text-xs sm:text-[13px] font-normal text-[#111827] focus:outline-none focus:border-[#111827] focus:bg-white leading-relaxed transition-colors"
                       />
                     </div>
 
                     {/* 4 Options with Correct Answer Selector */}
                     <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <label className="text-xs font-semibold text-[#3C4043]">
-                          Answer Choices (Click letter pill to mark Correct Answer)
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="font-mono text-[9.5px] uppercase tracking-wider text-[#6B7280]">
+                          Option Values (Select letter to mark correct)
                         </label>
-                        <span className="text-[11px] font-semibold text-[#137333]">
+                        <span className="font-mono text-[10px] font-medium text-[#15803D]">
                           ✓ Correct: {['A', 'B', 'C', 'D'][activeQuestion.correctOptionIndex ?? 0]}
                         </span>
                       </div>
@@ -504,21 +534,21 @@ function GameManipulatorModalInner({
                           return (
                             <div
                               key={optIdx}
-                              className={`flex items-center gap-2 rounded-2xl border p-2 transition-all ${
+                              className={`flex items-center gap-2 rounded-xl border p-2 transition-all ${
                                 isCorrect
-                                  ? 'border-[#34A853] bg-[#E6F4EA]/40 ring-1 ring-[#34A853]/40'
-                                  : 'border-[#E5E7EB] bg-white hover:border-[#BDC1C6]'
+                                  ? 'border-[#86EFAC] bg-[#F0FDF4] ring-1 ring-[#86EFAC]'
+                                  : 'border-[#E5E7EB] bg-white hover:border-[#D1D5DB]'
                               }`}
                             >
                               <button
                                 type="button"
                                 onClick={() => handleUpdateActiveQuestion('correctOptionIndex', optIdx)}
-                                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-bold shadow-2xs transition-all cursor-pointer ${
+                                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg font-mono text-xs font-bold transition-all cursor-pointer ${
                                   isCorrect
-                                    ? 'bg-[#34A853] text-white hover:bg-[#2E7D32]'
-                                    : 'border border-[#E5E7EB] bg-white text-[#5F6368] hover:bg-[#E8F0FE] hover:text-[#1967D2]'
+                                    ? 'bg-[#15803D] text-white shadow-xs'
+                                    : 'border border-[#E5E7EB] bg-white text-[#6B7280] hover:bg-[#F3F4F6] hover:text-[#111827]'
                                 }`}
-                                title={isCorrect ? 'Marked as Correct Answer' : `Click to set Option ${letter} as Correct`}
+                                title={isCorrect ? 'Marked as Correct' : `Click to set Option ${letter} as Correct`}
                               >
                                 {letter}
                               </button>
@@ -527,14 +557,14 @@ function GameManipulatorModalInner({
                                 type="text"
                                 value={opt}
                                 onChange={(e) => handleUpdateOption(optIdx, e.target.value)}
-                                placeholder={`Option ${letter} text`}
-                                className="w-full bg-transparent px-2 text-xs font-medium text-[#202124] focus:outline-none"
+                                placeholder={`Option ${letter} statement`}
+                                className="w-full bg-transparent px-2 text-xs font-normal text-[#111827] focus:outline-none"
                               />
 
                               {isCorrect && (
-                                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#34A853] px-2.5 py-0.5 text-[10px] font-bold text-white shadow-2xs">
-                                  <Check className="h-3 w-3" />
-                                  <span>Correct Answer</span>
+                                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#15803D] px-2.5 py-0.5 font-mono text-[8.5px] font-bold text-white shadow-2xs">
+                                  <Check className="h-2.5 w-2.5" />
+                                  <span>Correct</span>
                                 </span>
                               )}
                             </div>
@@ -544,10 +574,10 @@ function GameManipulatorModalInner({
                     </div>
 
                     {/* Question Scoring & Timer Settings */}
-                    <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[#F1F3F4]">
+                    <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[#F3F4F6]">
                       <div>
-                        <label className="block text-xs font-semibold text-[#5F6368] mb-1">
-                          Score Points
+                        <label className="block font-mono text-[9.5px] uppercase tracking-wider text-[#6B7280] mb-1">
+                          Scoring Points
                         </label>
                         <input
                           type="number"
@@ -556,13 +586,13 @@ function GameManipulatorModalInner({
                           step={10}
                           value={activeQuestion.points || 100}
                           onChange={(e) => handleUpdateActiveQuestion('points', Number(e.target.value))}
-                          className="w-full rounded-xl border border-[#E5E7EB] bg-white px-3 py-2 text-xs font-semibold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                          className="w-full rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] px-3 py-2 font-mono text-xs font-semibold text-[#111827] focus:outline-none focus:border-[#111827] focus:bg-white"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-xs font-semibold text-[#5F6368] mb-1">
-                          Time Limit (Seconds)
+                        <label className="block font-mono text-[9.5px] uppercase tracking-wider text-[#6B7280] mb-1">
+                          Round Time Limit (Seconds)
                         </label>
                         <input
                           type="number"
@@ -571,15 +601,36 @@ function GameManipulatorModalInner({
                           step={5}
                           value={activeQuestion.timeLimitSeconds || 30}
                           onChange={(e) => handleUpdateActiveQuestion('timeLimitSeconds', Number(e.target.value))}
-                          className="w-full rounded-xl border border-[#E5E7EB] bg-white px-3 py-2 text-xs font-semibold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                          className="w-full rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] px-3 py-2 font-mono text-xs font-semibold text-[#111827] focus:outline-none focus:border-[#111827] focus:bg-white"
                         />
                       </div>
                     </div>
                   </>
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-12 text-[#5F6368]">
-                    <HelpCircle className="h-8 w-8 mb-2 text-[#BDC1C6]" />
-                    <p className="text-xs">Select or add a question from the left panel.</p>
+                  <div className="flex flex-col items-center justify-center py-12 text-[#6B7280] text-center">
+                    <HelpCircle className="h-8 w-8 mb-2 text-[#9CA3AF]" />
+                    <p className="text-xs font-medium text-[#111827]">No Question Selected</p>
+                    <p className="text-[11px] text-[#6B7280] mt-0.5 max-w-xs">
+                      Pick a question from the left pool or add a new question to edit prompt and choices.
+                    </p>
+                    <div className="mt-4 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={handleAddQuestion}
+                        className="inline-flex items-center gap-1.5 rounded-full bg-[#111827] px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-white hover:bg-black transition-colors cursor-pointer"
+                      >
+                        <Plus className="h-3 w-3" />
+                        <span>Add Question</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleResetDefaultQuestions}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] bg-white px-3.5 py-2 font-mono text-[10px] uppercase tracking-wider text-[#111827] hover:border-[#111827] transition-colors cursor-pointer"
+                      >
+                        <RotateCcw className="h-3 w-3 text-[#6B7280]" />
+                        <span>Load Curated</span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -595,7 +646,7 @@ function GameManipulatorModalInner({
                   onSubmit={handleAddTargetWord}
                   className="rounded-2xl border border-[#E5E7EB] bg-white p-3.5 shadow-2xs space-y-2"
                 >
-                  <span className="text-xs font-bold text-[#137333] uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#15803D] font-medium flex items-center gap-1.5">
                     <Plus className="h-3.5 w-3.5" />
                     Add Target Word
                   </span>
@@ -604,18 +655,18 @@ function GameManipulatorModalInner({
                     value={newWordInput}
                     onChange={(e) => setNewWordInput(e.target.value.toUpperCase())}
                     placeholder="TARGET WORD (e.g. FLUTTER)"
-                    className="w-full rounded-xl border border-[#E5E7EB] bg-white px-3 py-1.5 text-xs font-bold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#34A853]"
+                    className="w-full rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] px-3 py-2 font-mono text-xs font-semibold text-[#111827] focus:outline-none focus:border-[#15803D] focus:bg-white"
                   />
                   <input
                     type="text"
                     value={newHintInput}
                     onChange={(e) => setNewHintInput(e.target.value)}
                     placeholder="Clue or hint for participants"
-                    className="w-full rounded-xl border border-[#E5E7EB] bg-white px-3 py-1.5 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#34A853]"
+                    className="w-full rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] px-3 py-2 text-xs text-[#111827] focus:outline-none focus:border-[#15803D] focus:bg-white"
                   />
                   <button
                     type="submit"
-                    className="w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-[#34A853] py-2 text-xs font-semibold text-white shadow-2xs hover:bg-[#2E7D32] transition-colors cursor-pointer"
+                    className="w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-[#111827] py-2 font-mono text-xs uppercase tracking-wider text-white shadow-2xs hover:bg-black transition-colors cursor-pointer"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     <span>Add Word to Bank</span>
@@ -623,8 +674,8 @@ function GameManipulatorModalInner({
                 </form>
 
                 <div className="flex flex-col gap-2 max-h-[360px] overflow-y-auto pr-1">
-                  <span className="text-xs font-bold text-[#5F6368] uppercase tracking-wider">
-                    Target Words ({wendBoard.targetWords.length})
+                  <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#6B7280]">
+                    TARGET WORDS ({wendBoard.targetWords.length})
                   </span>
                   {wendBoard.targetWords.map((tw) => {
                     const isSelected = selectedWordId === tw.id
@@ -635,29 +686,29 @@ function GameManipulatorModalInner({
                       <div
                         key={tw.id}
                         onClick={() => setSelectedWordId(tw.id)}
-                        className={`group flex items-start justify-between rounded-2xl p-3 border transition-all cursor-pointer ${
+                        className={`group flex items-start justify-between rounded-xl p-3 border transition-all cursor-pointer ${
                           isSelected
-                            ? 'border-[#34A853] bg-white ring-2 ring-[#34A853]/20 shadow-xs'
-                            : 'border-[#E5E7EB] bg-white hover:border-[#BDC1C6]'
+                            ? 'border-[#15803D] bg-white ring-1 ring-[#15803D]/20 shadow-xs'
+                            : 'border-[#E5E7EB] bg-white hover:border-[#D1D5DB]'
                         }`}
                       >
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-bold text-[#202124] tracking-wider">
+                            <span className="font-mono text-xs font-semibold text-[#111827] tracking-wider">
                               {tw.word}
                             </span>
                             <span
-                              className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${
+                              className={`rounded-full px-2 py-0.2 font-mono text-[9px] font-medium ${
                                 isSolvable
-                                  ? 'bg-[#E6F4EA] text-[#137333]'
-                                  : 'bg-[#FCE8E6] text-[#C5221F]'
+                                  ? 'bg-[#F0FDF4] text-[#15803D]'
+                                  : 'bg-[#FEF2F2] text-[#DC2626]'
                               }`}
                             >
-                              {isSolvable ? '✓ Solvable on Grid' : '✕ Path Blocked'}
+                              {isSolvable ? '✓ Solvable' : '✕ Blocked'}
                             </span>
                           </div>
                           {tw.hint && (
-                            <p className="text-[11px] text-[#5F6368] mt-1 line-clamp-1">{tw.hint}</p>
+                            <p className="text-[11px] text-[#6B7280] mt-1 line-clamp-1">{tw.hint}</p>
                           )}
                         </div>
 
@@ -667,7 +718,7 @@ function GameManipulatorModalInner({
                             e.stopPropagation()
                             handleDeleteTargetWord(tw.id)
                           }}
-                          className="opacity-0 group-hover:opacity-100 p-1 rounded-lg text-[#5F6368] hover:bg-[#FCE8E6] hover:text-[#C5221F] transition-all cursor-pointer"
+                          className="opacity-60 group-hover:opacity-100 p-1 rounded-lg text-[#9CA3AF] hover:bg-[#FEF2F2] hover:text-[#DC2626] transition-all cursor-pointer"
                           title="Delete word"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -679,35 +730,33 @@ function GameManipulatorModalInner({
               </div>
 
               {/* Right Column: Grid Information & Studio Shortcut */}
-              <div className="md:col-span-7 flex flex-col gap-4 rounded-3xl border border-[#E5E7EB] bg-white p-5 shadow-xs">
-                <div className="flex items-center justify-between pb-3 border-b border-[#F1F3F4]">
+              <div className="md:col-span-7 flex flex-col gap-4 rounded-2xl border border-[#E5E7EB] bg-white p-4 sm:p-6 shadow-xs">
+                <div className="flex items-center justify-between pb-3 border-b border-[#F3F4F6]">
                   <div>
-                    <h3 className="text-sm font-semibold text-[#202124]">
-                      Wend Board Configuration ({wendBoard.rows}x{wendBoard.cols})
+                    <h3 className="text-sm font-medium text-[#111827]">
+                      Wend Board Configuration ({wendBoard.rows}×{wendBoard.cols})
                     </h3>
-                    <p className="text-xs text-[#5F6368]">
-                      Participants trace adjacent snake paths across letters on this grid.
+                    <p className="text-xs text-[#6B7280]">
+                      Participants trace adjacent letter paths on this matrix.
                     </p>
                   </div>
                   <a
                     href="/admin-panel/panel?tab=wend"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded-full bg-[#1A73E8] px-3.5 py-1.5 text-xs font-semibold text-white shadow-2xs hover:bg-[#1765CC]"
+                    className="inline-flex items-center gap-1 rounded-full bg-[#111827] px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-wider text-white shadow-2xs hover:bg-black"
                   >
-                    <span>Open Grid Studio</span>
-                    <ExternalLink className="h-3.5 w-3.5" />
+                    <span>Full Grid Studio</span>
+                    <ExternalLink className="h-3 w-3" />
                   </a>
                 </div>
 
-                {/* Wend Round Time Limit (Set by Admin) */}
-                <div className="rounded-2xl border border-[#E5E7EB] bg-[#F8F9FA] p-4 text-left">
+                {/* Wend Round Time Limit */}
+                <div className="rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] p-4 text-left">
                   <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-[#E5E7EB]">
-                    <span className="text-xs font-bold text-[#137333] flex items-center gap-1.5">
-                      <Clock className="h-3.5 w-3.5" />
-                      <span>Round Time Limit (Enforces Live User Countdown)</span>
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-[#15803D] font-medium flex items-center gap-1.5">
+                      <Clock className="h-3 w-3" />
+                      <span>Round Time Limit</span>
                     </span>
-                    <span className="text-xs font-bold text-[#1A73E8]">
+                    <span className="font-mono text-xs font-semibold text-[#111827]">
                       {wendBoard.timeLimitSeconds || 120}s ({Math.floor((wendBoard.timeLimitSeconds || 120) / 60)}m {((wendBoard.timeLimitSeconds || 120) % 60)}s)
                     </span>
                   </div>
@@ -722,10 +771,10 @@ function GameManipulatorModalInner({
                           api.saveWendBoard(updated)
                           showToast(`Set round timer to ${sec}s!`)
                         }}
-                        className={`rounded-full px-3 py-1 text-xs font-semibold transition-all cursor-pointer ${
+                        className={`rounded-full px-3 py-1 font-mono text-xs transition-all cursor-pointer ${
                           (wendBoard.timeLimitSeconds || 120) === sec
-                            ? 'bg-[#137333] text-white shadow-xs'
-                            : 'border border-[#E5E7EB] bg-white text-[#3C4043] hover:bg-[#E8F0FE]'
+                            ? 'bg-[#111827] text-white shadow-xs'
+                            : 'border border-[#E5E7EB] bg-white text-[#4B5563] hover:border-[#111827]'
                         }`}
                       >
                         {sec}s
@@ -742,21 +791,21 @@ function GameManipulatorModalInner({
                         setWendBoard(updated)
                         api.saveWendBoard(updated)
                       }}
-                      className="w-20 rounded-xl border border-[#E5E7EB] bg-white px-2.5 py-1 text-xs font-bold text-[#202124]"
+                      className="w-20 rounded-xl border border-[#E5E7EB] bg-white px-2.5 py-1 font-mono text-xs font-semibold text-[#111827]"
                     />
-                    <span className="text-xs text-[#5F6368]">sec</span>
+                    <span className="font-mono text-xs text-[#6B7280]">sec</span>
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-[#E5E7EB] bg-[#F8F9FA] p-4 text-center">
-                  <p className="text-xs text-[#5F6368] leading-relaxed mb-3">
-                    The 8x8 Wend board features obstacle cutouts and letter matrix. For detailed letter-by-letter board painting, obstacle toggling, and live grid manipulation, open the dedicated Wend Studio.
+                <div className="rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] p-4 text-center">
+                  <p className="text-xs text-[#6B7280] leading-relaxed mb-3">
+                    Active targets loaded into the puzzle word bank. Letter cells can be individually customized in the full 8×8 Studio.
                   </p>
                   <div className="flex flex-wrap justify-center gap-2">
                     {wendBoard.targetWords.map((tw) => (
                       <span
                         key={tw.id}
-                        className="rounded-full bg-white border border-[#E5E7EB] px-3 py-1 text-xs font-bold text-[#202124] shadow-2xs"
+                        className="rounded-full bg-white border border-[#E5E7EB] px-3 py-1 font-mono text-xs font-medium text-[#111827] shadow-2xs"
                       >
                         {tw.word}
                       </span>
@@ -769,9 +818,9 @@ function GameManipulatorModalInner({
 
           {/* TAB 2: TITLE & DESCRIPTION */}
           {activeTab === 'details' && (
-            <div className="max-w-xl mx-auto rounded-3xl border border-[#E5E7EB] bg-white p-6 shadow-xs space-y-4">
+            <div className="max-w-xl mx-auto rounded-2xl border border-[#E5E7EB] bg-white p-6 shadow-xs space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-[#3C4043] mb-1">
+                <label className="block font-mono text-[9.5px] uppercase tracking-wider text-[#6B7280] mb-1.5">
                   Track Display Title
                 </label>
                 <input
@@ -779,12 +828,12 @@ function GameManipulatorModalInner({
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Event track title"
-                  className="w-full rounded-2xl border border-[#E5E7EB] bg-white p-3 text-sm font-semibold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                  className="w-full rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] p-3 text-sm font-medium text-[#111827] focus:outline-none focus:border-[#111827] focus:bg-white transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#3C4043] mb-1">
+                <label className="block font-mono text-[9.5px] uppercase tracking-wider text-[#6B7280] mb-1.5">
                   Description
                 </label>
                 <textarea
@@ -792,7 +841,7 @@ function GameManipulatorModalInner({
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Event track description"
-                  className="w-full rounded-2xl border border-[#E5E7EB] bg-white p-3 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                  className="w-full rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] p-3 text-xs text-[#111827] focus:outline-none focus:border-[#111827] focus:bg-white leading-relaxed transition-colors"
                 />
               </div>
             </div>
@@ -800,17 +849,17 @@ function GameManipulatorModalInner({
 
           {/* TAB 3: LIVE QUIZ SIMULATOR */}
           {!isWend && activeTab === 'preview' && activeQuestion && (
-            <div className="max-w-lg mx-auto rounded-3xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#F1F3F4]">
-                <span className="text-xs font-bold text-[#1A73E8] uppercase tracking-wider">
-                  Participant Perspective Preview
+            <div className="max-w-md mx-auto rounded-2xl border border-[#E5E7EB] bg-white p-6 shadow-xs">
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#F3F4F6]">
+                <span className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-[#6B7280]">
+                  PARTICIPANT PERSPECTIVE
                 </span>
-                <span className="rounded-full bg-[#FEF7E0] px-3 py-1 text-xs font-bold text-[#B06000]">
+                <span className="rounded-full bg-[#FEF7E0] border border-[#FDE68A] px-2.5 py-0.5 font-mono text-[10px] font-medium text-[#B45309]">
                   {activeQuestion.timeLimitSeconds || 30}s Timer
                 </span>
               </div>
 
-              <h4 className="text-base font-semibold text-[#202124] mb-4">
+              <h4 className="text-base font-normal tracking-tight text-[#111827] mb-4">
                 {activeQuestion.questionText}
               </h4>
 
@@ -823,43 +872,45 @@ function GameManipulatorModalInner({
                       key={idx}
                       type="button"
                       onClick={() => setPreviewSelectedOption(idx)}
-                      className={`w-full flex items-center gap-3 rounded-2xl p-3 text-left transition-all cursor-pointer ${
+                      className={`w-full flex items-center gap-3 rounded-xl p-3 text-left transition-all cursor-pointer ${
                         isSelected
-                          ? 'border-2 border-[#1A73E8] bg-[#E8F0FE] text-[#1967D2]'
-                          : 'border border-[#E5E7EB] bg-white text-[#202124] hover:bg-[#F8F9FA]'
+                          ? 'border border-[#111827] bg-[#F4F4F5] text-[#111827]'
+                          : 'border border-[#E5E7EB] bg-white text-[#4B5563] hover:border-[#D1D5DB]'
                       }`}
                     >
-                      <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-white border border-[#E5E7EB] text-xs font-bold text-[#5F6368] shadow-2xs">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-white border border-[#E5E7EB] font-mono text-xs font-semibold text-[#111827] shadow-2xs">
                         {['A', 'B', 'C', 'D'][idx]}
                       </span>
-                      <span className="text-xs font-medium flex-1">{opt}</span>
+                      <span className="text-xs font-normal flex-1">{opt}</span>
                       {isSelected && isCorrect && (
-                        <span className="text-xs font-bold text-[#137333]">✓ Correct Answer!</span>
+                        <span className="font-mono text-[10px] font-semibold text-[#15803D]">✓ Correct</span>
                       )}
                     </button>
                   )
                 })}
               </div>
 
-              <p className="mt-4 text-center text-[11px] text-[#5F6368]">
-                Interactive preview simulating the participant mobile and desktop experience.
+              <p className="mt-4 text-center font-mono text-[9.5px] text-[#9CA3AF] uppercase tracking-wider">
+                Simulated participant view
               </p>
             </div>
           )}
         </div>
 
         {/* Modal Bottom Footer Action Bar */}
-        <div className="flex items-center justify-between px-5 sm:px-7 py-4 border-t border-[#E5E7EB] bg-white">
-          <div className="flex items-center gap-1.5 text-xs text-[#5F6368]">
-            <span className="h-2 w-2 rounded-full bg-[#34A853] animate-pulse" />
-            <span className="hidden sm:inline">Real-time sync to all participants on save</span>
+        <div className="flex items-center justify-between px-4 sm:px-7 py-3.5 sm:py-4 border-t border-[#E5E7EB] bg-white shrink-0">
+          <div className="flex items-center gap-2 text-xs text-[#6B7280]">
+            <span className="h-2 w-2 rounded-full bg-[#22C55E] animate-pulse" />
+            <span className="hidden sm:inline font-mono text-[10px] uppercase tracking-wider">
+              Realtime WebSocket sync on save
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full border border-[#E5E7EB] bg-white px-4 py-2 text-xs font-medium text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] transition-colors cursor-pointer"
+              className="rounded-full border border-[#E5E7EB] bg-white px-4 py-2 font-mono text-xs uppercase tracking-wider text-[#6B7280] hover:bg-[#F3F4F6] hover:text-[#111827] transition-colors cursor-pointer"
             >
               Cancel
             </button>
@@ -867,7 +918,7 @@ function GameManipulatorModalInner({
             <button
               type="button"
               onClick={handleSaveAll}
-              className="inline-flex items-center gap-2 rounded-full bg-[#1A73E8] px-5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#1765CC] active:scale-95 transition-all cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-full bg-[#111827] px-5 py-2 font-mono text-xs uppercase tracking-wider text-white shadow-xs hover:bg-black active:scale-95 transition-all cursor-pointer"
             >
               <Save className="h-3.5 w-3.5" />
               <span>Save & Apply Live</span>

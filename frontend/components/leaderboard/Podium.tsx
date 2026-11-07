@@ -2,14 +2,14 @@
 
 import React from 'react'
 import { LeaderboardEntry } from '@/lib/api'
-import { Trophy, Clock, Crown } from 'lucide-react'
+import { Trophy, Clock, Crown, Sparkles } from 'lucide-react'
 
 interface PodiumProps {
   entries: LeaderboardEntry[]
 }
 
 function formatDuration(ms: number): string {
-  if (!ms || ms <= 0) return '0s'
+  if (!ms || ms <= 0) return '0.0s'
   const seconds = (ms / 1000).toFixed(1)
   if (ms < 60000) return `${seconds}s`
   const minutes = Math.floor(ms / 60000)
@@ -36,102 +36,109 @@ export function Podium({ entries }: PodiumProps) {
   }
 
   return (
-    <div className="flex items-end justify-center gap-2.5 pt-8 pb-2 px-2">
-      {/* 2nd Place (Silver) */}
+    <div className="flex items-end justify-center gap-2 sm:gap-4 pt-10 pb-2 px-1 select-none">
+      {/* 2nd Place (Silver Pedestal) */}
       {second ? (
-        <div className="flex flex-1 flex-col items-center">
-          <div className="relative mb-2.5 flex flex-col items-center">
+        <div className="group/podium flex flex-1 flex-col items-center transition-transform hover:-translate-y-1 duration-200">
+          <div className="relative mb-3 flex flex-col items-center">
             <div className="relative">
               <img
                 src={second.user?.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=2nd'}
                 alt={second.user?.name || 'Player'}
-                className="h-13 w-13 rounded-full border border-[#E5E7EB] object-cover"
+                className="h-12 w-12 sm:h-14 sm:w-14 rounded-full border-2 border-[#9CA3AF] object-cover ring-2 ring-[#9CA3AF]/20"
               />
-              <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#6B7280] font-mono text-[10px] font-medium text-white">
+              <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#6B7280] font-mono text-[10px] font-semibold text-white shadow-xs">
                 2
               </span>
             </div>
-            <span className="mt-2 text-center text-xs font-medium text-[#111827] max-w-[80px] truncate">
+            <span className="mt-2 text-center text-xs font-medium text-[#111827] max-w-[85px] sm:max-w-[100px] truncate">
               {second.user?.name}
             </span>
             <span className="font-mono text-[9px] uppercase tracking-wider text-[#6B7280] my-0.5">
               Silver
             </span>
-            <span className="flex items-center gap-1 font-mono text-[10px] text-[#9CA3AF]">
-              <Clock className="h-2.5 w-2.5" />
+            <span className="flex items-center gap-1 font-mono text-[10px] text-[#4B5563] bg-[#FAFAFA] border border-[#E5E7EB] px-2 py-0.5 rounded-full mt-0.5">
+              <Clock className="h-2.5 w-2.5 text-[#9CA3AF]" />
               {formatDuration(second.durationMs)}
             </span>
           </div>
-          {/* Step block */}
-          <div className="h-20 w-full rounded-t-xl bg-white border border-[#E5E7EB] border-t-2 border-t-[#6B7280] shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex items-center justify-center font-mono text-xs font-medium text-[#6B7280]">
-            02
+
+          {/* Silver Step Block */}
+          <div className="h-24 w-full rounded-t-2xl bg-gradient-to-b from-white to-[#F4F4F5] border border-[#E5E7EB] border-t-[3px] border-t-[#9CA3AF] shadow-[0_8px_20px_rgba(0,0,0,0.03)] flex flex-col items-center justify-center">
+            <span className="font-mono text-xs sm:text-sm font-semibold text-[#6B7280]">02</span>
+            <span className="font-mono text-[8px] uppercase tracking-widest text-[#9CA3AF] mt-0.5">RUNNER UP</span>
           </div>
         </div>
       ) : (
         <div className="flex-1" />
       )}
 
-      {/* 1st Place (Gold Champion) */}
-      <div className="flex flex-1 flex-col items-center">
-        <div className="relative mb-2.5 flex flex-col items-center">
+      {/* 1st Place (Gold Champion Pedestal) */}
+      <div className="group/podium flex flex-1 flex-col items-center transition-transform hover:-translate-y-1.5 duration-200">
+        <div className="relative mb-3 flex flex-col items-center">
           <div className="relative">
-            <div className="absolute -top-4.5 left-1/2 -translate-x-1/2">
-              <Crown className="h-4 w-4 text-[#FBBC04]" />
+            <div className="absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-0.5">
+              <Crown className="h-5 w-5 text-[#FBBC04] drop-shadow-xs animate-bounce" />
             </div>
             <img
               src={first.user?.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=1st'}
               alt={first.user?.name || 'Winner'}
-              className="h-16 w-16 rounded-full border-2 border-[#FBBC04] object-cover ring-4 ring-[#FBBC04]/10"
+              className="h-16 w-16 sm:h-18 sm:w-18 rounded-full border-2 border-[#FBBC04] object-cover ring-4 ring-[#FBBC04]/25 shadow-md"
             />
-            <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#FBBC04] font-mono text-[10px] font-bold text-[#111827]">
+            <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#FBBC04] font-mono text-[10px] font-bold text-[#111827] shadow-xs">
               1
             </span>
           </div>
-          <span className="mt-2 text-center text-xs font-medium text-[#111827] max-w-[90px] truncate">
+          <span className="mt-2.5 text-center text-xs sm:text-sm font-semibold text-[#111827] max-w-[95px] sm:max-w-[120px] truncate">
             {first.user?.name}
           </span>
-          <span className="font-mono text-[9px] uppercase tracking-wider text-[#B45309] font-medium my-0.5">
+          <span className="font-mono text-[9px] uppercase tracking-wider text-[#B45309] font-medium my-0.5 flex items-center gap-1">
+            <Sparkles className="h-2.5 w-2.5 text-[#FBBC04]" />
             Champion
           </span>
-          <span className="flex items-center gap-1 font-mono text-[10px] text-[#15803D]">
-            <Clock className="h-2.5 w-2.5" />
+          <span className="flex items-center gap-1 font-mono text-[10px] text-[#15803D] bg-[#F0FDF4] border border-[#DCFCE7] px-2.5 py-0.5 rounded-full mt-0.5 font-medium">
+            <Clock className="h-2.5 w-2.5 text-[#16A34A]" />
             {formatDuration(first.durationMs)}
           </span>
         </div>
-        {/* Highest Step block */}
-        <div className="h-28 w-full rounded-t-xl bg-white border border-[#E5E7EB] border-t-2 border-t-[#FBBC04] shadow-[0_6px_24px_rgba(0,0,0,0.03)] flex items-center justify-center font-mono text-sm font-semibold text-[#111827]">
-          01
+
+        {/* Champion Highest Step Block */}
+        <div className="h-32 w-full rounded-t-2xl bg-gradient-to-b from-white to-[#FEFDF0] border border-[#E5E7EB] border-t-[3px] border-t-[#FBBC04] shadow-[0_12px_28px_rgba(251,188,4,0.12)] flex flex-col items-center justify-center">
+          <span className="font-mono text-base sm:text-lg font-bold text-[#111827]">01</span>
+          <span className="font-mono text-[8.5px] uppercase tracking-widest text-[#B45309] mt-0.5 font-medium">WINNER</span>
         </div>
       </div>
 
-      {/* 3rd Place (Bronze) */}
+      {/* 3rd Place (Bronze Pedestal) */}
       {third ? (
-        <div className="flex flex-1 flex-col items-center">
-          <div className="relative mb-2.5 flex flex-col items-center">
+        <div className="group/podium flex flex-1 flex-col items-center transition-transform hover:-translate-y-1 duration-200">
+          <div className="relative mb-3 flex flex-col items-center">
             <div className="relative">
               <img
                 src={third.user?.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=3rd'}
                 alt={third.user?.name || 'Player'}
-                className="h-13 w-13 rounded-full border border-[#E5E7EB] object-cover"
+                className="h-12 w-12 sm:h-14 sm:w-14 rounded-full border-2 border-[#D97706] object-cover ring-2 ring-[#D97706]/20"
               />
-              <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#D97706] font-mono text-[10px] font-medium text-white">
+              <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#D97706] font-mono text-[10px] font-semibold text-white shadow-xs">
                 3
               </span>
             </div>
-            <span className="mt-2 text-center text-xs font-medium text-[#111827] max-w-[80px] truncate">
+            <span className="mt-2 text-center text-xs font-medium text-[#111827] max-w-[85px] sm:max-w-[100px] truncate">
               {third.user?.name}
             </span>
             <span className="font-mono text-[9px] uppercase tracking-wider text-[#D97706] my-0.5">
               Bronze
             </span>
-            <span className="flex items-center gap-1 font-mono text-[10px] text-[#9CA3AF]">
-              <Clock className="h-2.5 w-2.5" />
+            <span className="flex items-center gap-1 font-mono text-[10px] text-[#4B5563] bg-[#FAFAFA] border border-[#E5E7EB] px-2 py-0.5 rounded-full mt-0.5">
+              <Clock className="h-2.5 w-2.5 text-[#9CA3AF]" />
               {formatDuration(third.durationMs)}
             </span>
           </div>
-          {/* Step block */}
-          <div className="h-14 w-full rounded-t-xl bg-white border border-[#E5E7EB] border-t-2 border-t-[#D97706] shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex items-center justify-center font-mono text-xs font-medium text-[#D97706]">
-            03
+
+          {/* Bronze Step Block */}
+          <div className="h-18 w-full rounded-t-2xl bg-gradient-to-b from-white to-[#FDF8F3] border border-[#E5E7EB] border-t-[3px] border-t-[#D97706] shadow-[0_8px_20px_rgba(0,0,0,0.03)] flex flex-col items-center justify-center">
+            <span className="font-mono text-xs sm:text-sm font-semibold text-[#D97706]">03</span>
+            <span className="font-mono text-[8px] uppercase tracking-widest text-[#B45309] mt-0.5">PODIUM</span>
           </div>
         </div>
       ) : (

@@ -9,9 +9,9 @@ import { RankList } from '@/components/leaderboard/RankList'
 import { api, DEFAULT_LEADERBOARD, LeaderboardEntry } from '@/lib/api'
 import { ArrowLeft, RefreshCw, Trophy, Home } from 'lucide-react'
 
-function LeaderboardContent() {
+export function LeaderboardContent({ customSlug }: { customSlug?: string }) {
   const params = useParams()
-  const slug = (params?.slug as string) || 'web-dev-quiz'
+  const slug = customSlug || (params?.slug as string) || 'web-dev-quiz'
 
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(true)
@@ -51,7 +51,7 @@ function LeaderboardContent() {
     <div className="min-h-screen flex flex-col bg-[#FAFAFA] text-[#111827] relative selection:bg-[#111827] selection:text-white">
       <Navbar />
 
-      <main className="relative z-10 mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pt-5 pb-16 sm:px-6">
+      <main className="relative z-10 mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pt-5 pb-16 sm:px-6 select-none">
         {/* Navigation & Refresh Bar */}
         <div className="flex items-center justify-between mb-4">
           <Link
@@ -65,7 +65,7 @@ function LeaderboardContent() {
           <button
             onClick={handleRefresh}
             disabled={refreshing}
-            className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] bg-white px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-[#111827] hover:border-[#111827] transition-all active:scale-95 cursor-pointer"
+            className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] bg-white px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-[#111827] hover:border-[#111827] transition-all active:scale-95 cursor-pointer shadow-2xs"
           >
             <RefreshCw className={`h-2.5 w-2.5 ${refreshing ? 'animate-spin' : ''}`} />
             <span>Refresh</span>
@@ -74,14 +74,17 @@ function LeaderboardContent() {
 
         {/* Editorial Title Header */}
         <div className="text-center my-4">
-          <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-[#9CA3AF] mb-1.5 block">
-            OFFICIAL TOURNAMENT STANDINGS
-          </span>
+          <div className="inline-flex items-center gap-2 mb-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#FBBC04]" />
+            <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-[#9CA3AF]">
+              OFFICIAL TOURNAMENT STANDINGS
+            </span>
+          </div>
           <h1 className="text-3xl sm:text-4xl font-normal tracking-[-0.035em] text-[#111827]">
             {trackTitle}
           </h1>
           <p className="mt-1 text-xs text-[#6B7280]">
-            Ranked by total score with millisecond tie-breaker duration
+            Ranked by total score with millisecond tie-breaker timing
           </p>
         </div>
 
@@ -91,7 +94,7 @@ function LeaderboardContent() {
             <p className="mt-3 font-mono text-[10px] uppercase tracking-wider text-[#6B7280]">Syncing standings...</p>
           </div>
         ) : leaderboard.length === 0 ? (
-          <div className="my-12 flex flex-col items-center rounded-2xl border border-[#E5E7EB] bg-white p-8 text-center">
+          <div className="my-12 flex flex-col items-center rounded-2xl border border-[#E5E7EB] bg-white p-8 text-center shadow-[0_12px_40px_rgba(0,0,0,0.03)]">
             <Trophy className="h-7 w-7 text-[#9CA3AF] mb-3" />
             <h3 className="text-xl font-normal tracking-[-0.03em] text-[#111827]">No Entries Recorded</h3>
             <p className="mt-1 text-xs text-[#6B7280] max-w-xs leading-relaxed">
@@ -107,27 +110,32 @@ function LeaderboardContent() {
         ) : (
           <div className="flex flex-col gap-6">
             {/* Top 3 Visual Podium Card */}
-            <div className="relative rounded-[32px] border border-white/90 bg-white/90 p-4 sm:p-6 shadow-[0_12px_40px_rgba(0,0,0,0.06)] backdrop-blur-xl overflow-hidden">
-              <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-[#4285F4] via-[#EA4335] via-[#FBBC04] to-[#34A853]" />
+            <div className="relative rounded-2xl border border-[#E5E7EB] bg-white p-4 sm:p-6 shadow-[0_12px_36px_rgba(0,0,0,0.04)] overflow-hidden">
+              <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-[#1A73E8] via-[#FBBC04] to-[#34A853]" />
               <Podium entries={leaderboard.slice(0, 3)} />
             </div>
 
             {/* Scrollable Rank List */}
             <div className="mt-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-[#5F6368] mb-3 px-1">
-                Full Standings ({leaderboard.length} Participants)
-              </h3>
+              <div className="flex items-center justify-between mb-3 px-1">
+                <h3 className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#6B7280]">
+                  FULL STANDINGS
+                </h3>
+                <span className="font-mono text-[10px] uppercase tracking-wider text-[#9CA3AF]">
+                  {leaderboard.length} PARTICIPANTS
+                </span>
+              </div>
               <RankList entries={leaderboard} />
             </div>
 
-            {/* Redirect to Home Hub Button */}
-            <div className="mt-8 mb-6 flex justify-center">
+            {/* Return to Hub */}
+            <div className="mt-4 mb-6 flex justify-center">
               <Link
                 href="/"
-                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#1A73E8] to-[#1557B0] px-7 py-3 text-xs font-bold text-white shadow-sm hover:shadow-md hover:from-[#1765CC] hover:to-[#124BA0] active:scale-95 transition-all"
+                className="inline-flex items-center gap-2 rounded-full border border-[#111827] bg-[#111827] px-6 py-2.5 text-xs font-medium text-white shadow-xs hover:bg-black active:scale-98 transition-all"
               >
-                <Home className="h-4 w-4" />
-                <span>Redirect to Home Hub</span>
+                <Home className="h-3.5 w-3.5" />
+                <span>Return to Hub</span>
               </Link>
             </div>
           </div>
@@ -141,8 +149,8 @@ export default function LeaderboardPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-[#F8F9FA]">
-          <div className="h-8 w-8 animate-spin rounded-full border-3 border-[#1A73E8] border-t-transparent" />
+        <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA]">
+          <div className="h-7 w-7 animate-spin rounded-full border-2 border-[#111827] border-t-transparent" />
         </div>
       }
     >
