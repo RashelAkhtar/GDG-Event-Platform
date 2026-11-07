@@ -7,6 +7,7 @@ interface AuthContextType {
   user: User | null
   loading: boolean
   loginWithGoogle: () => void
+  participantLogin: (name: string, email?: string) => Promise<{ success: boolean; message?: string }>
   logout: () => Promise<void>
   adminPasswordLogin: (email: string, pass: string) => Promise<{ success: boolean; message?: string }>
   refreshUser: () => Promise<void>
@@ -16,6 +17,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   loginWithGoogle: () => {},
+  participantLogin: async () => ({ success: false }),
   logout: async () => {},
   adminPasswordLogin: async () => ({ success: false }),
   refreshUser: async () => {},
@@ -30,12 +32,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshUser = async () => {
     try {
       const res = await api.getMe()
-      setUser(res.success && res.user ? res.user : null)
-    } catch {
-      setUser(null)
-    } finally {
-      setLoading(false)
+      if (res.success && res.user) {
+        setUser(res.user)
+        return
+      }
+    } catch {}
+
+    if (typeof window !== 'undefined') {
+      const savedUserStr = localStorage.getItem('gdg_demo_user')
+      if (savedUserStr) {
+        try {
+          const parsed = JSON.parse(savedUserStr) as User
+          if (parsed && parsed.name) {
+            setUser(parsed)
+            return
+          }
+        } catch {}
+      }
     }
+    setUser(null)
+    setLoading(false)
   }
 
   useEffect(() => {
@@ -60,6 +76,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginWithGoogle = () => {
     window.location.href = new URL(`${API_BASE}/auth/google`, window.location.origin).toString()
+  }
+
+  const participantLogin = async (name: string, email?: string) => {
+    const res = await api.participantLogin(name, email)
+    if (res.success && res.user) {
+      setUser(res.user)
+      return { success: true }
+    }
+    return { success: false, message: res.message || 'Failed to sign in' }
   }
 
   const logout = async () => {
@@ -94,6 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         loading,
         loginWithGoogle,
+        participantLogin,
         logout,
         adminPasswordLogin,
         refreshUser,

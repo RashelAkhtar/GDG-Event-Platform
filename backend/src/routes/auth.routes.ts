@@ -1,5 +1,5 @@
 import { Router, type Request, type Response, type NextFunction } from 'express';
-import passport from 'passport';
+import passport, { isGoogleConfigured } from '../config/passport.ts';
 import mongoose from 'mongoose';
 import { generateToken } from '../utils/jwt.ts';
 import { User, UserRole, type IUser } from '../models/User.ts';
@@ -8,21 +8,30 @@ import { protect, optionalAuth } from '../middlewares/auth.middleware.ts';
 const router = Router();
 
 // 1. Initiate Google OAuth
-router.get(
-  '/google',
+router.get('/google', (req: Request, res: Response, next: NextFunction) => {
+  if (!isGoogleConfigured) {
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+    return res.redirect(`${clientUrl}/login?error=google_not_configured`);
+  }
   passport.authenticate('google', {
     scope: ['profile', 'email'],
     prompt: 'select_account',
-  })
-);
+  })(req, res, next);
+});
 
 // 2. Google OAuth Callback
 router.get(
   '/google/callback',
-  passport.authenticate('google', {
-    failureRedirect: `${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=oauth_failed`,
-    session: false,
-  }),
+  (req: Request, res: Response, next: NextFunction) => {
+    if (!isGoogleConfigured) {
+      const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+      return res.redirect(`${clientUrl}/login?error=google_not_configured`);
+    }
+    passport.authenticate('google', {
+      failureRedirect: `${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=oauth_failed`,
+      session: false,
+    })(req, res, next);
+  },
   (req: Request, res: Response) => {
     const user = req.user as IUser;
 
@@ -143,6 +152,67 @@ router.post('/admin/login', async (req: Request, res: Response, next: NextFuncti
   }
 
   return res.status(401).json({ success: false, message: 'Invalid admin email or password' });
+});
+
+// 6. Direct Participant Community Login
+router.post('/participant/login', async (req: Request, res: Response) => {
+  const { name, email } = req.body || {};
+  const cleanName = String(name || '').trim();
+  const cleanEmail = String(email || '').trim().toLowerCase();
+
+  if (!cleanName) {
+    return res.status(400).json({ success: false, message: 'Participant handle or name is required' });
+  }
+
+  // Guard against admin impersonation
+  if (cleanName.toLowerCase().includes('admin') || cleanEmail.includes('admin') || cleanEmail === 'aryan.crores@gmail.com') {
+    return res.status(403).json({ success: false, message: 'Host accounts must sign in using the Host / Admin tab.' });
+  }
+
+  const userId = `user_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  const participantUser = {
+    _id: userId,
+    googleId: `community_${userId}`,
+    name: cleanName,
+    email: cleanEmail || `${cleanName.toLowerCase().replace(/\s+/g, '')}@community.gdg`,
+    avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(cleanName)}`,
+    role: UserRole.USER,
+  };
+
+  if (mongoose.connection.readyState === 1) {
+    try {
+      const existing = await User.findOne({ email: participantUser.email });
+      if (existing) {
+        participantUser._id = existing._id.toString();
+        participantUser.name = existing.name;
+        if (existing.avatar) {
+          participantUser.avatar = existing.avatar;
+        }
+      } else {
+        const created = await User.create(participantUser);
+        participantUser._id = created._id.toString();
+      }
+    } catch {}
+  }
+
+  const token = generateToken({
+    userId: participantUser._id,
+    role: 'USER',
+  });
+
+  res.cookie('gdg_token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: 'Signed in successfully',
+    user: participantUser,
+    token,
+  });
 });
 
 export default router;

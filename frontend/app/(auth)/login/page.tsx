@@ -5,18 +5,30 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { GdgLogoBadge, GoogleG } from '@/components/ui/GoogleBrand'
-import { ShieldCheck, ArrowLeft, AlertCircle, CheckCircle2, Lock, Mail, Users } from 'lucide-react'
+import { ShieldCheck, ArrowLeft, AlertCircle, CheckCircle2, Lock, Mail, Users, UserCheck } from 'lucide-react'
 
 function LoginContent() {
-  const { user, loginWithGoogle, adminPasswordLogin, loading: authLoading } = useAuth()
+  const { user, loginWithGoogle, participantLogin, adminPasswordLogin, loading: authLoading } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectUrl = searchParams.get('redirect') || '/'
   const initialTab = searchParams.get('tab') === 'admin' || searchParams.get('role') === 'admin' ? 'admin' : 'participant'
+  const urlError = searchParams.get('error')
+  const initialError =
+    urlError === 'google_not_configured' || urlError === 'oauth_failed'
+      ? 'Google OAuth is not configured in this environment. Enter your participant handle below to join instantly.'
+      : urlError
+      ? `Authentication error: ${urlError}`
+      : null
 
   const [activeTab, setActiveTab] = useState<'participant' | 'admin'>(initialTab)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(initialError)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+
+  // Participant form state
+  const [participantName, setParticipantName] = useState('')
+  const [participantEmail, setParticipantEmail] = useState('')
+  const [participantLoading, setParticipantLoading] = useState(false)
 
   // Admin credentials state
   const [adminEmail, setAdminEmail] = useState('')
@@ -33,6 +45,30 @@ function LoginContent() {
       }
     }
   }, [user, authLoading, router, redirectUrl])
+
+  const handleParticipantSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!participantName.trim()) {
+      setErrorMessage('Please enter your tournament handle or name.')
+      return
+    }
+    setErrorMessage(null)
+    setParticipantLoading(true)
+
+    try {
+      const res = await participantLogin(participantName.trim(), participantEmail.trim())
+      if (res.success) {
+        setSuccessMessage('Handle confirmed. Entering Arena...')
+        setTimeout(() => {
+          router.replace(redirectUrl)
+        }, 400)
+      } else {
+        setErrorMessage(res.message || 'Failed to sign in')
+      }
+    } finally {
+      setParticipantLoading(false)
+    }
+  }
 
   const handleAdminSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -122,7 +158,7 @@ function LoginContent() {
         {errorMessage && (
           <div className="mt-4 flex items-center gap-2 rounded-xl bg-[#FEF2F2] p-3 text-xs text-[#DC2626] border border-[#FEE2E2]">
             <AlertCircle className="h-4 w-4 shrink-0" />
-            <span>{errorMessage}</span>
+            <span className="leading-relaxed">{errorMessage}</span>
           </div>
         )}
 
@@ -134,23 +170,66 @@ function LoginContent() {
           </div>
         )}
 
-        {/* TAB 1: PARTICIPANT LOGIN (Google OAuth) */}
+        {/* TAB 1: PARTICIPANT LOGIN (Google OAuth + Instant Community Handle) */}
         {activeTab === 'participant' && (
-          <div className="mt-6 flex flex-col gap-3.5">
+          <div className="mt-6 flex flex-col gap-4 text-xs">
             <button
               type="button"
               onClick={loginWithGoogle}
-              className="flex h-12 w-full items-center justify-center gap-2.5 rounded-xl border border-[#E5E7EB] bg-white text-xs font-medium text-[#111827] hover:border-[#111827] hover:bg-[#FAFAFA] active:scale-[0.99] transition-all cursor-pointer"
+              className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-[#E5E7EB] bg-white text-xs font-medium text-[#111827] hover:border-[#111827] hover:bg-[#FAFAFA] active:scale-[0.99] transition-all cursor-pointer"
             >
               <GoogleG className="h-4 w-4" />
               <span>Continue with Google</span>
             </button>
 
-            <div className="rounded-xl bg-[#FAFAFA] border border-[#E5E7EB] p-3 text-center">
-              <p className="font-mono text-[10px] uppercase tracking-wider text-[#6B7280] leading-relaxed">
-                Single sign-on secures your tournament handle and live point telemetry.
-              </p>
+            {/* Subtle Divider */}
+            <div className="relative my-1 flex items-center justify-center">
+              <div className="w-full border-t border-[#E5E7EB]" />
+              <span className="absolute bg-white px-3 font-mono text-[9px] uppercase tracking-[0.2em] text-[#9CA3AF]">
+                or join with handle
+              </span>
             </div>
+
+            {/* Community Handle Form */}
+            <form onSubmit={handleParticipantSubmit} autoComplete="off" className="flex flex-col gap-3">
+              <div>
+                <label className="block font-mono text-[10px] uppercase tracking-wider text-[#6B7280] mb-1.5 flex items-center gap-1.5">
+                  <Users className="h-3 w-3 text-[#9CA3AF]" />
+                  <span>Your Handle / Name</span>
+                </label>
+                <input
+                  type="text"
+                  value={participantName}
+                  onChange={(e) => setParticipantName(e.target.value)}
+                  placeholder="e.g. Alex Rivera"
+                  className="w-full rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] px-3.5 py-2.5 text-xs text-[#111827] placeholder:text-[#9CA3AF] focus:bg-white focus:outline-none focus:border-[#111827] transition-all"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block font-mono text-[10px] uppercase tracking-wider text-[#6B7280] mb-1.5 flex items-center gap-1.5">
+                  <Mail className="h-3 w-3 text-[#9CA3AF]" />
+                  <span>Email (optional)</span>
+                </label>
+                <input
+                  type="email"
+                  value={participantEmail}
+                  onChange={(e) => setParticipantEmail(e.target.value)}
+                  placeholder="alex@example.com"
+                  className="w-full rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] px-3.5 py-2.5 text-xs text-[#111827] placeholder:text-[#9CA3AF] focus:bg-white focus:outline-none focus:border-[#111827] transition-all"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={participantLoading}
+                className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#111827] text-xs font-medium tracking-wide uppercase text-white hover:bg-black active:scale-[0.99] transition-all cursor-pointer disabled:opacity-50"
+              >
+                <UserCheck className="h-3.5 w-3.5" />
+                <span>{participantLoading ? 'Entering...' : 'Enter Arena'}</span>
+              </button>
+            </form>
           </div>
         )}
 

@@ -221,6 +221,49 @@ export const api = {
     }
   },
 
+  async participantLogin(
+    name: string,
+    email?: string
+  ): Promise<{ success: boolean; user?: User; token?: string; message?: string }> {
+    const cleanName = name.trim()
+    const cleanEmail =
+      (email || '').trim().toLowerCase() ||
+      `${cleanName.toLowerCase().replace(/[^a-z0-9]/g, '')}@community.gdg`
+    const avatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(cleanName)}`
+
+    try {
+      const res = await fetch(`${API_BASE}/auth/participant/login`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: cleanName, email: cleanEmail }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.token && typeof window !== 'undefined') {
+          localStorage.setItem('gdg_token', data.token)
+        }
+        if (data.user && typeof window !== 'undefined') {
+          localStorage.setItem('gdg_demo_user', JSON.stringify(data.user))
+        }
+        return data
+      }
+    } catch {}
+
+    // Resilient client fallback (e.g. when backend is unreachable or not yet configured)
+    const localUser: User = {
+      _id: `user_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      name: cleanName,
+      email: cleanEmail,
+      avatar,
+      role: 'USER',
+    }
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('gdg_demo_user', JSON.stringify(localUser))
+    }
+    return { success: true, user: localUser }
+  },
+
   async getEvents(): Promise<GdgEvent[]> {
     let events = [DEFAULT_WEB_EVENT, DEFAULT_MENTIS_EVENT, DEFAULT_WEND_EVENT]
     try {
