@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { api, User } from '@/lib/api'
+import { api, User, getApiBase } from '@/lib/api'
 
 interface AuthContextType {
   user: User | null
@@ -23,7 +23,7 @@ const AuthContext = createContext<AuthContextType>({
   refreshUser: async () => {},
 })
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1'
+const API_BASE = getApiBase()
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -31,27 +31,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshUser = async () => {
     try {
-      const res = await api.getMe()
-      if (res.success && res.user) {
-        setUser(res.user)
-        return
-      }
-    } catch {}
+      try {
+        const res = await api.getMe()
+        if (res.success && res.user) {
+          setUser(res.user)
+          return
+        }
+      } catch {}
 
-    if (typeof window !== 'undefined') {
-      const savedUserStr = localStorage.getItem('gdg_demo_user')
-      if (savedUserStr) {
-        try {
-          const parsed = JSON.parse(savedUserStr) as User
-          if (parsed && parsed.name) {
-            setUser(parsed)
-            return
-          }
-        } catch {}
+      if (typeof window !== 'undefined') {
+        const savedUserStr = localStorage.getItem('gdg_demo_user')
+        if (savedUserStr) {
+          try {
+            const parsed = JSON.parse(savedUserStr) as User
+            if (parsed && parsed.name) {
+              setUser(parsed)
+              return
+            }
+          } catch {}
+        }
       }
+      setUser(null)
+    } finally {
+      setLoading(false)
     }
-    setUser(null)
-    setLoading(false)
   }
 
   useEffect(() => {
@@ -82,18 +85,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const res = await api.participantLogin(name, email)
     if (res.success && res.user) {
       setUser(res.user)
+      setLoading(false)
       return { success: true }
     }
+    setLoading(false)
     return { success: false, message: res.message || 'Failed to sign in' }
   }
 
   const logout = async () => {
     await api.logout()
-    localStorage.removeItem('gdg_demo_user')
     if (typeof window !== 'undefined') {
+      localStorage.removeItem('gdg_demo_user')
       localStorage.removeItem('gdg_token')
     }
     setUser(null)
+    setLoading(false)
   }
 
   const adminPasswordLogin = async (email: string, pass: string) => {
@@ -101,15 +107,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (res.success) {
       if (res.user && res.user.role === 'ADMIN') {
         setUser(res.user)
+        setLoading(false)
         return { success: true }
       }
       const session = await api.getMe()
       if (session.success && session.user?.role === 'ADMIN') {
         setUser(session.user)
+        setLoading(false)
         return { success: true }
       }
       setUser(null)
     }
+    setLoading(false)
     return { success: false, message: res.message || 'Invalid admin credentials' }
   }
 

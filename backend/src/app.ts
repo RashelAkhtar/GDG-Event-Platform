@@ -27,7 +27,8 @@ app.use((req, res, next) => {
   res.vary("Origin");
   const isLanOrLocal =
     origin && /^http:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)(:\d+)?$/.test(origin);
-  if (origin && (allowedOrigins.has(origin) || isLanOrLocal)) {
+  const isVercel = origin && /^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(origin);
+  if (origin && (allowedOrigins.has(origin) || isLanOrLocal || isVercel)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
   }
   res.setHeader("Access-Control-Allow-Credentials", "true");
@@ -52,5 +53,13 @@ app.get("/health", (_req, res) => {
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/events", eventRoutes);
 app.use("/api/v1/events", quizRoutes);
+
+// Centralized JSON error handler
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  const status = Number(err.status || err.statusCode) || 500;
+  const message = err.message || 'Internal server error';
+  console.error('API Error:', err);
+  res.status(status).json({ success: false, message });
+});
 
 export default app;

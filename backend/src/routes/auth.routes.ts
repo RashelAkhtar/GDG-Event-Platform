@@ -7,10 +7,39 @@ import { protect, optionalAuth } from '../middlewares/auth.middleware.ts';
 
 const router = Router();
 
+function getClientRedirectUrl(req: Request): string {
+  const referer = req.headers.referer;
+  if (referer) {
+    try {
+      const url = new URL(referer);
+      return url.origin;
+    } catch {}
+  }
+
+  const origin = req.headers.origin;
+  if (origin && typeof origin === 'string') {
+    try {
+      const url = new URL(origin);
+      return url.origin;
+    } catch {}
+  }
+
+  const fwdHost = req.headers['x-forwarded-host'] || req.headers.host;
+  if (fwdHost && typeof fwdHost === 'string') {
+    const proto = (req.headers['x-forwarded-proto'] as string) || (req.secure ? 'https' : 'http');
+    try {
+      const url = new URL(`${proto}://${fwdHost}`);
+      return url.origin;
+    } catch {}
+  }
+
+  return process.env.CLIENT_URL || 'http://localhost:3000';
+}
+
 // 1. Initiate Google OAuth
 router.get('/google', (req: Request, res: Response, next: NextFunction) => {
+  const clientUrl = getClientRedirectUrl(req);
   if (!isGoogleConfigured) {
-    const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
     return res.redirect(`${clientUrl}/login?error=google_not_configured`);
   }
   passport.authenticate('google', {
@@ -23,17 +52,18 @@ router.get('/google', (req: Request, res: Response, next: NextFunction) => {
 router.get(
   '/google/callback',
   (req: Request, res: Response, next: NextFunction) => {
+    const clientUrl = getClientRedirectUrl(req);
     if (!isGoogleConfigured) {
-      const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
       return res.redirect(`${clientUrl}/login?error=google_not_configured`);
     }
     passport.authenticate('google', {
-      failureRedirect: `${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=oauth_failed`,
+      failureRedirect: `${clientUrl}/login?error=oauth_failed`,
       session: false,
     })(req, res, next);
   },
   (req: Request, res: Response) => {
     const user = req.user as IUser;
+    const clientUrl = getClientRedirectUrl(req);
 
     // Issue single app JWT
     const token = generateToken({ 
@@ -49,7 +79,6 @@ router.get(
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
-    const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
     res.redirect(`${clientUrl}/?auth=success&token=${token}`);
   }
 );
@@ -169,34 +198,58 @@ router.post('/participant/login', async (req: Request, res: Response) => {
     return res.status(403).json({ success: false, message: 'Host accounts must sign in using the Host / Admin tab.' });
   }
 
-  const userId = `user_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-  const participantUser = {
-    _id: userId,
-    googleId: `community_${userId}`,
+  const effectiveEmail = cleanEmail || `${cleanName.toLowerCase().replace(/[^a-z0-9]/g, '')}@community.gdg`;
+  const avatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(cleanName)}`;
+
+  let finalUserId = `user_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  let finalUser: any = {
+    _id: finalUserId,
+    googleId: `community_${finalUserId}`,
     name: cleanName,
-    email: cleanEmail || `${cleanName.toLowerCase().replace(/\s+/g, '')}@community.gdg`,
-    avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(cleanName)}`,
+    email: effectiveEmail,
+    avatar,
     role: UserRole.USER,
   };
 
+  // 1. Direct MongoDB Database Persistence (Single Source of Truth)
   if (mongoose.connection.readyState === 1) {
     try {
-      const existing = await User.findOne({ email: participantUser.email });
+      const existing = await User.findOne({ email: effectiveEmail });
       if (existing) {
-        participantUser._id = existing._id.toString();
-        participantUser.name = existing.name;
-        if (existing.avatar) {
-          participantUser.avatar = existing.avatar;
-        }
+        finalUserId = existing._id.toString();
+        finalUser = {
+          _id: finalUserId,
+          googleId: existing.googleId,
+          name: existing.name || cleanName,
+          email: existing.email,
+          avatar: existing.avatar || avatar,
+          role: existing.role || UserRole.USER,
+        };
       } else {
-        const created = await User.create(participantUser);
-        participantUser._id = created._id.toString();
+        const created = await User.create({
+          googleId: `community_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+          name: cleanName,
+          email: effectiveEmail,
+          avatar,
+          role: UserRole.USER,
+        });
+        finalUserId = created._id.toString();
+        finalUser = {
+          _id: finalUserId,
+          googleId: created.googleId,
+          name: created.name,
+          email: created.email,
+          avatar: created.avatar,
+          role: created.role,
+        };
       }
-    } catch {}
+    } catch (dbErr) {
+      console.warn('MongoDB participant user persist notice:', dbErr);
+    }
   }
 
   const token = generateToken({
-    userId: participantUser._id,
+    userId: finalUserId,
     role: 'USER',
   });
 
@@ -210,7 +263,7 @@ router.post('/participant/login', async (req: Request, res: Response) => {
   return res.status(200).json({
     success: true,
     message: 'Signed in successfully',
-    user: participantUser,
+    user: finalUser,
     token,
   });
 });

@@ -1,4 +1,4 @@
-function getApiBase(): string {
+export function getApiBase(): string {
   if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL
   if (typeof window !== 'undefined') {
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
@@ -9,7 +9,7 @@ function getApiBase(): string {
   return 'http://localhost:5000/api/v1'
 }
 
-function getAuthHeaders(extraHeaders?: Record<string, string>): Record<string, string> {
+export function getAuthHeaders(extraHeaders?: Record<string, string>): Record<string, string> {
   const headers: Record<string, string> = { Accept: 'application/json', ...(extraHeaders || {}) }
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('gdg_token')
@@ -20,7 +20,7 @@ function getAuthHeaders(extraHeaders?: Record<string, string>): Record<string, s
   return headers
 }
 
-const API_BASE = getApiBase()
+export const API_BASE = getApiBase()
 
 export interface User {
   _id: string
@@ -215,6 +215,10 @@ export const api = {
           avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=Aryan&backgroundColor=1a73e8&textColor=ffffff',
           role: 'ADMIN',
         }
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('gdg_demo_user', JSON.stringify(adminUser))
+          localStorage.setItem('gdg_token', 'local_admin_dev_token')
+        }
         return { success: true, user: adminUser }
       }
       return { success: false, message: 'Invalid admin credentials' }
@@ -247,10 +251,15 @@ export const api = {
           localStorage.setItem('gdg_demo_user', JSON.stringify(data.user))
         }
         return data
+      } else {
+        const errData = await res.json().catch(() => null)
+        if (errData?.message) {
+          return { success: false, message: errData.message }
+        }
       }
     } catch {}
 
-    // Resilient client fallback (e.g. when backend is unreachable or not yet configured)
+    // Resilient client fallback (when backend server is unreachable or offline)
     const localUser: User = {
       _id: `user_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       name: cleanName,

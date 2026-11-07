@@ -30,13 +30,31 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
   }
 
   if (!mongoose.Types.ObjectId.isValid(decoded.userId)) {
-    return res.status(401).json({ message: 'User no longer exists.' });
+    if (mongoose.connection.readyState !== 1 || decoded.userId.startsWith('user_')) {
+      req.user = {
+        _id: decoded.userId as any,
+        name: 'Community Participant',
+        email: `${decoded.userId}@community.gdg`,
+        role: decoded.role || UserRole.USER,
+      } as any;
+      return next();
+    }
+    return res.status(401).json({ message: 'User session expired. Please log in again.' });
   }
 
   try {
     const user: IUser | null = await User.findById(decoded.userId);
     if (!user) {
-      return res.status(401).json({ message: 'User no longer exists.' });
+      if (mongoose.connection.readyState !== 1 || decoded.userId.startsWith('user_')) {
+        req.user = {
+          _id: decoded.userId as any,
+          name: 'Community Participant',
+          email: `${decoded.userId}@community.gdg`,
+          role: decoded.role || UserRole.USER,
+        } as any;
+        return next();
+      }
+      return res.status(401).json({ message: 'User session expired. Please log in again.' });
     }
 
     req.user = user;
@@ -70,11 +88,30 @@ export const optionalAuth = async (req: Request, _res: Response, next: NextFunct
     return next();
   }
 
-  if (!mongoose.Types.ObjectId.isValid(decoded.userId)) return next();
+  if (!mongoose.Types.ObjectId.isValid(decoded.userId)) {
+    if (mongoose.connection.readyState !== 1 || decoded.userId.startsWith('user_')) {
+      req.user = {
+        _id: decoded.userId as any,
+        name: 'Community Participant',
+        email: `${decoded.userId}@community.gdg`,
+        role: decoded.role || UserRole.USER,
+      } as any;
+    }
+    return next();
+  }
 
   try {
     const user = await User.findById(decoded.userId);
-    if (user) req.user = user;
+    if (user) {
+      req.user = user;
+    } else if (mongoose.connection.readyState !== 1 || decoded.userId.startsWith('user_')) {
+      req.user = {
+        _id: decoded.userId as any,
+        name: 'Community Participant',
+        email: `${decoded.userId}@community.gdg`,
+        role: decoded.role || UserRole.USER,
+      } as any;
+    }
     return next();
   } catch (error) {
     return next(error);
