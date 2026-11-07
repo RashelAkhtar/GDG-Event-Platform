@@ -610,27 +610,27 @@ function AdminPageContent() {
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E5E7EB] bg-white/90 text-[#5F6368] hover:bg-white hover:text-[#202124] hover:shadow-xs transition-all active:scale-95"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-[#4B5563] hover:text-[#111827] hover:border-[#111827] transition-all active:scale-95 shadow-2xs"
+              title="Return to Directory"
             >
               <ArrowLeft className="h-4 w-4" />
             </Link>
             <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#1A73E8] to-[#4285F4] text-white shadow-sm shadow-[#1A73E8]/30">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#111827] text-white shadow-2xs">
                 <ShieldCheck className="h-4.5 w-4.5" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-sm font-bold tracking-tight text-[#202124] leading-none">
-                    GDG Admin Command Center
+                  <h1 className="text-sm font-medium tracking-tight text-[#111827] leading-none">
+                    Command Center
                   </h1>
-                  <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-[#E8F0FE] border border-[#1A73E8]/20 px-2 py-0.5 text-[10px] font-bold text-[#1967D2]">
-                    <Sparkles className="h-2.5 w-2.5 text-[#1A73E8]" />
-                    Host
+                  <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-[#FAFAFA] border border-[#E5E7EB] px-2 py-0.5 font-mono text-[8.5px] uppercase tracking-wider text-[#6B7280]">
+                    Host Session
                   </span>
                 </div>
-                <div className="mt-1 flex items-center gap-1.5 text-[11px] text-[#5F6368]">
+                <div className="mt-1 flex items-center gap-1.5 font-mono text-[11px] text-[#6B7280]">
                   <span>Active Session:</span>
-                  <strong className="font-semibold text-[#1A73E8]">aryan.crores@gmail.com</strong>
+                  <strong className="font-semibold text-[#111827]">aryan.crores@gmail.com</strong>
                 </div>
               </div>
             </div>
@@ -639,9 +639,9 @@ function AdminPageContent() {
           {/* WebSocket Status Indicator & Security Alerts Bell */}
           <div className="flex items-center gap-2.5">
             <SecurityNotificationBell />
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB]/80 bg-white/90 backdrop-blur-md px-3 py-1.5 text-xs font-semibold text-[#3C4043] shadow-2xs">
-              <span className={`h-2 w-2 rounded-full ${connected ? 'bg-[#34A853] shadow-[0_0_8px_#34A853]' : 'bg-[#FBBC04] animate-pulse'}`} />
-              <span>{connected ? 'WebSocket Live' : 'Local Channel'}</span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] bg-white px-3.5 py-1.5 font-mono text-xs text-[#111827] shadow-2xs">
+              <span className={`h-2 w-2 rounded-full ${connected ? 'bg-[#15803D] shadow-[0_0_8px_#15803D]' : 'bg-[#FBBC04] animate-pulse'}`} />
+              <span className="text-[10.5px] font-semibold uppercase tracking-wider">{connected ? 'Socket Live' : 'Local Channel'}</span>
             </span>
           </div>
         </div>
@@ -671,112 +671,76 @@ function AdminPageContent() {
           </div>
         )}
 
-        {/* Structured Segmented Control Bar (Horizontal Touch Scroll on Mobile, Grid on Desktop) */}
-        <div className="mb-6 rounded-2xl border border-[#E5E7EB] bg-white p-1.5 shadow-xs overflow-x-auto no-scrollbar">
+        {/* Editorial Segmented Control Bar */}
+        <div className="mb-6 rounded-2xl border border-[#E5E7EB] bg-white p-1.5 shadow-2xs overflow-x-auto no-scrollbar">
           <div className="flex sm:grid sm:grid-cols-4 gap-1.5 min-w-[560px] sm:min-w-0">
-            <button
-              type="button"
-              onClick={() => navigateToPanel('locks')}
-              className={`group flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-mono text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                activeTab === 'locks'
-                  ? 'bg-[#1A73E8] text-white shadow-xs'
-                  : 'text-[#5F6368] hover:text-[#202124] hover:bg-[#F1F3F4]'
-              }`}
-            >
-              <span className={`flex h-4.5 w-4.5 items-center justify-center rounded-lg font-mono text-[10px] font-black ${
-                activeTab === 'locks' ? 'bg-white/20 text-white' : 'bg-[#E8F0FE] text-[#1967D2]'
-              }`}>
-                01
-              </span>
-              <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">Div Locks & Arenas</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => navigateToPanel('quiz', selectedSlug)}
-              className={`group flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-mono text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                activeTab === 'quiz'
-                  ? 'bg-[#34A853] text-white shadow-xs'
-                  : 'text-[#5F6368] hover:text-[#202124] hover:bg-[#F1F3F4]'
-              }`}
-            >
-              <span className={`flex h-4.5 w-4.5 items-center justify-center rounded-lg font-mono text-[10px] font-black ${
-                activeTab === 'quiz' ? 'bg-white/20 text-white' : 'bg-[#E6F4EA] text-[#137333]'
-              }`}>
-                02
-              </span>
-              <ListOrdered className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">Quiz & Questions</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => navigateToPanel('wend')}
-              className={`group flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-mono text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                activeTab === 'wend'
-                  ? 'bg-[#EA4335] text-white shadow-xs'
-                  : 'text-[#5F6368] hover:text-[#202124] hover:bg-[#F1F3F4]'
-              }`}
-            >
-              <span className={`flex h-4.5 w-4.5 items-center justify-center rounded-lg font-mono text-[10px] font-black ${
-                activeTab === 'wend' ? 'bg-white/20 text-white' : 'bg-[#FCE8E6] text-[#C5221F]'
-              }`}>
-                03
-              </span>
-              <Grid className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">Wend 8×8 Studio</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => navigateToPanel('winners')}
-              className={`group flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-mono text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                activeTab === 'winners'
-                  ? 'bg-[#FBBC04] text-[#202124] shadow-xs'
-                  : 'text-[#5F6368] hover:text-[#202124] hover:bg-[#F1F3F4]'
-              }`}
-            >
-              <span className={`flex h-4.5 w-4.5 items-center justify-center rounded-lg font-mono text-[10px] font-black ${
-                activeTab === 'winners' ? 'bg-black/15 text-[#202124]' : 'bg-[#FEF7E0] text-[#B06000]'
-              }`}>
-                04
-              </span>
-              <Crown className="h-3.5 w-3.5 shrink-0 text-[#B06000]" />
-              <span className="truncate">Winner Ceremony</span>
-            </button>
+            {[
+              { id: 'locks' as const, num: '01', label: 'Div Locks & Arenas', icon: SlidersHorizontal },
+              { id: 'quiz' as const, num: '02', label: 'Quiz & Questions', icon: ListOrdered },
+              { id: 'wend' as const, num: '03', label: 'Wend 8×8 Studio', icon: Grid },
+              { id: 'winners' as const, num: '04', label: 'Winner Ceremony', icon: Crown },
+            ].map((tab) => {
+              const isActive = activeTab === tab.id
+              const Icon = tab.icon
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => {
+                    if (tab.id === 'quiz') navigateToPanel('quiz', selectedSlug)
+                    else navigateToPanel(tab.id)
+                  }}
+                  className={`group flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-mono text-xs uppercase tracking-wider transition-all cursor-pointer ${
+                    isActive
+                      ? 'bg-[#111827] text-white shadow-xs font-semibold'
+                      : 'text-[#6B7280] hover:text-[#111827] hover:bg-[#F9FAFB] font-medium'
+                  }`}
+                >
+                  <span
+                    className={`flex h-4.5 w-4.5 items-center justify-center rounded-lg font-mono text-[10px] font-bold ${
+                      isActive ? 'bg-white/20 text-white' : 'bg-[#F3F4F6] text-[#6B7280]'
+                    }`}
+                  >
+                    {tab.num}
+                  </span>
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{tab.label}</span>
+                </button>
+              )
+            })}
           </div>
         </div>
 
         {/* ======================================================== */}
-        {/* PANEL 1: DIV LOCK / UNLOCK & LIVE COUNTDOWN LAUNCHER    */}
+        {/* PANEL 1: DIV LOCK / UNLOCK & MASTER ARENA CONTROLS       */}
         {/* ======================================================== */}
         {activeTab === 'locks' && (
           <div className="flex flex-col gap-6 animate-in fade-in duration-200">
-            {/* Panel Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-5 rounded-3xl border border-[#E5E7EB] shadow-xs">
+            {/* Panel Masthead */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 sm:p-7 rounded-3xl border border-[#E5E7EB] shadow-2xs">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#E8F0FE] text-[#1967D2] border border-[#1A73E8]/30">
-                    <SlidersHorizontal className="h-4 w-4" />
+                  <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-[#9CA3AF]">
+                    ARENA CONTROLS // SYSTEM 01
                   </span>
-                  <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-[#202124] uppercase font-mono">
-                    Arena Track Locks & Controls
-                  </h2>
                 </div>
-                <p className="mt-1 text-xs text-[#5F6368]">
-                  Toggle arena locks in real-time over WebSockets. Click any card to jump directly into the full studio editor.
+                <h2 className="text-xl sm:text-2xl font-normal tracking-[-0.03em] text-[#111827] mt-0.5">
+                  Track Access & Master Controls
+                </h2>
+                <p className="mt-1 text-xs sm:text-[13px] text-[#4B5563] leading-relaxed">
+                  Real-time participant gatekeeping over WebSockets. Toggle access or enter studio suites.
                 </p>
               </div>
+
               <div className="flex items-center gap-2 self-start sm:self-auto">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E6F4EA] border border-[#34A853]/40 px-3.5 py-1.5 font-mono text-xs font-bold text-[#137333] shadow-2xs">
-                  <span className="h-2 w-2 rounded-full bg-[#34A853] animate-pulse" />
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F0FDF4] border border-[#DCFCE7] px-3.5 py-1.5 font-mono text-xs font-medium text-[#15803D] shadow-2xs">
+                  <span className="h-2 w-2 rounded-full bg-[#15803D] animate-pulse" />
                   <span>WEBSOCKET LIVE</span>
                 </span>
               </div>
             </div>
 
-            {/* 3 Arena Track Cards - Aesthetic, Modern & Rounded Material 3 Design */}
+            {/* 3 Arena Track Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {[
                 {
@@ -786,13 +750,12 @@ function AdminPageContent() {
                   trackIndex: '01',
                   trackTag: 'WEB DEV SPRINT',
                   stripeColor: 'bg-[#1A73E8]',
-                  tagBg: 'bg-[#E8F0FE] text-[#1967D2] border-[#1A73E8]/30',
-                  accentHover: 'hover:border-[#1A73E8]',
+                  accentDot: 'bg-[#1A73E8]',
                   icon: Globe,
-                  meta: `${api.getQuestionsForSlug('web-dev-quiz').length} Questions • Fast Blitz`,
+                  meta: `${api.getQuestionsForSlug('web-dev-quiz').length} Questions • Blitz Pool`,
                   actionTitle: 'Web Dev Sprint',
                   jumpTab: 'quiz' as const,
-                  jumpLabel: 'Manage Questions',
+                  jumpLabel: 'Open Questions Studio',
                 },
                 {
                   slug: 'mentis-quiz' as const,
@@ -801,13 +764,12 @@ function AdminPageContent() {
                   trackIndex: '02',
                   trackTag: 'MENTIS CHALLENGE',
                   stripeColor: 'bg-[#FBBC04]',
-                  tagBg: 'bg-[#FEF7E0] text-[#B06000] border-[#FBBC04]/50',
-                  accentHover: 'hover:border-[#FBBC04]',
+                  accentDot: 'bg-[#FBBC04]',
                   icon: Brain,
-                  meta: `${api.getQuestionsForSlug('mentis-quiz').length} Questions • Logic & AI`,
+                  meta: `${api.getQuestionsForSlug('mentis-quiz').length} Questions • Logic & Algorithms`,
                   actionTitle: 'Mentis Mind Challenge',
                   jumpTab: 'quiz' as const,
-                  jumpLabel: 'Manage Questions',
+                  jumpLabel: 'Open Questions Studio',
                 },
                 {
                   slug: 'wend-game' as const,
@@ -816,16 +778,15 @@ function AdminPageContent() {
                   trackIndex: '03',
                   trackTag: 'WEND WORD ARENA',
                   stripeColor: 'bg-[#34A853]',
-                  tagBg: 'bg-[#E6F4EA] text-[#137333] border-[#34A853]/40',
-                  accentHover: 'hover:border-[#34A853]',
+                  accentDot: 'bg-[#34A853]',
                   icon: Gamepad2,
-                  meta: `8×8 Matrix • ${wendBoard.targetWords.length} Target Words`,
+                  meta: `8×8 Grid • ${wendBoard.targetWords.length} Target Words`,
                   actionTitle: 'Wend Word Arena',
                   jumpTab: 'wend' as const,
-                  jumpLabel: 'Open 8×8 Studio',
+                  jumpLabel: 'Open Matrix Studio',
                 },
               ].map((track) => {
-                const { slug, event, isLive, trackIndex, trackTag, stripeColor, tagBg, accentHover, icon: Icon, meta, actionTitle, jumpTab, jumpLabel } = track
+                const { slug, event, isLive, trackIndex, trackTag, stripeColor, accentDot, icon: Icon, meta, actionTitle, jumpTab, jumpLabel } = track
                 const isUpdating = updatingId === event._id
 
                 return (
@@ -834,179 +795,116 @@ function AdminPageContent() {
                     onClick={() => {
                       navigateToPanel(jumpTab, slug !== 'wend-game' ? slug : undefined)
                     }}
-                    className={`group relative flex flex-col justify-between rounded-3xl border bg-white p-5 shadow-xs transition-all duration-200 hover:shadow-md cursor-pointer overflow-hidden ${
+                    className={`group relative flex flex-col justify-between rounded-3xl border bg-white p-6 sm:p-7 shadow-xs hover:border-[#111827] hover:shadow-[0_16px_40px_rgba(0,0,0,0.06)] transition-all duration-300 cursor-pointer overflow-hidden ${
                       isLive
-                        ? 'border-[#34A853] ring-1 ring-[#34A853]/30 ' + accentHover
-                        : 'border-[#E5E7EB] hover:border-[#1A73E8]'
+                        ? 'border-[#15803D]/40 ring-1 ring-[#15803D]/20'
+                        : 'border-[#E5E7EB]'
                     }`}
-                    title={`Click to open ${actionTitle} editor in panel`}
+                    title={`Click to open ${actionTitle} studio`}
                   >
-                    {/* Top Accent Stripe */}
-                    <div className={`absolute top-0 inset-x-0 h-1.5 ${stripeColor}`} />
+                    {/* Top Luminous Hairline Indicator */}
+                    <div className={`absolute top-0 inset-x-0 h-[3px] ${stripeColor}`} />
 
                     <div>
-                      {/* Top Header: Track Tag, Studio Button, Live/Locked Pill */}
-                      <div className="flex items-center justify-between gap-2 mb-3 pt-1">
-                        <div className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-[11px] font-bold tracking-wider ${tagBg}`}>
-                          <span className="opacity-75">{trackIndex} •</span>
-                          <Icon className="h-3.5 w-3.5" />
-                          <span>{trackTag}</span>
+                      {/* Top Header Row: Track Category & Live Toggle */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className={`h-2 w-2 rounded-full ${accentDot}`} />
+                          <span className="font-mono text-[10px] tracking-[0.24em] uppercase font-medium text-[#6B7280]">
+                            {trackIndex} // {trackTag}
+                          </span>
                         </div>
 
-                        <div className="flex items-center gap-1.5">
-                          {/* Dedicated Studio Button */}
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              navigateToPanel(jumpTab, slug !== 'wend-game' ? slug : undefined)
-                            }}
-                            className="inline-flex items-center gap-1 rounded-full border border-[#E5E7EB] bg-white px-2.5 py-1 font-mono text-[10px] font-bold text-[#1A73E8] hover:border-[#1A73E8] hover:bg-[#E8F0FE] transition-all cursor-pointer"
-                            title={`Open full ${actionTitle} studio`}
-                          >
-                            <Maximize2 className="h-3 w-3" />
-                            <span>STUDIO</span>
-                          </button>
-
-                          {/* Compact Aesthetic Lock Toggle Pill */}
-                          <div
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleToggleDivLock(slug, isLive)
-                            }}
-                            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[11px] font-bold transition-all cursor-pointer ${
-                              isLive
-                                ? 'border-[#34A853]/40 bg-[#E6F4EA] text-[#137333]'
-                                : 'border-[#E5E7EB] bg-[#F1F3F4] text-[#5F6368]'
-                            }`}
-                            title={isLive ? 'Click to switch to LOCKED' : 'Click to GO LIVE'}
-                          >
-                            <AnimatedLockToggle
-                              id={`admin-lock-toggle-${slug}`}
-                              checked={isLive}
-                              isLive={isLive}
-                              isAdmin={true}
-                              disabled={isUpdating}
-                              onChange={() => handleToggleDivLock(slug, isLive)}
-                              size="xs"
-                            />
-                            <span>{isLive ? 'LIVE' : 'LOCKED'}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Structured Arena Status & Padlock Bar */}
-                      <div className={`my-3 flex items-center justify-between rounded-2xl border p-3.5 transition-colors ${
-                        isLive ? 'border-[#34A853]/40 bg-[#F4FBF6]' : 'border-[#E5E7EB] bg-[#F8F9FA]'
-                      }`}>
-                        <div className="flex items-center gap-3">
-                          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-mono transition-transform duration-300 ${
-                            isLive
-                              ? 'border border-[#34A853]/40 bg-[#15803D] text-white shadow-xs'
-                              : 'border border-[#EA4335]/40 bg-[#DC2626] text-white shadow-xs'
-                          }`}>
-                            {isLive ? <Unlock className="h-4.5 w-4.5 anim-shackle-open" /> : <Lock className="h-4.5 w-4.5 anim-shackle-close" />}
-                          </div>
-                          <div>
-                            <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#5F6368]">
-                              {isLive ? 'STATUS: UNLOCKED' : 'STATUS: LOCKED'}
-                            </p>
-                            <p className="text-xs font-bold text-[#202124]">
-                              {isLive ? 'Live Submissions Active' : 'Access Restricted by Host'}
-                            </p>
-                          </div>
-                        </div>
-
-                        <button
-                          type="button"
-                          disabled={isUpdating}
+                        {/* Animated Lock State Toggle */}
+                        <div
                           onClick={(e) => {
                             e.stopPropagation()
                             handleToggleDivLock(slug, isLive)
                           }}
-                          className={`px-3 py-1.5 rounded-full font-mono text-xs font-bold border transition-all cursor-pointer ${
-                            isLive
-                              ? 'border-[#EA4335] bg-white text-[#EA4335] hover:bg-[#EA4335] hover:text-white'
-                              : 'border-[#34A853] bg-white text-[#34A853] hover:bg-[#34A853] hover:text-white'
-                          }`}
+                          className="flex items-center gap-1.5"
                         >
-                          {isLive ? 'SWITCH LOCK' : 'GO LIVE'}
-                        </button>
+                          <AnimatedLockToggle
+                            id={`admin-lock-toggle-${slug}`}
+                            checked={isLive}
+                            isLive={isLive}
+                            isAdmin={true}
+                            disabled={isUpdating}
+                            onChange={() => handleToggleDivLock(slug, isLive)}
+                            size="xs"
+                            showBadge={true}
+                            badgeLiveText="Live"
+                            badgeLockedText="Locked"
+                          />
+                        </div>
                       </div>
 
-                      {/* Card Content */}
-                      <div className="mt-2 flex flex-col items-start text-left">
-                        <div className="flex items-center justify-between w-full">
-                          <h3 className="text-base font-extrabold text-[#202124] group-hover:text-[#1A73E8] transition-colors">
-                            {event.title}
-                          </h3>
-                          <span className="text-[#5F6368] group-hover:text-[#1A73E8] group-hover:translate-x-0.5 transition-all text-xs font-bold flex items-center gap-1 font-mono">
-                            <span>EDIT</span>
-                            <ArrowRight className="h-3 w-3" />
-                          </span>
-                        </div>
-                        <p className="text-xs text-[#5F6368] mt-1.5 leading-relaxed line-clamp-2">
+                      {/* Title & Description */}
+                      <div className="mt-4 flex flex-col text-left">
+                        <h3 className="text-xl sm:text-2xl font-normal tracking-[-0.03em] text-[#111827] group-hover:text-black transition-colors leading-snug">
+                          {event.title}
+                        </h3>
+                        <p className="text-xs sm:text-[13px] text-[#4B5563] mt-1.5 leading-relaxed line-clamp-2">
                           {event.description}
                         </p>
-                        <div className="mt-3 flex items-center justify-between w-full gap-2 pt-2.5 border-t border-[#E5E7EB]">
-                          <span className="inline-flex items-center gap-1.5 font-mono text-[11px] font-semibold text-[#5F6368]">
-                            <Sparkles className="h-3 w-3 text-[#FBBC04]" />
-                            <span>{meta}</span>
-                          </span>
-                          <span className="inline-flex items-center gap-1 rounded-full border border-[#1A73E8]/30 bg-[#E8F0FE] px-2.5 py-0.5 font-mono text-[10px] font-bold text-[#1967D2] uppercase tracking-wider group-hover:bg-[#1A73E8] group-hover:text-white transition-all shadow-2xs">
-                            <SlidersHorizontal className="h-2.5 w-2.5" />
-                            <span>EDIT PANEL</span>
-                          </span>
-                        </div>
+                      </div>
+
+                      {/* Specs Ribbon */}
+                      <div className="pt-3 mt-4 border-t border-[#F3F4F6] flex items-center justify-between">
+                        <span className="font-mono text-[10px] tracking-wider uppercase text-[#9CA3AF] flex items-center gap-1.5">
+                          <Sparkles className="h-3 w-3 text-[#9CA3AF]" />
+                          <span>{meta}</span>
+                        </span>
+                        <span className="font-mono text-[10px] uppercase tracking-wider text-[#111827] group-hover:translate-x-0.5 transition-transform flex items-center gap-1 font-semibold">
+                          <span>Studio</span>
+                          <ArrowRight className="h-3 w-3" />
+                        </span>
                       </div>
                     </div>
 
-                    {/* Bottom Action Controls Deck */}
-                    <div className="mt-5 flex flex-col gap-2 pt-3 border-t border-[#E5E7EB]">
-                      {/* Primary Lock/Unlock Action Button */}
+                    {/* Action Controls Deck */}
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      className="mt-6 flex flex-col gap-2 pt-4 border-t border-[#F3F4F6]"
+                    >
+                      {/* Primary Button: Open Dedicated Studio */}
                       <button
                         type="button"
-                        disabled={isUpdating}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleToggleDivLock(slug, isLive)
-                        }}
-                        className={`flex h-11 items-center justify-center gap-2 rounded-2xl border font-mono text-xs font-extrabold uppercase tracking-wider transition-all active:translate-y-0.5 shadow-xs cursor-pointer ${
-                          isLive
-                            ? 'border-[#B31412] bg-[#EA4335] text-white hover:bg-[#B31412]'
-                            : 'border-[#137333] bg-[#34A853] text-white hover:bg-[#137333]'
-                        }`}
-                      >
-                        {isLive ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
-                        <span>{isLive ? `LOCK ${actionTitle.toUpperCase()} (LOCKED)` : `UNLOCK ${actionTitle.toUpperCase()} (LIVE)`}</span>
-                      </button>
-
-                      {/* Broadcast Winner Trigger */}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          navigateToPanel('winners', slug !== 'wend-game' ? slug : undefined)
-                        }}
-                        className="flex h-10 items-center justify-center gap-2 rounded-2xl border border-[#FBBC04] bg-[#FEF7E0] font-mono text-xs font-bold text-[#B06000] uppercase tracking-wider hover:bg-[#FBBC04] hover:text-[#202124] transition-all shadow-2xs cursor-pointer"
-                        title="Open Leaderboard to inspect, delete users, and broadcast winners"
-                      >
-                        <Trophy className="h-4 w-4 text-[#FBBC04]" />
-                        <span>BROADCAST WINNERS</span>
-                      </button>
-
-                      {/* Jump Shortcut Link */}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
+                        onClick={() => {
                           navigateToPanel(jumpTab, slug !== 'wend-game' ? slug : undefined)
                         }}
-                        className="mt-1 flex items-center justify-center gap-1.5 rounded-xl font-mono text-[11px] font-bold uppercase tracking-wider text-[#5F6368] hover:text-[#1A73E8] transition-colors py-1 cursor-pointer"
+                        className="w-full flex h-10 items-center justify-center gap-2 rounded-full bg-[#111827] hover:bg-black font-mono text-xs font-medium uppercase tracking-wider text-white shadow-2xs transition-all active:scale-95 cursor-pointer"
                       >
+                        <Maximize2 className="h-3.5 w-3.5" />
                         <span>{jumpLabel}</span>
-                        <span>➔</span>
                       </button>
+
+                      {/* Secondary Row: Gate Lock Toggle + Podium Broadcast */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          disabled={isUpdating}
+                          onClick={() => handleToggleDivLock(slug, isLive)}
+                          className={`flex h-9 items-center justify-center gap-1.5 rounded-full font-mono text-[11px] font-semibold uppercase tracking-wider transition-all cursor-pointer border ${
+                            isLive
+                              ? 'border-[#FECACA] bg-[#FEF2F2] text-[#DC2626] hover:bg-[#FEE2E2]'
+                              : 'border-[#E5E7EB] bg-[#FAFAFA] text-[#111827] hover:border-[#111827] hover:bg-white'
+                          }`}
+                        >
+                          {isLive ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
+                          <span>{isLive ? 'Lock Gate' : 'Open Live'}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigateToPanel('winners', slug !== 'wend-game' ? slug : undefined)
+                          }}
+                          className="flex h-9 items-center justify-center gap-1.5 rounded-full border border-[#E5E7EB] bg-white text-[#111827] hover:border-[#FBBC04] hover:bg-[#FEF7E0] hover:text-[#B06000] font-mono text-[11px] font-semibold uppercase tracking-wider transition-all cursor-pointer shadow-2xs"
+                        >
+                          <Trophy className="h-3 w-3 text-[#FBBC04]" />
+                          <span>Podium</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )
