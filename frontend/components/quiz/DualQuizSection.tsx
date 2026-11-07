@@ -100,11 +100,13 @@ export function DualQuizSection({
     void Promise.all([
       api.fetchQuestions(webEvent.slug),
       api.fetchQuestions(mentisEvent.slug),
-    ]).then(([webQ, mentisQ]) => {
+      api.fetchWendBoard(),
+    ]).then(([webQ, mentisQ, wendB]) => {
       if (active) {
         setQuestionCounts({
           [webEvent.slug]: webQ?.length || 0,
           [mentisEvent.slug]: mentisQ?.length || 0,
+          'wend-game': wendB?.targetWords?.length || 0,
         })
       }
     })
@@ -229,7 +231,7 @@ export function DualQuizSection({
     // Live question / word count strictly based on user-created content
     const activeQuestionsCount =
       type === 'wend'
-        ? (mounted ? api.getWendBoard().targetWords.length : 0)
+        ? (questionCounts['wend-game'] ?? (mounted ? api.getWendBoard().targetWords.length : 0))
         : (questionCounts[event.slug] ?? (mounted ? api.getQuestionsForSlug(event.slug).length : 0))
 
     const wendLimit = api.getWendBoard().timeLimitSeconds || 120

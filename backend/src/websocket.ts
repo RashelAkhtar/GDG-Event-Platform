@@ -3,6 +3,7 @@ import type { Server as HttpServer } from 'http';
 import type { IncomingMessage } from 'http';
 import mongoose from 'mongoose';
 import { User, UserRole } from './models/User.ts';
+import { WendBoard } from './models/WendBoard.ts';
 import { verifyToken } from './utils/jwt.ts';
 import 'dotenv/config';
 
@@ -68,40 +69,6 @@ export interface LeaderboardEntryPayload {
   };
 }
 
-export const DEFAULT_WEND_BOARD_BACKEND = {
-  id: 'board-reference-hi',
-  title: 'H & I Maze Corridor',
-  description: 'Trace technical path words through the maze corridors without hitting obstacle blocks.',
-  rows: 8,
-  cols: 8,
-  difficulty: 'MEDIUM',
-  timeLimitSeconds: 120,
-  targetWords: [
-    { id: 'tw-1', word: 'INHI', hint: 'Traced on the right corridor (I > N > H > I)' },
-    { id: 'tw-2', word: 'LIGHT', hint: 'Spelled horizontally along the bottom row' },
-    { id: 'tw-3', word: 'CHING', hint: 'Spelled across the top row from left to right' },
-    { id: 'tw-4', word: 'SAHIRE', hint: 'Spelled across the lower section' },
-    { id: 'tw-5', word: 'INHIBIT', hint: 'Snake downward through the right column into corner' },
-  ],
-  grid: [
-    ['C', 'H', 'H', 'I', 'N', 'G', 'R', 'S'],
-    ['T', 'I', 'I', 'K', 'M', 'E', 'E', 'H'],
-    [null, 'H', null, 'U', 'S', 'M', 'B', 'I'],
-    [null, null, null, 'S', null, null, null, 'P'],
-    [null, 'H', null, 'H', 'I', null, 'I', 'N'],
-    ['G', 'I', 'P', 'P', null, null, null, 'H'],
-    ['H', 'S', 'A', 'H', 'I', 'R', 'E', 'I'],
-    ['L', 'I', 'G', 'H', 'T', 'T', 'I', 'B'],
-  ].map((rowArr, r) =>
-    rowArr.map((val, c) => ({
-      row: r,
-      col: c,
-      type: val === null ? 'OBSTACLE' : 'LETTER',
-      letter: val === null ? undefined : val,
-    }))
-  ),
-};
-
 class EventWebSocketService {
   private wss: WebSocketServer | null = null;
   private sessions: Map<string, ConnectedSession> = new Map();
@@ -118,11 +85,11 @@ class EventWebSocketService {
     'wend-game': { isLocked: false, status: 'LIVE' },
   };
   private securityAlerts: SecurityAlert[] = [];
-  private wendBoardConfig: unknown = DEFAULT_WEND_BOARD_BACKEND;
+  private wendBoardConfig: unknown = null;
   private heartbeatInterval: NodeJS.Timeout | null = null;
 
   public getWendBoardConfig(): unknown {
-    return this.wendBoardConfig || DEFAULT_WEND_BOARD_BACKEND;
+    return this.wendBoardConfig;
   }
 
   public setWendBoardConfig(config: unknown): void {
@@ -172,6 +139,17 @@ class EventWebSocketService {
         callback(!origin || allowedOrigins.has(origin) || Boolean(isLan), 403, 'Forbidden');
       },
     });
+
+    // Hydrate Wend board directly from MongoDB (Single Source of Truth)
+    try {
+      if (mongoose.connection.readyState === 1) {
+        void WendBoard.findOne({ slug: 'wend-game' }).lean().then((dbBoard) => {
+          if (dbBoard) {
+            this.wendBoardConfig = dbBoard;
+          }
+        }).catch(() => {});
+      }
+    } catch {}
 
     this.wss.on('connection', (ws: WebSocket, request: IncomingMessage) => {
       ws.on('message', (data: string) => {
@@ -524,6 +502,13 @@ class EventWebSocketService {
 
       case 'WEND_CONFIG_UPDATE': {
         this.wendBoardConfig = message.payload;
+        if (message.payload && typeof message.payload === 'object') {
+          void WendBoard.findOneAndUpdate(
+            { slug: 'wend-game' },
+            { $set: message.payload },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+          ).catch((err) => console.warn('Error syncing Wend board to MongoDB from WS:', err));
+        }
         this.broadcast({
           type: 'WEND_CONFIG_UPDATE',
           payload: message.payload,

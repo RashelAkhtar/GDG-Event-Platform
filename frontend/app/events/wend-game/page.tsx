@@ -148,7 +148,7 @@ export default function WendGamePage() {
 
   // Auto-submit when time set by admin expires
   const handleTimeUpSubmit = useCallback(() => {
-    if (completedSession) return
+    if (completedSession || !board?.targetWords?.length) return
     const currentFoundWords = foundWordIdsRef.current
     const durationMs = allocatedTimeSeconds * 1000
     const totalPoints = currentFoundWords.size * 200
@@ -190,7 +190,7 @@ export default function WendGamePage() {
 
   // Countdown timer honoring time set by admin
   useEffect(() => {
-    if (completedSession || isLocked || isCountingDown) return
+    if (completedSession || isLocked || isCountingDown || !board?.targetWords?.length) return
 
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
@@ -209,7 +209,7 @@ export default function WendGamePage() {
     }, 1000)
 
     return () => clearInterval(timer)
-  }, [completedSession, isLocked, isCountingDown, handleTimeUpSubmit])
+  }, [completedSession, isLocked, isCountingDown, handleTimeUpSubmit, board?.targetWords?.length])
 
   // Real-time synchronization if admin updates board time limit or layout
   useEffect(() => {
@@ -513,7 +513,7 @@ export default function WendGamePage() {
       <Navbar />
 
       {/* 5-Second Local Countdown Animation Before Game Start */}
-      {Boolean(!completedSession && !isLocked && !isDisqualified && isCountingDown) && (
+      {Boolean(!completedSession && !isLocked && !isDisqualified && isCountingDown && (board?.targetWords?.length ?? 0) > 0) && (
         <LocalGameCountdown
           gameTitle={board.title || 'Wend Word Arena'}
           onComplete={handleCountdownComplete}
@@ -534,7 +534,7 @@ export default function WendGamePage() {
           <div className="flex items-center gap-2">
             <SoundToggle />
             {/* Live Admin-Configured Countdown Timer */}
-            {!completedSession && (
+            {!completedSession && (board?.targetWords?.length ?? 0) > 0 && (
               <div
                 className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-xs font-medium transition-all ${
                   timeLeft <= 15
@@ -551,15 +551,17 @@ export default function WendGamePage() {
               </div>
             )}
 
-            <span className="inline-flex items-center gap-1.5 bg-white px-3 py-1 font-mono text-xs font-bold text-[#137333] border border-[#34A853] shadow-2xs">
-              <span className="h-2 w-2 bg-[#34A853] animate-pulse" />
-              <span>{foundWordIds.size} / {board.targetWords.length} WORDS</span>
-            </span>
+            {(board?.targetWords?.length ?? 0) > 0 && (
+              <span className="inline-flex items-center gap-1.5 bg-white px-3 py-1 font-mono text-xs font-bold text-[#137333] border border-[#34A853] shadow-2xs">
+                <span className="h-2 w-2 bg-[#34A853] animate-pulse" />
+                <span>{foundWordIds.size} / {board.targetWords.length} WORDS</span>
+              </span>
+            )}
           </div>
         </div>
 
         {/* Live Countdown Progress Bar (Reflecting admin-configured time) */}
-        {!completedSession && !isLocked && (
+        {!completedSession && !isLocked && (board?.targetWords?.length ?? 0) > 0 && (
           <div className="w-full h-1 bg-[#E8EAED] overflow-hidden mb-3">
             <div
               className={`h-full transition-all duration-1000 ${
@@ -684,6 +686,34 @@ export default function WendGamePage() {
               >
                 <Home className="h-3.5 w-3.5" />
                 <span>Return to Hub</span>
+              </Link>
+            </div>
+          </div>
+        ) : (!board || !board.targetWords || board.targetWords.length === 0) ? (
+          /* --- CLEAN EMPTY UNPUBLISHED PUZZLE STATE --- */
+          <div className="my-auto flex flex-col items-center rounded-2xl border border-[#E5E7EB] bg-white p-8 text-center max-w-sm w-full">
+            <span className="h-2 w-2 rounded-full bg-[#34A853] mb-3" />
+            <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-[#9CA3AF] mb-1">
+              STATUS // UNPUBLISHED
+            </span>
+            <h2 className="text-2xl font-normal tracking-[-0.03em] text-[#111827]">
+              No Puzzle Words Published Yet
+            </h2>
+            <p className="mt-1.5 text-xs text-[#6B7280] max-w-xs leading-relaxed">
+              The organizer has not yet added puzzle target words to this arena. Check back soon.
+            </p>
+            <div className="mt-6 flex gap-2.5 w-full">
+              <Link
+                href="/"
+                className="flex h-11 flex-1 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white text-xs font-medium text-[#111827] hover:border-[#111827] transition-all cursor-pointer"
+              >
+                Back to Hub
+              </Link>
+              <Link
+                href="/events/wend-game/leaderboard"
+                className="flex h-11 flex-1 items-center justify-center rounded-xl bg-[#111827] text-xs font-medium text-white hover:bg-black transition-all cursor-pointer"
+              >
+                Standings
               </Link>
             </div>
           </div>

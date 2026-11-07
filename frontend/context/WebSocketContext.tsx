@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react'
-import { LeaderboardEntry, CeremonyWinner, WendBoardConfig, QuestionData, api } from '@/lib/api'
+import { LeaderboardEntry, CeremonyWinner, WendBoardConfig, QuestionData } from '@/lib/api'
 import { useAuth } from './AuthContext'
 
 export interface ConnectedSession {
@@ -341,8 +341,8 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
             setSecurityAlerts(payload.securityAlerts as SecurityAlert[])
           }
           if (payload?.wendBoardConfig) {
-            api.saveWendBoard(payload.wendBoardConfig as unknown as WendBoardConfig)
             if (typeof window !== 'undefined') {
+              localStorage.setItem('gdg_wend_board_config', JSON.stringify(payload.wendBoardConfig))
               window.dispatchEvent(new CustomEvent('gdg_wend_board_sync', { detail: payload.wendBoardConfig }))
             }
           }
@@ -350,8 +350,8 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
         }
         case 'WEND_CONFIG_UPDATE': {
           if (payload) {
-            api.saveWendBoard(payload as unknown as WendBoardConfig)
             if (typeof window !== 'undefined') {
+              localStorage.setItem('gdg_wend_board_config', JSON.stringify(payload))
               window.dispatchEvent(new CustomEvent('gdg_wend_board_sync', { detail: payload }))
             }
           }

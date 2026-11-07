@@ -1,5 +1,5 @@
 import { type Request, type Response, type NextFunction } from 'express';
-import { Types } from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import { QuizService } from '../services/quiz.service.ts';
 import { sendQuizError } from '../utils/error.ts';
 import { getId, getUser } from '../utils/auth.ts';
@@ -46,15 +46,27 @@ export const getQuestions = async (req: Request, res: Response, next: NextFuncti
   const isAdmin = user?.role === UserRole.ADMIN || (user as any)?.role === 'ADMIN';
 
   try {
-    // 1. Try DB lookup if ObjectId is valid
-    if (Types.ObjectId.isValid(eventIdOrSlug)) {
-      const selectFields = isAdmin ? '+correctOptionIndex' : '-correctOptionIndex';
-      const dbQuestions = await Question.find({ eventId: new Types.ObjectId(eventIdOrSlug) })
-        .select(selectFields)
-        .sort({ order: 1 })
-        .lean();
+    // 1. Direct MongoDB Database Retrieval (Single Source of Truth)
+    if (mongoose.connection.readyState === 1) {
+      let targetEventId: Types.ObjectId | null = null;
+      if (Types.ObjectId.isValid(eventIdOrSlug)) {
+        targetEventId = new Types.ObjectId(eventIdOrSlug);
+      } else {
+        const foundEvent = await Event.findOne({ slug });
+        if (foundEvent) targetEventId = foundEvent._id as Types.ObjectId;
+      }
 
-      if (dbQuestions && dbQuestions.length > 0) {
+      if (targetEventId) {
+        const selectFields = isAdmin ? '+correctOptionIndex' : '-correctOptionIndex';
+        const dbQuestions = await Question.find({ eventId: targetEventId })
+          .select(selectFields)
+          .sort({ order: 1 })
+          .lean();
+
+        // Sync local memory cache with DB truth
+        inMemoryQuestions[slug] = dbQuestions;
+
+        // User side receives STRICTLY what was retrieved from database (if 0, returns [])
         return res.status(200).json({
           success: true,
           count: dbQuestions.length,
@@ -63,27 +75,7 @@ export const getQuestions = async (req: Request, res: Response, next: NextFuncti
       }
     }
 
-    // 2. Try DB lookup by slug if Event model has it
-    try {
-      const event = await Event.findOne({ slug });
-      if (event) {
-        const selectFields = isAdmin ? '+correctOptionIndex' : '-correctOptionIndex';
-        const dbQuestions = await Question.find({ eventId: event._id })
-          .select(selectFields)
-          .sort({ order: 1 })
-          .lean();
-
-        if (dbQuestions && dbQuestions.length > 0) {
-          return res.status(200).json({
-            success: true,
-            count: dbQuestions.length,
-            data: dbQuestions,
-          });
-        }
-      }
-    } catch {}
-
-    // 3. Fallback to centralized in-memory store
+    // 2. Resilient memory cache (strictly user-created content, NO dummy data)
     const list = inMemoryQuestions[slug] || [];
     const output = isAdmin ? list : sanitizeQuestions(list);
 
@@ -99,8 +91,8 @@ export const getQuestions = async (req: Request, res: Response, next: NextFuncti
 
 /**
  * PUT /api/v1/events/:eventId/questions
- * Admin replaces or saves the full questions list for an event/slug.
- * Persists in DB (if connected) and in-memory, and broadcasts over WebSocket.
+ * Admin sets the full questions pool for an event/slug in the MongoDB database.
+ * Deletes old event questions and persists the user-created pool into MongoDB.
  */
 export const updateQuestions = async (req: Request, res: Response, next: NextFunction) => {
   const eventIdOrSlug = getId(req.params.eventId);
@@ -109,6 +101,7 @@ export const updateQuestions = async (req: Request, res: Response, next: NextFun
   }
 
   const slug = resolveSlug(eventIdOrSlug);
+  const user = getUser(req);
   const { questions } = req.body;
   if (!Array.isArray(questions)) {
     return res.status(400).json({ success: false, message: 'questions must be an array.' });
@@ -128,24 +121,51 @@ export const updateQuestions = async (req: Request, res: Response, next: NextFun
   // Update in-memory registry
   inMemoryQuestions[slug] = formattedQuestions;
 
-  // Persist to MongoDB if event exists
+  // Persist directly to MongoDB database
   try {
-    let targetEventId: Types.ObjectId | null = null;
-    if (Types.ObjectId.isValid(eventIdOrSlug)) {
-      targetEventId = new Types.ObjectId(eventIdOrSlug);
-    } else {
-      const foundEvent = await Event.findOne({ slug });
-      if (foundEvent) targetEventId = foundEvent._id as Types.ObjectId;
-    }
+    if (mongoose.connection.readyState === 1) {
+      let targetEvent = null;
+      if (Types.ObjectId.isValid(eventIdOrSlug)) {
+        targetEvent = await Event.findById(eventIdOrSlug);
+      }
+      if (!targetEvent) {
+        targetEvent = await Event.findOne({ slug });
+      }
+      if (!targetEvent) {
+        const creatorId =
+          user?._id && Types.ObjectId.isValid(user._id)
+            ? new Types.ObjectId(user._id)
+            : new Types.ObjectId();
+        targetEvent = await Event.create({
+          title: slug === 'mentis-quiz' ? 'Mentis Logic & Algo Quiz' : 'Web Dev Blitz Quiz',
+          slug,
+          description: slug === 'mentis-quiz' ? 'Algorithmic reasoning challenge.' : 'Frontend fundamentals sprint.',
+          type: 'QUIZ',
+          status: 'LIVE',
+          startTime: new Date(),
+          endTime: new Date(Date.now() + 365 * 24 * 3600 * 1000),
+          createdBy: creatorId,
+        });
+      }
 
-    if (targetEventId) {
-      await Question.deleteMany({ eventId: targetEventId });
-      if (formattedQuestions.length > 0) {
-        const toInsert = formattedQuestions.map((fq) => ({
-          ...fq,
-          eventId: targetEventId,
-        }));
-        await Question.insertMany(toInsert);
+      if (targetEvent) {
+        await Question.deleteMany({ eventId: targetEvent._id });
+        if (formattedQuestions.length > 0) {
+          const toInsert = formattedQuestions.map((fq) => ({
+            questionText: fq.questionText,
+            options: fq.options,
+            correctOptionIndex: fq.correctOptionIndex,
+            points: fq.points,
+            timeLimitSeconds: fq.timeLimitSeconds,
+            order: fq.order,
+            eventId: targetEvent._id,
+          }));
+          const inserted = await Question.insertMany(toInsert);
+          formattedQuestions.forEach((fq, idx) => {
+            if (inserted[idx]) fq._id = inserted[idx]._id.toString();
+          });
+          inMemoryQuestions[slug] = formattedQuestions;
+        }
       }
     }
   } catch (dbErr) {
@@ -170,6 +190,7 @@ export const updateQuestions = async (req: Request, res: Response, next: NextFun
 
 export const addQuestions = async (req: Request, res: Response, next: NextFunction) => {
   const eventIdOrSlug = getId(req.params.eventId);
+  const user = getUser(req);
   if (!eventIdOrSlug) {
     return res.status(400).json({ success: false, message: 'Invalid event id.' });
   }
@@ -211,6 +232,46 @@ export const addQuestions = async (req: Request, res: Response, next: NextFuncti
     timeLimitSeconds: Number(q.timeLimitSeconds) || 30,
     order: Number.isInteger(q.order) ? q.order : nextOrder + idx,
   }));
+
+  // Persist directly to MongoDB if connected
+  try {
+    if (mongoose.connection.readyState === 1) {
+      let targetEvent = await Event.findOne({ slug });
+      if (!targetEvent) {
+        const creatorId =
+          user?._id && Types.ObjectId.isValid(user._id)
+            ? new Types.ObjectId(user._id)
+            : new Types.ObjectId();
+        targetEvent = await Event.create({
+          title: slug === 'mentis-quiz' ? 'Mentis Logic & Algo Quiz' : 'Web Dev Blitz Quiz',
+          slug,
+          description: slug === 'mentis-quiz' ? 'Algorithmic reasoning challenge.' : 'Frontend fundamentals sprint.',
+          type: 'QUIZ',
+          status: 'LIVE',
+          startTime: new Date(),
+          endTime: new Date(Date.now() + 365 * 24 * 3600 * 1000),
+          createdBy: creatorId,
+        });
+      }
+      if (targetEvent) {
+        const toInsert = newQuestions.map((nq) => ({
+          questionText: nq.questionText,
+          options: nq.options,
+          correctOptionIndex: nq.correctOptionIndex,
+          points: nq.points,
+          timeLimitSeconds: nq.timeLimitSeconds,
+          order: nq.order,
+          eventId: targetEvent._id,
+        }));
+        const inserted = await Question.insertMany(toInsert);
+        newQuestions.forEach((nq, i) => {
+          if (inserted[i]) nq._id = String(inserted[i]._id);
+        });
+      }
+    }
+  } catch (err) {
+    console.warn('Error saving questions to MongoDB in addQuestions:', err);
+  }
 
   inMemoryQuestions[slug] = [...existing, ...newQuestions];
 

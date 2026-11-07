@@ -2,8 +2,9 @@ import { type Request, type Response, type NextFunction } from 'express';
 import { EventService } from '../services/event.service.ts';
 import { UserRole, type IUser } from '../models/User.ts';
 import { EventType } from '../models/Event.ts';
-import { Types } from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import { wsService } from '../websocket.ts';
+import { WendBoard } from '../models/WendBoard.ts';
 
 export const inMemoryEvents: Record<string, any> = {
   'web-dev-quiz': {
@@ -131,8 +132,21 @@ export const getEventBySlug = async (req: Request, res: Response, _next: NextFun
 };
 
 export const getWendBoardConfig = async (_req: Request, res: Response) => {
+  try {
+    if (mongoose.connection.readyState === 1) {
+      const dbBoard = await WendBoard.findOne({ slug: 'wend-game' }).lean();
+      if (dbBoard) {
+        wsService.setWendBoardConfig(dbBoard);
+        return res.status(200).json({ success: true, data: dbBoard });
+      }
+    }
+  } catch (err) {
+    console.warn('Error reading Wend board from DB:', err);
+  }
+
+  // Check in-memory/ws cache (only if set by user, otherwise null - strictly NO dummy data)
   const config = wsService.getWendBoardConfig();
-  res.status(200).json({ success: true, data: config });
+  res.status(200).json({ success: true, data: config ?? null });
 };
 
 export const updateWendBoardConfig = async (req: Request, res: Response) => {
@@ -140,18 +154,47 @@ export const updateWendBoardConfig = async (req: Request, res: Response) => {
   if (!board || typeof board !== 'object') {
     return res.status(400).json({ success: false, message: 'Invalid board configuration' });
   }
-  wsService.setWendBoardConfig(board);
+
+  const cleanBoard = {
+    slug: 'wend-game',
+    title: String(board.title || 'Wend Word Puzzle Arena').trim(),
+    description: String(board.description || '').trim(),
+    rows: Number(board.rows) || 8,
+    cols: Number(board.cols) || 8,
+    difficulty: String(board.difficulty || 'MEDIUM'),
+    timeLimitSeconds: Number(board.timeLimitSeconds) || 120,
+    targetWords: Array.isArray(board.targetWords) ? board.targetWords : [],
+    grid: Array.isArray(board.grid) ? board.grid : [],
+  };
+
+  // 1. Persist directly in MongoDB database
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await WendBoard.findOneAndUpdate(
+        { slug: 'wend-game' },
+        { $set: cleanBoard },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+    }
+  } catch (err) {
+    console.warn('Error persisting Wend board to MongoDB:', err);
+  }
+
+  // 2. Sync in-memory WebSocket service and broadcast live update
+  wsService.setWendBoardConfig(cleanBoard);
   wsService.broadcast({
     type: 'WEND_CONFIG_UPDATE',
-    payload: board,
+    payload: cleanBoard,
   });
-  if (board.title && inMemoryEvents['wend-game']) {
-    inMemoryEvents['wend-game'].title = board.title;
+
+  if (cleanBoard.title && inMemoryEvents['wend-game']) {
+    inMemoryEvents['wend-game'].title = cleanBoard.title;
   }
-  if (board.description && inMemoryEvents['wend-game']) {
-    inMemoryEvents['wend-game'].description = board.description;
+  if (cleanBoard.description && inMemoryEvents['wend-game']) {
+    inMemoryEvents['wend-game'].description = cleanBoard.description;
   }
-  res.status(200).json({ success: true, data: board });
+
+  res.status(200).json({ success: true, data: cleanBoard });
 };
 
 export const updateEvent = async (req: Request, res: Response, next: NextFunction) => {
