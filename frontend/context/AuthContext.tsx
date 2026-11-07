@@ -41,9 +41,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search)
+      const token = params.get('token')
+      if (token) {
+        localStorage.setItem('gdg_token', token)
+      }
       if (params.get('auth') === 'success') {
         const url = new URL(window.location.href)
         url.searchParams.delete('auth')
+        url.searchParams.delete('token')
         window.history.replaceState({}, document.title, url.toString())
       }
     }
@@ -60,12 +65,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     await api.logout()
     localStorage.removeItem('gdg_demo_user')
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('gdg_token')
+    }
     setUser(null)
   }
 
   const adminPasswordLogin = async (email: string, pass: string) => {
     const res = await api.adminLogin(email, pass)
     if (res.success) {
+      if (res.user && res.user.role === 'ADMIN') {
+        setUser(res.user)
+        return { success: true }
+      }
       const session = await api.getMe()
       if (session.success && session.user?.role === 'ADMIN') {
         setUser(session.user)

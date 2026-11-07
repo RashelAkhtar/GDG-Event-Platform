@@ -3,7 +3,7 @@ import passport from 'passport';
 import mongoose from 'mongoose';
 import { generateToken } from '../utils/jwt.ts';
 import { User, UserRole, type IUser } from '../models/User.ts';
-import { protect } from '../middlewares/auth.middleware.ts';
+import { protect, optionalAuth } from '../middlewares/auth.middleware.ts';
 
 const router = Router();
 
@@ -36,16 +36,20 @@ router.get(
     res.cookie('gdg_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
-    res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/?auth=success`);
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+    res.redirect(`${clientUrl}/?auth=success&token=${token}`);
   }
 );
 
-// 3. Get Logged-in User
-router.get('/me', protect, (req: Request, res: Response) => {
+// 3. Get Logged-in User (Session check)
+router.get('/me', optionalAuth, (req: Request, res: Response) => {
+  if (!req.user) {
+    return res.status(200).json({ success: false, user: null });
+  }
   res.status(200).json({ success: true, user: req.user });
 });
 
@@ -84,13 +88,14 @@ router.post('/admin/login', async (req: Request, res: Response, next: NextFuncti
       res.cookie('gdg_token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
       return res.status(200).json({
         success: true,
         message: 'Admin authenticated successfully',
         user: fallbackUser,
+        token,
       });
     }
 
@@ -125,7 +130,7 @@ router.post('/admin/login', async (req: Request, res: Response, next: NextFuncti
     res.cookie('gdg_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -133,6 +138,7 @@ router.post('/admin/login', async (req: Request, res: Response, next: NextFuncti
       success: true,
       message: 'Admin authenticated successfully',
       user,
+      token,
     });
   }
 

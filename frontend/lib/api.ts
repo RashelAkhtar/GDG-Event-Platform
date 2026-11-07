@@ -1,9 +1,23 @@
 function getApiBase(): string {
   if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL
   if (typeof window !== 'undefined') {
-    return `http://${window.location.hostname}:5000/api/v1`
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return `http://${window.location.hostname}:5000/api/v1`
+    }
+    return '/api/v1'
   }
   return 'http://localhost:5000/api/v1'
+}
+
+function getAuthHeaders(extraHeaders?: Record<string, string>): Record<string, string> {
+  const headers: Record<string, string> = { Accept: 'application/json', ...(extraHeaders || {}) }
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('gdg_token')
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+  }
+  return headers
 }
 
 const API_BASE = getApiBase()
@@ -152,7 +166,7 @@ export const api = {
     try {
       const res = await fetch(`${API_BASE}/auth/me`, {
         credentials: 'include',
-        headers: { Accept: 'application/json' },
+        headers: getAuthHeaders(),
       })
       if (!res.ok) return { success: false }
       const data = await res.json()
@@ -163,10 +177,14 @@ export const api = {
   },
 
   async logout(): Promise<boolean> {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('gdg_token')
+    }
     try {
       const res = await fetch(`${API_BASE}/auth/logout`, {
         method: 'POST',
         credentials: 'include',
+        headers: getAuthHeaders(),
       })
       return res.ok
     } catch {
@@ -174,7 +192,7 @@ export const api = {
     }
   },
 
-  async adminLogin(email: string, password: string): Promise<{ success: boolean; user?: User; message?: string }> {
+  async adminLogin(email: string, password: string): Promise<{ success: boolean; user?: User; token?: string; message?: string }> {
     try {
       const res = await fetch(`${API_BASE}/auth/admin/login`, {
         method: 'POST',
@@ -183,6 +201,9 @@ export const api = {
         body: JSON.stringify({ email, password }),
       })
       const data = await res.json()
+      if (data.token && typeof window !== 'undefined') {
+        localStorage.setItem('gdg_token', data.token)
+      }
       return data
     } catch {
       // Local fallback for dev
