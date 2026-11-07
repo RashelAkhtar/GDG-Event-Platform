@@ -1,38 +1,31 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
-const adminPanelPath = process.env.ADMIN_PANEL_PATH?.trim().replace(/\/+$/, '')
-const isValidAdminPanelPath =
-  adminPanelPath !== undefined &&
-  /^\/[a-zA-Z0-9/_-]+$/.test(adminPanelPath) &&
-  !adminPanelPath.includes('//') &&
-  adminPanelPath !== '/admin' &&
-  adminPanelPath !== '/login'
+const envAdminPath = process.env.ADMIN_PANEL_PATH?.trim().replace(/\/+$/, '')
+const adminPanelPath = envAdminPath && envAdminPath.startsWith('/') ? envAdminPath : '/admin-panel'
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
-  const isAdminRoute = pathname === '/admin' || pathname.startsWith('/admin/')
-  const isLoginRoute = pathname === '/login' || pathname.startsWith('/login/')
 
-  if (!isValidAdminPanelPath) {
-    return isAdminRoute || isLoginRoute
-      ? NextResponse.redirect(new URL('/', request.url))
-      : NextResponse.next()
+  // 1. Direct admin panel routes: /admin-panel or configured ADMIN_PANEL_PATH
+  if (
+    pathname === adminPanelPath ||
+    pathname === `${adminPanelPath}/panel` ||
+    pathname === '/admin-panel' ||
+    pathname === '/admin-panel/panel'
+  ) {
+    const adminUrl = request.nextUrl.clone()
+    adminUrl.pathname = '/admin'
+    return NextResponse.rewrite(adminUrl)
   }
 
-  if (pathname === adminPanelPath) {
-    const loginUrl = request.nextUrl.clone()
-    loginUrl.pathname = '/login'
-    return NextResponse.rewrite(loginUrl)
+  // 2. Direct /admin route (renders admin page and AdminLoginForm)
+  if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+    return NextResponse.next()
   }
 
-  if (pathname === `${adminPanelPath}/panel`) {
-    const panelUrl = request.nextUrl.clone()
-    panelUrl.pathname = '/admin'
-    return NextResponse.rewrite(panelUrl)
-  }
-
-  if (isAdminRoute || isLoginRoute) {
-    return NextResponse.redirect(new URL('/', request.url))
+  // 3. /login is dedicated to participants
+  if (pathname === '/login' || pathname.startsWith('/login/')) {
+    return NextResponse.next()
   }
 
   return NextResponse.next()
