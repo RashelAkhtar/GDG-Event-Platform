@@ -7,44 +7,123 @@ import { protect, optionalAuth } from '../middlewares/auth.middleware.ts';
 
 const router = Router();
 
-function getClientRedirectUrl(req: Request): string {
-  const referer = req.headers.referer;
-  if (referer) {
+/**
+ * Checks whether an origin belongs to a disallowed external service (e.g. Google auth pages)
+ * so we never redirect an authenticated participant back to Google accounts!
+ */
+function isDisallowedOrigin(originStr: string): boolean {
+  try {
+    const url = new URL(originStr);
+    const host = url.hostname.toLowerCase();
+    return (
+      host.endsWith('google.com') ||
+      host.endsWith('googleusercontent.com') ||
+      host.endsWith('googleapis.com') ||
+      host.endsWith('gvt1.com') ||
+      host === 'accounts.google.com' ||
+      host === 'myaccount.google.com'
+    );
+  } catch {
+    return true;
+  }
+}
+
+/**
+ * Resolves the client application's frontend URL with strict filtering
+ * to prevent redirecting users to accounts.google.com or other external domains.
+ */
+function resolveClientUrl(req: Request): string {
+  // 1. Explicit return_to query parameter (passed from frontend)
+  const returnToQuery = req.query.return_to;
+  if (typeof returnToQuery === 'string' && returnToQuery.trim()) {
     try {
-      const url = new URL(referer);
-      return url.origin;
+      const parsed = new URL(returnToQuery.trim());
+      if (!isDisallowedOrigin(parsed.origin)) {
+        return parsed.origin;
+      }
     } catch {}
   }
 
+  // 2. Request Origin header
   const origin = req.headers.origin;
-  if (origin && typeof origin === 'string') {
+  if (typeof origin === 'string' && origin.trim()) {
     try {
-      const url = new URL(origin);
-      return url.origin;
+      const parsed = new URL(origin.trim());
+      if (!isDisallowedOrigin(parsed.origin)) {
+        return parsed.origin;
+      }
     } catch {}
   }
 
+  // 3. Referer header (ONLY if NOT from a Google domain!)
+  const referer = req.headers.referer;
+  if (typeof referer === 'string' && referer.trim()) {
+    try {
+      const parsed = new URL(referer.trim());
+      if (!isDisallowedOrigin(parsed.origin)) {
+        return parsed.origin;
+      }
+    } catch {}
+  }
+
+  // 4. Host header from proxy/deployment
   const fwdHost = req.headers['x-forwarded-host'] || req.headers.host;
   if (fwdHost && typeof fwdHost === 'string') {
     const proto = (req.headers['x-forwarded-proto'] as string) || (req.secure ? 'https' : 'http');
     try {
-      const url = new URL(`${proto}://${fwdHost}`);
-      return url.origin;
+      const candidate = `${proto}://${fwdHost.split(',')[0].trim()}`;
+      const parsed = new URL(candidate);
+      if (!isDisallowedOrigin(parsed.origin)) {
+        return parsed.origin;
+      }
     } catch {}
   }
 
-  return process.env.CLIENT_URL || 'http://localhost:3000';
+  // 5. Environment variable CLIENT_URL
+  if (process.env.CLIENT_URL && !isDisallowedOrigin(process.env.CLIENT_URL)) {
+    try {
+      const parsed = new URL(process.env.CLIENT_URL);
+      return parsed.origin;
+    } catch {}
+  }
+
+  return 'http://localhost:3000';
+}
+
+/**
+ * Extracts and validates the return URL preserved in OAuth state parameter
+ */
+function extractReturnUrlFromState(req: Request): string | null {
+  const stateStr = req.query.state;
+  if (typeof stateStr === 'string' && stateStr.trim()) {
+    try {
+      const jsonStr = Buffer.from(stateStr, 'base64').toString('utf8');
+      const parsed = JSON.parse(jsonStr);
+      if (parsed && typeof parsed.returnTo === 'string') {
+        const url = new URL(parsed.returnTo);
+        if (!isDisallowedOrigin(url.origin)) {
+          return url.origin;
+        }
+      }
+    } catch {}
+  }
+  return null;
 }
 
 // 1. Initiate Google OAuth
 router.get('/google', (req: Request, res: Response, next: NextFunction) => {
-  const clientUrl = getClientRedirectUrl(req);
+  const returnTo = resolveClientUrl(req);
   if (!isGoogleConfigured) {
-    return res.redirect(`${clientUrl}/login?error=google_not_configured`);
+    return res.redirect(`${returnTo}/login?error=google_not_configured`);
   }
+
+  // Encode the client return destination in OAuth state
+  const state = Buffer.from(JSON.stringify({ returnTo })).toString('base64');
+
   passport.authenticate('google', {
     scope: ['profile', 'email'],
     prompt: 'select_account',
+    state,
   })(req, res, next);
 });
 
@@ -52,7 +131,7 @@ router.get('/google', (req: Request, res: Response, next: NextFunction) => {
 router.get(
   '/google/callback',
   (req: Request, res: Response, next: NextFunction) => {
-    const clientUrl = getClientRedirectUrl(req);
+    const clientUrl = extractReturnUrlFromState(req) || resolveClientUrl(req);
     if (!isGoogleConfigured) {
       return res.redirect(`${clientUrl}/login?error=google_not_configured`);
     }
@@ -63,7 +142,7 @@ router.get(
   },
   (req: Request, res: Response) => {
     const user = req.user as IUser;
-    const clientUrl = getClientRedirectUrl(req);
+    const clientUrl = extractReturnUrlFromState(req) || resolveClientUrl(req);
 
     // Issue single app JWT
     const token = generateToken({ 
@@ -79,6 +158,7 @@ router.get(
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
+    console.log(`[GDG Auth] Google OAuth successful for participant: ${user.email} (${user.name}). Redirecting to: ${clientUrl}`);
     res.redirect(`${clientUrl}/?auth=success&token=${token}`);
   }
 );
@@ -211,7 +291,7 @@ router.post('/participant/login', async (req: Request, res: Response) => {
     role: UserRole.USER,
   };
 
-  // 1. Direct MongoDB Database Persistence (Single Source of Truth)
+  // Direct MongoDB Database Persistence (Single Source of Truth)
   if (mongoose.connection.readyState === 1) {
     try {
       const existing = await User.findOne({ email: effectiveEmail });

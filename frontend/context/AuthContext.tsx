@@ -78,7 +78,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const loginWithGoogle = () => {
-    window.location.href = new URL(`${API_BASE}/auth/google`, window.location.origin).toString()
+    const base = getApiBase()
+    const target = base.startsWith('http') ? `${base}/auth/google` : `${window.location.origin}${base}/auth/google`
+    const url = new URL(target, window.location.origin)
+    if (typeof window !== 'undefined' && window.location.origin) {
+      url.searchParams.set('return_to', window.location.origin)
+    }
+    console.log('[GDG Auth] Redirecting to Google Auth:', url.toString())
+    window.location.href = url.toString()
   }
 
   const participantLogin = async (name: string, email?: string) => {
