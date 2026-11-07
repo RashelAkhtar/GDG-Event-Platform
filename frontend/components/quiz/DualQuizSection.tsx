@@ -253,9 +253,7 @@ export function DualQuizSection({
         router.push(`/login?redirect=${encodeURIComponent(targetHref)}`)
         return
       }
-      if (isAdmin) {
-        router.push(adminPanelHref)
-      } else if (isLive) {
+      if (isLive) {
         router.push(targetHref)
       } else {
         showToast('This challenge arena is currently locked. Check back soon!')
@@ -273,8 +271,8 @@ export function DualQuizSection({
           isLive
             ? 'border-[#E5E7EB] hover:border-[#111827] hover:shadow-[0_16px_40px_rgba(0,0,0,0.04)]'
             : 'border-[#E5E7EB] hover:border-[#9CA3AF]'
-        } ${isAdmin ? 'hover:ring-1 hover:ring-[#111827]' : ''}`}
-        title={isAdmin ? 'Click to open Game in Admin Panel' : isLive ? 'Click to play' : 'Challenge Locked'}
+        }`}
+        title={isLive ? 'Click to enter track' : 'Challenge Locked'}
       >
         <div className="relative z-10 flex flex-col gap-3">
           {/* Header Row: Editorial Track Marker + Lock Status */}
@@ -287,35 +285,13 @@ export function DualQuizSection({
             </div>
 
             <div className="flex items-center gap-2">
-              {/* Studio Button for Host */}
-              {isAdmin && (
-                <Link
-                  href={adminPanelHref}
-                  onClick={(e) => e.stopPropagation()}
-                  className="inline-flex items-center gap-1 rounded-full border border-[#E5E7EB] bg-white px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-[#111827] hover:border-[#111827] transition-all"
-                  title="Open Game Studio"
-                >
-                  <Maximize2 className="h-2.5 w-2.5" />
-                  <span>Studio</span>
-                </Link>
-              )}
-
               {/* Minimalist Status Indicator */}
               <div
-                onClick={(e) => {
-                  if (isAdmin) {
-                    e.stopPropagation()
-                    toggleEventLock(event, isLive)
-                  }
-                }}
-                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-wider transition-all ${
-                  isAdmin ? 'cursor-pointer hover:border-[#111827]' : ''
-                } ${
+                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-wider ${
                   isLive
                     ? 'border-[#34A853]/40 bg-[#F0FDF4] text-[#15803D]'
                     : 'border-[#E5E7EB] bg-[#F9FAFB] text-[#6B7280]'
                 }`}
-                title={isAdmin ? (isLive ? 'Click to switch to LOCKED' : 'Click to GO LIVE') : isLive ? 'Live Arena' : 'Locked Arena'}
               >
                 <span className={`h-1.5 w-1.5 rounded-full ${isLive ? 'bg-[#34A853] animate-pulse' : 'bg-[#9CA3AF]'}`} />
                 <span>{isLive ? 'Live' : 'Locked'}</span>
@@ -376,38 +352,6 @@ export function DualQuizSection({
               <Trophy className="h-3.5 w-3.5" />
             </Link>
           </div>
-
-          {/* Host Controls Strip (Admin Only) */}
-          {isAdmin && (
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className="mt-1 pt-2.5 border-t border-[#F3F4F6] flex items-center gap-2"
-            >
-              <button
-                type="button"
-                disabled={isUpdating}
-                onClick={() => toggleEventLock(event, isLive)}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg font-mono text-[10px] uppercase tracking-wider border transition-all cursor-pointer active:scale-[0.98] ${
-                  isLive
-                    ? 'border-[#EA4335]/30 bg-[#FEF2F2] text-[#DC2626] hover:bg-[#FEE2E2]'
-                    : 'border-[#34A853]/30 bg-[#F0FDF4] text-[#16A34A] hover:bg-[#DCFCE7]'
-                }`}
-              >
-                {isLive ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
-                <span>{isLive ? 'Lock Track' : 'Go Live'}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleOpenBroadcastReview(event.slug, event.title)}
-                className="flex-1 flex items-center justify-center gap-1.5 bg-[#FFFBEB] border border-[#FDE68A] py-1.5 px-3 rounded-lg font-mono text-[10px] uppercase tracking-wider text-[#B45309] hover:bg-[#FEF3C7] transition-all cursor-pointer"
-                title="Broadcast ceremony"
-              >
-                <Trophy className="h-3 w-3 text-[#B45309]" />
-                <span>Broadcast</span>
-              </button>
-            </div>
-          )}
         </div>
       </div>
     )

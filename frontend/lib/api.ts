@@ -568,7 +568,7 @@ export const api = {
   },
 
   getParticipantSession(slug: string, userKey?: string): ParticipantSession | null {
-    if (typeof window !== 'undefined' && userKey) {
+    if (typeof window !== 'undefined' && userKey && userKey !== 'guest' && !userKey.startsWith('guest')) {
       const userSpecific = localStorage.getItem(`gdg_user_session_${slug}_${userKey}`)
       if (userSpecific) {
         try {
@@ -576,13 +576,12 @@ export const api = {
           const isMine =
             (parsed.userId && parsed.userId === userKey) ||
             (parsed.userEmail && parsed.userEmail === userKey) ||
-            (parsed.userName && parsed.userName.toLowerCase().replace(/\s+/g, '_') === userKey) ||
-            (parsed.sessionId && parsed.sessionId.includes(userKey))
+            (parsed.userName && parsed.userName.toLowerCase().replace(/\s+/g, '_') === userKey)
           if (isMine) return parsed
         } catch {}
       }
     }
-    // Strict isolation: if no userKey or doesn't belong to current user, NEVER return another user's result!
+    // Strict isolation: guests and unauthenticated visitors always enter fresh
     return null
   },
 

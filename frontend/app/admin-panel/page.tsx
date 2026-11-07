@@ -1,5 +1,1 @@
-import { redirect } from 'next/navigation'
-
-export default function AdminPanelRedirect() {
-  redirect('/admin-panel/panel')
-}
+export { default } from '@/app/admin/page'

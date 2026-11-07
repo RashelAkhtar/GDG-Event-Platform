@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 import { GdgLogoBadge, GoogleG } from './GoogleBrand'
 import { LogOut, ChevronDown } from 'lucide-react'
-import { SecurityNotificationBell } from '@/components/security/SecurityNotificationBell'
 import { ParticipantLoginModal } from '@/components/auth/ParticipantLoginModal'
 
 const emptySubscribe = () => () => {}
@@ -44,7 +43,6 @@ export function Navbar() {
 
         {/* Auth Actions (Protected against SSR Hydration Mismatch) */}
         <div className="flex items-center gap-2.5" suppressHydrationWarning>
-          {mounted && user?.role === 'ADMIN' && <SecurityNotificationBell />}
           {mounted && user ? (
             <div className="relative">
               <button

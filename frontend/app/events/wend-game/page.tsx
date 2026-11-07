@@ -26,6 +26,7 @@ import {
   ArrowLeft,
   Clock,
   Home,
+  RotateCcw,
 } from 'lucide-react'
 
 const GOOGLE_COLORS = ['#4285F4', '#34A853', '#FBBC04', '#EA4335']
@@ -102,30 +103,32 @@ export default function WendGamePage() {
   // User result isolation guard: strictly ensure session belongs to the current user
   const isMySession = Boolean(
     completedSession &&
-    ((user && (completedSession.userId === user._id || completedSession.userEmail === user.email)) ||
-     (!user && completedSession.sessionId?.includes(currentSessionId)))
+    user &&
+    (completedSession.userId === user._id || completedSession.userEmail === user.email)
   )
 
-
-  // Reactively verify that completedSession belongs to the current logged-in user (not another account)
+  // Reactively verify that completedSession belongs to the current logged-in user
   useEffect(() => {
-    if (authLoading) return // Wait for auth resolution
+    if (authLoading) return
     const timer = setTimeout(() => {
-      const userIdentifier = user?._id || user?.email || (currentSessionId ? `guest_${currentSessionId}` : 'guest')
+      if (!user) {
+        setCompletedSession(null)
+        return
+      }
+      const userIdentifier = user._id || user.email
       const existing = api.getParticipantSession('wend-game', userIdentifier)
 
       if (existing) {
         const isMine =
-          (user?._id && existing.userId === user._id) ||
-          (user?.email && existing.userEmail === user.email) ||
-          (!user && existing.sessionId?.includes(currentSessionId))
+          (user._id && existing.userId === user._id) ||
+          (user.email && existing.userEmail === user.email)
         setCompletedSession(isMine ? existing : null)
       } else {
         setCompletedSession(null)
       }
     }, 0)
     return () => clearTimeout(timer)
-  }, [user, authLoading, currentSessionId])
+  }, [user, authLoading])
 
   const showToast = useCallback((text: string, type: 'success' | 'info' | 'error' = 'info') => {
     setToastMessage({ text, type })
@@ -263,6 +266,27 @@ export default function WendGamePage() {
     })
     return () => unsubscribe()
   }, [subscribeToLeaderboardReset])
+
+  const handleStartNewAttempt = useCallback(() => {
+    if (user) {
+      api.clearParticipantSession('wend-game', user._id)
+      api.clearParticipantSession('wend-game', user.email)
+    }
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('gdg_user_session_wend-game')
+      localStorage.removeItem('gdg_wend_session')
+    }
+    setCompletedSession(null)
+    setIsDisqualified(false)
+    setScreenshotWarningCount(0)
+    setShowScreenshotWarning(false)
+    setFoundWordIds(new Set())
+    setDiscoveredWords([])
+    setCurrentWord('')
+    setTimeLeft(allocatedTimeSeconds)
+    setIsCountingDown(true)
+    startTimeRef.current = Date.now()
+  }, [allocatedTimeSeconds, user])
 
 
   const handleSecurityDisqualification = useCallback(async () => {
@@ -678,14 +702,22 @@ export default function WendGamePage() {
               </div>
             </div>
 
-            {/* Actions: Return to Hub */}
-            <div className="flex w-full justify-center">
+            {/* Actions */}
+            <div className="flex w-full flex-col sm:flex-row gap-2.5 justify-center">
+              <button
+                type="button"
+                onClick={handleStartNewAttempt}
+                className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-[#111827] text-xs font-medium uppercase tracking-wider text-white hover:bg-black active:scale-[0.99] transition-all cursor-pointer"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                <span>Retake Puzzle</span>
+              </button>
               <Link
                 href="/"
-                className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#111827] text-xs font-medium uppercase tracking-wider text-white hover:bg-black transition-all cursor-pointer"
+                className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-[#E5E7EB] bg-white text-xs font-medium uppercase tracking-wider text-[#111827] hover:border-[#111827] hover:bg-[#FAFAFA] transition-all cursor-pointer"
               >
                 <Home className="h-3.5 w-3.5" />
-                <span>Return to Hub</span>
+                <span>Back to Hub</span>
               </Link>
             </div>
           </div>

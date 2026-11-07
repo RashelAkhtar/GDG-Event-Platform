@@ -11,7 +11,7 @@ interface AdminLoginFormProps {
 }
 
 export function AdminLoginForm({ onSuccess }: AdminLoginFormProps) {
-  const { adminPasswordLogin } = useAuth()
+  const { user, adminPasswordLogin } = useAuth()
 
   const [adminEmail, setAdminEmail] = useState('')
   const [adminPassword, setAdminPassword] = useState('')
@@ -81,6 +81,12 @@ export function AdminLoginForm({ onSuccess }: AdminLoginFormProps) {
             Authorized Chapter Leads and Event Administrators only. Enter your host credentials to access the command center.
           </p>
         </div>
+
+        {user && user.role !== 'ADMIN' && (
+          <div className="mt-4 flex items-center gap-2 rounded-xl bg-[#FFFBEB] p-2.5 text-xs text-[#92400E] border border-[#FEF3C7]">
+            <span className="leading-snug">Currently signed in as participant <strong>{user.name}</strong>. Enter Chapter Lead credentials below to access host tools.</span>
+          </div>
+        )}
 
         {/* Notifications */}
         {errorMessage && (

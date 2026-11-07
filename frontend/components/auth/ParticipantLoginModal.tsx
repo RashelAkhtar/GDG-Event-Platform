@@ -1,10 +1,11 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { GdgLogoBadge, GoogleG } from '@/components/ui/GoogleBrand'
-import { X, Users, Mail, UserCheck, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { X, Users, Mail, UserCheck, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react'
 
 interface ParticipantLoginModalProps {
   isOpen: boolean
@@ -20,11 +21,17 @@ export function ParticipantLoginModal({
   const router = useRouter()
   const { loginWithGoogle, participantLogin } = useAuth()
 
+  const [mounted, setMounted] = useState(false)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Handle escape key
   useEffect(() => {
@@ -36,11 +43,19 @@ export function ParticipantLoginModal({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, onClose])
 
-  if (!isOpen) return null
+  if (!isOpen || !mounted || typeof document === 'undefined') return null
 
   const handleGoogleClick = () => {
     console.log('[GDG Auth] Initiating Google sign-in from modal')
-    loginWithGoogle()
+    setGoogleLoading(true)
+    setErrorMessage(null)
+    try {
+      loginWithGoogle()
+    } catch (err: any) {
+      console.error('[GDG Auth] Google login redirect error:', err)
+      setGoogleLoading(false)
+      setErrorMessage('Failed to connect to Google authentication. Enter your participant handle below.')
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -72,7 +87,7 @@ export function ParticipantLoginModal({
         console.warn('[GDG Auth] Participant login failed:', res.message)
         setErrorMessage(res.message || 'Failed to sign in')
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('[GDG Auth] Participant login exception:', err)
       setErrorMessage('Network or server error during sign in')
     } finally {
@@ -80,19 +95,17 @@ export function ParticipantLoginModal({
     }
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-150"
-        onClick={onClose}
-      />
-
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-y-auto bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
+      onClick={onClose}
+    >
       {/* Modal Dialog Card */}
       <div
         role="dialog"
         aria-modal="true"
-        className="relative z-10 w-full max-w-sm rounded-2xl border border-[#E5E7EB] bg-white p-6 sm:p-8 shadow-[0_16px_48px_rgba(0,0,0,0.12)] text-[#111827] animate-in zoom-in-95 duration-150"
+        onClick={(e) => e.stopPropagation()}
+        className="relative z-10 w-full max-w-sm rounded-2xl border border-[#E5E7EB] bg-white p-6 sm:p-8 shadow-[0_24px_64px_rgba(0,0,0,0.18)] text-[#111827] my-auto animate-in zoom-in-95 duration-150"
       >
         {/* Close Button */}
         <button
@@ -114,7 +127,7 @@ export function ParticipantLoginModal({
             Join Arena
           </h2>
           <p className="mt-1 text-xs text-[#6B7280] leading-relaxed max-w-xs">
-            Enter your handle to compete in live technical sprints and rank on tournament leaderboards.
+            Sign in to compete in live technical sprints, solve puzzles, and rank on tournament leaderboards.
           </p>
         </div>
 
@@ -138,11 +151,21 @@ export function ParticipantLoginModal({
           {/* 1. Google OAuth */}
           <button
             type="button"
+            disabled={googleLoading}
             onClick={handleGoogleClick}
-            className="flex h-10 w-full items-center justify-center gap-2.5 rounded-xl border border-[#E5E7EB] bg-white text-xs font-medium text-[#111827] hover:border-[#111827] hover:bg-[#FAFAFA] active:scale-[0.99] transition-all cursor-pointer"
+            className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-[#E5E7EB] bg-white text-xs font-medium text-[#111827] hover:border-[#111827] hover:bg-[#FAFAFA] active:scale-[0.99] transition-all cursor-pointer disabled:opacity-60"
           >
-            <GoogleG className="h-3.5 w-3.5" />
-            <span>Continue with Google</span>
+            {googleLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin text-[#111827]" />
+                <span>Connecting to Google...</span>
+              </>
+            ) : (
+              <>
+                <GoogleG className="h-4 w-4" />
+                <span>Continue with Google</span>
+              </>
+            )}
           </button>
 
           {/* Divider */}
@@ -188,7 +211,7 @@ export function ParticipantLoginModal({
             <button
               type="submit"
               disabled={loading}
-              className="mt-1.5 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#111827] text-xs font-medium tracking-wide uppercase text-white hover:bg-black active:scale-[0.99] transition-all cursor-pointer disabled:opacity-50"
+              className="mt-1.5 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#111827] text-xs font-medium tracking-wide uppercase text-white hover:bg-black active:scale-[0.99] transition-all cursor-pointer disabled:opacity-50"
             >
               <UserCheck className="h-3.5 w-3.5" />
               <span>{loading ? 'Entering...' : 'Enter Arena'}</span>
@@ -196,6 +219,7 @@ export function ParticipantLoginModal({
           </form>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
