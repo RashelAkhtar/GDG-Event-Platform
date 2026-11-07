@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext'
 import { GdgLogoBadge, GoogleG } from './GoogleBrand'
 import { LogOut, ChevronDown } from 'lucide-react'
 import { SecurityNotificationBell } from '@/components/security/SecurityNotificationBell'
+import { ParticipantLoginModal } from '@/components/auth/ParticipantLoginModal'
 
 const emptySubscribe = () => () => {}
 function useMounted() {
@@ -19,6 +20,7 @@ function useMounted() {
 export function Navbar() {
   const { user, logout } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [isParticipantModalOpen, setIsParticipantModalOpen] = useState(false)
   const mounted = useMounted()
 
   return (
@@ -100,17 +102,30 @@ export function Navbar() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <Link
-                href="/login"
+              <button
+                type="button"
+                onClick={() => {
+                  console.log('[GDG Auth] Participant Sign in button clicked from Navbar')
+                  setIsParticipantModalOpen(true)
+                }}
                 className="flex items-center gap-2 rounded-full border border-[#111827] bg-[#111827] px-4 py-1.5 text-xs font-medium text-white transition-all hover:bg-black active:scale-[0.98] cursor-pointer"
+                title="Participant Sign In"
               >
                 <GoogleG className="h-3.5 w-3.5" />
                 <span>Sign in</span>
-              </Link>
+              </button>
             </div>
           )}
         </div>
       </div>
+
+      {/* Participant-Only Sign In Modal */}
+      {isParticipantModalOpen && (
+        <ParticipantLoginModal
+          isOpen={isParticipantModalOpen}
+          onClose={() => setIsParticipantModalOpen(false)}
+        />
+      )}
     </header>
   )
 }

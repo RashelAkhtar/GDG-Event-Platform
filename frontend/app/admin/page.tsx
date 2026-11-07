@@ -18,6 +18,7 @@ import {
 } from '@/lib/api'
 import { useWebSocket } from '@/context/WebSocketContext'
 import { useAuth } from '@/context/AuthContext'
+import { AdminLoginForm } from '@/components/auth/AdminLoginForm'
 import {
   ShieldCheck,
   Globe,
@@ -72,12 +73,19 @@ function AdminPageContent() {
   const { user, loading: authLoading } = useAuth()
   const { gameLockStates, sendLockToggle, sendWinnerCeremonyStart, sendLeaderboardReset, sendDeleteLeaderboardEntry, sendQuestionsUpdate, sendWendConfigUpdate, liveLeaderboards, subscribeToLeaderboardUpdate, connected } = useWebSocket()
 
-  // Strict Host Auth Guard: Non-admin users are immediately redirected to the dedicated credentials login
-  useEffect(() => {
-    if (!authLoading && (!user || user.role !== 'ADMIN')) {
-      router.replace('/login?tab=admin&redirect=/admin-panel/panel')
-    }
-  }, [user, authLoading, router])
+  // Dedicated Admin Login screen when not authenticated
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#FAFAFA]">
+        <div className="h-8 w-8 animate-spin rounded-full border-3 border-[#111827] border-t-transparent" />
+        <p className="mt-3 font-mono text-xs text-[#6B7280] uppercase tracking-wider">Verifying administrative access...</p>
+      </div>
+    )
+  }
+
+  if (!user || user.role !== 'ADMIN') {
+    return <AdminLoginForm />
+  }
 
   // Deep linking params (?tab=locks|quiz|wend|winners&track=web-dev-quiz|mentis-quiz)
   const tabParam = searchParams.get('tab') as 'locks' | 'quiz' | 'wend' | 'winners' | null

@@ -5,14 +5,24 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { GdgLogoBadge, GoogleG } from '@/components/ui/GoogleBrand'
-import { ShieldCheck, ArrowLeft, AlertCircle, CheckCircle2, Lock, Mail, Users, UserCheck } from 'lucide-react'
+import { ArrowLeft, AlertCircle, CheckCircle2, Mail, Users, UserCheck } from 'lucide-react'
 
 function LoginContent() {
-  const { user, loginWithGoogle, participantLogin, adminPasswordLogin, loading: authLoading } = useAuth()
+  const { user, loginWithGoogle, participantLogin, loading: authLoading } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectUrl = searchParams.get('redirect') || '/'
-  const initialTab = searchParams.get('tab') === 'admin' || searchParams.get('role') === 'admin' ? 'admin' : 'participant'
+  const urlTab = searchParams.get('tab')
+  const urlRole = searchParams.get('role')
+
+  // If someone accessed /login?tab=admin, redirect them to the dedicated /admin-panel
+  useEffect(() => {
+    if (urlTab === 'admin' || urlRole === 'admin') {
+      console.log('[GDG Auth] Redirecting admin login request to /admin-panel')
+      router.replace('/admin-panel')
+    }
+  }, [urlTab, urlRole, router])
+
   const urlError = searchParams.get('error')
   const initialError =
     urlError === 'google_not_configured' || urlError === 'oauth_failed'
@@ -21,7 +31,6 @@ function LoginContent() {
       ? `Authentication error: ${urlError}`
       : null
 
-  const [activeTab, setActiveTab] = useState<'participant' | 'admin'>(initialTab)
   const [errorMessage, setErrorMessage] = useState<string | null>(initialError)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
@@ -29,11 +38,6 @@ function LoginContent() {
   const [participantName, setParticipantName] = useState('')
   const [participantEmail, setParticipantEmail] = useState('')
   const [participantLoading, setParticipantLoading] = useState(false)
-
-  // Admin credentials state
-  const [adminEmail, setAdminEmail] = useState('')
-  const [adminPassword, setAdminPassword] = useState('')
-  const [adminLoading, setAdminLoading] = useState(false)
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -46,47 +50,42 @@ function LoginContent() {
     }
   }, [user, authLoading, router, redirectUrl])
 
+  const handleGoogleClick = () => {
+    console.log('[GDG Auth] Participant login initiated via Google OAuth')
+    loginWithGoogle()
+  }
+
   const handleParticipantSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!participantName.trim()) {
+    const cleanName = participantName.trim()
+    const cleanEmail = participantEmail.trim()
+
+    if (!cleanName) {
       setErrorMessage('Please enter your tournament handle or name.')
       return
     }
+
+    console.log('[GDG Auth] Submitting participant handle login:', cleanName, cleanEmail || '(no email)')
     setErrorMessage(null)
     setParticipantLoading(true)
 
     try {
-      const res = await participantLogin(participantName.trim(), participantEmail.trim())
+      const res = await participantLogin(cleanName, cleanEmail)
       if (res.success) {
+        console.log('[GDG Auth] Participant logged in successfully:', cleanName)
         setSuccessMessage('Handle confirmed. Entering Arena...')
         setTimeout(() => {
           router.replace(redirectUrl)
         }, 400)
       } else {
+        console.warn('[GDG Auth] Participant login failed:', res.message)
         setErrorMessage(res.message || 'Failed to sign in')
       }
+    } catch (err: any) {
+      console.error('[GDG Auth] Participant login unexpected error:', err)
+      setErrorMessage(err?.message || 'Unexpected login error')
     } finally {
       setParticipantLoading(false)
-    }
-  }
-
-  const handleAdminSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setErrorMessage(null)
-    setAdminLoading(true)
-
-    try {
-      const res = await adminPasswordLogin(adminEmail.trim(), adminPassword)
-      if (res.success) {
-        setSuccessMessage('Verified. Entering command center...')
-        setTimeout(() => {
-          router.replace(redirectUrl !== '/' ? redirectUrl : '/admin')
-        }, 500)
-      } else {
-        setErrorMessage(res.message || 'Invalid credentials')
-      }
-    } finally {
-      setAdminLoading(false)
     }
   }
 
@@ -108,50 +107,14 @@ function LoginContent() {
         <div className="flex flex-col items-center text-center">
           <GdgLogoBadge />
           <span className="font-mono text-[9px] tracking-[0.26em] uppercase text-[#9CA3AF] mt-3">
-            {activeTab === 'participant' ? 'COMMUNITY ACCESS' : 'HOST GATEWAY'}
+            COMMUNITY PARTICIPANT ACCESS
           </span>
           <h1 className="text-3xl font-normal tracking-[-0.035em] text-[#111827] mt-1">
-            {activeTab === 'participant' ? 'Join Arena' : 'Organizer Portal'}
+            Join Arena
           </h1>
           <p className="mt-1.5 text-xs text-[#6B7280] leading-relaxed max-w-xs">
-            {activeTab === 'participant'
-              ? 'Sign in to compete in real-time technical sprints and rank on official leaderboards.'
-              : 'Authorized Chapter Leads and Event Administrators only.'}
+            Sign in to compete in real-time technical sprints, submit projects, and rank on official leaderboards.
           </p>
-        </div>
-
-        {/* Tab Switcher */}
-        <div className="mt-6 flex rounded-xl bg-[#F4F4F5] p-1 border border-[#E5E7EB]">
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab('participant')
-              setErrorMessage(null)
-            }}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 font-mono text-[10px] uppercase tracking-wider transition-all cursor-pointer ${
-              activeTab === 'participant'
-                ? 'bg-white text-[#111827] shadow-xs font-semibold'
-                : 'text-[#6B7280] hover:text-[#111827]'
-            }`}
-          >
-            <Users className="h-3 w-3" />
-            <span>Participant</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab('admin')
-              setErrorMessage(null)
-            }}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 font-mono text-[10px] uppercase tracking-wider transition-all cursor-pointer ${
-              activeTab === 'admin'
-                ? 'bg-white text-[#111827] shadow-xs font-semibold'
-                : 'text-[#6B7280] hover:text-[#111827]'
-            }`}
-          >
-            <ShieldCheck className="h-3 w-3" />
-            <span>Host / Admin</span>
-          </button>
         </div>
 
         {/* Error notification */}
@@ -170,84 +133,37 @@ function LoginContent() {
           </div>
         )}
 
-        {/* TAB 1: PARTICIPANT LOGIN (Google OAuth + Instant Community Handle) */}
-        {activeTab === 'participant' && (
-          <div className="mt-6 flex flex-col gap-4 text-xs">
-            <button
-              type="button"
-              onClick={loginWithGoogle}
-              className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-[#E5E7EB] bg-white text-xs font-medium text-[#111827] hover:border-[#111827] hover:bg-[#FAFAFA] active:scale-[0.99] transition-all cursor-pointer"
-            >
-              <GoogleG className="h-4 w-4" />
-              <span>Continue with Google</span>
-            </button>
+        {/* PARTICIPANT LOGIN (Google OAuth + Community Handle) */}
+        <div className="mt-6 flex flex-col gap-4 text-xs">
+          <button
+            type="button"
+            onClick={handleGoogleClick}
+            className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-[#E5E7EB] bg-white text-xs font-medium text-[#111827] hover:border-[#111827] hover:bg-[#FAFAFA] active:scale-[0.99] transition-all cursor-pointer"
+          >
+            <GoogleG className="h-4 w-4" />
+            <span>Continue with Google</span>
+          </button>
 
-            {/* Subtle Divider */}
-            <div className="relative my-1 flex items-center justify-center">
-              <div className="w-full border-t border-[#E5E7EB]" />
-              <span className="absolute bg-white px-3 font-mono text-[9px] uppercase tracking-[0.2em] text-[#9CA3AF]">
-                or join with handle
-              </span>
-            </div>
-
-            {/* Community Handle Form */}
-            <form onSubmit={handleParticipantSubmit} autoComplete="off" className="flex flex-col gap-3">
-              <div>
-                <label className="block font-mono text-[10px] uppercase tracking-wider text-[#6B7280] mb-1.5 flex items-center gap-1.5">
-                  <Users className="h-3 w-3 text-[#9CA3AF]" />
-                  <span>Your Handle / Name</span>
-                </label>
-                <input
-                  type="text"
-                  value={participantName}
-                  onChange={(e) => setParticipantName(e.target.value)}
-                  placeholder="e.g. Alex Rivera"
-                  className="w-full rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] px-3.5 py-2.5 text-xs text-[#111827] placeholder:text-[#9CA3AF] focus:bg-white focus:outline-none focus:border-[#111827] transition-all"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block font-mono text-[10px] uppercase tracking-wider text-[#6B7280] mb-1.5 flex items-center gap-1.5">
-                  <Mail className="h-3 w-3 text-[#9CA3AF]" />
-                  <span>Email (optional)</span>
-                </label>
-                <input
-                  type="email"
-                  value={participantEmail}
-                  onChange={(e) => setParticipantEmail(e.target.value)}
-                  placeholder="alex@example.com"
-                  className="w-full rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] px-3.5 py-2.5 text-xs text-[#111827] placeholder:text-[#9CA3AF] focus:bg-white focus:outline-none focus:border-[#111827] transition-all"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={participantLoading}
-                className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#111827] text-xs font-medium tracking-wide uppercase text-white hover:bg-black active:scale-[0.99] transition-all cursor-pointer disabled:opacity-50"
-              >
-                <UserCheck className="h-3.5 w-3.5" />
-                <span>{participantLoading ? 'Entering...' : 'Enter Arena'}</span>
-              </button>
-            </form>
+          {/* Subtle Divider */}
+          <div className="relative my-1 flex items-center justify-center">
+            <div className="w-full border-t border-[#E5E7EB]" />
+            <span className="absolute bg-white px-3 font-mono text-[9px] uppercase tracking-[0.2em] text-[#9CA3AF]">
+              or join with handle
+            </span>
           </div>
-        )}
 
-        {/* TAB 2: ORGANIZER & ADMIN LOGIN (Strictly Credentials - NO Google Login Option) */}
-        {activeTab === 'admin' && (
-          <form onSubmit={handleAdminSubmit} autoComplete="off" className="mt-6 flex flex-col gap-3.5 text-xs">
+          {/* Community Handle Form */}
+          <form onSubmit={handleParticipantSubmit} autoComplete="off" className="flex flex-col gap-3">
             <div>
               <label className="block font-mono text-[10px] uppercase tracking-wider text-[#6B7280] mb-1.5 flex items-center gap-1.5">
-                <Mail className="h-3 w-3 text-[#9CA3AF]" />
-                <span>Host Identifier</span>
+                <Users className="h-3 w-3 text-[#9CA3AF]" />
+                <span>Participant Handle / Name</span>
               </label>
               <input
-                type="email"
-                name="admin-email"
-                autoComplete="off"
-                value={adminEmail}
-                onChange={(e) => setAdminEmail(e.target.value)}
-                placeholder="host@gdg.community"
+                type="text"
+                value={participantName}
+                onChange={(e) => setParticipantName(e.target.value)}
+                placeholder="e.g. Alex Rivera"
                 className="w-full rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] px-3.5 py-2.5 text-xs text-[#111827] placeholder:text-[#9CA3AF] focus:bg-white focus:outline-none focus:border-[#111827] transition-all"
                 required
               />
@@ -255,35 +171,28 @@ function LoginContent() {
 
             <div>
               <label className="block font-mono text-[10px] uppercase tracking-wider text-[#6B7280] mb-1.5 flex items-center gap-1.5">
-                <Lock className="h-3 w-3 text-[#9CA3AF]" />
-                <span>Security Key</span>
+                <Mail className="h-3 w-3 text-[#9CA3AF]" />
+                <span>Email (optional)</span>
               </label>
               <input
-                type="password"
-                name="admin-password"
-                autoComplete="new-password"
-                value={adminPassword}
-                onChange={(e) => setAdminPassword(e.target.value)}
-                placeholder="••••••••••••"
+                type="email"
+                value={participantEmail}
+                onChange={(e) => setParticipantEmail(e.target.value)}
+                placeholder="alex@example.com"
                 className="w-full rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] px-3.5 py-2.5 text-xs text-[#111827] placeholder:text-[#9CA3AF] focus:bg-white focus:outline-none focus:border-[#111827] transition-all"
-                required
               />
             </div>
 
             <button
               type="submit"
-              disabled={adminLoading}
-              className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#111827] text-xs font-medium tracking-wide uppercase text-white hover:bg-black active:scale-[0.99] transition-all cursor-pointer disabled:opacity-50"
+              disabled={participantLoading}
+              className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#111827] text-xs font-medium tracking-wide uppercase text-white hover:bg-black active:scale-[0.99] transition-all cursor-pointer disabled:opacity-50"
             >
-              <ShieldCheck className="h-3.5 w-3.5" />
-              <span>{adminLoading ? 'Authenticating...' : 'Enter Host Center'}</span>
+              <UserCheck className="h-3.5 w-3.5" />
+              <span>{participantLoading ? 'Entering...' : 'Enter Arena'}</span>
             </button>
-
-            <p className="text-center font-mono text-[9px] uppercase tracking-wider text-[#9CA3AF]">
-              Protected console • Chapter Leads only
-            </p>
           </form>
-        )}
+        </div>
       </div>
     </div>
   )
