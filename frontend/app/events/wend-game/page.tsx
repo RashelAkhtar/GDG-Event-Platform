@@ -62,7 +62,26 @@ export default function WendGamePage() {
   }, [authLoading, user, router])
 
   const startTimeRef = useRef<number | null>(null)
-  const [board, setBoard] = useState<WendBoardConfig>(() => api.getWendBoard())
+  const [board, setBoard] = useState<WendBoardConfig>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('gdg_wend_board_config')
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored)
+          const hasDummy =
+            parsed.targetWords?.some((tw: any) =>
+              ['INHI', 'LIGHT', 'CHING', 'SAHIRE', 'INHIBIT'].includes(tw.word?.toUpperCase())
+            ) || parsed.title === 'H & I Maze Corridor'
+          if (hasDummy) {
+            localStorage.removeItem('gdg_wend_board_config')
+          } else {
+            return parsed
+          }
+        } catch {}
+      }
+    }
+    return api.getWendBoard()
+  })
 
   useEffect(() => {
     void api.fetchWendBoard().then((fresh) => {

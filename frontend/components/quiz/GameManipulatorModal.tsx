@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   GdgEvent,
   QuestionData,
@@ -73,6 +73,26 @@ function GameManipulatorModalInner({
   )
   const [newWordInput, setNewWordInput] = useState('')
   const [newHintInput, setNewHintInput] = useState('')
+
+  // Live Database Hydration on Studio Opening
+  useEffect(() => {
+    if (isWend) {
+      void api.fetchWendBoard().then((fresh) => {
+        if (fresh) {
+          setWendBoard(fresh)
+          if (fresh.targetWords && fresh.targetWords.length > 0) {
+            setSelectedWordId(fresh.targetWords[0].id)
+          }
+        }
+      })
+    } else {
+      void api.fetchQuestions(event.slug).then((fresh) => {
+        if (fresh && fresh.length > 0) {
+          setQuestions(fresh)
+        }
+      })
+    }
+  }, [isWend, event.slug])
 
   // Toast feedback inside modal
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)

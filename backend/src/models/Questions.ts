@@ -1,7 +1,7 @@
 import { Schema, model, Document, Types } from "mongoose";
 
 export interface IQuestion extends Document {
-  eventId: Types.ObjectId;
+  eventId: Types.ObjectId | string;
   questionText: string;
   options: string[];
   correctOptionIndex: number; // Keep secret from client GET responses
@@ -15,9 +15,9 @@ export interface IQuestion extends Document {
 const QuestionSchema = new Schema<IQuestion>(
   {
     eventId: {
-      type: Schema.Types.ObjectId,
+      type: Schema.Types.Mixed,
       ref: "Event",
-      required: true,
+      required: false,
       index: true,
     },
     questionText: { type: String, required: true, trim: true },
@@ -27,10 +27,10 @@ const QuestionSchema = new Schema<IQuestion>(
     timeLimitSeconds: { type: Number, default: 30 },
     order: { type: Number, required: true },
   },
-  { timestamps: true },
+  { timestamps: true, strict: false }
 );
 
-// Prevent duplicate question orders in a single event
-QuestionSchema.index({ eventId: 1, order: 1 }, { unique: true });
+// Index on eventId and order
+QuestionSchema.index({ eventId: 1, order: 1 });
 
 export const Question = model<IQuestion>("Question", QuestionSchema);

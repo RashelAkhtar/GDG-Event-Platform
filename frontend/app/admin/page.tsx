@@ -654,11 +654,11 @@ function AdminPageContent() {
     showToast('Target word removed from board')
   }
 
-  const handleResetToReferenceBoard = () => {
-    const defaultBoard = api.resetWendBoard()
+  const handleResetToReferenceBoard = async () => {
+    const defaultBoard = await api.resetWendBoard()
     setWendBoard(defaultBoard)
     sendWendConfigUpdate(defaultBoard)
-    showToast('Reset Wend Board to Reference "H & I" Layout!', 'success')
+    showToast('Reset Wend Board to clean empty layout!', 'success')
   }
 
   const handleSetWendTimeLimit = (seconds: number) => {

@@ -132,9 +132,19 @@ export const getEventBySlug = async (req: Request, res: Response, _next: NextFun
 };
 
 export const getWendBoardConfig = async (_req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   try {
     if (mongoose.connection.readyState === 1) {
-      const dbBoard = await WendBoard.findOne({ slug: 'wend-game' }).lean();
+      const dbBoard = await WendBoard.findOne({
+        $or: [
+          { slug: 'wend-game' },
+          { slug: 'wend' },
+          { slug: { $regex: /wend/i } },
+        ],
+      })
+        .sort({ updatedAt: -1 })
+        .lean() || await WendBoard.findOne().sort({ updatedAt: -1 }).lean();
+
       if (dbBoard) {
         wsService.setWendBoardConfig(dbBoard);
         return res.status(200).json({ success: true, data: dbBoard });
@@ -165,36 +175,40 @@ export const updateWendBoardConfig = async (req: Request, res: Response) => {
     timeLimitSeconds: Number(board.timeLimitSeconds) || 120,
     targetWords: Array.isArray(board.targetWords) ? board.targetWords : [],
     grid: Array.isArray(board.grid) ? board.grid : [],
+    updatedAt: new Date(),
   };
 
   // 1. Persist directly in MongoDB database
+  let savedBoard: any = cleanBoard;
   try {
     if (mongoose.connection.readyState === 1) {
-      await WendBoard.findOneAndUpdate(
+      const result = await WendBoard.findOneAndUpdate(
         { slug: 'wend-game' },
         { $set: cleanBoard },
         { upsert: true, new: true, setDefaultsOnInsert: true }
-      );
+      ).lean();
+      if (result) savedBoard = result;
     }
   } catch (err) {
     console.warn('Error persisting Wend board to MongoDB:', err);
   }
 
   // 2. Sync in-memory WebSocket service and broadcast live update
-  wsService.setWendBoardConfig(cleanBoard);
+  wsService.setWendBoardConfig(savedBoard);
   wsService.broadcast({
     type: 'WEND_CONFIG_UPDATE',
-    payload: cleanBoard,
+    payload: savedBoard,
   });
 
-  if (cleanBoard.title && inMemoryEvents['wend-game']) {
-    inMemoryEvents['wend-game'].title = cleanBoard.title;
+  if (savedBoard.title && inMemoryEvents['wend-game']) {
+    inMemoryEvents['wend-game'].title = savedBoard.title;
   }
-  if (cleanBoard.description && inMemoryEvents['wend-game']) {
-    inMemoryEvents['wend-game'].description = cleanBoard.description;
+  if (savedBoard.description && inMemoryEvents['wend-game']) {
+    inMemoryEvents['wend-game'].description = savedBoard.description;
   }
 
-  res.status(200).json({ success: true, data: cleanBoard });
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.status(200).json({ success: true, data: savedBoard });
 };
 
 export const updateEvent = async (req: Request, res: Response, next: NextFunction) => {

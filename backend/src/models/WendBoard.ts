@@ -33,7 +33,7 @@ const TargetWordSchema = new Schema<ITargetWord>(
     word: { type: String, required: true, uppercase: true, trim: true },
     hint: { type: String, trim: true },
   },
-  { _id: false }
+  { _id: false, strict: false }
 );
 
 const GridCellSchema = new Schema<IGridCell>(
@@ -43,7 +43,7 @@ const GridCellSchema = new Schema<IGridCell>(
     type: { type: String, enum: ['LETTER', 'OBSTACLE'], required: true },
     letter: { type: String, uppercase: true },
   },
-  { _id: false }
+  { _id: false, strict: false }
 );
 
 const WendBoardSchema = new Schema<IWendBoard>(
@@ -56,7 +56,7 @@ const WendBoardSchema = new Schema<IWendBoard>(
     difficulty: { type: String, default: 'MEDIUM' },
     timeLimitSeconds: { type: Number, required: true, default: 120 },
     targetWords: { type: [TargetWordSchema], default: [] },
-    grid: { type: [[GridCellSchema]], default: [] },
+    grid: { type: Schema.Types.Mixed, default: [] },
   },
   { timestamps: true }
 );

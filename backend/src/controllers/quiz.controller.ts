@@ -36,6 +36,7 @@ function resolveSlug(param: string): string {
  * Authenticated admins receive answer keys; participants receive sanitized questions.
  */
 export const getQuestions = async (req: Request, res: Response, next: NextFunction) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   const eventIdOrSlug = getId(req.params.eventId);
   if (!eventIdOrSlug) {
     return res.status(400).json({ success: false, message: 'Invalid event identifier.' });
@@ -52,21 +53,38 @@ export const getQuestions = async (req: Request, res: Response, next: NextFuncti
       if (Types.ObjectId.isValid(eventIdOrSlug)) {
         targetEventId = new Types.ObjectId(eventIdOrSlug);
       } else {
-        const foundEvent = await Event.findOne({ slug });
-        if (foundEvent) targetEventId = foundEvent._id as Types.ObjectId;
+        const foundEvent = await Event.findOne({
+          $or: [{ slug }, { slug: eventIdOrSlug }],
+        }).lean();
+        if (foundEvent && foundEvent._id) targetEventId = foundEvent._id as Types.ObjectId;
       }
 
-      if (targetEventId) {
-        const selectFields = isAdmin ? '+correctOptionIndex' : '-correctOptionIndex';
-        const dbQuestions = await Question.find({ eventId: targetEventId })
-          .select(selectFields)
-          .sort({ order: 1 })
-          .lean();
+      const selectFields = isAdmin ? '+correctOptionIndex' : '-correctOptionIndex';
 
+      // Build inclusive multi-field query so any database-seeded questions are resolved
+      const queryClauses: any[] = [];
+      if (targetEventId) {
+        queryClauses.push({ eventId: targetEventId });
+      }
+      queryClauses.push({ eventId: eventIdOrSlug });
+      queryClauses.push({ eventId: slug });
+      queryClauses.push({ track: slug });
+      queryClauses.push({ track: { $regex: new RegExp(slug.replace('-quiz', ''), 'i') } });
+      queryClauses.push({ quizSlug: slug });
+      queryClauses.push({ eventSlug: slug });
+      queryClauses.push({ category: slug });
+      queryClauses.push({ category: { $regex: new RegExp(slug.replace('-quiz', ''), 'i') } });
+
+      let dbQuestions = await Question.find({ $or: queryClauses })
+        .select(selectFields)
+        .sort({ order: 1, createdAt: 1 })
+        .lean();
+
+      if (dbQuestions.length > 0) {
         // Sync local memory cache with DB truth
         inMemoryQuestions[slug] = dbQuestions;
 
-        // User side receives STRICTLY what was retrieved from database (if 0, returns [])
+        // User side receives STRICTLY what was retrieved from database
         return res.status(200).json({
           success: true,
           count: dbQuestions.length,

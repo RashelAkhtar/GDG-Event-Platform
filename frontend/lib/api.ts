@@ -479,9 +479,13 @@ export const api = {
 
   async fetchQuestions(slug: string): Promise<QuestionData[]> {
     try {
-      const res = await fetch(`${API_BASE}/events/${slug}/questions`, {
+      const res = await fetch(`${API_BASE}/events/${slug}/questions?_t=${Date.now()}`, {
         credentials: 'include',
-        headers: getAuthHeaders({ Accept: 'application/json' }),
+        headers: getAuthHeaders({
+          Accept: 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          Pragma: 'no-cache',
+        }),
       })
       if (res.ok) {
         const json = await res.json()
@@ -497,17 +501,22 @@ export const api = {
     return api.getQuestionsForSlug(slug)
   },
 
-  saveQuestionsForSlug(slug: string, questions: QuestionData[]): void {
+  async saveQuestionsForSlug(slug: string, questions: QuestionData[]): Promise<boolean> {
     if (typeof window !== 'undefined') {
       localStorage.setItem(`gdg_questions_${slug}`, JSON.stringify(questions))
       window.dispatchEvent(new CustomEvent('gdg_questions_sync', { detail: { slug, questions } }))
     }
-    fetch(`${API_BASE}/events/${slug}/questions`, {
-      method: 'PUT',
-      credentials: 'include',
-      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify({ questions }),
-    }).catch(() => {})
+    try {
+      const res = await fetch(`${API_BASE}/events/${slug}/questions`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ questions }),
+      })
+      return res.ok
+    } catch {
+      return false
+    }
   },
 
   getWendWords(): WendWord[] {
@@ -946,7 +955,17 @@ export const api = {
       const stored = localStorage.getItem('gdg_wend_board_config')
       if (stored) {
         try {
-          return JSON.parse(stored)
+          const parsed = JSON.parse(stored) as WendBoardConfig
+          // Purge any legacy dummy board containing hardcoded reference words or titles
+          const hasLegacyDummyWords = parsed.targetWords?.some((tw) =>
+            ['INHI', 'LIGHT', 'CHING', 'SAHIRE', 'INHIBIT'].includes(tw.word?.toUpperCase())
+          )
+          const hasLegacyDummyTitle = parsed.title === 'H & I Maze Corridor'
+          if (hasLegacyDummyWords || hasLegacyDummyTitle) {
+            localStorage.removeItem('gdg_wend_board_config')
+            return DEFAULT_WEND_BOARD
+          }
+          return parsed
         } catch {}
       }
     }
@@ -955,54 +974,72 @@ export const api = {
 
   async fetchWendBoard(): Promise<WendBoardConfig> {
     try {
-      const res = await fetch(`${API_BASE}/events/wend-game/board`, {
+      const res = await fetch(`${API_BASE}/events/wend-game/board?_t=${Date.now()}`, {
         credentials: 'include',
-        headers: getAuthHeaders({ Accept: 'application/json' }),
+        headers: getAuthHeaders({
+          Accept: 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          Pragma: 'no-cache',
+        }),
       })
       if (res.ok) {
         const json = await res.json()
         if (json.data && typeof json.data === 'object' && json.data !== null) {
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('gdg_wend_board_config', JSON.stringify(json.data))
-            window.dispatchEvent(new CustomEvent('gdg_wend_board_sync', { detail: json.data }))
+          const fetchedBoard = json.data as WendBoardConfig
+          // Verify it does not contain legacy dummy words
+          const isDummy = fetchedBoard.targetWords?.some((tw) =>
+            ['INHI', 'LIGHT', 'CHING', 'SAHIRE', 'INHIBIT'].includes(tw.word?.toUpperCase())
+          )
+          if (!isDummy) {
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('gdg_wend_board_config', JSON.stringify(fetchedBoard))
+              window.dispatchEvent(new CustomEvent('gdg_wend_board_sync', { detail: fetchedBoard }))
+            }
+            return fetchedBoard
           }
-          return json.data as WendBoardConfig
-        } else if (json.data === null) {
-          if (typeof window !== 'undefined') {
-            localStorage.removeItem('gdg_wend_board_config')
-            window.dispatchEvent(new CustomEvent('gdg_wend_board_sync', { detail: DEFAULT_WEND_BOARD }))
-          }
-          return DEFAULT_WEND_BOARD
         }
+        // If data is null or unpublished, clean local storage
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('gdg_wend_board_config')
+          window.dispatchEvent(new CustomEvent('gdg_wend_board_sync', { detail: DEFAULT_WEND_BOARD }))
+        }
+        return DEFAULT_WEND_BOARD
       }
     } catch {}
     return api.getWendBoard()
   },
 
-  saveWendBoard(board: WendBoardConfig): void {
+  async saveWendBoard(board: WendBoardConfig): Promise<boolean> {
     if (typeof window !== 'undefined') {
       localStorage.setItem('gdg_wend_board_config', JSON.stringify(board))
       window.dispatchEvent(new CustomEvent('gdg_wend_board_sync', { detail: board }))
     }
-    fetch(`${API_BASE}/events/wend-game/board`, {
-      method: 'PUT',
-      credentials: 'include',
-      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify(board),
-    }).catch(() => {})
+    try {
+      const res = await fetch(`${API_BASE}/events/wend-game/board`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(board),
+      })
+      return res.ok
+    } catch {
+      return false
+    }
   },
 
-  resetWendBoard(): WendBoardConfig {
+  async resetWendBoard(): Promise<WendBoardConfig> {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('gdg_wend_board_config')
       window.dispatchEvent(new CustomEvent('gdg_wend_board_sync', { detail: DEFAULT_WEND_BOARD }))
     }
-    fetch(`${API_BASE}/events/wend-game/board`, {
-      method: 'PUT',
-      credentials: 'include',
-      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify(DEFAULT_WEND_BOARD),
-    }).catch(() => {})
+    try {
+      await fetch(`${API_BASE}/events/wend-game/board`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(DEFAULT_WEND_BOARD),
+      })
+    } catch {}
     return DEFAULT_WEND_BOARD
   },
 
@@ -1067,28 +1104,9 @@ export interface WendBoardConfig {
   timeLimitSeconds?: number
 }
 
-// 8x8 Reference Board Layout matching user screenshot (H and I cutout obstacles)
-const REFERENCE_LETTERS_MATRIX: (string | null)[][] = [
-  ['C', 'H', 'H', 'I', 'N', 'G', 'R', 'S'],
-  ['T', 'I', 'I', 'K', 'M', 'E', 'E', 'H'],
-  [null, 'H', null, 'U', 'S', 'M', 'B', 'I'],
-  [null, null, null, 'S', null, null, null, 'P'],
-  [null, 'H', null, 'H', 'I', null, 'I', 'N'],
-  ['G', 'I', 'P', 'P', null, null, null, 'H'],
-  ['H', 'S', 'A', 'H', 'I', 'R', 'E', 'I'],
-  ['L', 'I', 'G', 'H', 'T', 'T', 'I', 'B'],
-]
-
-export const REFERENCE_TARGET_WORDS: WendTargetWord[] = [
-  { id: 'tw-1', word: 'INHI', hint: 'Traced on the right corridor (I > N > H > I)' },
-  { id: 'tw-2', word: 'LIGHT', hint: 'Spelled horizontally along the bottom row' },
-  { id: 'tw-3', word: 'CHING', hint: 'Spelled across the top row from left to right' },
-  { id: 'tw-4', word: 'SAHIRE', hint: 'Spelled across the lower section' },
-  { id: 'tw-5', word: 'INHIBIT', hint: 'Snake downward through the right column into corner' },
-]
-
-// Single source of truth: initialized strictly to empty array (NO dummy words)
+// Clean Initial Board Layout (Zero dummy words, Zero dummy matrix)
 export const DEFAULT_TARGET_WORDS: WendTargetWord[] = []
+export const REFERENCE_TARGET_WORDS: WendTargetWord[] = []
 
 export const DEFAULT_WEND_BOARD: WendBoardConfig = {
   id: 'wend-game',
@@ -1099,34 +1117,17 @@ export const DEFAULT_WEND_BOARD: WendBoardConfig = {
   difficulty: 'MEDIUM',
   timeLimitSeconds: 120,
   targetWords: [],
-  grid: REFERENCE_LETTERS_MATRIX.map((rowArr, r) =>
-    rowArr.map((val, c) => ({
+  grid: Array.from({ length: 8 }, (_, r) =>
+    Array.from({ length: 8 }, (_, c) => ({
       row: r,
       col: c,
-      type: val === null ? 'OBSTACLE' : 'LETTER',
-      letter: val === null ? undefined : val,
+      type: 'LETTER' as CellType,
+      letter: '',
     }))
   ),
 }
 
-export const REFERENCE_WEND_BOARD: WendBoardConfig = {
-  id: 'board-reference-hi',
-  title: 'H & I Maze Corridor',
-  description: 'Trace technical path words through the maze corridors without hitting obstacle blocks.',
-  rows: 8,
-  cols: 8,
-  difficulty: 'MEDIUM',
-  timeLimitSeconds: 120,
-  targetWords: REFERENCE_TARGET_WORDS,
-  grid: REFERENCE_LETTERS_MATRIX.map((rowArr, r) =>
-    rowArr.map((val, c) => ({
-      row: r,
-      col: c,
-      type: val === null ? 'OBSTACLE' : 'LETTER',
-      letter: val === null ? undefined : val,
-    }))
-  ),
-}
+export const REFERENCE_WEND_BOARD: WendBoardConfig = DEFAULT_WEND_BOARD
 
 // DFS Orthogonal Path Validator (ensures words are solvable on the grid)
 export function findWordPathInGrid(

@@ -143,11 +143,17 @@ class EventWebSocketService {
     // Hydrate Wend board directly from MongoDB (Single Source of Truth)
     try {
       if (mongoose.connection.readyState === 1) {
-        void WendBoard.findOne({ slug: 'wend-game' }).lean().then((dbBoard) => {
-          if (dbBoard) {
-            this.wendBoardConfig = dbBoard;
-          }
-        }).catch(() => {});
+        void WendBoard.findOne({
+          $or: [{ slug: 'wend-game' }, { slug: 'wend' }, { slug: { $regex: /wend/i } }],
+        })
+          .sort({ updatedAt: -1 })
+          .lean()
+          .then((dbBoard) => {
+            if (dbBoard) {
+              this.wendBoardConfig = dbBoard;
+            }
+          })
+          .catch(() => {});
       }
     } catch {}
 
