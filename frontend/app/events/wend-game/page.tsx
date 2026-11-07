@@ -556,7 +556,7 @@ export default function WendGamePage() {
         />
       )}
 
-      <main className="relative z-10 flex-1 flex flex-col items-center justify-between p-3 sm:p-5 max-w-lg mx-auto w-full select-none no-copy" onCopy={(e) => { e.preventDefault(); showCopyProhibitedAlert(); }} onCut={(e) => e.preventDefault()} onContextMenu={(e) => e.preventDefault()}>
+      <main className="relative flex-1 flex flex-col items-center justify-between p-3 sm:p-5 max-w-lg mx-auto w-full select-none no-copy" onCopy={(e) => { e.preventDefault(); showCopyProhibitedAlert(); }} onCut={(e) => e.preventDefault()} onContextMenu={(e) => e.preventDefault()}>
         {/* Navigation & Live Header with Admin Time Limit */}
         <div className="w-full flex items-center justify-between mb-2 gap-2">
           <Link

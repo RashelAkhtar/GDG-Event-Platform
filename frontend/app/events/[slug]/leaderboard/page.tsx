@@ -51,7 +51,7 @@ export function LeaderboardContent({ customSlug }: { customSlug?: string }) {
     <div className="min-h-screen flex flex-col bg-[#FAFAFA] text-[#111827] relative selection:bg-[#111827] selection:text-white">
       <Navbar />
 
-      <main className="relative z-10 mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pt-5 pb-16 sm:px-6 select-none">
+      <main className="relative mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pt-5 pb-16 sm:px-6 select-none">
         {/* Navigation & Refresh Bar */}
         <div className="flex items-center justify-between mb-4">
           <Link

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import {
   GdgEvent,
   QuestionData,
@@ -43,8 +44,28 @@ interface GameManipulatorModalProps {
 }
 
 export function GameManipulatorModal(props: GameManipulatorModalProps) {
-  if (!props.isOpen) return null
-  return <GameManipulatorModalInner key={`${props.event._id}-${props.isOpen}`} {...props} />
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (props.isOpen) {
+      const originalOverflow = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => {
+        document.body.style.overflow = originalOverflow
+      }
+    }
+  }, [props.isOpen])
+
+  if (!props.isOpen || !mounted || typeof document === 'undefined') return null
+
+  return createPortal(
+    <GameManipulatorModalInner key={`${props.event._id}-${props.isOpen}`} {...props} />,
+    document.body
+  )
 }
 
 function GameManipulatorModalInner({
@@ -246,17 +267,17 @@ function GameManipulatorModalInner({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-0 sm:p-4 md:p-6 animate-in fade-in duration-200 select-none"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-md p-0 sm:p-4 md:p-6 animate-in fade-in duration-200 select-none overflow-y-auto"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative flex flex-col w-full h-full sm:h-auto sm:max-h-[92vh] sm:max-w-5xl rounded-none sm:rounded-3xl bg-white text-[#111827] shadow-[0_24px_80px_rgba(0,0,0,0.18)] border-0 sm:border sm:border-[#E5E7EB] overflow-hidden"
+        className="relative flex flex-col w-full h-[100dvh] sm:h-auto sm:max-h-[92vh] sm:max-w-5xl rounded-none sm:rounded-3xl bg-white text-[#111827] shadow-[0_24px_80px_rgba(0,0,0,0.25)] border-0 sm:border sm:border-[#E5E7EB] overflow-hidden my-auto"
       >
         {/* Top Single Hairline Google 4-Color Accent Strip */}
-        <div className="google-hairline-strip" />
+        <div className="google-hairline-strip shrink-0" />
 
-        {/* Modal Masthead */}
-        <div className="flex items-center justify-between px-4 sm:px-7 py-3.5 sm:py-4 border-b border-[#E5E7EB] bg-white">
+        {/* Modal Masthead - Sticky Header */}
+        <div className="sticky top-0 z-30 flex items-center justify-between px-4 sm:px-7 py-3.5 sm:py-4 border-b border-[#E5E7EB] bg-white shrink-0 shadow-2xs">
           <div className="flex items-center gap-3 min-w-0">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#FAFAFA] border border-[#E5E7EB] text-[#111827]">
               {isWend ? (
@@ -306,7 +327,7 @@ function GameManipulatorModalInner({
         {/* Toast Alert Banner */}
         {toast && (
           <div
-            className={`px-4 sm:px-7 py-2 text-xs font-medium flex items-center gap-2 border-b transition-all ${
+            className={`shrink-0 px-4 sm:px-7 py-2 text-xs font-medium flex items-center gap-2 border-b transition-all ${
               toast.type === 'success'
                 ? 'bg-[#F0FDF4] text-[#15803D] border-[#86EFAC]'
                 : toast.type === 'error'
@@ -324,7 +345,7 @@ function GameManipulatorModalInner({
         )}
 
         {/* Studio Sub-Tabs Bar */}
-        <div className="flex items-center justify-between px-4 sm:px-7 border-b border-[#E5E7EB] bg-[#FAFAFA] overflow-x-auto no-scrollbar">
+        <div className="sticky top-[69px] z-20 flex items-center justify-between px-4 sm:px-7 border-b border-[#E5E7EB] bg-[#FAFAFA] overflow-x-auto no-scrollbar shrink-0 shadow-2xs">
           <div className="flex items-center gap-1.5 py-2">
             <button
               type="button"
@@ -384,8 +405,8 @@ function GameManipulatorModalInner({
           )}
         </div>
 
-        {/* Modal Main Body */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-7 bg-[#FAFAFA]">
+        {/* Modal Main Body - Independent Scroll Container */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-7 bg-[#FAFAFA] overscroll-contain">
           {/* TAB 1: QUESTIONS & ANSWERS (FOR QUIZ TRACKS) */}
           {!isWend && activeTab === 'questions' && (
             <div className="grid grid-cols-1 md:grid-cols-12 gap-5">

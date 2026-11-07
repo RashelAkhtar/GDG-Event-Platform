@@ -36,7 +36,7 @@ export default function HomePage() {
       <Navbar />
 
       <main
-        className="relative z-10 mx-auto flex w-full max-w-xl flex-1 flex-col px-4 pt-8 pb-20 sm:px-6 select-none"
+        className="relative mx-auto flex w-full max-w-xl flex-1 flex-col px-4 pt-8 pb-20 sm:px-6 select-none"
         onContextMenu={(e) => e.preventDefault()}
       >
         {/* Editorial Hero Header */}

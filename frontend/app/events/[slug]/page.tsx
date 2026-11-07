@@ -410,7 +410,7 @@ function QuizRunnerContent() {
         />
       )}
 
-      <main className="relative z-10 mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pt-5 pb-16 sm:px-6">
+      <main className="relative mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pt-5 pb-16 sm:px-6">
         {/* Top Back bar */}
         <div className="flex items-center justify-between mb-4">
           <Link
