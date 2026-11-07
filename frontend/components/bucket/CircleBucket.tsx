@@ -439,9 +439,9 @@ export function CircleBucket() {
       ctx.fillStyle = bgGrad
       ctx.fill()
 
-      // Glass rim border
-      ctx.lineWidth = 3
-      ctx.strokeStyle = '#DADCE0'
+      // Glass rim border - razor-thin crisp editorial boundary
+      ctx.lineWidth = 1.5
+      ctx.strokeStyle = '#E5E7EB'
       ctx.stroke()
       ctx.restore()
 
@@ -675,47 +675,47 @@ export function CircleBucket() {
 
   return (
     <div className="relative flex flex-col items-center select-none touch-none" onContextMenu={(e) => e.preventDefault()}>
-      {/* Bucket Heading & Counter Pill */}
-      <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mb-3 max-w-full px-2">
+      {/* Minimalist Editorial Status & Counter Row */}
+      <div className="flex flex-wrap items-center justify-center gap-2 mb-3.5 max-w-full px-2">
         {/* Active Count Pill */}
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1 text-xs font-semibold text-[#3C4043] border border-[#DADCE0] shadow-2xs select-none pointer-events-none">
+        <span className="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1 font-mono text-[10px] tracking-[0.2em] uppercase text-[#111827] border border-[#E5E7EB] select-none pointer-events-none">
           <span
-            className={`h-2 w-2 rounded-full ${
-              totalCount > 0 ? 'bg-[#34A853] animate-pulse' : 'bg-[#9AA0A6]'
+            className={`h-1.5 w-1.5 rounded-full ${
+              totalCount > 0 ? 'bg-[#34A853]' : 'bg-[#9CA3AF]'
             }`}
           />
-          <span>{totalCount > 0 ? `${totalCount} Active in Bucket` : 'Bucket Empty'}</span>
+          <span>{totalCount > 0 ? `${totalCount} In Arena` : 'Arena Standby'}</span>
         </span>
 
         {/* Scatter fling button */}
         {totalCount > 1 && (
           <button
             onClick={handleScatter}
-            title="Scatter balls with explosive fling"
-            className="flex h-7 w-7 items-center justify-center rounded-full border border-[#DADCE0] bg-white text-[#5F6368] shadow-2xs hover:bg-[#F8F9FA] active:scale-95 transition-all"
+            title="Disperse bubbles"
+            className="flex h-6 w-6 items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:border-[#111827] transition-all cursor-pointer"
           >
-            <RotateCcw className="h-3 w-3" />
+            <RotateCcw className="h-2.5 w-2.5" />
           </button>
         )}
 
-        {/* Socket Connection Status Pill */}
+        {/* Socket Connection Status */}
         <button
           type="button"
           onClick={reconnect}
-          title={connected ? 'Realtime WebSocket Connected' : 'Disconnected. Click to Reconnect'}
-          className={`inline-flex items-center gap-1.5 rounded-full border border-[#DADCE0] bg-white px-3 py-1 text-[11px] font-semibold transition-all active:scale-95 ${
-            connected ? 'text-[#137333] hover:bg-[#E6F4EA]' : 'text-[#C5221F] bg-[#FCE8E6]/60 hover:bg-[#FCE8E6]'
+          title={connected ? 'Realtime Connected' : 'Disconnected. Click to Reconnect'}
+          className={`inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] bg-white px-3 py-1 font-mono text-[10px] tracking-wider uppercase transition-all cursor-pointer ${
+            connected ? 'text-[#34A853] hover:border-[#34A853]' : 'text-[#EA4335] hover:border-[#EA4335]'
           }`}
         >
           {connected ? (
             <>
-              <Wifi className="h-3 w-3 text-[#34A853]" />
-              <span className="hidden xs:inline">Live Connected</span>
+              <span className="h-1.5 w-1.5 rounded-full bg-[#34A853] animate-pulse" />
+              <span>Live Sync</span>
             </>
           ) : (
             <>
-              <WifiOff className="h-3 w-3 text-[#EA4335]" />
-              <span>Tap to Reconnect</span>
+              <WifiOff className="h-2.5 w-2.5 text-[#EA4335]" />
+              <span>Reconnect</span>
             </>
           )}
         </button>
@@ -723,20 +723,18 @@ export function CircleBucket() {
 
       {/* Live Arrival Notification Toast */}
       {liveArrivalToast && (
-        <div className="mb-2 animate-in slide-in-from-top-2 duration-300 rounded-full bg-[#E6F4EA] border border-[#34A853]/40 px-3.5 py-1 text-xs font-medium text-[#137333] shadow-xs">
-          ✨ {liveArrivalToast}
+        <div className="mb-2.5 animate-in fade-in slide-in-from-top-1 duration-200 rounded-full bg-[#111827] px-3.5 py-1 font-mono text-[10px] tracking-wider uppercase text-white shadow-sm">
+          {liveArrivalToast} joined
         </div>
       )}
 
-      {/* Circular Bucket Visual Container with Ambient Google Glow */}
+      {/* Pristine Circular Vessel */}
       <div
         ref={containerRef}
-        className="relative mx-auto aspect-square w-full max-w-[300px] xs:max-w-[320px] sm:max-w-[340px] select-none touch-none" onContextMenu={(e) => e.preventDefault()}
+        className="relative mx-auto aspect-square w-full max-w-[280px] xs:max-w-[300px] sm:max-w-[320px] select-none touch-none rounded-full border border-[#E5E7EB] bg-white p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.03)]"
+        onContextMenu={(e) => e.preventDefault()}
       >
-        {/* Ambient Google Aurora Glow */}
-        <div className="pointer-events-none absolute -inset-3 rounded-full bg-gradient-to-tr from-[#4285F4]/25 via-[#FBBC04]/20 to-[#34A853]/25 blur-xl animate-aurora" />
-
-        <div className="relative h-full w-full rounded-full border border-white/80 shadow-md overflow-hidden bg-transparent">
+        <div className="relative h-full w-full rounded-full overflow-hidden bg-[#FAFAFA]">
           <canvas
             ref={canvasRef}
             width={340}
@@ -745,17 +743,20 @@ export function CircleBucket() {
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerUp}
-            className="h-full w-full touch-none select-none" onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none', touchAction: 'none' }}
+            className="h-full w-full touch-none select-none"
+            onContextMenu={(e) => e.preventDefault()}
+            onDragStart={(e) => e.preventDefault()}
+            style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none', touchAction: 'none' }}
           />
         </div>
 
-        {/* Floating Tooltip Pill following dragged/tapped ball */}
+        {/* Minimalist Floating Tooltip */}
         {activeTooltip && (
           <div
-            className="pointer-events-none absolute -translate-x-1/2 -translate-y-9 rounded-full bg-[#202124] px-3 py-1 text-[11px] font-medium text-white shadow-lg transition-all animate-in zoom-in-90"
+            className="pointer-events-none absolute -translate-x-1/2 -translate-y-8 rounded-full bg-[#111827] px-3 py-1 font-mono text-[10px] tracking-wider uppercase text-white shadow-lg transition-all animate-in zoom-in-95"
             style={{
-              left: `${Math.max(40, Math.min(300, activeTooltip.x))}px`,
-              top: `${Math.max(30, Math.min(310, activeTooltip.y))}px`,
+              left: `${Math.max(40, Math.min(280, activeTooltip.x))}px`,
+              top: `${Math.max(24, Math.min(290, activeTooltip.y))}px`,
             }}
           >
             {activeTooltip.name}

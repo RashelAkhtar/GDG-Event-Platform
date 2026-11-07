@@ -385,14 +385,7 @@ function QuizRunnerContent() {
   const currentQ = questions[currentIndex]
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F9FA] text-[#202124] relative overflow-hidden">
-      {/* Background Multi-color Aurora Mesh for Google Game Aesthetic */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-40 -left-40 h-[480px] w-[480px] rounded-full bg-[#4285F4]/10 blur-3xl animate-aurora" />
-        <div className="absolute top-1/2 -right-40 h-[480px] w-[480px] rounded-full bg-[#FBBC04]/10 blur-3xl animate-aurora" style={{ animationDelay: '-5s' }} />
-        <div className="absolute -bottom-40 left-1/3 h-[480px] w-[480px] rounded-full bg-[#34A853]/10 blur-3xl animate-aurora" style={{ animationDelay: '-10s' }} />
-      </div>
-
+    <div className="min-h-screen flex flex-col bg-[#FAFAFA] text-[#111827] relative selection:bg-[#111827] selection:text-white">
       <Navbar />
 
       {/* 5-Second Local Countdown Animation Before Game Start */}
@@ -403,133 +396,115 @@ function QuizRunnerContent() {
         />
       )}
 
-      <main className="relative z-10 mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pt-4 pb-16 sm:px-6">
+      <main className="relative z-10 mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pt-5 pb-16 sm:px-6">
         {/* Top Back bar */}
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-4">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/70 px-3.5 py-1 text-xs font-semibold text-[#5F6368] shadow-2xs backdrop-blur-md hover:bg-white hover:text-[#202124] transition-all"
+            className="inline-flex items-center gap-1.5 font-mono text-[10px] tracking-[0.2em] uppercase text-[#6B7280] hover:text-[#111827] transition-colors"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            <span>Exit Quiz</span>
+            <ArrowLeft className="h-3 w-3" />
+            <span>Exit Track</span>
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <SoundToggle />
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#1A73E8]/20 bg-[#E8F0FE]/90 px-3.5 py-1 text-xs font-bold text-[#1967D2] shadow-2xs backdrop-blur-md">
-              <Sparkles className="h-3 w-3 text-[#1A73E8]" />
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] bg-white px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-[#111827]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#1A73E8]" />
               <span>{event?.title}</span>
             </span>
           </div>
         </div>
 
-        {/* --- AESTHETIC WAIT MESSAGE & SESSION INFO SCREEN --- */}
+        {/* --- EDITORIAL COMPLETED SESSION RECEIPT SCREEN --- */}
         {isMySession && completedSession ? (
-          <div className="relative my-auto flex flex-col items-center rounded-[36px] border border-white/90 bg-white/95 p-7 sm:p-9 text-center shadow-[0_15px_45px_rgba(0,0,0,0.06)] backdrop-blur-2xl animate-in zoom-in-95 duration-400 overflow-hidden">
-            {/* Top Google 4-Color Accent Ribbon */}
-            <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-[#4285F4] via-[#EA4335] via-[#FBBC04] to-[#34A853]" />
-
+          <div className="relative my-auto flex flex-col items-center rounded-2xl border border-[#E5E7EB] bg-white p-7 sm:p-9 text-center shadow-[0_12px_40px_rgba(0,0,0,0.03)] animate-in fade-in zoom-in-95 duration-200">
             {/* Status Pill Badge */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#34A853]/30 bg-[#E6F4EA] px-4 py-1.5 text-xs font-semibold text-[#137333] shadow-2xs animate-badge-glow">
-              <span className="h-2 w-2 rounded-full bg-[#34A853] animate-ping" />
-              <span>Responses Securely Recorded</span>
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-[#34A853]/40 bg-[#F0FDF4] px-3.5 py-1 font-mono text-[10px] tracking-wider uppercase text-[#15803D]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#34A853]" />
+              <span>Responses Recorded</span>
             </div>
 
-            {/* Pulsing Central Clock Icon with Concentric Ripples */}
-            <div className="my-6 relative flex h-24 w-24 items-center justify-center">
-              <div className="absolute inset-0 rounded-full border-2 border-[#1A73E8]/30 animate-ripple-1 pointer-events-none" />
-              <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#E8F0FE] to-[#D2E3FC] text-[#1A73E8] shadow-lg ring-6 ring-[#E8F0FE]/60 animate-float">
-                <Clock className="h-10 w-10 text-[#1A73E8]" />
-              </div>
-            </div>
-
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#202124]">
-              Session Completed!
+            <h2 className="text-3xl font-normal tracking-[-0.035em] text-[#111827] mt-5">
+              Session Complete
             </h2>
-            <p className="mt-2 text-xs sm:text-sm text-[#5F6368] max-w-xs leading-relaxed">
-              Your quiz responses are locked and evaluated. Wait for the live broadcast ceremony to reveal the podium champions.
+            <p className="mt-1.5 text-xs text-[#6B7280] max-w-xs leading-relaxed">
+              Your answers have been evaluated and locked into tournament standings.
             </p>
 
-            {/* Session Info Receipt Card (Google Pass Style) */}
-            <div className="my-6 w-full max-w-sm rounded-[24px] border border-[#DADCE0] bg-gradient-to-b from-white to-[#F8F9FA] p-4 text-left shadow-2xs">
-              <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-[#DADCE0]">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#5F6368] flex items-center gap-1.5">
-                  <Award className="h-3.5 w-3.5 text-[#1A73E8]" />
-                  <span>Official Session Receipt</span>
+            {/* Session Info Receipt Card */}
+            <div className="my-6 w-full max-w-sm rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] p-4 text-left">
+              <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-[#E5E7EB]">
+                <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#6B7280]">
+                  OFFICIAL RECEIPT
                 </span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-0.5 text-[10px] font-bold text-[#1A73E8] border border-[#DADCE0] shadow-2xs font-mono">
-                  {completedSession.sessionId.slice(0, 16)}
+                <span className="font-mono text-[9px] text-[#9CA3AF]">
+                  {completedSession.sessionId.slice(0, 14)}
                 </span>
               </div>
 
               <div className="space-y-2 text-xs">
                 <div className="flex justify-between items-center">
-                  <span className="text-[#5F6368]">Event Track:</span>
-                  <span className="font-semibold text-[#202124]">{completedSession.eventTitle || event?.title}</span>
+                  <span className="text-[#6B7280]">Track:</span>
+                  <span className="font-medium text-[#111827]">{completedSession.eventTitle || event?.title}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-[#5F6368]">Participant:</span>
-                  <span className="font-semibold text-[#202124]">{completedSession.userName}</span>
+                  <span className="text-[#6B7280]">Participant:</span>
+                  <span className="font-medium text-[#111827]">{completedSession.userName}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-[#5F6368]">Questions Answered:</span>
-                  <span className="font-semibold text-[#202124]">{completedSession.totalItems} questions</span>
+                  <span className="text-[#6B7280]">Questions:</span>
+                  <span className="font-medium text-[#111827]">{completedSession.totalItems} Completed</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-[#5F6368]">Completion Time:</span>
-                  <span className="font-semibold text-[#137333]">
+                  <span className="text-[#6B7280]">Duration:</span>
+                  <span className="font-mono font-medium text-[#111827]">
                     {formatDuration(completedSession.durationMs)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-[#5F6368]">Evaluation Status:</span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[#FEF7E0] px-2.5 py-0.5 text-[10px] font-bold text-[#B06000]">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#FBBC04] animate-pulse" />
-                    Pending Host Ceremony
+                  <span className="text-[#6B7280]">Status:</span>
+                  <span className="inline-flex items-center gap-1 font-mono text-[10px] text-[#B45309] uppercase">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#FBBC04]" />
+                    Awaiting Ceremony
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Live WebSocket Broadcast Notice */}
-            <div className="flex items-center justify-center gap-2 rounded-full border border-[#DADCE0] bg-white px-4 py-2 text-xs font-semibold text-[#3C4043] shadow-xs mb-5">
-              <Sparkles className="h-3.5 w-3.5 text-[#FBBC04] animate-spin" style={{ animationDuration: '6s' }} />
-              <span>Winners will broadcast live on this screen</span>
-            </div>
-
-            {/* Actions: ONLY Redirect Home (No Replay / Play Again on user side) */}
+            {/* Actions */}
             <div className="flex w-full max-w-sm justify-center">
               <Link
                 href="/"
-                className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#1A73E8] to-[#4285F4] text-xs font-bold text-white shadow-md shadow-[#1A73E8]/25 hover:from-[#1765CC] hover:to-[#1A73E8] active:scale-95 transition-all"
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#111827] text-xs font-medium uppercase tracking-wider text-white hover:bg-black transition-all cursor-pointer"
               >
-                <Home className="h-4 w-4" />
-                <span>Redirect Home</span>
-                <ArrowRight className="h-4 w-4" />
+                <Home className="h-3.5 w-3.5" />
+                <span>Return to Hub</span>
               </Link>
             </div>
           </div>
         ) : questions.length === 0 ? (
           /* --- EMPTY QUESTIONS STATE --- */
-          <div className="my-auto flex flex-col items-center rounded-3xl border border-[#DADCE0] bg-white p-8 text-center shadow-sm">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#E8F0FE] text-[#1A73E8] mb-4">
-              <HelpCircle className="h-8 w-8 text-[#1A73E8]" />
-            </div>
-            <h2 className="text-xl font-medium tracking-tight text-[#202124]">
+          <div className="my-auto flex flex-col items-center rounded-2xl border border-[#E5E7EB] bg-white p-8 text-center">
+            <span className="h-2 w-2 rounded-full bg-[#1A73E8] mb-3" />
+            <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-[#9CA3AF] mb-1">
+              STATUS // UNPUBLISHED
+            </span>
+            <h2 className="text-2xl font-normal tracking-[-0.03em] text-[#111827]">
               No Questions Published Yet
             </h2>
-            <p className="mt-1.5 text-xs text-[#5F6368] max-w-xs leading-relaxed">
-              The administrator has not added questions for this challenge yet. Check back soon or visit the Admin portal to publish new questions.
+            <p className="mt-1.5 text-xs text-[#6B7280] max-w-xs leading-relaxed">
+              The organizer has not yet added questions to this arena track. Check back soon.
             </p>
-            <div className="mt-6 flex flex-col sm:flex-row gap-2.5 w-full max-w-xs">
+            <div className="mt-6 flex gap-2.5 w-full max-w-xs">
               <Link
                 href="/"
-                className="flex h-11 flex-1 items-center justify-center rounded-full border border-[#DADCE0] bg-white text-xs font-medium text-[#3C4043] hover:bg-[#F8F9FA]"
+                className="flex h-11 flex-1 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white text-xs font-medium text-[#111827] hover:border-[#111827] transition-all"
               >
                 Back to Hub
               </Link>
               <Link
                 href={`/events/${slug}/leaderboard`}
-                className="flex h-11 flex-1 items-center justify-center rounded-full bg-[#1A73E8] text-xs font-medium text-white shadow-xs hover:bg-[#1765CC]"
+                className="flex h-11 flex-1 items-center justify-center rounded-xl bg-[#111827] text-xs font-medium text-white hover:bg-black transition-all"
               >
                 Standings
               </Link>
@@ -541,48 +516,45 @@ function QuizRunnerContent() {
             {/* Progress Bar & Timer Header */}
             <div className="flex items-center justify-between py-2">
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-[#1A73E8]/20 bg-white/90 backdrop-blur-md px-3.5 py-1 text-xs font-bold text-[#1967D2] shadow-2xs">
-                  <span>Question {currentIndex + 1} of {questions.length}</span>
+                <span className="font-mono text-[11px] tracking-wider uppercase text-[#111827] font-medium">
+                  Question {currentIndex + 1} / {questions.length}
                 </span>
-                <span className="hidden xs:inline-flex items-center rounded-full bg-[#FEF7E0] border border-[#FBBC04]/40 px-2.5 py-0.5 text-[11px] font-bold text-[#B06000]">
-                  +{currentQ?.points || 100} pts
+                <span className="font-mono text-[10px] text-[#9CA3AF]">
+                  • {currentQ?.points || 100} PTS
                 </span>
               </div>
 
-              {/* Countdown Timer with color warning */}
+              {/* Countdown Timer */}
               <div
-                className={`flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-bold shadow-2xs backdrop-blur-md transition-all ${
+                className={`flex items-center gap-1.5 rounded-full px-3 py-1 font-mono text-xs font-medium transition-all ${
                   timeLeft <= 5
-                    ? 'bg-[#FCE8E6] text-[#C5221F] ring-2 ring-[#EA4335]/40 animate-pulse'
-                    : 'bg-white/90 border border-[#DADCE0] text-[#3C4043]'
+                    ? 'bg-[#FEF2F2] text-[#DC2626] border border-[#FEE2E2]'
+                    : 'bg-white border border-[#E5E7EB] text-[#111827]'
                 }`}
               >
-                <Clock className={`h-3.5 w-3.5 ${timeLeft <= 5 ? 'text-[#EA4335]' : 'text-[#1A73E8]'}`} />
+                <Clock className={`h-3 w-3 ${timeLeft <= 5 ? 'text-[#DC2626]' : 'text-[#6B7280]'}`} />
                 <span>{timeLeft}s</span>
               </div>
             </div>
 
-            {/* Google Gradient Linear Progress Bar */}
-            <div className="h-2 w-full rounded-full bg-[#E8EAED]/80 overflow-hidden my-2 shadow-inner">
+            {/* Hairline Progress Line */}
+            <div className="h-1 w-full rounded-full bg-[#E5E7EB] overflow-hidden my-2">
               <div
-                className="h-full bg-gradient-to-r from-[#4285F4] via-[#EA4335] via-[#FBBC04] to-[#34A853] transition-all duration-300 shadow-[0_0_10px_rgba(66,133,244,0.4)]"
+                className="h-full bg-[#1A73E8] transition-all duration-300"
                 style={{
                   width: `${((currentIndex + 1) / questions.length) * 100}%`,
                 }}
               />
             </div>
 
-            {/* Question Card - Modern Light Google Architecture */}
-            <div className="relative mt-3 flex-1 rounded-2xl border border-[#DADCE0] bg-white p-6 sm:p-8 shadow-sm flex flex-col justify-between overflow-hidden select-none no-copy" onCopy={(e) => { e.preventDefault(); showCopyProhibitedAlert(); }} onCut={(e) => e.preventDefault()} onContextMenu={(e) => e.preventDefault()}>
-              {/* Top Google Accent Line */}
-              <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-[#4285F4] via-[#EA4335] via-[#FBBC04] to-[#34A853]" />
-
+            {/* Question Card - Pristine Editorial Architecture */}
+            <div className="relative mt-3 flex-1 rounded-2xl border border-[#E5E7EB] bg-white p-6 sm:p-8 flex flex-col justify-between overflow-hidden select-none no-copy" onCopy={(e) => { e.preventDefault(); showCopyProhibitedAlert(); }} onCut={(e) => e.preventDefault()} onContextMenu={(e) => e.preventDefault()}>
               <div>
-                <h3 className="text-base sm:text-lg font-bold leading-snug text-[#202124] select-none pointer-events-none">
+                <h3 className="text-xl sm:text-2xl font-normal tracking-[-0.03em] leading-snug text-[#111827] select-none pointer-events-none">
                   {currentQ?.questionText}
                 </h3>
 
-                {/* 4 Options with Structured Styling & Rounded Modern Corners */}
+                {/* 4 Options with Structured Styling */}
                 <div className="mt-6 flex flex-col gap-2.5">
                   {currentQ?.options.map((option, optIdx) => {
                     const isSelected = selectedAnswers[currentIndex] === optIdx
@@ -593,30 +565,30 @@ function QuizRunnerContent() {
                         key={optIdx}
                         type="button"
                         onClick={() => handleSelectOption(optIdx)}
-                        className={`group relative flex min-h-[52px] w-full items-center justify-between gap-3.5 rounded-xl border px-4 py-3 text-left transition-all duration-150 cursor-pointer ${
+                        className={`group relative flex min-h-[50px] w-full items-center justify-between gap-3.5 rounded-xl border px-4 py-3 text-left transition-all duration-150 cursor-pointer ${
                           isSelected
-                            ? 'border-[#1A73E8] bg-[#E8F0FE] text-[#1967D2] shadow-xs'
-                            : 'border-[#DADCE0] bg-white text-[#3C4043] hover:border-[#1A73E8] hover:bg-[#F8F9FA]'
+                            ? 'border-[#111827] bg-[#F4F4F5] text-[#111827]'
+                            : 'border-[#E5E7EB] bg-white text-[#374151] hover:border-[#9CA3AF] hover:bg-[#FAFAFA]'
                         }`}
                       >
                         <div className="flex items-center gap-3">
                           <span
-                            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold transition-all ${
+                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg font-mono text-[11px] font-medium transition-all ${
                               isSelected
-                                ? 'bg-[#1A73E8] text-white'
-                                : 'bg-[#F1F3F4] text-[#5F6368] group-hover:bg-[#E8EAED]'
+                                ? 'bg-[#111827] text-white'
+                                : 'bg-[#F4F4F5] text-[#6B7280]'
                             }`}
                           >
                             {optionLetter}
                           </span>
-                          <span className="text-xs sm:text-sm font-semibold leading-relaxed">
+                          <span className="text-xs sm:text-[13px] font-normal leading-relaxed">
                             {option}
                           </span>
                         </div>
 
                         {isSelected && (
-                          <span className="shrink-0 flex h-5 w-5 items-center justify-center rounded-full bg-[#1A73E8] text-white animate-in zoom-in-75">
-                            <CheckCircle2 className="h-3.5 w-3.5" />
+                          <span className="shrink-0 flex h-4 w-4 items-center justify-center rounded-full bg-[#111827] text-white">
+                            <CheckCircle2 className="h-3 w-3" />
                           </span>
                         )}
                       </button>
@@ -626,14 +598,14 @@ function QuizRunnerContent() {
               </div>
 
               {/* Bottom Nav: Previous / Next / Submit */}
-              <div className="mt-8 flex items-center justify-between pt-4 border-t border-[#F1F3F4]">
+              <div className="mt-8 flex items-center justify-between pt-4 border-t border-[#F3F4F6]">
                 <button
                   type="button"
                   disabled={currentIndex === 0}
                   onClick={() => setCurrentIndex((idx) => idx - 1)}
-                  className="inline-flex h-11 items-center gap-1.5 rounded-full px-5 text-xs font-semibold text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] disabled:opacity-30 disabled:pointer-events-none transition-all active:scale-95"
+                  className="inline-flex h-10 items-center gap-1.5 rounded-xl px-4 font-mono text-[11px] uppercase tracking-wider text-[#6B7280] hover:text-[#111827] disabled:opacity-25 disabled:pointer-events-none transition-all cursor-pointer"
                 >
-                  <ArrowLeft className="h-3.5 w-3.5" />
+                  <ArrowLeft className="h-3 w-3" />
                   <span>Previous</span>
                 </button>
 
@@ -641,10 +613,10 @@ function QuizRunnerContent() {
                   <button
                     type="button"
                     onClick={() => setCurrentIndex((idx) => idx + 1)}
-                    className="inline-flex h-11 items-center gap-2 rounded-full bg-[#1A73E8] px-6 text-xs font-semibold text-white shadow-xs hover:bg-[#1765CC] hover:shadow-md active:scale-95 transition-all"
+                    className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-[#111827] px-5 font-mono text-[11px] uppercase tracking-wider text-white hover:bg-black transition-all cursor-pointer"
                   >
                     <span>Next</span>
-                    <ArrowRight className="h-3.5 w-3.5" />
+                    <ArrowRight className="h-3 w-3" />
                   </button>
                 ) : (
                   <button

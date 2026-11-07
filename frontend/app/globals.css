@@ -1,26 +1,27 @@
 @import "tailwindcss";
 
 :root {
-  --background: #F8F9FA;
-  --foreground: #202124;
+  --background: #FAFAFA;
+  --foreground: #111827;
   --google-blue: #1A73E8;
   --google-red: #EA4335;
   --google-yellow: #FBBC04;
   --google-green: #34A853;
-  --google-gray: #5F6368;
-  --google-border: #DADCE0;
+  --google-gray: #4B5563;
+  --google-border: #E5E7EB;
+  --hairline: #E5E7EB;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans), "Google Sans", "Google Sans Text", Roboto, system-ui, sans-serif;
+  --font-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 /* =========================================================================
-   MODERN GOOGLE MATERIAL DESIGN 3 ARCHITECTURE
-   Clean, light, airy surfaces with soft rounded geometry and Google 4-color language
+   HIGH-EDITORIAL MINIMALIST ARCHITECTURE
+   Pristine paper surfaces, dramatic typography hierarchy, Google color punctuation
    ========================================================================= */
 
 body {
@@ -29,171 +30,92 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.011em;
 }
 
-/* Polished Google Rounded Scrollbar */
+/* Polished Editorial Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #DADCE0;
+  background: #E5E7EB;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #9AA0A6;
+  background: #9CA3AF;
 }
 
 /* =========================================================================
-   AESTHETIC & STRUCTURED CSS BACKGROUND ANIMATIONS
+   EDITORIAL TYPOGRAPHY & SURFACE UTILITIES
    ========================================================================= */
 
-/* 1. Precision Technical Grid with Dynamic Subtle Ambient Gridlines */
-.bg-tech-grid {
-  background-image: 
-    linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
-  background-size: 32px 32px;
+.editorial-headline {
+  letter-spacing: -0.035em;
+  font-weight: 500;
+  line-height: 1.15;
+  color: #111827;
 }
 
-.bg-tech-dots {
-  background-image: radial-gradient(rgba(26, 115, 232, 0.12) 1px, transparent 1px);
-  background-size: 24px 24px;
+.editorial-kicker {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #6B7280;
+  font-weight: 600;
 }
 
-/* 2. Living Ambient Organic Google Aurora Mesh */
-@keyframes ambientAurora {
-  0% {
-    transform: translate(0px, 0px) scale(1);
-    opacity: 0.65;
-  }
-  33% {
-    transform: translate(30px, -25px) scale(1.12);
-    opacity: 0.85;
-  }
-  66% {
-    transform: translate(-25px, 20px) scale(0.92);
-    opacity: 0.7;
-  }
-  100% {
-    transform: translate(0px, 0px) scale(1);
-    opacity: 0.65;
-  }
+.hairline-border {
+  border: 1px solid #E5E7EB;
 }
 
-.animate-aurora {
-  animation: ambientAurora 16s ease-in-out infinite;
-  will-change: transform, opacity;
+.hairline-divider {
+  height: 1px;
+  background-color: #E5E7EB;
+  width: 100%;
 }
 
-/* 3. Subtle Laser Sweep Horizon / Progress Glow */
-@keyframes laserSweep {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+.editorial-card {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.animate-laser {
+.editorial-card:hover {
+  border-color: #D1D5DB;
+  box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
+}
+
+/* Single Hairline Google 4-Color Accent Strip */
+.google-hairline-strip {
+  height: 2px;
   background: linear-gradient(
     90deg,
-    transparent 0%,
-    rgba(66, 133, 244, 0.6) 25%,
-    rgba(234, 67, 53, 0.6) 50%,
-    rgba(251, 188, 4, 0.6) 75%,
-    transparent 100%
+    #1A73E8 0%,
+    #1A73E8 25%,
+    #EA4335 25%,
+    #EA4335 50%,
+    #FBBC04 50%,
+    #FBBC04 75%,
+    #34A853 75%,
+    #34A853 100%
   );
-  background-size: 200% 100%;
-  animation: laserSweep 4s linear infinite;
 }
 
-/* 4. Concentric Square Radar Waves (Sharp Geometry) */
-@keyframes squareRipple {
-  0% {
-    transform: scale(0.85);
-    opacity: 0.9;
-  }
-  50% {
-    opacity: 0.4;
-  }
-  100% {
-    transform: scale(2.2);
-    opacity: 0;
-  }
-}
-
-.animate-ripple-1 {
-  animation: squareRipple 2.4s cubic-bezier(0.1, 0.7, 0.1, 1) infinite;
-}
-.animate-ripple-2 {
-  animation: squareRipple 2.4s cubic-bezier(0.1, 0.7, 0.1, 1) infinite;
-  animation-delay: 0.8s;
-}
-.animate-ripple-3 {
-  animation: squareRipple 2.4s cubic-bezier(0.1, 0.7, 0.1, 1) infinite;
-  animation-delay: 1.6s;
-}
-
-/* 5. Sharp Numeric Count Pop */
-@keyframes countPop {
-  0% {
-    transform: scale(0.6);
-    opacity: 0;
-  }
-  50% {
-    transform: scale(1.15);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.animate-count-pop {
-  animation: countPop 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* 6. Continuous Floating Mesh Spheres */
-@keyframes floatMesh1 {
-  0%, 100% { transform: translate(0px, 0px); }
-  50% { transform: translate(40px, -30px); }
-}
-@keyframes floatMesh2 {
-  0%, 100% { transform: translate(0px, 0px); }
-  50% { transform: translate(-35px, 35px); }
-}
-@keyframes floatMesh3 {
-  0%, 100% { transform: translate(0px, 0px); }
-  50% { transform: translate(30px, 40px); }
-}
-
-.animate-mesh-1 { animation: floatMesh1 22s ease-in-out infinite; will-change: transform; }
-.animate-mesh-2 { animation: floatMesh2 26s ease-in-out infinite; will-change: transform; }
-.animate-mesh-3 { animation: floatMesh3 24s ease-in-out infinite; will-change: transform; }
-
-/* 7. Structured Crisp Panels */
-.glass-panel {
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid #DADCE0;
-  box-shadow: 0 1px 3px 0 rgba(60, 64, 67, 0.08);
-}
-
-.glass-card {
-  background: #FFFFFF;
-  border: 1px solid #DADCE0;
-  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.06);
+/* Minimalist Glass Filter for Fixed Nav */
+.editorial-glass {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 /* =========================================================================
-   PRECISION SHARP LOCK TOGGLE (No rounded corners, clean geometric badge)
+   TACTILE MINIMALIST CONTROLS
    ========================================================================= */
 
 .btn-lock {
@@ -202,26 +124,25 @@ body {
   align-items: center;
   justify-content: center;
   background: #EA4335;
-  width: 54px;
-  height: 54px;
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
   box-sizing: border-box;
   padding: 0;
   margin: 0;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px -1px rgba(234, 67, 53, 0.35);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
-  border: 1px solid rgba(234, 67, 53, 0.5);
+  border: 1px solid rgba(234, 67, 53, 0.3);
 }
 
 .btn-lock:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px -2px rgba(234, 67, 53, 0.5);
+  transform: scale(1.04);
 }
 
 .btn-lock:active {
-  transform: translateY(1px);
+  transform: scale(0.96);
 }
 
 .btn-lock.btn-lock-readonly {
@@ -247,7 +168,7 @@ body {
   stroke-width: 3.5;
   stroke-linejoin: miter;
   stroke-linecap: square;
-  stroke-dasharray: 48; /* LOCKED: Solid fully-closed shackle */
+  stroke-dasharray: 48;
   transition: all 0.3s ease;
 }
 
@@ -266,26 +187,13 @@ body {
 
 #inpLock:checked + label,
 .inp-lock:checked + .btn-lock {
-  background: #1E8E3E;
-  border-color: rgba(30, 142, 62, 0.5);
-  box-shadow: 0 2px 8px -1px rgba(30, 142, 62, 0.35);
-}
-
-#inpLock:checked + label:hover,
-.inp-lock:checked + .btn-lock:hover {
-  box-shadow: 0 4px 12px -2px rgba(30, 142, 62, 0.5);
-}
-
-#inpLock:checked + label svg .bling,
-.inp-lock:checked + .btn-lock svg .bling {
-  animation: bling6132 0.3s linear forwards;
-  animation-delay: 0.15s;
+  background: #34A853;
+  border-color: rgba(52, 168, 83, 0.3);
 }
 
 #inpLock:checked + label svg .lock,
 .inp-lock:checked + .btn-lock svg .lock {
-  stroke-dasharray: 36; /* UNLOCKED: Open shackle with clear gap */
-  animation: locked 0.25s linear forwards;
+  stroke-dasharray: 36;
 }
 
 #inpLock:checked + label svg .lockb,
@@ -293,16 +201,7 @@ body {
   transform: rotate(6deg);
 }
 
-@keyframes bling6132 {
-  50% { stroke-dasharray: 3; stroke-dashoffset: 12; }
-  100% { stroke-dasharray: 3; stroke-dashoffset: 9; }
-}
-
-@keyframes locked {
-  50% { transform: translateY(1px); }
-}
-
-/* Mobile Touch Isolation */
+/* Touch Arena Isolation */
 .touch-arena {
   touch-action: none;
   -webkit-touch-callout: none;
@@ -311,10 +210,7 @@ body {
   overscroll-behavior: contain;
 }
 
-/* =========================================================================
-   ANTI-COPY & SUPPRESSION
-   ========================================================================= */
-
+/* Suppression */
 *,
 *::before,
 *::after {
@@ -336,6 +232,6 @@ svg {
 }
 
 ::selection {
-  background: transparent;
-  color: inherit;
+  background: #111827;
+  color: #FFFFFF;
 }

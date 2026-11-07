@@ -288,46 +288,44 @@ export function DualQuizSection({
     }
 
     const enterHref = isAuthed ? targetHref : `/login?redirect=${encodeURIComponent(targetHref)}`
+    const trackIndex = isWeb ? '01' : isMentis ? '02' : '03'
+    const accentDot = isWeb ? 'bg-[#1A73E8]' : isMentis ? 'bg-[#FBBC04]' : 'bg-[#34A853]'
 
     return (
       <div
         onClick={handleCardClick}
-        className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border transition-all duration-300 p-5 sm:p-6 cursor-pointer bg-white ${
+        className={`group relative flex flex-col justify-between rounded-2xl border transition-all duration-300 p-6 sm:p-7 cursor-pointer bg-white ${
           isLive
-            ? 'border-[#34A853]/60 shadow-sm hover:shadow-md hover:border-[#1A73E8]'
-            : 'border-[#DADCE0] hover:border-[#1A73E8] hover:shadow-sm'
-        } ${isAdmin ? 'hover:ring-1 hover:ring-[#1A73E8]' : ''}`}
+            ? 'border-[#E5E7EB] hover:border-[#111827] hover:shadow-[0_16px_40px_rgba(0,0,0,0.04)]'
+            : 'border-[#E5E7EB] hover:border-[#9CA3AF]'
+        } ${isAdmin ? 'hover:ring-1 hover:ring-[#111827]' : ''}`}
         title={isAdmin ? 'Click to open Game in Admin Panel' : isLive ? 'Click to play' : 'Challenge Locked'}
       >
-        {/* Subtle Architectural Tech Grid */}
-        <div className="pointer-events-none absolute inset-0 bg-tech-dots opacity-[0.06]" />
-
-        {/* Top Status Accent Line */}
-        <div className={`absolute top-0 inset-x-0 h-1 ${topAccentColor}`} />
-
-        <div className="relative z-10 flex flex-col gap-3.5">
-          {/* Header Row: Track Badge + Studio Link + Compact Lock Status Pill */}
+        <div className="relative z-10 flex flex-col gap-3">
+          {/* Header Row: Editorial Track Marker + Lock Status */}
           <div className="flex items-center justify-between gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#DADCE0] bg-[#F8F9FA] px-3 py-1 text-xs font-semibold text-[#3C4043] tracking-wide">
-              {icon}
-              <span>{trackLabel}</span>
-            </span>
+            <div className="flex items-center gap-2">
+              <span className={`h-2 w-2 rounded-full ${accentDot}`} />
+              <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-[#6B7280] font-medium">
+                {trackIndex} // {trackLabel}
+              </span>
+            </div>
 
-            <div className="flex items-center gap-1.5">
-              {/* Dedicated Studio Button for Host/Admin */}
+            <div className="flex items-center gap-2">
+              {/* Studio Button for Host */}
               {isAdmin && (
                 <Link
                   href={adminPanelHref}
                   onClick={(e) => e.stopPropagation()}
-                  className="inline-flex items-center gap-1 rounded-full border border-[#DADCE0] bg-white px-2.5 py-1 text-xs font-semibold text-[#1A73E8] hover:border-[#1A73E8] hover:bg-[#E8F0FE] transition-all"
-                  title="Open Full Game Studio in Admin Command Center"
+                  className="inline-flex items-center gap-1 rounded-full border border-[#E5E7EB] bg-white px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-[#111827] hover:border-[#111827] transition-all"
+                  title="Open Game Studio"
                 >
-                  <Maximize2 className="h-3 w-3" />
+                  <Maximize2 className="h-2.5 w-2.5" />
                   <span>Studio</span>
                 </Link>
               )}
 
-              {/* Compact, Aesthetic Lock Status Toggle */}
+              {/* Minimalist Status Indicator */}
               <div
                 onClick={(e) => {
                   if (isAdmin) {
@@ -335,57 +333,41 @@ export function DualQuizSection({
                     toggleEventLock(event, isLive)
                   }
                 }}
-                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold transition-all ${
-                  isAdmin ? 'cursor-pointer hover:shadow-2xs' : ''
+                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-wider transition-all ${
+                  isAdmin ? 'cursor-pointer hover:border-[#111827]' : ''
                 } ${
                   isLive
-                    ? 'border-[#34A853]/40 bg-[#E6F4EA] text-[#137333]'
-                    : 'border-[#DADCE0] bg-[#F1F3F4] text-[#5F6368]'
+                    ? 'border-[#34A853]/40 bg-[#F0FDF4] text-[#15803D]'
+                    : 'border-[#E5E7EB] bg-[#F9FAFB] text-[#6B7280]'
                 }`}
                 title={isAdmin ? (isLive ? 'Click to switch to LOCKED' : 'Click to GO LIVE') : isLive ? 'Live Arena' : 'Locked Arena'}
               >
-                <AnimatedLockToggle
-                  id={`arena-lock-${event.slug}`}
-                  checked={isLive}
-                  isLive={isLive}
-                  isAdmin={isAdmin}
-                  disabled={isUpdating}
-                  onChange={() => toggleEventLock(event, isLive)}
-                  size="xs"
-                />
-                <span className="tracking-wide">{isLive ? 'LIVE' : 'LOCKED'}</span>
+                <span className={`h-1.5 w-1.5 rounded-full ${isLive ? 'bg-[#34A853] animate-pulse' : 'bg-[#9CA3AF]'}`} />
+                <span>{isLive ? 'Live' : 'Locked'}</span>
               </div>
             </div>
           </div>
 
           {/* Title & Description */}
-          <div className="flex flex-col gap-1 text-left">
-            <div className="flex items-center justify-between gap-1">
-              <h3 className="text-lg sm:text-xl font-bold text-[#202124] tracking-tight group-hover:text-[#1A73E8] transition-colors leading-snug">
-                {event.title}
-              </h3>
-              {isAdmin && (
-                <span className="text-xs font-semibold text-[#1A73E8] flex items-center gap-1 shrink-0">
-                  <span>Edit</span>
-                  <ExternalLink className="h-3 w-3" />
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-[#5F6368] leading-relaxed line-clamp-2">
+          <div className="flex flex-col gap-1 text-left mt-1">
+            <h3 className="text-xl sm:text-2xl font-normal tracking-[-0.03em] text-[#111827] group-hover:text-black transition-colors leading-snug">
+              {event.title}
+            </h3>
+            <p className="text-xs sm:text-[13px] text-[#4B5563] leading-relaxed line-clamp-2 mt-0.5">
               {event.description}
             </p>
           </div>
 
-          {/* Live Specs Structured Chip */}
-          <div className="flex items-center justify-start">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#DADCE0] bg-[#F8F9FA] px-3 py-1 text-xs font-medium text-[#3C4043]" suppressHydrationWarning>
-              <Clock className="h-3 w-3 text-[#5F6368]" />
+          {/* Live Specs */}
+          <div className="pt-2.5 mt-1 border-t border-[#F3F4F6] flex items-center justify-between">
+            <span className="font-mono text-[10px] tracking-wider uppercase text-[#9CA3AF] flex items-center gap-1.5" suppressHydrationWarning>
+              <Clock className="h-3 w-3 text-[#9CA3AF]" />
               <span suppressHydrationWarning>{specsBadge}</span>
             </span>
           </div>
         </div>
 
-        {/* Primary Action Button Deck (Enter Game + Leaderboard Shortcut) */}
+        {/* Action Controls Deck */}
         <div onClick={(e) => e.stopPropagation()} className="relative z-10 pt-4 flex flex-col gap-2">
           <div className="flex items-center gap-2">
             {isLive ? (
@@ -394,35 +376,29 @@ export function DualQuizSection({
                 onClick={() => {
                   void soundManager.unlock()
                 }}
-                className={`relative flex h-11 flex-1 items-center justify-center gap-2 rounded-xl text-xs sm:text-sm font-semibold tracking-wide text-white border transition-all active:scale-[0.99] shadow-xs overflow-hidden ${
-                  isWeb
-                    ? 'border-[#1765CC] bg-[#1A73E8] hover:bg-[#1557B0]'
-                    : isMentis
-                    ? 'border-[#B06000] bg-[#EA4335] hover:bg-[#D93025]'
-                    : 'border-[#137333] bg-[#1E8E3E] hover:bg-[#137333]'
-                }`}
+                className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl text-xs font-medium tracking-wide text-white bg-[#111827] hover:bg-black transition-all active:scale-[0.99] shadow-xs cursor-pointer"
               >
-                <span suppressHydrationWarning>{isAuthed ? buttonText : `Sign in to play • ${buttonText}`}</span>
-                <ArrowRight className="h-4 w-4" />
+                <span suppressHydrationWarning>{isAuthed ? buttonText : `Sign in • ${buttonText}`}</span>
+                <ArrowRight className="h-3.5 w-3.5 text-white/80" />
               </Link>
             ) : (
               <button
                 type="button"
                 disabled
-                className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-[#DADCE0] bg-[#F1F3F4] text-xs font-semibold text-[#80868B] cursor-not-allowed"
+                className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] font-mono text-[11px] uppercase tracking-wider text-[#9CA3AF] cursor-not-allowed"
               >
-                <Lock className="h-3.5 w-3.5" />
-                <span>Challenge Locked by Host</span>
+                <Lock className="h-3 w-3" />
+                <span>Arena Restricted</span>
               </button>
             )}
 
-            {/* Minimalist Trophy Leaderboard Shortcut */}
+            {/* Minimalist Leaderboard Shortcut */}
             <Link
               href={leaderboardHref}
-              className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#DADCE0] bg-white text-[#5F6368] hover:border-[#FBBC04] hover:text-[#B06000] hover:bg-[#FEF7E0] transition-all shadow-xs"
-              title="View live standings & victory podium"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:border-[#111827] transition-all"
+              title="View standings"
             >
-              <Trophy className="h-4 w-4" />
+              <Trophy className="h-3.5 w-3.5" />
             </Link>
           </div>
 
@@ -430,16 +406,16 @@ export function DualQuizSection({
           {isAdmin && (
             <div
               onClick={(e) => e.stopPropagation()}
-              className="mt-1 pt-2.5 border-t border-[#DADCE0] flex items-center gap-2"
+              className="mt-1 pt-2.5 border-t border-[#F3F4F6] flex items-center gap-2"
             >
               <button
                 type="button"
                 disabled={isUpdating}
                 onClick={() => toggleEventLock(event, isLive)}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold border transition-all cursor-pointer active:scale-[0.98] shadow-2xs ${
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg font-mono text-[10px] uppercase tracking-wider border transition-all cursor-pointer active:scale-[0.98] ${
                   isLive
-                    ? 'border-[#B31412] bg-[#FCE8E6] text-[#C5221F] hover:bg-[#FAD2CF]'
-                    : 'border-[#137333] bg-[#E6F4EA] text-[#137333] hover:bg-[#CEEAD6]'
+                    ? 'border-[#EA4335]/30 bg-[#FEF2F2] text-[#DC2626] hover:bg-[#FEE2E2]'
+                    : 'border-[#34A853]/30 bg-[#F0FDF4] text-[#16A34A] hover:bg-[#DCFCE7]'
                 }`}
               >
                 {isLive ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
@@ -449,10 +425,10 @@ export function DualQuizSection({
               <button
                 type="button"
                 onClick={() => handleOpenBroadcastReview(event.slug, event.title)}
-                className="flex-1 flex items-center justify-center gap-1.5 bg-[#FEF7E0] border border-[#FBBC04] py-1.5 px-2.5 font-mono text-[11px] font-bold text-[#B06000] uppercase tracking-wider hover:bg-[#FBBC04] hover:text-[#202124] active:translate-y-0.5 transition-all shadow-2xs cursor-pointer"
-                title="Review leaderboard and broadcast ceremony"
+                className="flex-1 flex items-center justify-center gap-1.5 bg-[#FFFBEB] border border-[#FDE68A] py-1.5 px-3 rounded-lg font-mono text-[10px] uppercase tracking-wider text-[#B45309] hover:bg-[#FEF3C7] transition-all cursor-pointer"
+                title="Broadcast ceremony"
               >
-                <Trophy className="h-3 w-3 text-[#B06000]" />
+                <Trophy className="h-3 w-3 text-[#B45309]" />
                 <span>Broadcast</span>
               </button>
             </div>

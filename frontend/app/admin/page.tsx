@@ -738,12 +738,12 @@ function AdminPageContent() {
 
   if (authLoading || (!user || user.role !== 'ADMIN')) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F9FA] text-[#202124]">
-        <div className="flex flex-col items-center gap-4 p-8 bg-white rounded-3xl border border-[#DADCE0] shadow-sm max-w-sm text-center">
-          <div className="h-10 w-10 animate-spin rounded-full border-3 border-[#E8F0FE] border-t-[#1A73E8]" />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#FAFAFA] text-[#111827]">
+        <div className="flex flex-col items-center gap-4 p-8 bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_12px_40px_rgba(0,0,0,0.03)] max-w-sm text-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#111827] border-t-transparent" />
           <div>
-            <h2 className="text-base font-semibold text-[#202124]">Verifying Host Authorization...</h2>
-            <p className="text-xs text-[#5F6368] mt-1">Redirecting to administrator authentication</p>
+            <h2 className="text-sm font-medium text-[#111827] tracking-tight">Verifying Host Authorization</h2>
+            <p className="text-xs text-[#6B7280] mt-1">Redirecting to administrator authentication</p>
           </div>
         </div>
       </div>
@@ -751,23 +751,11 @@ function AdminPageContent() {
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-[#F8F9FA] text-[#202124] overflow-x-hidden selection:bg-[#4285F4]/20 selection:text-[#1A73E8]">
-      {/* Ambient Animated Google Theme Aurora Background Mesh */}
-      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        {/* Subtle Google Tech Dot Matrix Grid */}
-        <div className="absolute inset-0 bg-google-grid opacity-60" />
-
-        {/* Dynamic Glowing Aurora Orbs with CSS Keyframe Animation */}
-        <div className="absolute -top-32 -left-32 h-[560px] w-[560px] rounded-full bg-gradient-to-br from-[#4285F4]/20 via-[#4285F4]/10 to-transparent blur-3xl animate-mesh-1" />
-        <div className="absolute top-1/4 -right-36 h-[580px] w-[580px] rounded-full bg-gradient-to-br from-[#EA4335]/16 via-[#EA4335]/08 to-transparent blur-3xl animate-mesh-2" />
-        <div className="absolute bottom-1/3 left-1/4 h-[520px] w-[520px] rounded-full bg-gradient-to-br from-[#FBBC04]/18 via-[#FBBC04]/08 to-transparent blur-3xl animate-mesh-3" />
-        <div className="absolute -bottom-28 right-1/4 h-[560px] w-[560px] rounded-full bg-gradient-to-br from-[#34A853]/18 via-[#34A853]/08 to-transparent blur-3xl animate-mesh-4" />
-      </div>
-
+    <div className="relative min-h-screen flex flex-col bg-[#FAFAFA] text-[#111827] overflow-x-hidden selection:bg-[#111827] selection:text-white">
       {/* Top Admin Header */}
-      <header className="sticky top-0 z-40 border-b border-[#DADCE0]/80 bg-white/80 backdrop-blur-xl shadow-xs">
+      <header className="sticky top-0 z-40 border-b border-[#E5E7EB] bg-white/90 backdrop-blur-xl">
         {/* Top Google 4-Color Accent Line */}
-        <div className="h-1 w-full bg-gradient-to-r from-[#4285F4] via-[#EA4335] via-[#FBBC04] to-[#34A853]" />
+        <div className="google-hairline-strip" />
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-3">
             <Link

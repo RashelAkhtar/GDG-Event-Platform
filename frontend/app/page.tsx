@@ -6,7 +6,7 @@ import { CircleBucket } from '@/components/bucket/CircleBucket'
 import { DualQuizSection } from '@/components/quiz/DualQuizSection'
 import { api, DEFAULT_WEB_EVENT, DEFAULT_MENTIS_EVENT, DEFAULT_WEND_EVENT, GdgEvent } from '@/lib/api'
 import Link from 'next/link'
-import { Trophy } from 'lucide-react'
+import { Trophy, ArrowUpRight } from 'lucide-react'
 
 export default function HomePage() {
   const [webEvent, setWebEvent] = useState<GdgEvent>(DEFAULT_WEB_EVENT)
@@ -31,38 +31,48 @@ export default function HomePage() {
   }, [])
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F9FA] text-[#202124] relative overflow-hidden bg-tech-dots">
-      {/* Background Ambient Google Aurora Gradient Glow */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-40 -left-40 h-[520px] w-[520px] rounded-full bg-[#4285F4]/12 blur-3xl animate-aurora" />
-        <div className="absolute top-1/2 -right-40 h-[520px] w-[520px] rounded-full bg-[#FBBC04]/12 blur-3xl animate-aurora" style={{ animationDelay: '-5s' }} />
-        <div className="absolute -bottom-40 left-1/3 h-[520px] w-[520px] rounded-full bg-[#34A853]/10 blur-3xl animate-aurora" style={{ animationDelay: '-10s' }} />
-      </div>
-
-      {/* 1. Google Authentication & App Bar */}
+    <div className="min-h-screen flex flex-col bg-[#FAFAFA] text-[#111827] relative selection:bg-[#111827] selection:text-white">
+      {/* 1. Masthead Navigation */}
       <Navbar />
 
-      <main className="relative z-10 mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pt-6 pb-16 sm:px-6 select-none" onContextMenu={(e) => e.preventDefault()}>
-        {/* Minimal Hero Header */}
-        <section className="text-center select-none pt-2 pb-1">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-[#E8F0FE] px-3.5 py-1 text-xs font-semibold text-[#1967D2] mb-3">
-            <span>Google Developer Groups Live Arena</span>
+      <main className="relative z-10 mx-auto flex w-full max-w-xl flex-1 flex-col px-4 pt-8 pb-20 sm:px-6 select-none" onContextMenu={(e) => e.preventDefault()}>
+        {/* High-Editorial Hero Header */}
+        <section className="text-center select-none pt-2 pb-6">
+          <div className="inline-flex items-center gap-2 mb-3">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#1A73E8]" />
+            <span className="font-mono text-[10px] tracking-[0.26em] uppercase text-[#6B7280]">
+              GDG LIVE SESSIONS // VOL. 26
+            </span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#202124] leading-tight">
-            Learn • Compete • Build
+
+          <h1 className="text-4xl sm:text-5xl font-normal tracking-[-0.035em] text-[#111827] leading-[1.08]">
+            Compete. Build. <span className="font-serif italic font-normal text-[#111827]">Excel.</span>
           </h1>
-          <p className="mt-2 text-xs sm:text-sm text-[#5F6368] font-normal leading-relaxed max-w-sm mx-auto">
-            Interactive real-time sprint challenges and technical maze puzzles.
+
+          <p className="mt-3 text-xs sm:text-sm text-[#4B5563] font-normal leading-relaxed max-w-md mx-auto">
+            Live technical challenge arenas and interactive puzzle environments. Engineered for speed and precision.
           </p>
         </section>
 
-        {/* 2. Interactive Circle Bucket with Falling Profile Bubbles */}
-        <section className="mt-5 mb-7 select-none touch-none">
+        {/* 2. Minimalist Circle Bucket Arena */}
+        <section className="mt-2 mb-8 select-none touch-none">
           <CircleBucket />
         </section>
 
-        {/* 3. Mobile Quiz & Wend Puzzle Arenas with Dynamic Lock/Unlock */}
-        <section className="mt-2">
+        {/* Section Divider */}
+        <div className="hairline-divider mb-8" />
+
+        {/* 3. Challenge Arenas */}
+        <section>
+          <div className="flex items-center justify-between mb-4 px-1">
+            <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-[#9CA3AF]">
+              FEATURED TRACKS
+            </span>
+            <span className="font-mono text-[10px] tracking-[0.16em] uppercase text-[#6B7280]">
+              03 ARENAS ACTIVE
+            </span>
+          </div>
+
           <DualQuizSection
             webEvent={webEvent}
             mentisEvent={mentisEvent}
@@ -75,54 +85,76 @@ export default function HomePage() {
           />
         </section>
 
-        {/* Leaderboards Quick Access Bar */}
-        <section className="mt-8 flex items-center justify-between rounded-2xl border border-[#DADCE0] bg-white p-4 shadow-sm hover:shadow-md transition-all">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#FEF7E0] border border-[#FBBC04]/40 text-[#B06000]">
-              <Trophy className="h-5 w-5 text-[#FBBC04]" />
-            </div>
+        {/* 4. Official Standings Index */}
+        <section className="mt-8 rounded-2xl border border-[#E5E7EB] bg-white p-5 transition-all hover:border-[#D1D5DB]">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h4 className="text-sm font-semibold text-[#202124]">Official Standings</h4>
-              <p className="text-[11px] text-[#5F6368]">Live Tie-Breaker Rankings</p>
+              <div className="flex items-center gap-2">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#111827] text-white">
+                  <Trophy className="h-3 w-3" />
+                </span>
+                <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[#9CA3AF]">
+                  LEADERBOARDS
+                </span>
+              </div>
+              <h4 className="text-base font-medium tracking-tight text-[#111827] mt-1">
+                Official Tournament Standings
+              </h4>
+              <p className="text-xs text-[#6B7280] mt-0.5">
+                Verified score rankings with millisecond tie-breaker timing.
+              </p>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link
-              href={`/events/${webEvent.slug}/leaderboard`}
-              className="rounded-full border border-[#1A73E8]/30 bg-[#E8F0FE] px-3.5 py-1 text-xs font-semibold text-[#1967D2] hover:bg-[#1A73E8] hover:text-white transition-all cursor-pointer shadow-2xs"
-            >
-              WEB
-            </Link>
-            <Link
-              href={`/events/${mentisEvent.slug}/leaderboard`}
-              className="rounded-full border border-[#FBBC04]/40 bg-[#FEF7E0] px-3.5 py-1 text-xs font-semibold text-[#B06000] hover:bg-[#FBBC04] hover:text-[#202124] transition-all cursor-pointer shadow-2xs"
-            >
-              MENTIS
-            </Link>
-            <Link
-              href="/events/wend-game/leaderboard"
-              className="rounded-full border border-[#34A853]/40 bg-[#E6F4EA] px-3.5 py-1 text-xs font-semibold text-[#137333] hover:bg-[#34A853] hover:text-white transition-all cursor-pointer shadow-2xs"
-            >
-              WEND
-            </Link>
+
+            <div className="flex items-center gap-1.5 self-start sm:self-auto shrink-0">
+              <Link
+                href={`/events/${webEvent.slug}/leaderboard`}
+                className="inline-flex items-center gap-1 rounded-full border border-[#E5E7EB] bg-[#FAFAFA] px-3.5 py-1.5 text-xs font-medium text-[#111827] hover:border-[#111827] hover:bg-white transition-all"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-[#1A73E8]" />
+                <span>Web</span>
+                <ArrowUpRight className="h-3 w-3 text-[#9CA3AF]" />
+              </Link>
+              <Link
+                href={`/events/${mentisEvent.slug}/leaderboard`}
+                className="inline-flex items-center gap-1 rounded-full border border-[#E5E7EB] bg-[#FAFAFA] px-3.5 py-1.5 text-xs font-medium text-[#111827] hover:border-[#111827] hover:bg-white transition-all"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-[#FBBC04]" />
+                <span>Mentis</span>
+                <ArrowUpRight className="h-3 w-3 text-[#9CA3AF]" />
+              </Link>
+              <Link
+                href="/events/wend-game/leaderboard"
+                className="inline-flex items-center gap-1 rounded-full border border-[#E5E7EB] bg-[#FAFAFA] px-3.5 py-1.5 text-xs font-medium text-[#111827] hover:border-[#111827] hover:bg-white transition-all"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-[#34A853]" />
+                <span>Wend</span>
+                <ArrowUpRight className="h-3 w-3 text-[#9CA3AF]" />
+              </Link>
+            </div>
           </div>
         </section>
 
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-[#DADCE0] bg-white py-5">
-        <div className="mx-auto flex max-w-lg flex-col items-center justify-between gap-2 px-4 text-center text-xs text-[#5F6368] sm:flex-row">
-          <span>© 2026 Google Developer Groups</span>
-          <div className="flex items-center gap-3">
+      {/* Editorial Footer */}
+      <footer className="border-t border-[#E5E7EB] bg-white py-6 mt-auto">
+        <div className="mx-auto flex max-w-xl flex-col items-center justify-between gap-3 px-4 text-center text-xs text-[#6B7280] sm:flex-row sm:text-left">
+          <div className="flex items-center gap-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#EA4335]" />
+            <span className="font-medium text-[#111827]">Google Developer Groups</span>
+            <span className="text-[#9CA3AF]">© 2026</span>
+          </div>
+          <div className="flex items-center gap-4 text-[11px] font-mono tracking-wider uppercase">
             <a
               href="https://developers.google.com/community/gdg"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-[#202124] transition-colors"
+              className="text-[#6B7280] hover:text-[#111827] transition-colors"
             >
-              Community Guidelines
+              Guidelines
             </a>
+            <span className="text-[#D1D5DB]">•</span>
+            <span className="text-[#9CA3AF]">Live Platform</span>
           </div>
         </div>
       </footer>

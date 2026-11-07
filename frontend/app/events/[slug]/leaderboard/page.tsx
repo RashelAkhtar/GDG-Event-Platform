@@ -48,70 +48,60 @@ function LeaderboardContent() {
     : 'Web Dev Sprint'
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F9FA] text-[#202124] relative overflow-hidden">
-      {/* Background Multi-color Aurora Mesh for Google Game Aesthetic */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-40 -left-40 h-[480px] w-[480px] rounded-full bg-[#4285F4]/10 blur-3xl animate-aurora" />
-        <div className="absolute top-1/2 -right-40 h-[480px] w-[480px] rounded-full bg-[#FBBC04]/10 blur-3xl animate-aurora" style={{ animationDelay: '-5s' }} />
-        <div className="absolute -bottom-40 left-1/3 h-[480px] w-[480px] rounded-full bg-[#34A853]/10 blur-3xl animate-aurora" style={{ animationDelay: '-10s' }} />
-      </div>
-
+    <div className="min-h-screen flex flex-col bg-[#FAFAFA] text-[#111827] relative selection:bg-[#111827] selection:text-white">
       <Navbar />
 
-      <main className="relative z-10 mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pt-4 sm:px-6">
+      <main className="relative z-10 mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pt-5 pb-16 sm:px-6">
         {/* Navigation & Refresh Bar */}
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-4">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/70 px-3.5 py-1 text-xs font-semibold text-[#5F6368] shadow-2xs backdrop-blur-md hover:bg-white hover:text-[#202124] transition-all"
+            className="inline-flex items-center gap-1.5 font-mono text-[10px] tracking-[0.2em] uppercase text-[#6B7280] hover:text-[#111827] transition-colors"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
+            <ArrowLeft className="h-3 w-3" />
             <span>Back to Hub</span>
           </Link>
 
           <button
             onClick={handleRefresh}
             disabled={refreshing}
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/70 px-3.5 py-1 text-xs font-semibold text-[#3C4043] shadow-2xs backdrop-blur-md hover:bg-white hover:text-[#202124] transition-all active:scale-95"
+            className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] bg-white px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-[#111827] hover:border-[#111827] transition-all active:scale-95 cursor-pointer"
           >
-            <RefreshCw className={`h-3 w-3 ${refreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-2.5 w-2.5 ${refreshing ? 'animate-spin' : ''}`} />
             <span>Refresh</span>
           </button>
         </div>
 
-        {/* Title Header */}
+        {/* Editorial Title Header */}
         <div className="text-center my-4">
-          <div className="mx-auto inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3.5 py-1 text-xs font-bold text-[#1A73E8] border border-white/80 shadow-2xs backdrop-blur-md mb-2">
-            <Trophy className="h-3.5 w-3.5 text-[#FBBC04]" />
-            <span>Official Rankings</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#202124]">
-            {trackTitle} Leaderboard
+          <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-[#9CA3AF] mb-1.5 block">
+            OFFICIAL TOURNAMENT STANDINGS
+          </span>
+          <h1 className="text-3xl sm:text-4xl font-normal tracking-[-0.035em] text-[#111827]">
+            {trackTitle}
           </h1>
-          <p className="mt-1 text-xs font-medium text-[#5F6368]">
-            Ranked by score with duration tiebreaker
+          <p className="mt-1 text-xs text-[#6B7280]">
+            Ranked by total score with millisecond tie-breaker duration
           </p>
         </div>
 
         {loading ? (
           <div className="my-12 flex flex-col items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-3 border-[#1A73E8] border-t-transparent" />
-            <p className="mt-3 text-xs text-[#5F6368]">Loading standings...</p>
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#111827] border-t-transparent" />
+            <p className="mt-3 font-mono text-[10px] uppercase tracking-wider text-[#6B7280]">Syncing standings...</p>
           </div>
         ) : leaderboard.length === 0 ? (
-          <div className="my-12 flex flex-col items-center rounded-3xl border border-[#DADCE0] bg-white p-8 text-center shadow-sm">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#FEF7E0] text-[#FBBC04] mb-3">
-              <Trophy className="h-8 w-8 text-[#FBBC04]" />
-            </div>
-            <h3 className="text-lg font-medium text-[#202124]">No Submissions Yet</h3>
-            <p className="mt-1 text-xs text-[#5F6368] max-w-xs leading-relaxed">
-              Be the first participant to take this challenge and claim the #1 spot on the podium!
+          <div className="my-12 flex flex-col items-center rounded-2xl border border-[#E5E7EB] bg-white p-8 text-center">
+            <Trophy className="h-7 w-7 text-[#9CA3AF] mb-3" />
+            <h3 className="text-xl font-normal tracking-[-0.03em] text-[#111827]">No Entries Recorded</h3>
+            <p className="mt-1 text-xs text-[#6B7280] max-w-xs leading-relaxed">
+              Be the first to complete this track and set the benchmark time on the podium.
             </p>
             <Link
               href={slug === 'wend-game' ? '/events/wend-game' : `/events/${slug}`}
-              className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#1A73E8] px-6 py-2.5 text-xs font-medium text-white shadow-xs hover:bg-[#1765CC] active:scale-95 transition-all"
+              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#111827] px-5 py-2.5 text-xs font-medium uppercase tracking-wider text-white hover:bg-black transition-all cursor-pointer"
             >
-              <span>Start Challenge</span>
+              <span>Enter Track</span>
             </Link>
           </div>
         ) : (

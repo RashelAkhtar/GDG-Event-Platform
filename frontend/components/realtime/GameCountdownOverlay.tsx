@@ -49,26 +49,18 @@ export function GameCountdownOverlay() {
     <div
       onClick={() => void soundManager.unlock()}
       onTouchStart={() => void soundManager.unlock()}
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/95 backdrop-blur-xl transition-all cursor-pointer"
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/95 backdrop-blur-2xl transition-all cursor-pointer"
     >
-      {/* Background Multi-color Aurora Mesh */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[520px] w-[520px] rounded-full opacity-25 blur-3xl transition-colors duration-700 animate-aurora"
-          style={{ backgroundColor: currentColor }}
-        />
-      </div>
-
       {/* GDG Event Title Badge */}
-      <div className="relative z-10 mb-8 flex items-center gap-2 rounded-full border border-white/80 bg-white/85 px-6 py-2.5 shadow-sm backdrop-blur-md animate-float">
+      <div className="relative z-10 mb-8 flex items-center gap-2 rounded-full border border-[#E5E7EB] bg-white px-5 py-2 shadow-xs">
         <span className="flex items-center gap-1.5" aria-hidden="true">
-          <span className="h-2.5 w-2.5 rounded-full bg-[#EA4335] animate-ping" />
-          <span className="h-2.5 w-2.5 rounded-full bg-[#FBBC04]" />
-          <span className="h-2.5 w-2.5 rounded-full bg-[#34A853]" />
-          <span className="h-2.5 w-2.5 rounded-full bg-[#4285F4]" />
+          <span className="h-2 w-2 rounded-full bg-[#EA4335]" />
+          <span className="h-2 w-2 rounded-full bg-[#FBBC04]" />
+          <span className="h-2 w-2 rounded-full bg-[#34A853]" />
+          <span className="h-2 w-2 rounded-full bg-[#1A73E8]" />
         </span>
-        <span className="text-xs font-bold uppercase tracking-wider text-[#3C4043]">
-          Live Challenge Starting • {gameSlug.includes('mentis') ? 'Mentis Track' : gameSlug.includes('wend') ? 'Wend Word Arena' : 'Web Track'}
+        <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#111827]">
+          Starting Track • {gameSlug.includes('mentis') ? 'Mentis' : gameSlug.includes('wend') ? 'Wend Arena' : 'Web Dev'}
         </span>
       </div>
 

@@ -516,14 +516,7 @@ export default function WendGamePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F9FA] text-[#202124] relative overflow-hidden">
-      {/* Background Multi-color Aurora Mesh for Google Game Aesthetic */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-40 -left-40 h-[480px] w-[480px] rounded-full bg-[#34A853]/10 blur-3xl animate-aurora" />
-        <div className="absolute top-1/2 -right-40 h-[480px] w-[480px] rounded-full bg-[#FBBC04]/10 blur-3xl animate-aurora" style={{ animationDelay: '-5s' }} />
-        <div className="absolute -bottom-40 left-1/3 h-[480px] w-[480px] rounded-full bg-[#4285F4]/10 blur-3xl animate-aurora" style={{ animationDelay: '-10s' }} />
-      </div>
-
+    <div className="min-h-screen flex flex-col bg-[#FAFAFA] text-[#111827] relative selection:bg-[#111827] selection:text-white">
       <Navbar />
 
       {/* 5-Second Local Countdown Animation Before Game Start */}
@@ -539,10 +532,10 @@ export default function WendGamePage() {
         <div className="w-full flex items-center justify-between mb-2 gap-2">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 border border-[#DADCE0] bg-white px-3 py-1 font-mono text-xs font-bold text-[#5F6368] shadow-2xs hover:bg-[#F8F9FA] hover:text-[#202124] transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-[#6B7280] hover:text-[#111827] transition-colors"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            <span>ALL CHALLENGES</span>
+            <ArrowLeft className="h-3 w-3" />
+            <span>Hub</span>
           </Link>
 
           <div className="flex items-center gap-2">
@@ -550,18 +543,18 @@ export default function WendGamePage() {
             {/* Live Admin-Configured Countdown Timer */}
             {!completedSession && (
               <div
-                className={`inline-flex items-center gap-1.5 border px-3 py-1 font-mono text-xs font-bold shadow-2xs transition-all ${
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-xs font-medium transition-all ${
                   timeLeft <= 15
-                    ? 'bg-[#FCE8E6] border-[#EA4335] text-[#C5221F]'
+                    ? 'bg-[#FEF2F2] border-[#FEE2E2] text-[#DC2626]'
                     : timeLeft <= allocatedTimeSeconds * 0.4
-                    ? 'bg-[#FEF7E0] border-[#FBBC04] text-[#B06000]'
-                    : 'bg-white border-[#1A73E8] text-[#1967D2]'
+                    ? 'bg-[#FFFBEB] border-[#FDE68A] text-[#B45309]'
+                    : 'bg-white border-[#E5E7EB] text-[#111827]'
                 }`}
                 title={`Round Time Limit set by Host: ${allocatedTimeSeconds}s`}
               >
-                <Clock className={`h-3.5 w-3.5 ${timeLeft <= 15 ? 'text-[#EA4335]' : 'text-[#1A73E8]'}`} />
+                <Clock className={`h-3 w-3 ${timeLeft <= 15 ? 'text-[#DC2626]' : 'text-[#6B7280]'}`} />
                 <span className="font-mono">{formatTimer(timeLeft)}</span>
-                <span className="hidden sm:inline text-[10px] opacity-75">/ {allocatedTimeSeconds}s</span>
+                <span className="hidden sm:inline text-[10px] text-[#9CA3AF]">/ {allocatedTimeSeconds}s</span>
               </div>
             )}
 
