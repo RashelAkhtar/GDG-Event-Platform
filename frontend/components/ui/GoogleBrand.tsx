@@ -49,7 +49,7 @@ export function GoogleButton({
   const style =
     variant === 'primary'
       ? 'bg-[#1A73E8] text-white hover:bg-[#1765CC] shadow-xs hover:shadow-md'
-      : 'border border-[#DADCE0] bg-white text-[#3C4043] hover:bg-[#F8F9FA] hover:border-[#BDC1C6]'
+      : 'border border-[#E5E7EB] bg-white text-[#111827] hover:bg-[#FAFAFA] hover:border-[#111827]'
 
   return (
     <button className={`${base} ${style} ${className}`} {...props}>

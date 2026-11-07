@@ -28,112 +28,110 @@ export function Podium({ entries }: PodiumProps) {
 
   if (!first) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 text-center text-[#5F6368]">
-        <Trophy className="h-10 w-10 text-[#DADCE0] mb-2" />
-        <p className="text-sm">No submissions recorded yet. Be the first to play!</p>
+      <div className="flex flex-col items-center justify-center p-8 text-center text-[#6B7280]">
+        <Trophy className="h-8 w-8 text-[#9CA3AF] mb-2" />
+        <p className="text-xs font-mono uppercase tracking-wider">No submissions recorded yet</p>
       </div>
     )
   }
 
   return (
-    <div className="flex items-end justify-center gap-3 pt-6 pb-2 px-2">
+    <div className="flex items-end justify-center gap-2.5 pt-8 pb-2 px-2">
       {/* 2nd Place (Silver) */}
       {second ? (
         <div className="flex flex-1 flex-col items-center">
-          <div className="relative mb-2 flex flex-col items-center">
+          <div className="relative mb-2.5 flex flex-col items-center">
             <div className="relative">
               <img
                 src={second.user?.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=2nd'}
                 alt={second.user?.name || 'Player'}
-                className="h-14 w-14 rounded-full border-2 border-[#9AA0A6] object-cover shadow-xs"
+                className="h-13 w-13 rounded-full border border-[#E5E7EB] object-cover"
               />
-              <span className="absolute -bottom-1.5 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#9AA0A6] text-[11px] font-bold text-white shadow-2xs">
+              <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#6B7280] font-mono text-[10px] font-medium text-white">
                 2
               </span>
             </div>
-            <span className="mt-2 text-center text-xs font-medium text-[#202124] max-w-[80px] truncate">
+            <span className="mt-2 text-center text-xs font-medium text-[#111827] max-w-[80px] truncate">
               {second.user?.name}
             </span>
-            <span className="rounded-full bg-[#E8F0FE] px-2.5 py-0.5 text-[10px] font-bold text-[#1967D2] my-0.5">
-              Silver Podium
+            <span className="font-mono text-[9px] uppercase tracking-wider text-[#6B7280] my-0.5">
+              Silver
             </span>
-            <span className="flex items-center gap-1 text-[10px] text-[#5F6368]">
+            <span className="flex items-center gap-1 font-mono text-[10px] text-[#9CA3AF]">
               <Clock className="h-2.5 w-2.5" />
               {formatDuration(second.durationMs)}
             </span>
           </div>
           {/* Step block */}
-          <div className="h-20 w-full rounded-t-2xl bg-gradient-to-t from-[#CFD8DC] via-[#ECEFF1] to-[#FFFFFF] border-t-2 border-[#9AA0A6] shadow-xs flex items-center justify-center text-sm font-black text-[#5F6368] animate-pedestal">
-            2nd
+          <div className="h-20 w-full rounded-t-xl bg-white border border-[#E5E7EB] border-t-2 border-t-[#6B7280] shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex items-center justify-center font-mono text-xs font-medium text-[#6B7280]">
+            02
           </div>
         </div>
       ) : (
         <div className="flex-1" />
       )}
 
-      {/* 1st Place (Gold) */}
+      {/* 1st Place (Gold Champion) */}
       <div className="flex flex-1 flex-col items-center">
-        <div className="relative mb-2 flex flex-col items-center">
+        <div className="relative mb-2.5 flex flex-col items-center">
           <div className="relative">
-            <div className="absolute -top-5 left-1/2 -translate-x-1/2">
-              <Trophy className="h-6 w-6 text-[#FBBC04] drop-shadow-md animate-float" />
+            <div className="absolute -top-4.5 left-1/2 -translate-x-1/2">
+              <Crown className="h-4 w-4 text-[#FBBC04]" />
             </div>
             <img
               src={first.user?.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=1st'}
               alt={first.user?.name || 'Winner'}
-              className="h-16 w-16 rounded-full border-[3px] border-[#FBBC04] object-cover shadow-md ring-4 ring-[#FBBC04]/30"
+              className="h-16 w-16 rounded-full border-2 border-[#FBBC04] object-cover ring-4 ring-[#FBBC04]/10"
             />
-            <span className="absolute -bottom-1.5 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#FBBC04] text-[11px] font-black text-white shadow-xs">
+            <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#FBBC04] font-mono text-[10px] font-bold text-[#111827]">
               1
             </span>
           </div>
-          <span className="mt-2 text-center text-xs font-black text-[#202124] max-w-[84px] truncate">
+          <span className="mt-2 text-center text-xs font-medium text-[#111827] max-w-[90px] truncate">
             {first.user?.name}
           </span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-[#FEF7E0] px-2.5 py-0.5 text-[10px] font-black text-[#B06000] my-0.5">
-            <Crown className="h-3 w-3 text-[#B06000]" />
-            <span>Champion</span>
+          <span className="font-mono text-[9px] uppercase tracking-wider text-[#B45309] font-medium my-0.5">
+            Champion
           </span>
-          <span className="flex items-center gap-1 text-[10px] font-semibold text-[#137333]">
+          <span className="flex items-center gap-1 font-mono text-[10px] text-[#15803D]">
             <Clock className="h-2.5 w-2.5" />
             {formatDuration(first.durationMs)}
           </span>
         </div>
         {/* Highest Step block */}
-        <div className="mt-2 h-28 w-full rounded-t-2xl bg-gradient-to-t from-[#FFE082] via-[#FFF9C4] to-[#FFFFFF] border-t-2 border-[#FBBC04] shadow-md flex items-center justify-center font-black text-base text-[#B06000] animate-pedestal gap-1">
-          <span>1st</span>
-          <Crown className="h-4 w-4 text-[#B06000]" />
+        <div className="h-28 w-full rounded-t-xl bg-white border border-[#E5E7EB] border-t-2 border-t-[#FBBC04] shadow-[0_6px_24px_rgba(0,0,0,0.03)] flex items-center justify-center font-mono text-sm font-semibold text-[#111827]">
+          01
         </div>
       </div>
 
       {/* 3rd Place (Bronze) */}
       {third ? (
         <div className="flex flex-1 flex-col items-center">
-          <div className="relative mb-2 flex flex-col items-center">
+          <div className="relative mb-2.5 flex flex-col items-center">
             <div className="relative">
               <img
                 src={third.user?.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=3rd'}
                 alt={third.user?.name || 'Player'}
-                className="h-14 w-14 rounded-full border-2 border-[#E37400] object-cover shadow-xs"
+                className="h-13 w-13 rounded-full border border-[#E5E7EB] object-cover"
               />
-              <span className="absolute -bottom-1.5 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#E37400] text-[11px] font-bold text-white shadow-2xs">
+              <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#D97706] font-mono text-[10px] font-medium text-white">
                 3
               </span>
             </div>
-            <span className="mt-2 text-center text-xs font-medium text-[#202124] max-w-[80px] truncate">
+            <span className="mt-2 text-center text-xs font-medium text-[#111827] max-w-[80px] truncate">
               {third.user?.name}
             </span>
-            <span className="rounded-full bg-[#FBE9E7] px-2.5 py-0.5 text-[10px] font-bold text-[#E37400] my-0.5">
-              Bronze Podium
+            <span className="font-mono text-[9px] uppercase tracking-wider text-[#D97706] my-0.5">
+              Bronze
             </span>
-            <span className="flex items-center gap-1 text-[10px] text-[#5F6368]">
+            <span className="flex items-center gap-1 font-mono text-[10px] text-[#9CA3AF]">
               <Clock className="h-2.5 w-2.5" />
               {formatDuration(third.durationMs)}
             </span>
           </div>
           {/* Step block */}
-          <div className="h-14 w-full rounded-t-2xl bg-gradient-to-t from-[#FFCCBC]/60 via-[#FBE9E7] to-[#FFFFFF] border-t-2 border-[#E37400] shadow-2xs flex items-center justify-center text-sm font-black text-[#E37400] animate-pedestal">
-            3rd
+          <div className="h-14 w-full rounded-t-xl bg-white border border-[#E5E7EB] border-t-2 border-t-[#D97706] shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex items-center justify-center font-mono text-xs font-medium text-[#D97706]">
+            03
           </div>
         </div>
       ) : (

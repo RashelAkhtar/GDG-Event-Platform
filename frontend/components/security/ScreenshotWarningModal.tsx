@@ -105,7 +105,7 @@ export function ScreenshotWarningModal({
         </p>
 
         {/* Notice Box */}
-        <div className="my-4 rounded-2xl border border-[#DADCE0] bg-[#F8F9FA] p-3 text-left text-[11px] text-[#5F6368]">
+        <div className="my-4 rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] p-3 text-left text-[11px] text-[#6B7280]">
           <div className="flex items-center justify-between font-semibold text-[#202124] mb-1">
             <span>Security Status:</span>
             <span className={isTerminated ? 'text-[#EA4335]' : 'text-[#B06000]'}>

@@ -35,7 +35,7 @@ export function RankList({ entries, startIndex = 0 }: RankListProps) {
   const userEntry = userRankIndex !== -1 ? nonAdminEntries[userRankIndex] : null
 
   return (
-    <div className="flex flex-col gap-2 w-full pb-20">
+    <div className="flex flex-col gap-2 w-full pb-24">
       {nonAdminEntries.map((entry, idx) => {
         const rank = startIndex + idx + 1
         const isCurrentUser =
@@ -44,40 +44,30 @@ export function RankList({ entries, startIndex = 0 }: RankListProps) {
         return (
           <div
             key={entry._id || idx}
-            className={`flex items-center justify-between rounded-2xl border px-4 py-3 transition-all ${
+            className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-all ${
               isCurrentUser
-                ? 'border-[#1A73E8] bg-[#E8F0FE]/70 shadow-xs ring-1 ring-[#1A73E8]'
-                : 'border-[#DADCE0] bg-white hover:border-[#BDC1C6]'
+                ? 'border-[#111827] bg-[#F4F4F5] shadow-xs'
+                : 'border-[#E5E7EB] bg-white hover:border-[#111827]'
             }`}
           >
             {/* Left: Rank & Avatar & Name */}
             <div className="flex items-center gap-3">
-              <span
-                className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ${
-                  rank === 1
-                    ? 'bg-[#FBBC04] text-white'
-                    : rank === 2
-                    ? 'bg-[#9AA0A6] text-white'
-                    : rank === 3
-                    ? 'bg-[#E37400] text-white'
-                    : 'bg-[#F1F3F4] text-[#5F6368]'
-                }`}
-              >
-                {rank}
+              <span className="font-mono text-xs font-semibold text-[#111827] w-5 text-center">
+                {String(rank).padStart(2, '0')}
               </span>
 
               <img
                 src={entry.user?.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${entry.user?.name}`}
                 alt={entry.user?.name}
-                className="h-10 w-10 rounded-full border border-[#DADCE0] object-cover"
+                className="h-9 w-9 rounded-full border border-[#E5E7EB] object-cover"
               />
 
               <div className="flex flex-col">
-                <span className="text-sm font-medium text-[#202124] max-w-[130px] sm:max-w-[180px] truncate">
-                  {entry.user?.name} {isCurrentUser && <span className="text-xs font-normal text-[#1A73E8]">(You)</span>}
+                <span className="text-xs sm:text-sm font-medium text-[#111827] max-w-[140px] sm:max-w-[200px] truncate">
+                  {entry.user?.name} {isCurrentUser && <span className="font-mono text-[10px] text-[#1A73E8] uppercase ml-1">(You)</span>}
                 </span>
-                <span className="flex items-center gap-1 text-[11px] text-[#5F6368]">
-                  <Clock className="h-3 w-3" />
+                <span className="flex items-center gap-1 font-mono text-[10px] text-[#9CA3AF]">
+                  <Clock className="h-2.5 w-2.5" />
                   {formatDuration(entry.durationMs)}
                 </span>
               </div>
@@ -85,8 +75,8 @@ export function RankList({ entries, startIndex = 0 }: RankListProps) {
 
             {/* Right: Duration badge */}
             <div className="text-right">
-              <span className="inline-flex items-center gap-1 rounded-full bg-[#E8F0FE] px-3 py-1 text-xs font-semibold text-[#1A73E8]">
-                <Clock className="h-3 w-3" />
+              <span className="inline-flex items-center gap-1 rounded-full border border-[#E5E7EB] bg-[#FAFAFA] px-2.5 py-1 font-mono text-[10px] text-[#111827]">
+                <Clock className="h-2.5 w-2.5 text-[#6B7280]" />
                 {formatDuration(entry.durationMs)}
               </span>
             </div>
@@ -96,24 +86,23 @@ export function RankList({ entries, startIndex = 0 }: RankListProps) {
 
       {/* Sticky Bottom Bar for Current User (Mobile Viewport) */}
       {userEntry && (
-        <div className="fixed bottom-3 left-4 right-4 mx-auto max-w-md z-30">
-          <div className="flex items-center justify-between rounded-full bg-[#202124] px-5 py-3 text-white shadow-lg border border-[#3C4043]">
-            <div className="flex items-center gap-3">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#1A73E8] text-xs font-bold text-white">
+        <div className="fixed bottom-4 left-4 right-4 mx-auto max-w-sm z-30">
+          <div className="flex items-center justify-between rounded-full bg-[#111827] px-4 py-2.5 text-white shadow-xl border border-neutral-800">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white font-mono text-[10px] font-bold text-[#111827]">
                 #{userRankIndex + 1}
               </span>
               <img
                 src={user?.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=me'}
                 alt="Me"
-                className="h-8 w-8 rounded-full border border-white/20 object-cover"
+                className="h-7 w-7 rounded-full border border-white/20 object-cover"
               />
-              <span className="text-xs font-medium truncate max-w-[120px]">
-                Your Submission
+              <span className="font-mono text-[11px] uppercase tracking-wider truncate max-w-[110px]">
+                Your Rank
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white">
-                <Clock className="h-3 w-3 text-[#8AB4F8]" />
+              <span className="font-mono text-[11px] text-neutral-300">
                 {formatDuration(userEntry.durationMs)}
               </span>
             </div>

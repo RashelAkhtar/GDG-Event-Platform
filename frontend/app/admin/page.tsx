@@ -760,7 +760,7 @@ function AdminPageContent() {
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-[#DADCE0] bg-white/90 text-[#5F6368] hover:bg-white hover:text-[#202124] hover:shadow-xs transition-all active:scale-95"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E5E7EB] bg-white/90 text-[#5F6368] hover:bg-white hover:text-[#202124] hover:shadow-xs transition-all active:scale-95"
             >
               <ArrowLeft className="h-4 w-4" />
             </Link>
@@ -789,7 +789,7 @@ function AdminPageContent() {
           {/* WebSocket Status Indicator & Security Alerts Bell */}
           <div className="flex items-center gap-2.5">
             <SecurityNotificationBell />
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#DADCE0]/80 bg-white/90 backdrop-blur-md px-3 py-1.5 text-xs font-semibold text-[#3C4043] shadow-2xs">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB]/80 bg-white/90 backdrop-blur-md px-3 py-1.5 text-xs font-semibold text-[#3C4043] shadow-2xs">
               <span className={`h-2 w-2 rounded-full ${connected ? 'bg-[#34A853] shadow-[0_0_8px_#34A853]' : 'bg-[#FBBC04] animate-pulse'}`} />
               <span>{connected ? 'WebSocket Live' : 'Local Channel'}</span>
             </span>
@@ -822,7 +822,7 @@ function AdminPageContent() {
         )}
 
         {/* Structured Segmented Control Bar (Rounded Google Theme, High-Precision Tabs) */}
-        <div className="mb-6 rounded-2xl border border-[#DADCE0] bg-white p-1.5 shadow-xs">
+        <div className="mb-6 rounded-2xl border border-[#E5E7EB] bg-white p-1.5 shadow-xs">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
             <button
               type="button"
@@ -904,7 +904,7 @@ function AdminPageContent() {
         {activeTab === 'locks' && (
           <div className="flex flex-col gap-6 animate-in fade-in duration-200">
             {/* Panel Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-5 rounded-3xl border border-[#DADCE0] shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-5 rounded-3xl border border-[#E5E7EB] shadow-xs">
               <div>
                 <div className="flex items-center gap-2">
                   <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#E8F0FE] text-[#1967D2] border border-[#1A73E8]/30">
@@ -987,7 +987,7 @@ function AdminPageContent() {
                     className={`group relative flex flex-col justify-between rounded-3xl border bg-white p-5 shadow-xs transition-all duration-200 hover:shadow-md cursor-pointer overflow-hidden ${
                       isLive
                         ? 'border-[#34A853] ring-1 ring-[#34A853]/30 ' + accentHover
-                        : 'border-[#DADCE0] hover:border-[#1A73E8]'
+                        : 'border-[#E5E7EB] hover:border-[#1A73E8]'
                     }`}
                     title={`Click to open ${actionTitle} editor in panel`}
                   >
@@ -1011,7 +1011,7 @@ function AdminPageContent() {
                               e.stopPropagation()
                               navigateToPanel(jumpTab, slug !== 'wend-game' ? slug : undefined)
                             }}
-                            className="inline-flex items-center gap-1 rounded-full border border-[#DADCE0] bg-white px-2.5 py-1 font-mono text-[10px] font-bold text-[#1A73E8] hover:border-[#1A73E8] hover:bg-[#E8F0FE] transition-all cursor-pointer"
+                            className="inline-flex items-center gap-1 rounded-full border border-[#E5E7EB] bg-white px-2.5 py-1 font-mono text-[10px] font-bold text-[#1A73E8] hover:border-[#1A73E8] hover:bg-[#E8F0FE] transition-all cursor-pointer"
                             title={`Open full ${actionTitle} studio`}
                           >
                             <Maximize2 className="h-3 w-3" />
@@ -1027,7 +1027,7 @@ function AdminPageContent() {
                             className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[11px] font-bold transition-all cursor-pointer ${
                               isLive
                                 ? 'border-[#34A853]/40 bg-[#E6F4EA] text-[#137333]'
-                                : 'border-[#DADCE0] bg-[#F1F3F4] text-[#5F6368]'
+                                : 'border-[#E5E7EB] bg-[#F1F3F4] text-[#5F6368]'
                             }`}
                             title={isLive ? 'Click to switch to LOCKED' : 'Click to GO LIVE'}
                           >
@@ -1047,7 +1047,7 @@ function AdminPageContent() {
 
                       {/* Structured Arena Status & Padlock Bar */}
                       <div className={`my-3 flex items-center justify-between rounded-2xl border p-3.5 transition-colors ${
-                        isLive ? 'border-[#34A853]/40 bg-[#F4FBF6]' : 'border-[#DADCE0] bg-[#F8F9FA]'
+                        isLive ? 'border-[#34A853]/40 bg-[#F4FBF6]' : 'border-[#E5E7EB] bg-[#F8F9FA]'
                       }`}>
                         <div className="flex items-center gap-3">
                           <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-mono ${
@@ -1098,7 +1098,7 @@ function AdminPageContent() {
                         <p className="text-xs text-[#5F6368] mt-1.5 leading-relaxed line-clamp-2">
                           {event.description}
                         </p>
-                        <div className="mt-3 flex items-center justify-between w-full gap-2 pt-2.5 border-t border-[#DADCE0]">
+                        <div className="mt-3 flex items-center justify-between w-full gap-2 pt-2.5 border-t border-[#E5E7EB]">
                           <span className="inline-flex items-center gap-1.5 font-mono text-[11px] font-semibold text-[#5F6368]">
                             <Sparkles className="h-3 w-3 text-[#FBBC04]" />
                             <span>{meta}</span>
@@ -1112,7 +1112,7 @@ function AdminPageContent() {
                     </div>
 
                     {/* Bottom Action Controls Deck */}
-                    <div className="mt-5 flex flex-col gap-2 pt-3 border-t border-[#DADCE0]">
+                    <div className="mt-5 flex flex-col gap-2 pt-3 border-t border-[#E5E7EB]">
                       {/* Primary Lock/Unlock Action Button */}
                       <button
                         type="button"
@@ -1171,7 +1171,7 @@ function AdminPageContent() {
         {activeTab === 'quiz' && (
           <div className="flex flex-col gap-6 animate-in fade-in duration-200">
             {/* Header & Quiz Switcher */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-5 rounded-3xl border border-[#DADCE0] shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-5 rounded-3xl border border-[#E5E7EB] shadow-xs">
               <div>
                 <div className="flex items-center gap-2">
                   <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#E6F4EA] text-[#137333] border border-[#34A853]/30">
@@ -1187,7 +1187,7 @@ function AdminPageContent() {
               </div>
 
               {/* Event Switcher Segmented Control */}
-              <div className="flex items-center gap-1.5 rounded-2xl border border-[#DADCE0] bg-[#F8F9FA] p-1 shadow-2xs self-start sm:self-auto font-mono text-xs font-bold">
+              <div className="flex items-center gap-1.5 rounded-2xl border border-[#E5E7EB] bg-[#F8F9FA] p-1 shadow-2xs self-start sm:self-auto font-mono text-xs font-bold">
                 <button
                   type="button"
                   onClick={() => handleSelectQuizTrack('web-dev-quiz')}
@@ -1217,7 +1217,7 @@ function AdminPageContent() {
 
             {/* Questions KPI Metric Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-              <div className="relative overflow-hidden rounded-3xl border border-[#DADCE0]/80 bg-white/90 backdrop-blur-md p-4 sm:p-5 shadow-xs hover:shadow-md transition-all">
+              <div className="relative overflow-hidden rounded-3xl border border-[#E5E7EB]/80 bg-white/90 backdrop-blur-md p-4 sm:p-5 shadow-xs hover:shadow-md transition-all">
                 <div className="absolute top-0 left-0 right-0 h-1 bg-[#1A73E8]" />
                 <div className="flex items-center justify-between">
                   <div>
@@ -1232,7 +1232,7 @@ function AdminPageContent() {
                 </div>
               </div>
 
-              <div className="relative overflow-hidden rounded-3xl border border-[#DADCE0]/80 bg-white/90 backdrop-blur-md p-4 sm:p-5 shadow-xs hover:shadow-md transition-all">
+              <div className="relative overflow-hidden rounded-3xl border border-[#E5E7EB]/80 bg-white/90 backdrop-blur-md p-4 sm:p-5 shadow-xs hover:shadow-md transition-all">
                 <div className="absolute top-0 left-0 right-0 h-1 bg-[#34A853]" />
                 <div className="flex items-center justify-between">
                   <div>
@@ -1247,7 +1247,7 @@ function AdminPageContent() {
                 </div>
               </div>
 
-              <div className="relative overflow-hidden rounded-3xl border border-[#DADCE0]/80 bg-white/90 backdrop-blur-md p-4 sm:p-5 shadow-xs hover:shadow-md transition-all">
+              <div className="relative overflow-hidden rounded-3xl border border-[#E5E7EB]/80 bg-white/90 backdrop-blur-md p-4 sm:p-5 shadow-xs hover:shadow-md transition-all">
                 <div className="absolute top-0 left-0 right-0 h-1 bg-[#FBBC04]" />
                 <div className="flex items-center justify-between">
                   <div>
@@ -1266,7 +1266,7 @@ function AdminPageContent() {
             </div>
 
             {/* Track Settings & Title/Description Editor */}
-            <div className="rounded-3xl border border-[#DADCE0]/90 bg-white/95 backdrop-blur-md p-5 sm:p-6 shadow-xs">
+            <div className="rounded-3xl border border-[#E5E7EB]/90 bg-white/95 backdrop-blur-md p-5 sm:p-6 shadow-xs">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 pb-3 border-b border-[#F1F3F4]">
                 <div className="flex items-center gap-2.5">
                   <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E8F0FE] text-[#1967D2]">
@@ -1301,7 +1301,7 @@ function AdminPageContent() {
                     type="text"
                     value={trackEditTitle}
                     onChange={(e) => setTrackEditTitle(e.target.value)}
-                    className="w-full rounded-2xl border border-[#DADCE0] bg-[#F8F9FA] px-3.5 py-2.5 text-xs font-bold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:bg-white"
+                    className="w-full rounded-2xl border border-[#E5E7EB] bg-[#F8F9FA] px-3.5 py-2.5 text-xs font-bold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:bg-white"
                     placeholder="Enter track title"
                   />
                 </div>
@@ -1313,7 +1313,7 @@ function AdminPageContent() {
                     type="text"
                     value={trackEditDesc}
                     onChange={(e) => setTrackEditDesc(e.target.value)}
-                    className="w-full rounded-2xl border border-[#DADCE0] bg-[#F8F9FA] px-3.5 py-2.5 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:bg-white"
+                    className="w-full rounded-2xl border border-[#E5E7EB] bg-[#F8F9FA] px-3.5 py-2.5 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:bg-white"
                     placeholder="Enter track description"
                   />
                 </div>
@@ -1321,7 +1321,7 @@ function AdminPageContent() {
             </div>
 
             {/* Question Creator Form */}
-            <div className="rounded-3xl border border-[#DADCE0]/90 bg-white/95 backdrop-blur-md p-5 sm:p-6 shadow-xs">
+            <div className="rounded-3xl border border-[#E5E7EB]/90 bg-white/95 backdrop-blur-md p-5 sm:p-6 shadow-xs">
               <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#F1F3F4]">
                 <div className="flex items-center gap-2.5">
                   <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E8F0FE] text-[#1967D2]">
@@ -1352,7 +1352,7 @@ function AdminPageContent() {
                     value={questionText}
                     onChange={(e) => setQuestionText(e.target.value)}
                     placeholder="Enter the question prompt here (e.g. Which CSS property triggers GPU hardware acceleration?)..."
-                    className="w-full rounded-2xl border border-[#DADCE0] bg-[#F8F9FA] p-3 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:bg-white leading-relaxed"
+                    className="w-full rounded-2xl border border-[#E5E7EB] bg-[#F8F9FA] p-3 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:bg-white leading-relaxed"
                     required
                   />
                 </div>
@@ -1379,7 +1379,7 @@ function AdminPageContent() {
                           className={`flex items-center gap-2.5 rounded-2xl border p-2.5 transition-all cursor-pointer ${
                             isCorrect
                               ? 'border-[#34A853] bg-[#E6F4EA]/50 ring-2 ring-[#34A853]/25 shadow-xs'
-                              : 'border-[#DADCE0] bg-white hover:border-[#BDC1C6]'
+                              : 'border-[#E5E7EB] bg-white hover:border-[#BDC1C6]'
                           }`}
                         >
                           <div className="flex items-center gap-2 pl-1">
@@ -1429,7 +1429,7 @@ function AdminPageContent() {
                     <label className="block text-[11px] font-bold uppercase tracking-wider text-[#3C4043] mb-1">
                       Points Awarded
                     </label>
-                    <div className="flex items-center gap-2 rounded-xl border border-[#DADCE0] bg-[#F8F9FA] px-3 py-2">
+                    <div className="flex items-center gap-2 rounded-xl border border-[#E5E7EB] bg-[#F8F9FA] px-3 py-2">
                       <Award className="h-4 w-4 text-[#FBBC04] shrink-0" />
                       <input
                         type="number"
@@ -1447,7 +1447,7 @@ function AdminPageContent() {
                     <label className="block text-[11px] font-bold uppercase tracking-wider text-[#3C4043] mb-1">
                       Question Timer Limit
                     </label>
-                    <div className="flex items-center gap-2 rounded-xl border border-[#DADCE0] bg-[#F8F9FA] px-3 py-2">
+                    <div className="flex items-center gap-2 rounded-xl border border-[#E5E7EB] bg-[#F8F9FA] px-3 py-2">
                       <Clock className="h-4 w-4 text-[#5F6368] shrink-0" />
                       <input
                         type="number"
@@ -1494,7 +1494,7 @@ function AdminPageContent() {
                         onClick={(e) => e.stopPropagation()}
                         className="flex flex-col rounded-3xl border-2 border-[#1A73E8] bg-white p-5 shadow-md animate-in zoom-in-95"
                       >
-                        <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-[#DADCE0]">
+                        <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-[#E5E7EB]">
                           <span className="text-xs font-bold text-[#1A73E8] uppercase tracking-wider flex items-center gap-1.5">
                             <Edit3 className="h-4 w-4" />
                             Editing Question #{qIdx + 1}
@@ -1513,7 +1513,7 @@ function AdminPageContent() {
                               rows={2}
                               value={editQText}
                               onChange={(e) => setEditQText(e.target.value)}
-                              className="w-full rounded-xl border border-[#DADCE0] bg-[#F8F9FA] p-2.5 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:bg-white"
+                              className="w-full rounded-xl border border-[#E5E7EB] bg-[#F8F9FA] p-2.5 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:bg-white"
                               placeholder="Enter question prompt..."
                               autoFocus
                             />
@@ -1534,7 +1534,7 @@ function AdminPageContent() {
                                     className={`flex items-center gap-2 rounded-xl border p-2 transition-all cursor-pointer ${
                                       isCorrect
                                         ? 'border-[#34A853] bg-[#E6F4EA]/50 ring-2 ring-[#34A853]/20 shadow-xs'
-                                        : 'border-[#DADCE0] bg-white'
+                                        : 'border-[#E5E7EB] bg-white'
                                     }`}
                                   >
                                     <input
@@ -1574,7 +1574,7 @@ function AdminPageContent() {
                               <label className="block text-[10px] font-bold text-[#3C4043] uppercase tracking-wider mb-1">
                                 Points
                               </label>
-                              <div className="flex items-center gap-1.5 rounded-xl border border-[#DADCE0] bg-[#F8F9FA] px-3 py-1.5">
+                              <div className="flex items-center gap-1.5 rounded-xl border border-[#E5E7EB] bg-[#F8F9FA] px-3 py-1.5">
                                 <Award className="h-3.5 w-3.5 text-[#FBBC04]" />
                                 <input
                                   type="number"
@@ -1591,7 +1591,7 @@ function AdminPageContent() {
                               <label className="block text-[10px] font-bold text-[#3C4043] uppercase tracking-wider mb-1">
                                 Time Limit (Sec)
                               </label>
-                              <div className="flex items-center gap-1.5 rounded-xl border border-[#DADCE0] bg-[#F8F9FA] px-3 py-1.5">
+                              <div className="flex items-center gap-1.5 rounded-xl border border-[#E5E7EB] bg-[#F8F9FA] px-3 py-1.5">
                                 <Clock className="h-3.5 w-3.5 text-[#5F6368]" />
                                 <input
                                   type="number"
@@ -1605,11 +1605,11 @@ function AdminPageContent() {
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#DADCE0]">
+                          <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#E5E7EB]">
                             <button
                               type="button"
                               onClick={handleCancelEditQuestion}
-                              className="inline-flex items-center gap-1 rounded-full border border-[#DADCE0] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#5F6368] hover:bg-[#F1F3F4]"
+                              className="inline-flex items-center gap-1 rounded-full border border-[#E5E7EB] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#5F6368] hover:bg-[#F1F3F4]"
                             >
                               <X className="h-3.5 w-3.5" />
                               <span>Cancel</span>
@@ -1632,7 +1632,7 @@ function AdminPageContent() {
                     <div
                       key={q._id || qIdx}
                       onClick={() => handleStartEditQuestion(q)}
-                      className="group/q flex flex-col rounded-3xl border border-[#DADCE0]/80 bg-white/90 backdrop-blur-md p-4 sm:p-5 shadow-xs hover:border-[#1A73E8]/60 hover:shadow-md transition-all cursor-pointer"
+                      className="group/q flex flex-col rounded-3xl border border-[#E5E7EB]/80 bg-white/90 backdrop-blur-md p-4 sm:p-5 shadow-xs hover:border-[#1A73E8]/60 hover:shadow-md transition-all cursor-pointer"
                       title="Click question card to edit prompt & answers"
                     >
                       <div className="flex items-start justify-between gap-3">
@@ -1714,7 +1714,7 @@ function AdminPageContent() {
         {activeTab === 'wend' && (
           <div className="flex flex-col gap-6 animate-in fade-in duration-200">
             {/* Header & Reset Button */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 sm:p-5 border border-[#DADCE0] shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 sm:p-5 border border-[#E5E7EB] shadow-xs">
               <div>
                 <div className="flex items-center gap-2">
                   <span className="flex h-7 w-7 items-center justify-center bg-[#FCE8E6] text-[#C5221F] border border-[#EA4335]/30">
@@ -1732,7 +1732,7 @@ function AdminPageContent() {
               <button
                 type="button"
                 onClick={handleResetToReferenceBoard}
-                className="inline-flex items-center gap-1.5 border border-[#DADCE0] bg-white px-4 py-2 font-mono text-xs font-bold text-[#1A73E8] shadow-2xs hover:bg-[#E8F0FE] transition-all self-start sm:self-auto cursor-pointer"
+                className="inline-flex items-center gap-1.5 border border-[#E5E7EB] bg-white px-4 py-2 font-mono text-xs font-bold text-[#1A73E8] shadow-2xs hover:bg-[#E8F0FE] transition-all self-start sm:self-auto cursor-pointer"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 <span>{'Reset Reference "H & I" Board'}</span>
@@ -1740,8 +1740,8 @@ function AdminPageContent() {
             </div>
 
             {/* Wend Word Arena Settings & Information */}
-            <div className="border border-[#DADCE0] bg-white p-5 sm:p-6 shadow-xs">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 pb-3 border-b border-[#DADCE0]">
+            <div className="border border-[#E5E7EB] bg-white p-5 sm:p-6 shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 pb-3 border-b border-[#E5E7EB]">
                 <div className="flex items-center gap-2.5">
                   <div className="flex h-9 w-9 items-center justify-center border border-[#34A853] bg-[#E6F4EA] text-[#137333]">
                     <Edit3 className="h-4.5 w-4.5" />
@@ -1775,7 +1775,7 @@ function AdminPageContent() {
                     type="text"
                     value={wendArenaTitle}
                     onChange={(e) => setWendArenaTitle(e.target.value)}
-                    className="w-full rounded-2xl border border-[#DADCE0] bg-[#F8F9FA] px-3.5 py-2.5 text-xs font-bold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#34A853] focus:bg-white"
+                    className="w-full rounded-2xl border border-[#E5E7EB] bg-[#F8F9FA] px-3.5 py-2.5 text-xs font-bold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#34A853] focus:bg-white"
                     placeholder="Enter Wend Arena title"
                   />
                 </div>
@@ -1787,7 +1787,7 @@ function AdminPageContent() {
                     type="text"
                     value={wendArenaDesc}
                     onChange={(e) => setWendArenaDesc(e.target.value)}
-                    className="w-full rounded-2xl border border-[#DADCE0] bg-[#F8F9FA] px-3.5 py-2.5 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#34A853] focus:bg-white"
+                    className="w-full rounded-2xl border border-[#E5E7EB] bg-[#F8F9FA] px-3.5 py-2.5 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#34A853] focus:bg-white"
                     placeholder="Enter Wend Arena description"
                   />
                 </div>
@@ -1795,7 +1795,7 @@ function AdminPageContent() {
             </div>
 
             {/* Wend Round Duration & Live Timer Controller */}
-            <div className="rounded-3xl border border-[#DADCE0]/80 bg-white/90 backdrop-blur-md p-5 sm:p-6 shadow-xs">
+            <div className="rounded-3xl border border-[#E5E7EB]/80 bg-white/90 backdrop-blur-md p-5 sm:p-6 shadow-xs">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-[#F1F3F4]">
                 <div className="flex items-center gap-2.5">
                   <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#E6F4EA] text-[#137333] shadow-2xs">
@@ -1835,7 +1835,7 @@ function AdminPageContent() {
                       className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition-all active:scale-95 cursor-pointer ${
                         (wendBoard.timeLimitSeconds || 120) === preset.val
                           ? 'bg-[#137333] text-white shadow-xs'
-                          : 'border border-[#DADCE0] bg-[#F8F9FA] text-[#3C4043] hover:bg-white hover:border-[#137333]'
+                          : 'border border-[#E5E7EB] bg-[#F8F9FA] text-[#3C4043] hover:bg-white hover:border-[#137333]'
                       }`}
                     >
                       {preset.label}
@@ -1852,7 +1852,7 @@ function AdminPageContent() {
                     step={15}
                     value={wendBoard.timeLimitSeconds || 120}
                     onChange={(e) => handleSetWendTimeLimit(Number(e.target.value))}
-                    className="w-24 rounded-xl border border-[#DADCE0] bg-[#F8F9FA] px-3 py-1.5 text-xs font-bold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#34A853] focus:bg-white"
+                    className="w-24 rounded-xl border border-[#E5E7EB] bg-[#F8F9FA] px-3 py-1.5 text-xs font-bold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#34A853] focus:bg-white"
                   />
                   <span className="text-xs font-semibold text-[#5F6368]">seconds</span>
                 </div>
@@ -1860,7 +1860,7 @@ function AdminPageContent() {
             </div>
 
             {/* Visual 8x8 Grid Editor Card */}
-            <div className="rounded-3xl border border-[#DADCE0]/80 bg-white/90 backdrop-blur-md p-5 sm:p-6 shadow-xs">
+            <div className="rounded-3xl border border-[#E5E7EB]/80 bg-white/90 backdrop-blur-md p-5 sm:p-6 shadow-xs">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-[#F1F3F4]">
                 <div className="flex items-center gap-2">
                   <Grid className="h-5 w-5 text-[#1A73E8]" />
@@ -1890,7 +1890,7 @@ function AdminPageContent() {
                   <button
                     type="button"
                     onClick={handleResetToReferenceBoard}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-[#DADCE0] bg-white px-3 py-1.5 text-xs font-bold text-[#5F6368] hover:text-[#1A73E8] hover:bg-[#F8F9FA] transition-all shadow-2xs cursor-pointer"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] bg-white px-3 py-1.5 text-xs font-bold text-[#5F6368] hover:text-[#1A73E8] hover:bg-[#F8F9FA] transition-all shadow-2xs cursor-pointer"
                   >
                     <RotateCcw className="h-3 w-3" />
                     <span>Reset Board</span>
@@ -1936,8 +1936,8 @@ function AdminPageContent() {
                                 : isInPreview
                                 ? 'bg-[#E6F4EA] border-2 border-[#34A853] text-[#137333] shadow-xs'
                                 : isEmpty
-                                ? 'border-2 border-dashed border-[#DADCE0] bg-white text-[#BDC1C6] hover:bg-[#F1F3F4] hover:border-[#1A73E8]/50'
-                                : 'bg-white text-[#202124] border border-[#DADCE0] shadow-2xs hover:border-[#1A73E8]/60'
+                                ? 'border-2 border-dashed border-[#E5E7EB] bg-white text-[#BDC1C6] hover:bg-[#F1F3F4] hover:border-[#1A73E8]/50'
+                                : 'bg-white text-[#202124] border border-[#E5E7EB] shadow-2xs hover:border-[#1A73E8]/60'
                             } ${
                               isFocused
                                 ? 'ring-4 ring-[#1A73E8] border-[#1A73E8] bg-[#E8F0FE] text-[#1A73E8] z-20 scale-105 shadow-md'
@@ -1975,7 +1975,7 @@ function AdminPageContent() {
             </div>
 
             {/* Target Words Manager & Solvability Checker */}
-            <div className="rounded-3xl border border-[#DADCE0]/80 bg-white/90 backdrop-blur-md p-5 sm:p-6 shadow-xs">
+            <div className="rounded-3xl border border-[#E5E7EB]/80 bg-white/90 backdrop-blur-md p-5 sm:p-6 shadow-xs">
               <div className="flex items-center gap-2 mb-4">
                 <Sparkles className="h-5 w-5 text-[#FBBC04]" />
                 <h3 className="text-base font-bold text-[#202124]">
@@ -1995,7 +1995,7 @@ function AdminPageContent() {
                       value={newTargetWord}
                       onChange={(e) => setNewTargetWord(e.target.value)}
                       placeholder="e.g. LIGHT, SHIRE, INHI"
-                      className="w-full uppercase tracking-wider rounded-xl border border-[#DADCE0] bg-[#F8F9FA] px-3 py-2 text-xs font-bold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:bg-white"
+                      className="w-full uppercase tracking-wider rounded-xl border border-[#E5E7EB] bg-[#F8F9FA] px-3 py-2 text-xs font-bold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:bg-white"
                       required
                     />
                   </div>
@@ -2008,7 +2008,7 @@ function AdminPageContent() {
                       value={newTargetHint}
                       onChange={(e) => setNewTargetHint(e.target.value)}
                       placeholder="e.g. Illuminating row across the bottom"
-                      className="w-full rounded-xl border border-[#DADCE0] bg-[#F8F9FA] px-3 py-2 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:bg-white font-medium"
+                      className="w-full rounded-xl border border-[#E5E7EB] bg-[#F8F9FA] px-3 py-2 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:bg-white font-medium"
                     />
                   </div>
                 </div>
@@ -2036,7 +2036,7 @@ function AdminPageContent() {
                         onClick={(e) => e.stopPropagation()}
                         className="flex flex-col rounded-2xl border-2 border-[#1A73E8] bg-white p-4 shadow-sm animate-in zoom-in-95"
                       >
-                        <div className="flex items-center justify-between pb-1.5 mb-2.5 border-b border-[#DADCE0]">
+                        <div className="flex items-center justify-between pb-1.5 mb-2.5 border-b border-[#E5E7EB]">
                           <span className="text-[11px] font-bold text-[#1A73E8] uppercase tracking-wider flex items-center gap-1.5">
                             <Edit3 className="h-3 w-3" />
                             Editing Target Word #{idx + 1}
@@ -2052,7 +2052,7 @@ function AdminPageContent() {
                               type="text"
                               value={editTargetWordStr}
                               onChange={(e) => setEditTargetWordStr(e.target.value)}
-                              className="w-full uppercase tracking-wider rounded-xl border border-[#DADCE0] bg-[#F8F9FA] px-3 py-1.5 text-xs font-bold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:bg-white"
+                              className="w-full uppercase tracking-wider rounded-xl border border-[#E5E7EB] bg-[#F8F9FA] px-3 py-1.5 text-xs font-bold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:bg-white"
                               placeholder="e.g. LIGHT"
                               autoFocus
                             />
@@ -2066,7 +2066,7 @@ function AdminPageContent() {
                               type="text"
                               value={editTargetWordHint}
                               onChange={(e) => setEditTargetWordHint(e.target.value)}
-                              className="w-full rounded-xl border border-[#DADCE0] bg-[#F8F9FA] px-3 py-1.5 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:bg-white"
+                              className="w-full rounded-xl border border-[#E5E7EB] bg-[#F8F9FA] px-3 py-1.5 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:bg-white"
                               placeholder="e.g. Illuminating row across the bottom"
                             />
                           </div>
@@ -2076,7 +2076,7 @@ function AdminPageContent() {
                           <button
                             type="button"
                             onClick={handleCancelEditTargetWord}
-                            className="inline-flex items-center gap-1 rounded-full border border-[#DADCE0] bg-white px-3 py-1 text-[11px] font-semibold text-[#5F6368] hover:bg-[#F1F3F4]"
+                            className="inline-flex items-center gap-1 rounded-full border border-[#E5E7EB] bg-white px-3 py-1 text-[11px] font-semibold text-[#5F6368] hover:bg-[#F1F3F4]"
                           >
                             <X className="h-3 w-3" />
                             <span>Cancel</span>
@@ -2101,12 +2101,12 @@ function AdminPageContent() {
                       className={`group/word flex items-center justify-between rounded-2xl border p-3.5 shadow-2xs hover:shadow-xs transition-all cursor-pointer ${
                         previewWordId === tw.id
                           ? 'border-[#34A853] bg-[#E6F4EA]/40'
-                          : 'border-[#DADCE0] bg-[#F8F9FA] hover:border-[#1A73E8]/50 hover:bg-white'
+                          : 'border-[#E5E7EB] bg-[#F8F9FA] hover:border-[#1A73E8]/50 hover:bg-white'
                       }`}
                       title="Click card to edit word and hint"
                     >
                       <div className="flex items-center gap-3">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-xs font-black text-[#5F6368] border border-[#DADCE0]">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-xs font-black text-[#5F6368] border border-[#E5E7EB]">
                           #{idx + 1}
                         </span>
                         <div className="flex flex-col">
@@ -2114,7 +2114,7 @@ function AdminPageContent() {
                             <span className="text-sm font-black tracking-wider text-[#202124] group-hover/word:text-[#1A73E8] transition-colors">
                               {tw.word}
                             </span>
-                            <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-[#5F6368] border border-[#DADCE0]">
+                            <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-[#5F6368] border border-[#E5E7EB]">
                               {tw.word.length} letters
                             </span>
                             {/* Live Solvability Badge */}
@@ -2155,7 +2155,7 @@ function AdminPageContent() {
                           className={`flex h-8 items-center gap-1 rounded-full px-3 text-xs font-bold transition-all cursor-pointer ${
                             previewWordId === tw.id
                               ? 'bg-[#34A853] text-white shadow-2xs'
-                              : 'bg-white border border-[#DADCE0] text-[#5F6368] hover:text-[#1A73E8] hover:border-[#1A73E8]'
+                              : 'bg-white border border-[#E5E7EB] text-[#5F6368] hover:text-[#1A73E8] hover:border-[#1A73E8]'
                           }`}
                         >
                           {previewWordId === tw.id ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
@@ -2188,7 +2188,7 @@ function AdminPageContent() {
         {activeTab === 'winners' && (
           <div className="flex flex-col gap-6 animate-in fade-in duration-200">
             {/* Header & Track Selector */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 sm:p-5 border border-[#DADCE0] shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 sm:p-5 border border-[#E5E7EB] shadow-xs">
               <div>
                 <div className="flex items-center gap-2">
                   <span className="flex h-7 w-7 items-center justify-center bg-[#FEF7E0] text-[#B06000] border border-[#FBBC04]/50">
@@ -2204,7 +2204,7 @@ function AdminPageContent() {
               </div>
 
               {/* Track Selector */}
-              <div className="flex items-center gap-1 border border-[#DADCE0] bg-[#F8F9FA] p-1 shadow-2xs self-start sm:self-auto font-mono text-xs font-bold">
+              <div className="flex items-center gap-1 border border-[#E5E7EB] bg-[#F8F9FA] p-1 shadow-2xs self-start sm:self-auto font-mono text-xs font-bold">
                 <button
                   type="button"
                   onClick={() => handleSelectWinnersTrack('web-dev-quiz')}
@@ -2258,7 +2258,7 @@ function AdminPageContent() {
                 </p>
 
                 {/* Timeline Step Sequence Indicator */}
-                <div className="mb-5 flex flex-wrap items-center justify-center gap-1.5 font-mono text-[11px] font-bold text-[#5F6368] bg-white px-4 py-2 border border-[#DADCE0] shadow-2xs">
+                <div className="mb-5 flex flex-wrap items-center justify-center gap-1.5 font-mono text-[11px] font-bold text-[#5F6368] bg-white px-4 py-2 border border-[#E5E7EB] shadow-2xs">
                   <span className="text-[#1A73E8]">1. 5s Countdown</span>
                   <span>➔</span>
                   <span className="text-[#E37400]">2. 3rd Place</span>
@@ -2271,7 +2271,7 @@ function AdminPageContent() {
                 </div>
 
                 {/* WebSocket Health Badge */}
-                <div className="mb-4 inline-flex items-center gap-2 bg-white px-4 py-1.5 font-mono text-xs font-bold shadow-2xs border border-[#DADCE0]">
+                <div className="mb-4 inline-flex items-center gap-2 bg-white px-4 py-1.5 font-mono text-xs font-bold shadow-2xs border border-[#E5E7EB]">
                   {connected ? (
                     <>
                       <span className="h-2 w-2 bg-[#34A853] animate-pulse" />
@@ -2306,7 +2306,7 @@ function AdminPageContent() {
                     <button
                       type="button"
                       onClick={() => handleSimulateTieTest(selectedSlug)}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-1.5 text-xs font-bold text-[#1A73E8] border border-[#DADCE0] hover:bg-[#F8F9FA] shadow-xs active:scale-95 transition-all cursor-pointer"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-1.5 text-xs font-bold text-[#1A73E8] border border-[#E5E7EB] hover:bg-[#F8F9FA] shadow-xs active:scale-95 transition-all cursor-pointer"
                     >
                       <Sparkles className="h-3.5 w-3.5 text-[#FBBC04]" />
                       <span>Load Test Participants to Try Broadcast</span>
@@ -2331,8 +2331,8 @@ function AdminPageContent() {
               </div>
 
               {automatedRanking.winners.length === 0 ? (
-                <div className="rounded-3xl border border-[#DADCE0]/80 bg-white/90 backdrop-blur-md p-8 text-center shadow-xs">
-                  <Trophy className="h-10 w-10 text-[#DADCE0] mx-auto mb-2" />
+                <div className="rounded-3xl border border-[#E5E7EB]/80 bg-white/90 backdrop-blur-md p-8 text-center shadow-xs">
+                  <Trophy className="h-10 w-10 text-[#E5E7EB] mx-auto mb-2" />
                   <h4 className="text-sm font-bold text-[#202124]">No Submissions Recorded Yet for this Track</h4>
                   <p className="text-xs text-[#5F6368] max-w-md mx-auto mt-1 mb-4 leading-relaxed font-medium">
                     When attendees submit their challenge responses, their scores and completion times will automatically populate the victory podium and tie-breaker standings.
@@ -2341,7 +2341,7 @@ function AdminPageContent() {
                     <button
                       type="button"
                       onClick={() => refreshStandings(selectedSlug)}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-[#DADCE0] bg-white px-4 py-2 text-xs font-bold text-[#3C4043] hover:bg-[#F8F9FA] cursor-pointer shadow-2xs"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] bg-white px-4 py-2 text-xs font-bold text-[#3C4043] hover:bg-[#F8F9FA] cursor-pointer shadow-2xs"
                     >
                       <RefreshCw className="h-3.5 w-3.5" />
                       <span>Refresh</span>
@@ -2364,7 +2364,7 @@ function AdminPageContent() {
                       const w2 = automatedRanking.winners.find((w) => w.rank === 2)!
                       return (
                         <div className="rounded-3xl border-2 border-[#9AA0A6]/50 bg-white p-5 shadow-xs flex flex-col gap-3 relative overflow-hidden order-2 md:order-1">
-                          <div className="absolute top-0 right-0 bg-[#F1F3F4] border-b border-l border-[#DADCE0] px-3 py-1 rounded-bl-xl text-[10px] font-black text-[#5F6368] uppercase tracking-wider">
+                          <div className="absolute top-0 right-0 bg-[#F1F3F4] border-b border-l border-[#E5E7EB] px-3 py-1 rounded-bl-xl text-[10px] font-black text-[#5F6368] uppercase tracking-wider">
                             Runner-Up
                           </div>
 
@@ -2412,7 +2412,7 @@ function AdminPageContent() {
                             </div>
 
                             {w2.tieBrokenByTime && (
-                              <div className="mt-1 flex items-center gap-1 rounded-xl bg-[#F8F9FA] border border-[#DADCE0] p-2 text-[10px] font-bold text-[#5F6368]">
+                              <div className="mt-1 flex items-center gap-1 rounded-xl bg-[#F8F9FA] border border-[#E5E7EB] p-2 text-[10px] font-bold text-[#5F6368]">
                                 <Zap className="h-3 w-3 shrink-0 text-[#9AA0A6]" />
                                 <span>Tied on Score • Rank decided by completion time</span>
                               </div>
@@ -2422,8 +2422,8 @@ function AdminPageContent() {
                       )
                     })()
                   ) : (
-                    <div className="rounded-3xl border border-dashed border-[#DADCE0] p-6 text-center text-xs text-[#5F6368] order-2 md:order-1 flex flex-col items-center justify-center min-h-[180px]">
-                      <Medal className="h-6 w-6 text-[#DADCE0] mb-1" />
+                    <div className="rounded-3xl border border-dashed border-[#E5E7EB] p-6 text-center text-xs text-[#5F6368] order-2 md:order-1 flex flex-col items-center justify-center min-h-[180px]">
+                      <Medal className="h-6 w-6 text-[#E5E7EB] mb-1" />
                       <span>Awaiting 2nd Place Participant</span>
                     </div>
                   )}
@@ -2492,8 +2492,8 @@ function AdminPageContent() {
                       )
                     })()
                   ) : (
-                    <div className="rounded-3xl border border-dashed border-[#DADCE0] p-6 text-center text-xs text-[#5F6368] order-1 md:order-2 flex flex-col items-center justify-center min-h-[180px]">
-                      <Crown className="h-6 w-6 text-[#DADCE0] mb-1" />
+                    <div className="rounded-3xl border border-dashed border-[#E5E7EB] p-6 text-center text-xs text-[#5F6368] order-1 md:order-2 flex flex-col items-center justify-center min-h-[180px]">
+                      <Crown className="h-6 w-6 text-[#E5E7EB] mb-1" />
                       <span>Awaiting 1st Place Champion</span>
                     </div>
                   )}
@@ -2552,7 +2552,7 @@ function AdminPageContent() {
                             </div>
 
                             {w3.tieBrokenByTime && (
-                              <div className="mt-1 flex items-center gap-1 rounded-xl bg-[#F8F9FA] border border-[#DADCE0] p-2 text-[10px] font-bold text-[#5F6368]">
+                              <div className="mt-1 flex items-center gap-1 rounded-xl bg-[#F8F9FA] border border-[#E5E7EB] p-2 text-[10px] font-bold text-[#5F6368]">
                                 <Zap className="h-3 w-3 shrink-0 text-[#E37400]" />
                                 <span>Tied on Score • Rank decided by completion time</span>
                               </div>
@@ -2562,8 +2562,8 @@ function AdminPageContent() {
                       )
                     })()
                   ) : (
-                    <div className="rounded-3xl border border-dashed border-[#DADCE0] p-6 text-center text-xs text-[#5F6368] order-3 flex flex-col items-center justify-center min-h-[180px]">
-                      <Award className="h-6 w-6 text-[#DADCE0] mb-1" />
+                    <div className="rounded-3xl border border-dashed border-[#E5E7EB] p-6 text-center text-xs text-[#5F6368] order-3 flex flex-col items-center justify-center min-h-[180px]">
+                      <Award className="h-6 w-6 text-[#E5E7EB] mb-1" />
                       <span>Awaiting 3rd Place Participant</span>
                     </div>
                   )}
@@ -2572,7 +2572,7 @@ function AdminPageContent() {
             </div>
 
             {/* Official Ranked Standings & Audit Table */}
-            <div className="rounded-3xl border border-[#DADCE0]/80 bg-white/90 backdrop-blur-md p-5 sm:p-6 shadow-xs">
+            <div className="rounded-3xl border border-[#E5E7EB]/80 bg-white/90 backdrop-blur-md p-5 sm:p-6 shadow-xs">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 mb-4 border-b border-[#F1F3F4]">
                 <div>
                   <h3 className="text-base font-bold text-[#202124] flex items-center gap-2">
@@ -2588,7 +2588,7 @@ function AdminPageContent() {
                   <button
                     type="button"
                     onClick={() => refreshStandings(selectedSlug)}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-[#DADCE0] bg-white px-3.5 py-1.5 text-xs font-bold text-[#3C4043] hover:bg-[#F8F9FA] transition-colors shadow-2xs cursor-pointer"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] bg-white px-3.5 py-1.5 text-xs font-bold text-[#3C4043] hover:bg-[#F8F9FA] transition-colors shadow-2xs cursor-pointer"
                   >
                     <RefreshCw className="h-3.5 w-3.5" />
                     <span>Refresh</span>
@@ -2616,7 +2616,7 @@ function AdminPageContent() {
 
               {automatedRanking.rankedParticipants.length === 0 ? (
                 <div className="p-8 text-center text-xs text-[#5F6368]">
-                  <HelpCircle className="h-8 w-8 text-[#DADCE0] mx-auto mb-2" />
+                  <HelpCircle className="h-8 w-8 text-[#E5E7EB] mx-auto mb-2" />
                   <p className="font-bold text-[#202124]">No participant submissions recorded yet for this track</p>
                   <p className="mt-1 font-medium">
                     When attendees submit their responses, their ranked standing will automatically calculate here in real-time.
@@ -2645,7 +2645,7 @@ function AdminPageContent() {
                             ? 'border-[#9AA0A6] bg-[#F8F9FA]'
                             : p.rank === 3
                             ? 'border-[#E37400]/40 bg-[#FBE9E7]/30'
-                            : 'border-[#DADCE0] bg-white hover:border-[#BDC1C6]'
+                            : 'border-[#E5E7EB] bg-white hover:border-[#BDC1C6]'
                         }`}
                       >
                         {/* Left: Rank & Participant */}
@@ -2667,7 +2667,7 @@ function AdminPageContent() {
                           <img
                             src={p.avatar}
                             alt={p.name}
-                            className="h-10 w-10 rounded-full border border-[#DADCE0] object-cover"
+                            className="h-10 w-10 rounded-full border border-[#E5E7EB] object-cover"
                           />
 
                           <div className="flex flex-col">
@@ -2680,7 +2680,7 @@ function AdminPageContent() {
                                 </span>
                               )}
                               {p.rank === 2 && (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-[#F1F3F4] border border-[#DADCE0] px-2 py-0.2 text-[10px] font-bold text-[#5F6368]">
+                                <span className="inline-flex items-center gap-1 rounded-full bg-[#F1F3F4] border border-[#E5E7EB] px-2 py-0.2 text-[10px] font-bold text-[#5F6368]">
                                   <Medal className="h-3 w-3" />
                                   2nd Place
                                 </span>
@@ -2712,7 +2712,7 @@ function AdminPageContent() {
                           {/* Priority 2 Badge */}
                           <span
                             title="Priority 2: Duration taken"
-                            className="inline-flex items-center gap-1 rounded-full bg-white border border-[#DADCE0] px-3 py-1 text-xs font-bold text-[#137333]"
+                            className="inline-flex items-center gap-1 rounded-full bg-white border border-[#E5E7EB] px-3 py-1 text-xs font-bold text-[#137333]"
                           >
                             <Clock className="h-3.5 w-3.5" />
                             <span>{formatDuration(p.durationMs)}</span>

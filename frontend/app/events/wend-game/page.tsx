@@ -605,125 +605,92 @@ export default function WendGamePage() {
 
         {/* --- LOCKED OVERLAY --- */}
         {isLocked ? (
-          <div className="my-auto flex flex-col items-center rounded-[32px] border border-white/80 bg-white/95 p-8 text-center shadow-sm max-w-md w-full backdrop-blur-xl">
+          <div className="my-auto flex flex-col items-center rounded-2xl border border-[#E5E7EB] bg-white p-8 text-center max-w-sm w-full">
             <div className="mb-4 flex items-center justify-center">
-              <LockedIllustration size={100} />
+              <LockedIllustration size={80} />
             </div>
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-[#F1F3F4] px-3.5 py-1 text-xs font-semibold text-[#5F6368] mb-3">
-              <Lock className="h-3.5 w-3.5" />
-              <span>Track Currently Locked</span>
-            </div>
-            <h2 className="text-xl font-bold tracking-tight text-[#202124]">
-              Wend Word Arena is Locked
+            <span className="font-mono text-[9px] uppercase tracking-[0.24em] text-[#9CA3AF] mb-1">
+              STATUS // RESTRICTED
+            </span>
+            <h2 className="text-xl font-normal tracking-[-0.03em] text-[#111827]">
+              Wend Word Arena Locked
             </h2>
-            <p className="mt-2 text-xs text-[#5F6368] leading-relaxed">
-              The event host has locked this challenge arena. When unlocked or launched with a countdown, the puzzle will unlock automatically.
+            <p className="mt-1.5 text-xs text-[#6B7280] leading-relaxed">
+              The organizer has restricted access to this arena. The grid unlocks automatically when live.
             </p>
-            <div className="mt-6 flex gap-3 w-full">
+            <div className="mt-6 flex w-full">
               <Link
                 href="/"
-                className="flex h-11 flex-1 items-center justify-center rounded-full border border-[#DADCE0] bg-white text-xs font-semibold text-[#3C4043] hover:bg-[#F8F9FA] transition-all"
+                className="flex h-11 flex-1 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white text-xs font-medium text-[#111827] hover:border-[#111827] transition-all cursor-pointer"
               >
                 Return to Hub
               </Link>
             </div>
           </div>
         ) : isMySession && completedSession ? (
-          /* --- AESTHETIC WAIT MESSAGE & SESSION INFO SCREEN --- */
-          <div className="relative my-auto flex flex-col items-center rounded-[36px] border border-white/90 bg-white/95 p-7 sm:p-9 text-center shadow-[0_15px_45px_rgba(0,0,0,0.06)] backdrop-blur-2xl animate-in zoom-in-95 duration-400 w-full overflow-hidden">
-            {/* Top Google 4-Color Accent Ribbon */}
-            <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-[#4285F4] via-[#EA4335] via-[#FBBC04] to-[#34A853]" />
-
+          /* --- EDITORIAL COMPLETED SESSION RECEIPT SCREEN --- */
+          <div className="relative my-auto flex flex-col items-center rounded-2xl border border-[#E5E7EB] bg-white p-7 sm:p-9 text-center shadow-[0_12px_40px_rgba(0,0,0,0.03)] w-full max-w-md animate-in fade-in zoom-in-95 duration-200">
             {/* Status Pill Badge */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#34A853]/30 bg-[#E6F4EA] px-4 py-1.5 text-xs font-semibold text-[#137333] shadow-2xs animate-badge-glow">
-              <span className="h-2 w-2 rounded-full bg-[#34A853] animate-ping" />
-              <span>Puzzle Completed Successfully</span>
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-[#34A853]/40 bg-[#F0FDF4] px-3.5 py-1 font-mono text-[10px] tracking-wider uppercase text-[#15803D]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#34A853]" />
+              <span>Puzzle Completed</span>
             </div>
 
-            {/* Pulsing Central Clock Icon with Concentric Ripple */}
-            <div className="my-6 relative flex h-24 w-24 items-center justify-center">
-              <div className="absolute inset-0 rounded-full border-2 border-[#34A853]/30 animate-ripple-1 pointer-events-none" />
-              <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#E6F4EA] to-[#CEEAD6] text-[#137333] shadow-lg ring-6 ring-[#E6F4EA]/60 animate-float">
-                <Clock className="h-10 w-10 text-[#137333]" />
-              </div>
-            </div>
-
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#202124]">
-              Session Completed!
+            <h2 className="text-3xl font-normal tracking-[-0.035em] text-[#111827] mt-5">
+              Session Recorded
             </h2>
-            <p className="mt-2 text-xs sm:text-sm text-[#5F6368] max-w-xs leading-relaxed">
-              Your word puzzle responses have been securely recorded. Wait for the host to announce the contest champions during the live ceremony.
+            <p className="mt-1.5 text-xs text-[#6B7280] max-w-xs leading-relaxed">
+              Your discovered word paths are recorded into the tournament index.
             </p>
 
-            {/* Session Info Receipt Card (Google Pass Style) */}
-            <div className="my-6 w-full max-w-sm rounded-[24px] border border-[#DADCE0] bg-gradient-to-b from-white to-[#F8F9FA] p-4 text-left shadow-2xs">
-              <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-[#DADCE0]">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#5F6368] flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-[#FBBC04]" />
-                  <span>Session Receipt</span>
+            {/* Session Info Receipt Card */}
+            <div className="my-6 w-full rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] p-4 text-left">
+              <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-[#E5E7EB]">
+                <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#6B7280]">
+                  OFFICIAL RECEIPT
                 </span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-0.5 text-[10px] font-bold text-[#1A73E8] border border-[#DADCE0] shadow-2xs font-mono">
-                  {completedSession.sessionId.slice(0, 16)}
+                <span className="font-mono text-[9px] text-[#9CA3AF]">
+                  {completedSession.sessionId.slice(0, 14)}
                 </span>
               </div>
 
               <div className="space-y-2 text-xs">
                 <div className="flex justify-between items-center">
-                  <span className="text-[#5F6368]">Event Track:</span>
-                  <span className="font-semibold text-[#202124]">{completedSession.eventTitle}</span>
+                  <span className="text-[#6B7280]">Track:</span>
+                  <span className="font-medium text-[#111827]">{completedSession.eventTitle}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-[#5F6368]">Participant:</span>
-                  <span className="font-semibold text-[#202124]">{completedSession.userName}</span>
+                  <span className="text-[#6B7280]">Participant:</span>
+                  <span className="font-medium text-[#111827]">{completedSession.userName}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-[#5F6368]">Words Solved:</span>
-                  <span className="font-semibold text-[#202124]">{completedSession.totalItems} words</span>
+                  <span className="text-[#6B7280]">Words Discovered:</span>
+                  <span className="font-medium text-[#111827]">{completedSession.totalItems} words</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-[#5F6368]">Allocated Game Time:</span>
-                  <span className="font-semibold text-[#1A73E8] flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    <span>{allocatedTimeSeconds}s (Set by Host)</span>
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[#5F6368]">Time Remaining:</span>
-                  <span className={`font-semibold ${timeLeft > 0 ? 'text-[#137333]' : 'text-[#EA4335]'}`}>
-                    {timeLeft > 0 ? `${timeLeft}s remaining` : 'Time Expired (0s)'}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[#5F6368]">Time Taken:</span>
-                  <span className="font-semibold text-[#202124]">
+                  <span className="text-[#6B7280]">Duration:</span>
+                  <span className="font-mono font-medium text-[#111827]">
                     {formatDuration(completedSession.durationMs)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-[#5F6368]">Evaluation Status:</span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[#FEF7E0] px-2.5 py-0.5 text-[10px] font-bold text-[#B06000]">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#FBBC04] animate-pulse" />
-                    Pending Host Ceremony
+                  <span className="text-[#6B7280]">Status:</span>
+                  <span className="inline-flex items-center gap-1 font-mono text-[10px] text-[#B45309] uppercase">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#FBBC04]" />
+                    Awaiting Ceremony
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Live Broadcast Notice */}
-            <div className="flex items-center justify-center gap-2 rounded-full border border-[#DADCE0] bg-white px-4 py-2 text-xs font-semibold text-[#3C4043] shadow-xs mb-4">
-              <Sparkles className="h-3.5 w-3.5 text-[#FBBC04] animate-spin" style={{ animationDuration: '6s' }} />
-              <span>Winners will broadcast live on this screen</span>
-            </div>
-
-            {/* Actions: ONLY Redirect Home (No Replay / Play Again on user side) */}
-            <div className="flex w-full max-w-sm justify-center">
+            {/* Actions: Return to Hub */}
+            <div className="flex w-full justify-center">
               <Link
                 href="/"
-                className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#1A73E8] to-[#4285F4] text-xs font-bold text-white shadow-md shadow-[#1A73E8]/25 hover:from-[#1765CC] hover:to-[#1A73E8] active:scale-95 transition-all"
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#111827] text-xs font-medium uppercase tracking-wider text-white hover:bg-black transition-all cursor-pointer"
               >
-                <Home className="h-4 w-4" />
-                <span>Redirect Home</span>
-                <ArrowRight className="h-4 w-4" />
+                <Home className="h-3.5 w-3.5" />
+                <span>Return to Hub</span>
               </Link>
             </div>
           </div>

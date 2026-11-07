@@ -32,7 +32,7 @@ export function SecurityNotificationBell() {
         type="button"
         onClick={handleToggle}
         title="Live Security & Screenshot Alerts"
-        className="relative flex h-9 w-9 items-center justify-center rounded-full border border-[#DADCE0] bg-white text-[#5F6368] hover:bg-[#F8F9FA] hover:text-[#202124] transition-all active:scale-95 shadow-2xs"
+        className="relative flex h-9 w-9 items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-[#5F6368] hover:bg-[#F8F9FA] hover:text-[#202124] transition-all active:scale-95 shadow-2xs"
       >
         <Bell className="h-4 w-4" />
 
@@ -49,7 +49,7 @@ export function SecurityNotificationBell() {
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
 
-          <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-[24px] border border-[#DADCE0] bg-white shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-[24px] border border-[#E5E7EB] bg-white shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-[#F1F3F4] px-4 py-3 bg-gradient-to-r from-white to-[#F8F9FA]">
               <div className="flex items-center gap-2">
@@ -100,7 +100,7 @@ export function SecurityNotificationBell() {
                           <img
                             src={alert.avatar}
                             alt={alert.userName}
-                            className="h-8 w-8 rounded-full border border-[#DADCE0] object-cover"
+                            className="h-8 w-8 rounded-full border border-[#E5E7EB] object-cover"
                           />
                         ) : (
                           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#E8F0FE] text-[#1A73E8]">

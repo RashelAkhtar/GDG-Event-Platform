@@ -221,7 +221,7 @@ function GameManipulatorModalInner({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative flex flex-col w-full max-w-4xl max-h-[92vh] rounded-[28px] sm:rounded-[32px] bg-white text-[#202124] shadow-2xl border border-[#DADCE0] overflow-hidden"
+        className="relative flex flex-col w-full max-w-4xl max-h-[92vh] rounded-[28px] sm:rounded-[32px] bg-white text-[#202124] shadow-2xl border border-[#E5E7EB] overflow-hidden"
       >
         {/* Top Google Quad-Color Header Stripe */}
         <div className="h-1.5 w-full bg-gradient-to-r from-[#4285F4] via-[#EA4335] via-[#FBBC04] to-[#34A853]" />
@@ -266,7 +266,7 @@ function GameManipulatorModalInner({
             </a>
             <button
               onClick={onClose}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-[#DADCE0] bg-white text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] transition-colors cursor-pointer"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] transition-colors cursor-pointer"
             >
               <X className="h-4 w-4" />
             </button>
@@ -390,7 +390,7 @@ function GameManipulatorModalInner({
                         className={`group flex items-start justify-between rounded-2xl p-3 border transition-all cursor-pointer ${
                           isSelected
                             ? 'border-[#1A73E8] bg-white ring-2 ring-[#1A73E8]/20 shadow-sm'
-                            : 'border-[#DADCE0] bg-white hover:border-[#BDC1C6] hover:bg-[#F8F9FA]'
+                            : 'border-[#E5E7EB] bg-white hover:border-[#BDC1C6] hover:bg-[#F8F9FA]'
                         }`}
                       >
                         <div className="flex items-start gap-2.5 flex-1 min-w-0 pr-2">
@@ -435,7 +435,7 @@ function GameManipulatorModalInner({
               </div>
 
               {/* Right Column: Active Question Editor */}
-              <div className="md:col-span-7 flex flex-col gap-4 rounded-3xl border border-[#DADCE0] bg-white p-5 shadow-xs">
+              <div className="md:col-span-7 flex flex-col gap-4 rounded-3xl border border-[#E5E7EB] bg-white p-5 shadow-xs">
                 {activeQuestion ? (
                   <>
                     <div className="flex items-center justify-between pb-3 border-b border-[#F1F3F4]">
@@ -462,7 +462,7 @@ function GameManipulatorModalInner({
                         value={activeQuestion.questionText}
                         onChange={(e) => handleUpdateActiveQuestion('questionText', e.target.value)}
                         placeholder="Type the question prompt here..."
-                        className="w-full rounded-2xl border border-[#DADCE0] bg-white p-3 text-xs sm:text-sm font-medium text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                        className="w-full rounded-2xl border border-[#E5E7EB] bg-white p-3 text-xs sm:text-sm font-medium text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
                       />
                     </div>
 
@@ -487,7 +487,7 @@ function GameManipulatorModalInner({
                               className={`flex items-center gap-2 rounded-2xl border p-2 transition-all ${
                                 isCorrect
                                   ? 'border-[#34A853] bg-[#E6F4EA]/40 ring-1 ring-[#34A853]/40'
-                                  : 'border-[#DADCE0] bg-white hover:border-[#BDC1C6]'
+                                  : 'border-[#E5E7EB] bg-white hover:border-[#BDC1C6]'
                               }`}
                             >
                               <button
@@ -496,7 +496,7 @@ function GameManipulatorModalInner({
                                 className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-bold shadow-2xs transition-all cursor-pointer ${
                                   isCorrect
                                     ? 'bg-[#34A853] text-white hover:bg-[#2E7D32]'
-                                    : 'border border-[#DADCE0] bg-white text-[#5F6368] hover:bg-[#E8F0FE] hover:text-[#1967D2]'
+                                    : 'border border-[#E5E7EB] bg-white text-[#5F6368] hover:bg-[#E8F0FE] hover:text-[#1967D2]'
                                 }`}
                                 title={isCorrect ? 'Marked as Correct Answer' : `Click to set Option ${letter} as Correct`}
                               >
@@ -536,7 +536,7 @@ function GameManipulatorModalInner({
                           step={10}
                           value={activeQuestion.points || 100}
                           onChange={(e) => handleUpdateActiveQuestion('points', Number(e.target.value))}
-                          className="w-full rounded-xl border border-[#DADCE0] bg-white px-3 py-2 text-xs font-semibold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                          className="w-full rounded-xl border border-[#E5E7EB] bg-white px-3 py-2 text-xs font-semibold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
                         />
                       </div>
 
@@ -551,7 +551,7 @@ function GameManipulatorModalInner({
                           step={5}
                           value={activeQuestion.timeLimitSeconds || 30}
                           onChange={(e) => handleUpdateActiveQuestion('timeLimitSeconds', Number(e.target.value))}
-                          className="w-full rounded-xl border border-[#DADCE0] bg-white px-3 py-2 text-xs font-semibold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                          className="w-full rounded-xl border border-[#E5E7EB] bg-white px-3 py-2 text-xs font-semibold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
                         />
                       </div>
                     </div>
@@ -573,7 +573,7 @@ function GameManipulatorModalInner({
               <div className="md:col-span-5 flex flex-col gap-3">
                 <form
                   onSubmit={handleAddTargetWord}
-                  className="rounded-2xl border border-[#DADCE0] bg-white p-3.5 shadow-2xs space-y-2"
+                  className="rounded-2xl border border-[#E5E7EB] bg-white p-3.5 shadow-2xs space-y-2"
                 >
                   <span className="text-xs font-bold text-[#137333] uppercase tracking-wider flex items-center gap-1.5">
                     <Plus className="h-3.5 w-3.5" />
@@ -584,14 +584,14 @@ function GameManipulatorModalInner({
                     value={newWordInput}
                     onChange={(e) => setNewWordInput(e.target.value.toUpperCase())}
                     placeholder="TARGET WORD (e.g. FLUTTER)"
-                    className="w-full rounded-xl border border-[#DADCE0] bg-white px-3 py-1.5 text-xs font-bold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#34A853]"
+                    className="w-full rounded-xl border border-[#E5E7EB] bg-white px-3 py-1.5 text-xs font-bold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#34A853]"
                   />
                   <input
                     type="text"
                     value={newHintInput}
                     onChange={(e) => setNewHintInput(e.target.value)}
                     placeholder="Clue or hint for participants"
-                    className="w-full rounded-xl border border-[#DADCE0] bg-white px-3 py-1.5 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#34A853]"
+                    className="w-full rounded-xl border border-[#E5E7EB] bg-white px-3 py-1.5 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#34A853]"
                   />
                   <button
                     type="submit"
@@ -618,7 +618,7 @@ function GameManipulatorModalInner({
                         className={`group flex items-start justify-between rounded-2xl p-3 border transition-all cursor-pointer ${
                           isSelected
                             ? 'border-[#34A853] bg-white ring-2 ring-[#34A853]/20 shadow-xs'
-                            : 'border-[#DADCE0] bg-white hover:border-[#BDC1C6]'
+                            : 'border-[#E5E7EB] bg-white hover:border-[#BDC1C6]'
                         }`}
                       >
                         <div>
@@ -659,7 +659,7 @@ function GameManipulatorModalInner({
               </div>
 
               {/* Right Column: Grid Information & Studio Shortcut */}
-              <div className="md:col-span-7 flex flex-col gap-4 rounded-3xl border border-[#DADCE0] bg-white p-5 shadow-xs">
+              <div className="md:col-span-7 flex flex-col gap-4 rounded-3xl border border-[#E5E7EB] bg-white p-5 shadow-xs">
                 <div className="flex items-center justify-between pb-3 border-b border-[#F1F3F4]">
                   <div>
                     <h3 className="text-sm font-semibold text-[#202124]">
@@ -681,8 +681,8 @@ function GameManipulatorModalInner({
                 </div>
 
                 {/* Wend Round Time Limit (Set by Admin) */}
-                <div className="rounded-2xl border border-[#DADCE0] bg-[#F8F9FA] p-4 text-left">
-                  <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-[#DADCE0]">
+                <div className="rounded-2xl border border-[#E5E7EB] bg-[#F8F9FA] p-4 text-left">
+                  <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-[#E5E7EB]">
                     <span className="text-xs font-bold text-[#137333] flex items-center gap-1.5">
                       <Clock className="h-3.5 w-3.5" />
                       <span>Round Time Limit (Enforces Live User Countdown)</span>
@@ -705,7 +705,7 @@ function GameManipulatorModalInner({
                         className={`rounded-full px-3 py-1 text-xs font-semibold transition-all cursor-pointer ${
                           (wendBoard.timeLimitSeconds || 120) === sec
                             ? 'bg-[#137333] text-white shadow-xs'
-                            : 'border border-[#DADCE0] bg-white text-[#3C4043] hover:bg-[#E8F0FE]'
+                            : 'border border-[#E5E7EB] bg-white text-[#3C4043] hover:bg-[#E8F0FE]'
                         }`}
                       >
                         {sec}s
@@ -722,13 +722,13 @@ function GameManipulatorModalInner({
                         setWendBoard(updated)
                         api.saveWendBoard(updated)
                       }}
-                      className="w-20 rounded-xl border border-[#DADCE0] bg-white px-2.5 py-1 text-xs font-bold text-[#202124]"
+                      className="w-20 rounded-xl border border-[#E5E7EB] bg-white px-2.5 py-1 text-xs font-bold text-[#202124]"
                     />
                     <span className="text-xs text-[#5F6368]">sec</span>
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-[#DADCE0] bg-[#F8F9FA] p-4 text-center">
+                <div className="rounded-2xl border border-[#E5E7EB] bg-[#F8F9FA] p-4 text-center">
                   <p className="text-xs text-[#5F6368] leading-relaxed mb-3">
                     The 8x8 Wend board features obstacle cutouts and letter matrix. For detailed letter-by-letter board painting, obstacle toggling, and live grid manipulation, open the dedicated Wend Studio.
                   </p>
@@ -736,7 +736,7 @@ function GameManipulatorModalInner({
                     {wendBoard.targetWords.map((tw) => (
                       <span
                         key={tw.id}
-                        className="rounded-full bg-white border border-[#DADCE0] px-3 py-1 text-xs font-bold text-[#202124] shadow-2xs"
+                        className="rounded-full bg-white border border-[#E5E7EB] px-3 py-1 text-xs font-bold text-[#202124] shadow-2xs"
                       >
                         {tw.word}
                       </span>
@@ -749,7 +749,7 @@ function GameManipulatorModalInner({
 
           {/* TAB 2: TITLE & DESCRIPTION */}
           {activeTab === 'details' && (
-            <div className="max-w-xl mx-auto rounded-3xl border border-[#DADCE0] bg-white p-6 shadow-xs space-y-4">
+            <div className="max-w-xl mx-auto rounded-3xl border border-[#E5E7EB] bg-white p-6 shadow-xs space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-[#3C4043] mb-1">
                   Track Display Title
@@ -759,7 +759,7 @@ function GameManipulatorModalInner({
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Event track title"
-                  className="w-full rounded-2xl border border-[#DADCE0] bg-white p-3 text-sm font-semibold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                  className="w-full rounded-2xl border border-[#E5E7EB] bg-white p-3 text-sm font-semibold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
                 />
               </div>
 
@@ -772,7 +772,7 @@ function GameManipulatorModalInner({
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Event track description"
-                  className="w-full rounded-2xl border border-[#DADCE0] bg-white p-3 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                  className="w-full rounded-2xl border border-[#E5E7EB] bg-white p-3 text-xs text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
                 />
               </div>
             </div>
@@ -780,7 +780,7 @@ function GameManipulatorModalInner({
 
           {/* TAB 3: LIVE QUIZ SIMULATOR */}
           {!isWend && activeTab === 'preview' && activeQuestion && (
-            <div className="max-w-lg mx-auto rounded-3xl border border-[#DADCE0] bg-white p-6 shadow-sm">
+            <div className="max-w-lg mx-auto rounded-3xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#F1F3F4]">
                 <span className="text-xs font-bold text-[#1A73E8] uppercase tracking-wider">
                   Participant Perspective Preview
@@ -806,10 +806,10 @@ function GameManipulatorModalInner({
                       className={`w-full flex items-center gap-3 rounded-2xl p-3 text-left transition-all cursor-pointer ${
                         isSelected
                           ? 'border-2 border-[#1A73E8] bg-[#E8F0FE] text-[#1967D2]'
-                          : 'border border-[#DADCE0] bg-white text-[#202124] hover:bg-[#F8F9FA]'
+                          : 'border border-[#E5E7EB] bg-white text-[#202124] hover:bg-[#F8F9FA]'
                       }`}
                     >
-                      <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-white border border-[#DADCE0] text-xs font-bold text-[#5F6368] shadow-2xs">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-white border border-[#E5E7EB] text-xs font-bold text-[#5F6368] shadow-2xs">
                         {['A', 'B', 'C', 'D'][idx]}
                       </span>
                       <span className="text-xs font-medium flex-1">{opt}</span>
@@ -829,7 +829,7 @@ function GameManipulatorModalInner({
         </div>
 
         {/* Modal Bottom Footer Action Bar */}
-        <div className="flex items-center justify-between px-5 sm:px-7 py-4 border-t border-[#DADCE0] bg-white">
+        <div className="flex items-center justify-between px-5 sm:px-7 py-4 border-t border-[#E5E7EB] bg-white">
           <div className="flex items-center gap-1.5 text-xs text-[#5F6368]">
             <span className="h-2 w-2 rounded-full bg-[#34A853] animate-pulse" />
             <span className="hidden sm:inline">Real-time sync to all participants on save</span>
@@ -839,7 +839,7 @@ function GameManipulatorModalInner({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full border border-[#DADCE0] bg-white px-4 py-2 text-xs font-medium text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] transition-colors cursor-pointer"
+              className="rounded-full border border-[#E5E7EB] bg-white px-4 py-2 text-xs font-medium text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] transition-colors cursor-pointer"
             >
               Cancel
             </button>
