@@ -84,28 +84,10 @@ function QuizRunnerContent() {
     (completedSession.userId === user._id || completedSession.userEmail === user.email)
   )
 
-  // Reactively verify that completedSession belongs to the current logged-in user
+  // Active play session guard: participants entering arena always start a fresh live attempt
   useEffect(() => {
-    if (authLoading) return
-    const timer = setTimeout(() => {
-      if (!user) {
-        setCompletedSession(null)
-        return
-      }
-      const userIdentifier = user._id || user.email
-      const existing = api.getParticipantSession(slug, userIdentifier)
-
-      if (existing) {
-        const isMine =
-          (user._id && existing.userId === user._id) ||
-          (user.email && existing.userEmail === user.email)
-        setCompletedSession(isMine ? existing : null)
-      } else {
-        setCompletedSession(null)
-      }
-    }, 0)
-    return () => clearTimeout(timer)
-  }, [user, authLoading, slug])
+    setCompletedSession(null)
+  }, [user, slug])
   const [loading, setLoading] = useState(false)
 
   // Listen for admin leaderboard resets so user can replay in real time

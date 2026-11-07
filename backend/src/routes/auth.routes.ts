@@ -274,8 +274,9 @@ router.post('/participant/login', async (req: Request, res: Response) => {
   }
 
   // Guard against admin impersonation
-  if (cleanName.toLowerCase().includes('admin') || cleanEmail.includes('admin') || cleanEmail === 'aryan.crores@gmail.com') {
-    return res.status(403).json({ success: false, message: 'Host accounts must sign in using the Host / Admin tab.' });
+  const adminEnvEmail = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+  if (cleanName.toLowerCase().includes('admin') || cleanEmail.includes('admin') || (adminEnvEmail && cleanEmail === adminEnvEmail)) {
+    return res.status(403).json({ success: false, message: 'Host accounts must sign in using the dedicated Host Login at /admin-panel.' });
   }
 
   const effectiveEmail = cleanEmail || `${cleanName.toLowerCase().replace(/[^a-z0-9]/g, '')}@community.gdg`;

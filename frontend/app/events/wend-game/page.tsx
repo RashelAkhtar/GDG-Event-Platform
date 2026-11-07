@@ -107,28 +107,10 @@ export default function WendGamePage() {
     (completedSession.userId === user._id || completedSession.userEmail === user.email)
   )
 
-  // Reactively verify that completedSession belongs to the current logged-in user
+  // Active play session guard: participants entering arena always start a fresh live attempt
   useEffect(() => {
-    if (authLoading) return
-    const timer = setTimeout(() => {
-      if (!user) {
-        setCompletedSession(null)
-        return
-      }
-      const userIdentifier = user._id || user.email
-      const existing = api.getParticipantSession('wend-game', userIdentifier)
-
-      if (existing) {
-        const isMine =
-          (user._id && existing.userId === user._id) ||
-          (user.email && existing.userEmail === user.email)
-        setCompletedSession(isMine ? existing : null)
-      } else {
-        setCompletedSession(null)
-      }
-    }, 0)
-    return () => clearTimeout(timer)
-  }, [user, authLoading])
+    setCompletedSession(null)
+  }, [user])
 
   const showToast = useCallback((text: string, type: 'success' | 'info' | 'error' = 'info') => {
     setToastMessage({ text, type })

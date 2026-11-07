@@ -87,10 +87,14 @@ export function CircleBucket() {
     const existing = physicsRef.current.bubbles.find((b) => b.id === bubbleId)
     if (existing) {
       if (existing.name !== name) existing.name = name;
+      existing.isUser = isUser;
       if (avatar && existing.avatar !== avatar) {
         existing.avatar = avatar
         const img = new Image()
         img.referrerPolicy = 'no-referrer'
+        img.onload = () => {
+          existing.imageObj = img
+        }
         img.src = avatar
         existing.imageObj = img
       }
@@ -152,19 +156,8 @@ export function CircleBucket() {
     const isMobile = typeof window !== 'undefined' && /mobile|iphone|android|ipad/i.test(navigator.userAgent)
     const deviceType = isMobile ? 'mobile' : 'desktop'
 
-    const isAdminUser = Boolean(
-      user &&
-      (user.role === 'ADMIN' ||
-       user.name?.toLowerCase().includes('admin') ||
-       user.email?.toLowerCase().includes('admin') ||
-       user.email === 'aryan.crores@gmail.com')
-    )
-
     if (user) {
-      // Exclude GDG Admin from entering the physics bucket simulation
-      if (!isAdminUser) {
-        dropBubble(user.name + ' (You)', user.avatar, true, `session-${currentSessionId}`)
-      }
+      dropBubble(user.name + ' (You)', user.avatar, true, `session-${currentSessionId}`)
       sendUserJoin({
         sessionId: currentSessionId,
         userId: user._id,
