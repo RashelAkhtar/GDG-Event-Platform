@@ -533,7 +533,7 @@ function AdminPageContent() {
     const defaultBoard = await api.resetWendBoard()
     setWendBoard(defaultBoard)
     sendWendConfigUpdate(defaultBoard)
-    showToast('Reset Wend Board to clean empty layout!', 'success')
+    showToast('Reset Wend Board: All cells blocked (#)!', 'success')
   }
 
   const handleSetWendTimeLimit = (seconds: number) => {
@@ -1614,7 +1614,7 @@ function AdminPageContent() {
                 <div>
                   <h3 className="text-sm sm:text-base font-bold text-[#202124]">Interactive 8×8 Matrix Studio</h3>
                   <p className="text-[11px] text-[#5F6368]">
-                    Click any cell to type letters or use the obstacle brush to place walls. Changes sync immediately via WebSockets.
+                    All cells are blocked (#) by default. Click any cell to type a letter and carve words. Use arrow keys to navigate. Double-click to block.
                   </p>
                 </div>
               </div>

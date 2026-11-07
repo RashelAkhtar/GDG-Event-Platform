@@ -1121,8 +1121,8 @@ export const DEFAULT_WEND_BOARD: WendBoardConfig = {
     Array.from({ length: 8 }, (_, c) => ({
       row: r,
       col: c,
-      type: 'LETTER' as CellType,
-      letter: '',
+      type: 'OBSTACLE' as CellType,
+      letter: undefined,
     }))
   ),
 }
