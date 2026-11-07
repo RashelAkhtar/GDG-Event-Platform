@@ -52,11 +52,11 @@ function QuizRunnerContent() {
       router.replace(`/login?redirect=${encodeURIComponent(`/events/${slug}`)}`)
     }
   }, [authLoading, user, slug, router])
-  const { currentSessionId, subscribeToLeaderboardReset, sendSubmitAttempt, sendScreenshotViolation } = useWebSocket()
+  const { currentSessionId, subscribeToLeaderboardReset, sendSubmitAttempt, sendScreenshotViolation, subscribeToQuestionsUpdate } = useWebSocket()
   const startTimeRef = useRef<number | null>(null)
 
   const [event, setEvent] = useState<GdgEvent | null>(() => (slug === 'mentis-quiz' ? DEFAULT_MENTIS_EVENT : DEFAULT_WEB_EVENT))
-  const [questions, setQuestions] = useState<QuestionData[]>(() => DEFAULT_QUESTIONS[slug] || [])
+  const [questions, setQuestions] = useState<QuestionData[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({})
   const [timeLeft, setTimeLeft] = useState<number>(30)
@@ -216,24 +216,16 @@ function QuizRunnerContent() {
     }
   }, [completedSession, isDisqualified, triggerScreenshotViolation])
 
-  // Load event & questions
+  // Load event & user-created questions
   useEffect(() => {
     async function initQuiz() {
       try {
-        const foundEvent = await api.getEventBySlug(slug)
+        const [foundEvent, remoteQuestions] = await Promise.all([
+          api.getEventBySlug(slug),
+          api.fetchQuestions(slug),
+        ])
         setEvent(foundEvent)
-
-        const localQuestions = api.getQuestionsForSlug(slug)
-        if (localQuestions && localQuestions.length > 0) {
-          setQuestions(localQuestions)
-        } else if (foundEvent) {
-          const startRes = await api.startQuiz(foundEvent._id)
-          if (startRes.success && startRes.questions && startRes.questions.length > 0) {
-            setQuestions(startRes.questions)
-          } else {
-            setQuestions(api.getQuestionsForSlug(slug))
-          }
-        }
+        setQuestions(remoteQuestions || [])
       } catch {
         setQuestions(api.getQuestionsForSlug(slug))
       } finally {
@@ -243,6 +235,16 @@ function QuizRunnerContent() {
     }
     initQuiz()
   }, [slug])
+
+  // Listen for real-time question updates published by the admin
+  useEffect(() => {
+    const unsubscribe = subscribeToQuestionsUpdate((updatedSlug, updatedQuestions) => {
+      if (updatedSlug === slug && Array.isArray(updatedQuestions)) {
+        setQuestions(updatedQuestions)
+      }
+    })
+    return () => unsubscribe()
+  }, [slug, subscribeToQuestionsUpdate])
 
   const handleSubmitQuiz = useCallback(async () => {
     setIsSubmitting(true)
@@ -570,8 +572,8 @@ function QuizRunnerContent() {
               />
             </div>
 
-            {/* Question Card - Precision Sharp Architecture */}
-            <div className="relative mt-3 flex-1 border border-[#DADCE0] bg-white p-6 sm:p-7 shadow-xs flex flex-col justify-between overflow-hidden select-none no-copy" onCopy={(e) => { e.preventDefault(); showCopyProhibitedAlert(); }} onCut={(e) => e.preventDefault()} onContextMenu={(e) => e.preventDefault()}>
+            {/* Question Card - Modern Light Google Architecture */}
+            <div className="relative mt-3 flex-1 rounded-2xl border border-[#DADCE0] bg-white p-6 sm:p-8 shadow-sm flex flex-col justify-between overflow-hidden select-none no-copy" onCopy={(e) => { e.preventDefault(); showCopyProhibitedAlert(); }} onCut={(e) => e.preventDefault()} onContextMenu={(e) => e.preventDefault()}>
               {/* Top Google Accent Line */}
               <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-[#4285F4] via-[#EA4335] via-[#FBBC04] to-[#34A853]" />
 
@@ -580,7 +582,7 @@ function QuizRunnerContent() {
                   {currentQ?.questionText}
                 </h3>
 
-                {/* 4 Options with Structured Styling & Zero Border Radius */}
+                {/* 4 Options with Structured Styling & Rounded Modern Corners */}
                 <div className="mt-6 flex flex-col gap-2.5">
                   {currentQ?.options.map((option, optIdx) => {
                     const isSelected = selectedAnswers[currentIndex] === optIdx
@@ -591,7 +593,7 @@ function QuizRunnerContent() {
                         key={optIdx}
                         type="button"
                         onClick={() => handleSelectOption(optIdx)}
-                        className={`group relative flex min-h-[52px] w-full items-center justify-between gap-3.5 border px-4 py-3 text-left transition-all duration-150 cursor-pointer ${
+                        className={`group relative flex min-h-[52px] w-full items-center justify-between gap-3.5 rounded-xl border px-4 py-3 text-left transition-all duration-150 cursor-pointer ${
                           isSelected
                             ? 'border-[#1A73E8] bg-[#E8F0FE] text-[#1967D2] shadow-xs'
                             : 'border-[#DADCE0] bg-white text-[#3C4043] hover:border-[#1A73E8] hover:bg-[#F8F9FA]'
@@ -599,7 +601,7 @@ function QuizRunnerContent() {
                       >
                         <div className="flex items-center gap-3">
                           <span
-                            className={`flex h-7 w-7 shrink-0 items-center justify-center font-mono text-xs font-black transition-all ${
+                            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold transition-all ${
                               isSelected
                                 ? 'bg-[#1A73E8] text-white'
                                 : 'bg-[#F1F3F4] text-[#5F6368] group-hover:bg-[#E8EAED]'
@@ -613,7 +615,7 @@ function QuizRunnerContent() {
                         </div>
 
                         {isSelected && (
-                          <span className="shrink-0 flex h-5 w-5 items-center justify-center bg-[#1A73E8] text-white animate-in zoom-in-75">
+                          <span className="shrink-0 flex h-5 w-5 items-center justify-center rounded-full bg-[#1A73E8] text-white animate-in zoom-in-75">
                             <CheckCircle2 className="h-3.5 w-3.5" />
                           </span>
                         )}

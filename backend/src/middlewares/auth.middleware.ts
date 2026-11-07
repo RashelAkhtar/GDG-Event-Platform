@@ -19,6 +19,16 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
     return res.status(401).json({ message: 'Invalid or expired token.' });
   }
 
+  if (decoded.role === 'ADMIN' && (decoded.userId === 'admin_master_aryan' || !mongoose.Types.ObjectId.isValid(decoded.userId) || mongoose.connection.readyState !== 1)) {
+    req.user = {
+      _id: 'admin_master_aryan' as any,
+      email: (process.env.ADMIN_EMAIL || 'aryan.crores@gmail.com').trim().toLowerCase(),
+      name: 'Aryan (Admin)',
+      role: UserRole.ADMIN,
+    } as any;
+    return next();
+  }
+
   if (!mongoose.Types.ObjectId.isValid(decoded.userId)) {
     return res.status(401).json({ message: 'User no longer exists.' });
   }
@@ -47,6 +57,16 @@ export const optionalAuth = async (req: Request, _res: Response, next: NextFunct
   try {
     decoded = verifyToken(token);
   } catch {
+    return next();
+  }
+
+  if (decoded.role === 'ADMIN' && (decoded.userId === 'admin_master_aryan' || !mongoose.Types.ObjectId.isValid(decoded.userId) || mongoose.connection.readyState !== 1)) {
+    req.user = {
+      _id: 'admin_master_aryan' as any,
+      email: (process.env.ADMIN_EMAIL || 'aryan.crores@gmail.com').trim().toLowerCase(),
+      name: 'Aryan (Admin)',
+      role: UserRole.ADMIN,
+    } as any;
     return next();
   }
 

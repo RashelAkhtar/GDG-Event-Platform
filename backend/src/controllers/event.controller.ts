@@ -3,6 +3,40 @@ import { EventService } from '../services/event.service.ts';
 import { UserRole, type IUser } from '../models/User.ts';
 import { EventType } from '../models/Event.ts';
 import { Types } from 'mongoose';
+import { wsService } from '../websocket.ts';
+
+export const inMemoryEvents: Record<string, any> = {
+  'web-dev-quiz': {
+    _id: 'web-dev-quiz-id',
+    title: 'Web Dev Blitz Quiz',
+    slug: 'web-dev-quiz',
+    description: 'Frontend fundamentals, CSS tricks & JavaScript core concepts.',
+    type: 'QUIZ',
+    status: 'LIVE',
+    startTime: new Date(Date.now() - 3600 * 1000).toISOString(),
+    endTime: new Date(Date.now() + 4 * 3600 * 1000).toISOString(),
+  },
+  'wend-game': {
+    _id: 'wend-game-id',
+    title: 'Wend Word Puzzle Arena',
+    slug: 'wend-game',
+    description: 'Fast-paced word puzzle challenge. Decode technical keywords from real-time clues.',
+    type: 'QUIZ',
+    status: 'LIVE',
+    startTime: new Date(Date.now() - 3600 * 1000).toISOString(),
+    endTime: new Date(Date.now() + 5 * 3600 * 1000).toISOString(),
+  },
+  'mentis-quiz': {
+    _id: 'mentis-quiz-id',
+    title: 'Mentis Logic & Algo Quiz',
+    slug: 'mentis-quiz',
+    description: 'Algorithmic reasoning, data structures & brain-teasing puzzles.',
+    type: 'QUIZ',
+    status: 'UPCOMING',
+    startTime: new Date(Date.now() + 1800 * 1000).toISOString(),
+    endTime: new Date(Date.now() + 3 * 3600 * 1000).toISOString(),
+  },
+};
 
 const getParam = (value: string | string[] | undefined): string | undefined =>
   typeof value === 'string' ? value : undefined;
@@ -54,42 +88,19 @@ export const getEvents = async (req: Request, res: Response, _next: NextFunction
     }
   } catch {}
 
-  // Resilient fallback events so UI always functions smoothly
+  // Resilient fallback events synchronized with real-time state
+  const syncedEvents = Object.values(inMemoryEvents).map((ev: any) => {
+    const liveState = wsService.getGameState(ev.slug);
+    return {
+      ...ev,
+      status: liveState ? liveState.status : ev.status,
+    };
+  });
+
   res.status(200).json({
     success: true,
-    count: 3,
-    data: [
-      {
-        _id: 'web-dev-quiz-id',
-        title: 'Web Dev Blitz Quiz',
-        slug: 'web-dev-quiz',
-        description: 'Frontend fundamentals, CSS tricks & JavaScript core concepts.',
-        type: 'QUIZ',
-        status: 'LIVE',
-        startTime: new Date(Date.now() - 3600 * 1000).toISOString(),
-        endTime: new Date(Date.now() + 4 * 3600 * 1000).toISOString(),
-      },
-      {
-        _id: 'wend-game-id',
-        title: 'Wend Word Puzzle Arena',
-        slug: 'wend-game',
-        description: 'Fast-paced word puzzle challenge. Decode technical keywords from real-time clues.',
-        type: 'QUIZ',
-        status: 'LIVE',
-        startTime: new Date(Date.now() - 3600 * 1000).toISOString(),
-        endTime: new Date(Date.now() + 5 * 3600 * 1000).toISOString(),
-      },
-      {
-        _id: 'mentis-quiz-id',
-        title: 'Mentis Logic & Algo Quiz',
-        slug: 'mentis-quiz',
-        description: 'Algorithmic reasoning, data structures & brain-teasing puzzles.',
-        type: 'QUIZ',
-        status: 'UPCOMING',
-        startTime: new Date(Date.now() + 1800 * 1000).toISOString(),
-        endTime: new Date(Date.now() + 3 * 3600 * 1000).toISOString(),
-      },
-    ],
+    count: syncedEvents.length,
+    data: syncedEvents,
   });
 };
 
@@ -105,30 +116,42 @@ export const getEventBySlug = async (req: Request, res: Response, _next: NextFun
   } catch {}
 
   // Resilient fallback for default events
-  if (slug === 'web-dev-quiz' || slug === 'mentis-quiz' || slug === 'wend-game') {
-    const fallbackTitle =
-      slug === 'web-dev-quiz'
-        ? 'Web Dev Blitz Quiz'
-        : slug === 'mentis-quiz'
-        ? 'Mentis Logic & Algo Quiz'
-        : 'Wend Word Puzzle Arena';
-    const fallbackStatus = slug === 'mentis-quiz' ? 'UPCOMING' : 'LIVE';
+  if (inMemoryEvents[slug]) {
+    const liveState = wsService.getGameState(slug);
     return res.status(200).json({
       success: true,
       data: {
-        _id: `${slug}-id`,
-        title: fallbackTitle,
-        slug,
-        description: 'Google Developer Groups challenge arena.',
-        type: 'QUIZ',
-        status: fallbackStatus,
-        startTime: new Date().toISOString(),
-        endTime: new Date(Date.now() + 4 * 3600 * 1000).toISOString(),
+        ...inMemoryEvents[slug],
+        status: liveState ? liveState.status : inMemoryEvents[slug].status,
       },
     });
   }
 
   res.status(404).json({ success: false, message: 'Event not found' });
+};
+
+export const getWendBoardConfig = async (_req: Request, res: Response) => {
+  const config = wsService.getWendBoardConfig();
+  res.status(200).json({ success: true, data: config });
+};
+
+export const updateWendBoardConfig = async (req: Request, res: Response) => {
+  const board = req.body;
+  if (!board || typeof board !== 'object') {
+    return res.status(400).json({ success: false, message: 'Invalid board configuration' });
+  }
+  wsService.setWendBoardConfig(board);
+  wsService.broadcast({
+    type: 'WEND_CONFIG_UPDATE',
+    payload: board,
+  });
+  if (board.title && inMemoryEvents['wend-game']) {
+    inMemoryEvents['wend-game'].title = board.title;
+  }
+  if (board.description && inMemoryEvents['wend-game']) {
+    inMemoryEvents['wend-game'].description = board.description;
+  }
+  res.status(200).json({ success: true, data: board });
 };
 
 export const updateEvent = async (req: Request, res: Response, next: NextFunction) => {
@@ -143,6 +166,32 @@ export const updateEvent = async (req: Request, res: Response, next: NextFunctio
     );
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({ success: false, message: 'At least one editable event field is required' });
+    }
+
+    const foundFallbackKey = Object.keys(inMemoryEvents).find(
+      (k) => k === id || inMemoryEvents[k]._id === id
+    );
+    if (foundFallbackKey) {
+      inMemoryEvents[foundFallbackKey] = {
+        ...inMemoryEvents[foundFallbackKey],
+        ...updates,
+      };
+      if (updates.status) {
+        const isLocked = updates.status !== 'LIVE';
+        wsService.setGameState(foundFallbackKey, isLocked, updates.status);
+        wsService.broadcast({
+          type: 'GAME_LOCK_TOGGLE',
+          payload: {
+            gameSlug: foundFallbackKey,
+            isLocked,
+            status: updates.status,
+          },
+        });
+      }
+      return res.status(200).json({
+        success: true,
+        data: inMemoryEvents[foundFallbackKey],
+      });
     }
 
     if (!Types.ObjectId.isValid(id)) {

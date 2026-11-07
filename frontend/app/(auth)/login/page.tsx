@@ -5,14 +5,16 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { GdgLogoBadge, GoogleG } from '@/components/ui/GoogleBrand'
-import { ShieldCheck, ArrowLeft, AlertCircle, CheckCircle2, Lock, Mail } from 'lucide-react'
+import { ShieldCheck, ArrowLeft, AlertCircle, CheckCircle2, Lock, Mail, Users } from 'lucide-react'
 
 function LoginContent() {
   const { user, loginWithGoogle, adminPasswordLogin, loading: authLoading } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectUrl = searchParams.get('redirect') || '/'
+  const initialTab = searchParams.get('tab') === 'admin' || searchParams.get('role') === 'admin' ? 'admin' : 'participant'
 
+  const [activeTab, setActiveTab] = useState<'participant' | 'admin'>(initialTab)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
@@ -20,7 +22,6 @@ function LoginContent() {
   const [adminEmail, setAdminEmail] = useState('')
   const [adminPassword, setAdminPassword] = useState('')
   const [adminLoading, setAdminLoading] = useState(false)
-  const [showAdminForm, setShowAdminForm] = useState(false)
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -54,33 +55,76 @@ function LoginContent() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F9FA] px-4 py-12 text-[#202124] bg-tech-grid">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F9FA] px-4 py-12 text-[#202124] relative overflow-hidden bg-tech-dots">
+      {/* Ambient Google Aurora Glow Background */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-32 -left-32 h-[420px] w-[420px] rounded-full bg-[#4285F4]/12 blur-3xl animate-aurora" />
+        <div className="absolute top-1/2 -right-32 h-[420px] w-[420px] rounded-full bg-[#FBBC04]/12 blur-3xl animate-aurora" style={{ animationDelay: '-6s' }} />
+        <div className="absolute -bottom-32 left-1/3 h-[420px] w-[420px] rounded-full bg-[#34A853]/10 blur-3xl animate-aurora" style={{ animationDelay: '-12s' }} />
+      </div>
+
       {/* Return to hub */}
-      <div className="mb-5 w-full max-w-sm">
+      <div className="mb-4 w-full max-w-md relative z-10">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-[#1A73E8] hover:text-[#1765CC] uppercase tracking-wider"
+          className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold text-[#1A73E8] bg-white border border-[#DADCE0] hover:bg-[#F8F9FA] shadow-2xs transition-all"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          <span>BACK TO HOME</span>
+          <span>Back to Hub</span>
         </Link>
       </div>
 
-      <div className="w-full max-w-sm border border-[#DADCE0] bg-white p-7 sm:p-8 shadow-xs">
+      <div className="w-full max-w-md rounded-2xl border border-[#DADCE0] bg-white p-7 sm:p-9 shadow-md relative z-10">
         {/* GDG Branding */}
         <div className="flex flex-col items-center text-center">
           <GdgLogoBadge />
-          <h1 className="mt-3.5 font-mono text-xl sm:text-2xl font-black uppercase tracking-tight text-[#202124]">
-            SIGN IN TO PLAY
+          <h1 className="mt-4 text-2xl font-bold tracking-tight text-[#202124]">
+            {activeTab === 'participant' ? 'Welcome to GDG Arena' : 'Organizer & Admin Access'}
           </h1>
-          <p className="mt-1.5 text-xs text-[#5F6368] leading-relaxed">
-            Guest players are restricted. Sign in with your Google account to play quizzes, unlock word grids, and record live scores.
+          <p className="mt-1.5 text-xs text-[#5F6368] leading-relaxed max-w-xs">
+            {activeTab === 'participant'
+              ? 'Sign in with your Google account to participate in live sprint quizzes and compete on official leaderboards.'
+              : 'Enter your credentials to manage live questions, customize puzzle arenas, and oversee ceremonies.'}
           </p>
+        </div>
+
+        {/* Tab Switcher */}
+        <div className="mt-6 flex rounded-full bg-[#F1F3F4] p-1 border border-[#DADCE0]">
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('participant')
+              setErrorMessage(null)
+            }}
+            className={`flex flex-1 items-center justify-center gap-2 rounded-full py-2 text-xs font-medium transition-all ${
+              activeTab === 'participant'
+                ? 'bg-white text-[#1A73E8] shadow-xs font-semibold'
+                : 'text-[#5F6368] hover:text-[#202124]'
+            }`}
+          >
+            <Users className="h-3.5 w-3.5" />
+            <span>Participant</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('admin')
+              setErrorMessage(null)
+            }}
+            className={`flex flex-1 items-center justify-center gap-2 rounded-full py-2 text-xs font-medium transition-all ${
+              activeTab === 'admin'
+                ? 'bg-white text-[#1A73E8] shadow-xs font-semibold'
+                : 'text-[#5F6368] hover:text-[#202124]'
+            }`}
+          >
+            <ShieldCheck className="h-3.5 w-3.5" />
+            <span>Admin / Host</span>
+          </button>
         </div>
 
         {/* Error notification */}
         {errorMessage && (
-          <div className="mt-4 flex items-center gap-2 bg-[#FCE8E6] p-3 font-mono text-xs text-[#C5221F] border border-[#EA4335]/30">
+          <div className="mt-4 flex items-center gap-2 rounded-xl bg-[#FCE8E6] p-3 text-xs text-[#C5221F] border border-[#EA4335]/30">
             <AlertCircle className="h-4 w-4 shrink-0" />
             <span>{errorMessage}</span>
           </div>
@@ -88,48 +132,38 @@ function LoginContent() {
 
         {/* Success notification */}
         {successMessage && (
-          <div className="mt-4 flex items-center gap-2 bg-[#E6F4EA] p-3 font-mono text-xs text-[#137333] border border-[#34A853]/30">
+          <div className="mt-4 flex items-center gap-2 rounded-xl bg-[#E6F4EA] p-3 text-xs text-[#137333] border border-[#34A853]/30">
             <CheckCircle2 className="h-4 w-4 shrink-0 text-[#34A853]" />
             <span>{successMessage}</span>
           </div>
         )}
 
-        {/* Primary Participant Login: Google OAuth */}
-        <div className="mt-6 flex flex-col gap-3">
-          <button
-            type="button"
-            onClick={loginWithGoogle}
-            className="flex h-12 w-full items-center justify-center gap-3 border border-[#DADCE0] bg-white font-mono text-xs font-bold uppercase tracking-wider text-[#3C4043] shadow-xs hover:border-[#1A73E8] hover:bg-[#F8F9FA] active:translate-y-0.5 transition-all cursor-pointer"
-          >
-            <GoogleG className="h-4.5 w-4.5" />
-            <span>CONTINUE WITH GOOGLE</span>
-          </button>
-        </div>
+        {/* TAB 1: PARTICIPANT LOGIN (Google OAuth) */}
+        {activeTab === 'participant' && (
+          <div className="mt-6 flex flex-col gap-4">
+            <button
+              type="button"
+              onClick={loginWithGoogle}
+              className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-[#DADCE0] bg-white text-xs font-semibold text-[#3C4043] shadow-xs hover:border-[#1A73E8] hover:bg-[#F8F9FA] active:scale-[0.99] transition-all cursor-pointer"
+            >
+              <GoogleG className="h-5 w-5" />
+              <span>Sign in with Google</span>
+            </button>
 
-        {/* Divider */}
-        <div className="my-6 flex items-center gap-3">
-          <div className="h-px flex-1 bg-[#DADCE0]" />
-          <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#80868B]">
-            OR HOST ACCESS
-          </span>
-          <div className="h-px flex-1 bg-[#DADCE0]" />
-        </div>
+            <div className="rounded-xl bg-[#E8F0FE]/60 border border-[#1A73E8]/20 p-3.5 text-center">
+              <p className="text-[11px] text-[#1967D2] font-medium leading-relaxed">
+                Google account verification is required to record your quiz points and unlock the live word puzzle grid.
+              </p>
+            </div>
+          </div>
+        )}
 
-        {/* Organizer / Admin Toggle */}
-        {!showAdminForm ? (
-          <button
-            type="button"
-            onClick={() => setShowAdminForm(true)}
-            className="flex w-full items-center justify-center gap-2 border border-[#DADCE0] bg-[#F8F9FA] py-2.5 font-mono text-[11px] font-bold text-[#5F6368] hover:text-[#202124] hover:bg-[#F1F3F4] uppercase tracking-wider transition-colors cursor-pointer"
-          >
-            <ShieldCheck className="h-3.5 w-3.5" />
-            <span>SIGN IN WITH ADMIN CREDENTIALS</span>
-          </button>
-        ) : (
-          <form onSubmit={handleAdminSubmit} autoComplete="off" className="flex flex-col gap-3.5 text-xs">
+        {/* TAB 2: ORGANIZER & ADMIN LOGIN (Strictly Credentials - NO Google Login Option) */}
+        {activeTab === 'admin' && (
+          <form onSubmit={handleAdminSubmit} autoComplete="off" className="mt-6 flex flex-col gap-4 text-xs">
             <div>
-              <label className="block text-[11px] font-mono font-bold uppercase text-[#3C4043] mb-1 flex items-center gap-1">
-                <Mail className="h-3 w-3 text-[#5F6368]" />
+              <label className="block text-xs font-medium text-[#3C4043] mb-1.5 flex items-center gap-1.5">
+                <Mail className="h-3.5 w-3.5 text-[#5F6368]" />
                 <span>Admin Email</span>
               </label>
               <input
@@ -139,14 +173,14 @@ function LoginContent() {
                 value={adminEmail}
                 onChange={(e) => setAdminEmail(e.target.value)}
                 placeholder="admin@gdg.org"
-                className="w-full border border-[#DADCE0] bg-[#F8F9FA] px-3.5 py-2.5 font-mono text-xs text-[#202124] focus:bg-white focus:outline-none focus:border-[#1A73E8] transition-all"
+                className="w-full rounded-xl border border-[#DADCE0] bg-[#F8F9FA] px-3.5 py-2.5 text-xs text-[#202124] focus:bg-white focus:outline-none focus:border-[#1A73E8] focus:ring-2 focus:ring-[#1A73E8]/20 transition-all"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-mono font-bold uppercase text-[#3C4043] mb-1 flex items-center gap-1">
-                <Lock className="h-3 w-3 text-[#5F6368]" />
+              <label className="block text-xs font-medium text-[#3C4043] mb-1.5 flex items-center gap-1.5">
+                <Lock className="h-3.5 w-3.5 text-[#5F6368]" />
                 <span>Admin Password</span>
               </label>
               <input
@@ -156,7 +190,7 @@ function LoginContent() {
                 value={adminPassword}
                 onChange={(e) => setAdminPassword(e.target.value)}
                 placeholder="••••••••••••"
-                className="w-full border border-[#DADCE0] bg-[#F8F9FA] px-3.5 py-2.5 font-mono text-xs text-[#202124] focus:bg-white focus:outline-none focus:border-[#1A73E8] transition-all"
+                className="w-full rounded-xl border border-[#DADCE0] bg-[#F8F9FA] px-3.5 py-2.5 text-xs text-[#202124] focus:bg-white focus:outline-none focus:border-[#1A73E8] focus:ring-2 focus:ring-[#1A73E8]/20 transition-all"
                 required
               />
             </div>
@@ -164,19 +198,15 @@ function LoginContent() {
             <button
               type="submit"
               disabled={adminLoading}
-              className="mt-1 flex h-11 w-full items-center justify-center gap-2 border border-[#1765CC] bg-[#1A73E8] font-mono text-xs font-bold uppercase tracking-wider text-white shadow-xs hover:bg-[#1557B0] active:translate-y-0.5 transition-all cursor-pointer"
+              className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#1A73E8] text-xs font-semibold text-white shadow-xs hover:bg-[#1557B0] active:scale-[0.99] transition-all cursor-pointer disabled:opacity-70"
             >
               <ShieldCheck className="h-4 w-4" />
-              <span>{adminLoading ? 'VERIFYING ADMIN...' : 'ADMIN SIGN IN'}</span>
+              <span>{adminLoading ? 'Verifying Credentials...' : 'Sign In as Admin'}</span>
             </button>
 
-            <button
-              type="button"
-              onClick={() => setShowAdminForm(false)}
-              className="text-center font-mono text-[10px] text-[#5F6368] hover:underline"
-            >
-              Hide Admin Credentials
-            </button>
+            <p className="text-center text-[11px] text-[#5F6368]">
+              Restricted to authorized GDG organizers and chapter leads.
+            </p>
           </form>
         )}
       </div>
@@ -189,7 +219,7 @@ export default function LoginPage() {
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center bg-[#F8F9FA]">
-          <div className="h-8 w-8 border-3 border-[#1A73E8] border-t-transparent animate-spin" />
+          <div className="h-8 w-8 rounded-full border-3 border-[#1A73E8] border-t-transparent animate-spin" />
         </div>
       }
     >

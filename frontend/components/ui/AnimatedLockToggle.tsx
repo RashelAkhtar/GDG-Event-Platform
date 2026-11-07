@@ -83,10 +83,10 @@ export function AnimatedLockToggle({
         title={tooltipText}
         aria-label={live ? 'Challenge Arena Live (Click to Lock)' : 'Challenge Arena Locked (Click to Unlock)'}
         aria-pressed={live}
-        className={`relative flex items-center justify-center transition-all duration-200 border ${currentSize.box} ${
+        className={`relative flex items-center justify-center rounded-xl transition-all duration-200 border ${currentSize.box} ${
           live
-            ? 'bg-[#137333] border-[#0D652D] text-white shadow-2xs hover:bg-[#0D652D]'
-            : 'bg-[#C5221F] border-[#B31412] text-white shadow-2xs hover:bg-[#B31412]'
+            ? 'bg-[#137333] border-[#0D652D] text-white shadow-xs hover:bg-[#0D652D]'
+            : 'bg-[#C5221F] border-[#B31412] text-white shadow-xs hover:bg-[#B31412]'
         } ${
           isAdmin && !disabled
             ? 'cursor-pointer active:scale-95'
@@ -186,14 +186,14 @@ export function AnimatedLockToggle({
 
       {showBadge && (
         <span
-          className={`inline-flex items-center gap-1 border px-2 py-0.5 font-mono text-[11px] font-bold ${
+          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${
             live
               ? 'bg-[#E6F4EA] border-[#34A853]/40 text-[#137333]'
               : 'bg-[#FCE8E6] border-[#EA4335]/40 text-[#C5221F]'
           }`}
         >
           <span
-            className={`h-1.5 w-1.5 ${
+            className={`h-2 w-2 rounded-full ${
               live ? 'bg-[#34A853] animate-pulse' : 'bg-[#EA4335]'
             }`}
           />

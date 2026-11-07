@@ -70,8 +70,15 @@ function formatDuration(ms: number): string {
 function AdminPageContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const { user } = useAuth()
-  const { gameLockStates, sendLockToggle, sendWinnerCeremonyStart, sendLeaderboardReset, sendDeleteLeaderboardEntry, sendWendConfigUpdate, liveLeaderboards, subscribeToLeaderboardUpdate, connected } = useWebSocket()
+  const { user, loading: authLoading } = useAuth()
+  const { gameLockStates, sendLockToggle, sendWinnerCeremonyStart, sendLeaderboardReset, sendDeleteLeaderboardEntry, sendQuestionsUpdate, sendWendConfigUpdate, liveLeaderboards, subscribeToLeaderboardUpdate, connected } = useWebSocket()
+
+  // Strict Host Auth Guard: Non-admin users are immediately redirected to the dedicated credentials login
+  useEffect(() => {
+    if (!authLoading && (!user || user.role !== 'ADMIN')) {
+      router.replace('/login?tab=admin&redirect=/admin-panel/panel')
+    }
+  }, [user, authLoading, router])
 
   // Deep linking params (?tab=locks|quiz|wend|winners&track=web-dev-quiz|mentis-quiz)
   const tabParam = searchParams.get('tab') as 'locks' | 'quiz' | 'wend' | 'winners' | null
@@ -143,6 +150,24 @@ function AdminPageContent() {
   const [editingTargetWordId, setEditingTargetWordId] = useState<string | null>(null)
   const [editTargetWordStr, setEditTargetWordStr] = useState('')
   const [editTargetWordHint, setEditTargetWordHint] = useState('')
+
+  useEffect(() => {
+    void api.fetchWendBoard().then((fresh) => {
+      if (fresh) setWendBoard(fresh)
+    })
+  }, [])
+
+  useEffect(() => {
+    let isMounted = true
+    void api.fetchQuestions(selectedSlug).then((qs) => {
+      if (isMounted && Array.isArray(qs)) {
+        setQuestionsList(qs)
+      }
+    })
+    return () => {
+      isMounted = false
+    }
+  }, [selectedSlug])
 
   const refreshStandings = async (slug = selectedSlug) => {
     const targetEvent =
@@ -288,6 +313,16 @@ function AdminPageContent() {
       })
       const updatedEvent: GdgEvent = { ...target, title: finalTitle, description: finalDesc }
       setEvent(updatedEvent)
+      if (slug === 'wend-game') {
+        const updatedBoard: WendBoardConfig = {
+          ...wendBoard,
+          title: finalTitle,
+          description: finalDesc,
+        }
+        setWendBoard(updatedBoard)
+        api.saveWendBoard(updatedBoard)
+        sendWendConfigUpdate(updatedBoard)
+      }
       showToast(`Saved settings for "${finalTitle}"!`)
     } catch {
       showToast('Failed to save settings', 'error')
@@ -338,6 +373,7 @@ function AdminPageContent() {
 
     setQuestionsList(updated)
     api.saveQuestionsForSlug(selectedSlug, updated)
+    sendQuestionsUpdate(selectedSlug, updated)
     setEditingQuestionId(null)
     showToast('Question updated successfully!')
   }
@@ -375,6 +411,7 @@ function AdminPageContent() {
     }
     setWendBoard(updatedBoard)
     api.saveWendBoard(updatedBoard)
+    sendWendConfigUpdate(updatedBoard)
     setEditingTargetWordId(null)
     showToast(`Target word updated to "${cleanWord}"!`)
   }
@@ -414,6 +451,7 @@ function AdminPageContent() {
     const updated = [...questionsList, newQ]
     setQuestionsList(updated)
     api.saveQuestionsForSlug(selectedSlug, updated)
+    sendQuestionsUpdate(selectedSlug, updated)
 
     setQuestionText('')
     setOptions(['', '', '', ''])
@@ -426,6 +464,7 @@ function AdminPageContent() {
     const updated = questionsList.filter((q) => q._id !== id)
     setQuestionsList(updated)
     api.saveQuestionsForSlug(selectedSlug, updated)
+    sendQuestionsUpdate(selectedSlug, updated)
     showToast('Question removed from quiz pool')
   }
 
@@ -505,6 +544,7 @@ function AdminPageContent() {
     const updatedBoard = { ...wendBoard, grid: updatedGrid }
     setWendBoard(updatedBoard)
     api.saveWendBoard(updatedBoard)
+    sendWendConfigUpdate(updatedBoard)
   }
 
   const handleSetCellLetter = (r: number, c: number, letter: string) => {
@@ -524,6 +564,7 @@ function AdminPageContent() {
     const updatedBoard = { ...wendBoard, grid: updatedGrid }
     setWendBoard(updatedBoard)
     api.saveWendBoard(updatedBoard)
+    sendWendConfigUpdate(updatedBoard)
   }
 
   const handleClearCell = (r: number, c: number) => {
@@ -695,7 +736,21 @@ function AdminPageContent() {
     showToast(`BROADCASTED VIA SOCKET: Winner Announcement ceremony with ${currentRankings.winners.length} podium winners is live!`)
   }
 
+  if (authLoading || (!user || user.role !== 'ADMIN')) {
     return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F9FA] text-[#202124]">
+        <div className="flex flex-col items-center gap-4 p-8 bg-white rounded-3xl border border-[#DADCE0] shadow-sm max-w-sm text-center">
+          <div className="h-10 w-10 animate-spin rounded-full border-3 border-[#E8F0FE] border-t-[#1A73E8]" />
+          <div>
+            <h2 className="text-base font-semibold text-[#202124]">Verifying Host Authorization...</h2>
+            <p className="text-xs text-[#5F6368] mt-1">Redirecting to administrator authentication</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
     <div className="relative min-h-screen flex flex-col bg-[#F8F9FA] text-[#202124] overflow-x-hidden selection:bg-[#4285F4]/20 selection:text-[#1A73E8]">
       {/* Ambient Animated Google Theme Aurora Background Mesh */}
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
@@ -778,19 +833,19 @@ function AdminPageContent() {
           </div>
         )}
 
-        {/* Structured Segmented Control Bar (Zero Border Radius, High-Precision Tabs) */}
-        <div className="mb-6 border border-[#DADCE0] bg-white p-1 shadow-xs">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1">
+        {/* Structured Segmented Control Bar (Rounded Google Theme, High-Precision Tabs) */}
+        <div className="mb-6 rounded-2xl border border-[#DADCE0] bg-white p-1.5 shadow-xs">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
             <button
               type="button"
               onClick={() => navigateToPanel('locks')}
-              className={`group flex items-center justify-center gap-2 py-2.5 px-3 font-mono text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+              className={`group flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-mono text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                 activeTab === 'locks'
                   ? 'bg-[#1A73E8] text-white shadow-xs'
                   : 'text-[#5F6368] hover:text-[#202124] hover:bg-[#F1F3F4]'
               }`}
             >
-              <span className={`flex h-4.5 w-4.5 items-center justify-center font-mono text-[10px] font-black ${
+              <span className={`flex h-4.5 w-4.5 items-center justify-center rounded-lg font-mono text-[10px] font-black ${
                 activeTab === 'locks' ? 'bg-white/20 text-white' : 'bg-[#E8F0FE] text-[#1967D2]'
               }`}>
                 01
@@ -802,13 +857,13 @@ function AdminPageContent() {
             <button
               type="button"
               onClick={() => navigateToPanel('quiz', selectedSlug)}
-              className={`group flex items-center justify-center gap-2 py-2.5 px-3 font-mono text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+              className={`group flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-mono text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                 activeTab === 'quiz'
-                  ? 'bg-[#1E8E3E] text-white shadow-xs'
+                  ? 'bg-[#34A853] text-white shadow-xs'
                   : 'text-[#5F6368] hover:text-[#202124] hover:bg-[#F1F3F4]'
               }`}
             >
-              <span className={`flex h-4.5 w-4.5 items-center justify-center font-mono text-[10px] font-black ${
+              <span className={`flex h-4.5 w-4.5 items-center justify-center rounded-lg font-mono text-[10px] font-black ${
                 activeTab === 'quiz' ? 'bg-white/20 text-white' : 'bg-[#E6F4EA] text-[#137333]'
               }`}>
                 02
@@ -820,13 +875,13 @@ function AdminPageContent() {
             <button
               type="button"
               onClick={() => navigateToPanel('wend')}
-              className={`group flex items-center justify-center gap-2 py-2.5 px-3 font-mono text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+              className={`group flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-mono text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                 activeTab === 'wend'
-                  ? 'bg-[#D93025] text-white shadow-xs'
+                  ? 'bg-[#EA4335] text-white shadow-xs'
                   : 'text-[#5F6368] hover:text-[#202124] hover:bg-[#F1F3F4]'
               }`}
             >
-              <span className={`flex h-4.5 w-4.5 items-center justify-center font-mono text-[10px] font-black ${
+              <span className={`flex h-4.5 w-4.5 items-center justify-center rounded-lg font-mono text-[10px] font-black ${
                 activeTab === 'wend' ? 'bg-white/20 text-white' : 'bg-[#FCE8E6] text-[#C5221F]'
               }`}>
                 03
@@ -838,13 +893,13 @@ function AdminPageContent() {
             <button
               type="button"
               onClick={() => navigateToPanel('winners')}
-              className={`group flex items-center justify-center gap-2 py-2.5 px-3 font-mono text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+              className={`group flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-mono text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                 activeTab === 'winners'
                   ? 'bg-[#FBBC04] text-[#202124] shadow-xs'
                   : 'text-[#5F6368] hover:text-[#202124] hover:bg-[#F1F3F4]'
               }`}
             >
-              <span className={`flex h-4.5 w-4.5 items-center justify-center font-mono text-[10px] font-black ${
+              <span className={`flex h-4.5 w-4.5 items-center justify-center rounded-lg font-mono text-[10px] font-black ${
                 activeTab === 'winners' ? 'bg-black/15 text-[#202124]' : 'bg-[#FEF7E0] text-[#B06000]'
               }`}>
                 04
@@ -861,10 +916,10 @@ function AdminPageContent() {
         {activeTab === 'locks' && (
           <div className="flex flex-col gap-6 animate-in fade-in duration-200">
             {/* Panel Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 sm:p-5 border border-[#DADCE0] shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-5 rounded-3xl border border-[#DADCE0] shadow-xs">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="flex h-7 w-7 items-center justify-center bg-[#E8F0FE] text-[#1967D2] border border-[#1A73E8]/30">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#E8F0FE] text-[#1967D2] border border-[#1A73E8]/30">
                     <SlidersHorizontal className="h-4 w-4" />
                   </span>
                   <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-[#202124] uppercase font-mono">
@@ -876,14 +931,14 @@ function AdminPageContent() {
                 </p>
               </div>
               <div className="flex items-center gap-2 self-start sm:self-auto">
-                <span className="inline-flex items-center gap-1.5 bg-[#E6F4EA] border border-[#34A853] px-3 py-1.5 font-mono text-xs font-bold text-[#137333] shadow-2xs">
-                  <span className="h-2 w-2 bg-[#34A853] animate-pulse" />
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E6F4EA] border border-[#34A853]/40 px-3.5 py-1.5 font-mono text-xs font-bold text-[#137333] shadow-2xs">
+                  <span className="h-2 w-2 rounded-full bg-[#34A853] animate-pulse" />
                   <span>WEBSOCKET LIVE</span>
                 </span>
               </div>
             </div>
 
-            {/* 3 Arena Track Cards - Simple, Aesthetic, Structured & Zero Border Radius */}
+            {/* 3 Arena Track Cards - Aesthetic, Modern & Rounded Material 3 Design */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {[
                 {
@@ -941,7 +996,7 @@ function AdminPageContent() {
                     onClick={() => {
                       navigateToPanel(jumpTab, slug !== 'wend-game' ? slug : undefined)
                     }}
-                    className={`group relative flex flex-col justify-between border bg-white p-5 shadow-xs transition-all duration-200 hover:shadow-md cursor-pointer ${
+                    className={`group relative flex flex-col justify-between rounded-3xl border bg-white p-5 shadow-xs transition-all duration-200 hover:shadow-md cursor-pointer overflow-hidden ${
                       isLive
                         ? 'border-[#34A853] ring-1 ring-[#34A853]/30 ' + accentHover
                         : 'border-[#DADCE0] hover:border-[#1A73E8]'
@@ -949,12 +1004,12 @@ function AdminPageContent() {
                     title={`Click to open ${actionTitle} editor in panel`}
                   >
                     {/* Top Accent Stripe */}
-                    <div className={`absolute top-0 inset-x-0 h-1 ${stripeColor}`} />
+                    <div className={`absolute top-0 inset-x-0 h-1.5 ${stripeColor}`} />
 
                     <div>
                       {/* Top Header: Track Tag, Studio Button, Live/Locked Pill */}
-                      <div className="flex items-center justify-between gap-2 mb-3">
-                        <div className={`inline-flex items-center gap-1.5 border px-2.5 py-1 font-mono text-[11px] font-bold tracking-wider ${tagBg}`}>
+                      <div className="flex items-center justify-between gap-2 mb-3 pt-1">
+                        <div className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-[11px] font-bold tracking-wider ${tagBg}`}>
                           <span className="opacity-75">{trackIndex} •</span>
                           <Icon className="h-3.5 w-3.5" />
                           <span>{trackTag}</span>
@@ -968,7 +1023,7 @@ function AdminPageContent() {
                               e.stopPropagation()
                               navigateToPanel(jumpTab, slug !== 'wend-game' ? slug : undefined)
                             }}
-                            className="inline-flex items-center gap-1 border border-[#DADCE0] bg-white px-2 py-1 font-mono text-[10px] font-bold text-[#1A73E8] hover:border-[#1A73E8] hover:bg-[#E8F0FE] transition-all cursor-pointer"
+                            className="inline-flex items-center gap-1 rounded-full border border-[#DADCE0] bg-white px-2.5 py-1 font-mono text-[10px] font-bold text-[#1A73E8] hover:border-[#1A73E8] hover:bg-[#E8F0FE] transition-all cursor-pointer"
                             title={`Open full ${actionTitle} studio`}
                           >
                             <Maximize2 className="h-3 w-3" />
@@ -981,7 +1036,7 @@ function AdminPageContent() {
                               e.stopPropagation()
                               handleToggleDivLock(slug, isLive)
                             }}
-                            className={`inline-flex items-center gap-1.5 border px-2 py-1 font-mono text-[11px] font-bold transition-all cursor-pointer ${
+                            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[11px] font-bold transition-all cursor-pointer ${
                               isLive
                                 ? 'border-[#34A853]/40 bg-[#E6F4EA] text-[#137333]'
                                 : 'border-[#DADCE0] bg-[#F1F3F4] text-[#5F6368]'
@@ -1003,14 +1058,14 @@ function AdminPageContent() {
                       </div>
 
                       {/* Structured Arena Status & Padlock Bar */}
-                      <div className={`my-3 flex items-center justify-between border p-3 transition-colors ${
+                      <div className={`my-3 flex items-center justify-between rounded-2xl border p-3.5 transition-colors ${
                         isLive ? 'border-[#34A853]/40 bg-[#F4FBF6]' : 'border-[#DADCE0] bg-[#F8F9FA]'
                       }`}>
                         <div className="flex items-center gap-3">
-                          <div className={`flex h-9 w-9 shrink-0 items-center justify-center border font-mono ${
+                          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-mono ${
                             isLive
-                              ? 'border-[#34A853] bg-[#1E8E3E] text-white'
-                              : 'border-[#EA4335] bg-[#D93025] text-white'
+                              ? 'border border-[#34A853]/40 bg-[#34A853] text-white shadow-xs'
+                              : 'border border-[#EA4335]/40 bg-[#EA4335] text-white shadow-xs'
                           }`}>
                             {isLive ? <Unlock className="h-4.5 w-4.5" /> : <Lock className="h-4.5 w-4.5" />}
                           </div>
@@ -1031,7 +1086,7 @@ function AdminPageContent() {
                             e.stopPropagation()
                             handleToggleDivLock(slug, isLive)
                           }}
-                          className={`px-3 py-1 font-mono text-xs font-bold border transition-all cursor-pointer ${
+                          className={`px-3 py-1.5 rounded-full font-mono text-xs font-bold border transition-all cursor-pointer ${
                             isLive
                               ? 'border-[#EA4335] bg-white text-[#EA4335] hover:bg-[#EA4335] hover:text-white'
                               : 'border-[#34A853] bg-white text-[#34A853] hover:bg-[#34A853] hover:text-white'
@@ -1060,7 +1115,7 @@ function AdminPageContent() {
                             <Sparkles className="h-3 w-3 text-[#FBBC04]" />
                             <span>{meta}</span>
                           </span>
-                          <span className="inline-flex items-center gap-1 border border-[#1A73E8]/30 bg-[#E8F0FE] px-2 py-0.5 font-mono text-[10px] font-bold text-[#1967D2] uppercase tracking-wider group-hover:bg-[#1A73E8] group-hover:text-white transition-all shadow-2xs">
+                          <span className="inline-flex items-center gap-1 rounded-full border border-[#1A73E8]/30 bg-[#E8F0FE] px-2.5 py-0.5 font-mono text-[10px] font-bold text-[#1967D2] uppercase tracking-wider group-hover:bg-[#1A73E8] group-hover:text-white transition-all shadow-2xs">
                             <SlidersHorizontal className="h-2.5 w-2.5" />
                             <span>EDIT PANEL</span>
                           </span>
@@ -1078,10 +1133,10 @@ function AdminPageContent() {
                           e.stopPropagation()
                           handleToggleDivLock(slug, isLive)
                         }}
-                        className={`flex h-11 items-center justify-center gap-2 border font-mono text-xs font-extrabold uppercase tracking-wider transition-all active:translate-y-0.5 shadow-xs cursor-pointer ${
+                        className={`flex h-11 items-center justify-center gap-2 rounded-2xl border font-mono text-xs font-extrabold uppercase tracking-wider transition-all active:translate-y-0.5 shadow-xs cursor-pointer ${
                           isLive
-                            ? 'border-[#B31412] bg-[#D93025] text-white hover:bg-[#B31412]'
-                            : 'border-[#137333] bg-[#1E8E3E] text-white hover:bg-[#137333]'
+                            ? 'border-[#B31412] bg-[#EA4335] text-white hover:bg-[#B31412]'
+                            : 'border-[#137333] bg-[#34A853] text-white hover:bg-[#137333]'
                         }`}
                       >
                         {isLive ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
@@ -1095,7 +1150,7 @@ function AdminPageContent() {
                           e.stopPropagation()
                           navigateToPanel('winners', slug !== 'wend-game' ? slug : undefined)
                         }}
-                        className="flex h-10 items-center justify-center gap-2 border border-[#FBBC04] bg-[#FEF7E0] font-mono text-xs font-bold text-[#B06000] uppercase tracking-wider hover:bg-[#FBBC04] hover:text-[#202124] transition-all shadow-2xs cursor-pointer"
+                        className="flex h-10 items-center justify-center gap-2 rounded-2xl border border-[#FBBC04] bg-[#FEF7E0] font-mono text-xs font-bold text-[#B06000] uppercase tracking-wider hover:bg-[#FBBC04] hover:text-[#202124] transition-all shadow-2xs cursor-pointer"
                         title="Open Leaderboard to inspect, delete users, and broadcast winners"
                       >
                         <Trophy className="h-4 w-4 text-[#FBBC04]" />
@@ -1109,7 +1164,7 @@ function AdminPageContent() {
                           e.stopPropagation()
                           navigateToPanel(jumpTab, slug !== 'wend-game' ? slug : undefined)
                         }}
-                        className="mt-1 flex items-center justify-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-[#5F6368] hover:text-[#1A73E8] transition-colors py-1 cursor-pointer"
+                        className="mt-1 flex items-center justify-center gap-1.5 rounded-xl font-mono text-[11px] font-bold uppercase tracking-wider text-[#5F6368] hover:text-[#1A73E8] transition-colors py-1 cursor-pointer"
                       >
                         <span>{jumpLabel}</span>
                         <span>➔</span>
@@ -1128,10 +1183,10 @@ function AdminPageContent() {
         {activeTab === 'quiz' && (
           <div className="flex flex-col gap-6 animate-in fade-in duration-200">
             {/* Header & Quiz Switcher */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 sm:p-5 border border-[#DADCE0] shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-5 rounded-3xl border border-[#DADCE0] shadow-xs">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="flex h-7 w-7 items-center justify-center bg-[#E6F4EA] text-[#137333] border border-[#34A853]/30">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#E6F4EA] text-[#137333] border border-[#34A853]/30">
                     <ListOrdered className="h-4 w-4" />
                   </span>
                   <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-[#202124] uppercase font-mono">
@@ -1144,11 +1199,11 @@ function AdminPageContent() {
               </div>
 
               {/* Event Switcher Segmented Control */}
-              <div className="flex items-center gap-1 border border-[#DADCE0] bg-[#F8F9FA] p-1 shadow-2xs self-start sm:self-auto font-mono text-xs font-bold">
+              <div className="flex items-center gap-1.5 rounded-2xl border border-[#DADCE0] bg-[#F8F9FA] p-1 shadow-2xs self-start sm:self-auto font-mono text-xs font-bold">
                 <button
                   type="button"
                   onClick={() => handleSelectQuizTrack('web-dev-quiz')}
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                     selectedSlug === 'web-dev-quiz'
                       ? 'bg-white text-[#1967D2] shadow-xs border border-[#1A73E8]'
                       : 'text-[#5F6368] hover:text-[#202124]'
@@ -1160,7 +1215,7 @@ function AdminPageContent() {
                 <button
                   type="button"
                   onClick={() => handleSelectQuizTrack('mentis-quiz')}
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                     selectedSlug === 'mentis-quiz'
                       ? 'bg-white text-[#B06000] shadow-xs border border-[#FBBC04]'
                       : 'text-[#5F6368] hover:text-[#202124]'

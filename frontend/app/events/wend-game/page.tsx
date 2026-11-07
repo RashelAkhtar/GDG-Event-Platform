@@ -65,11 +65,14 @@ export default function WendGamePage() {
   }, [authLoading, user, router])
 
   const startTimeRef = useRef<number | null>(null)
-  const [board, setBoard] = useState<WendBoardConfig>(DEFAULT_WEND_BOARD)
+  const [board, setBoard] = useState<WendBoardConfig>(() => api.getWendBoard())
 
   useEffect(() => {
-    const loadedBoard = api.getWendBoard()
-    setBoard(loadedBoard)
+    void api.fetchWendBoard().then((fresh) => {
+      if (fresh) {
+        setBoard(fresh)
+      }
+    })
   }, [])
 
   const allocatedTimeSeconds = board.timeLimitSeconds || 120

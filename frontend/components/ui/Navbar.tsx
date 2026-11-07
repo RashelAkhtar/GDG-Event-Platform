@@ -1,20 +1,25 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
-import { GoogleG, GdgLogoBadge } from './GoogleBrand'
+import { GdgLogoBadge, GoogleG } from './GoogleBrand'
 import { LogOut, ChevronDown } from 'lucide-react'
 import { SecurityNotificationBell } from '@/components/security/SecurityNotificationBell'
+
+const emptySubscribe = () => () => {}
+function useMounted() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  )
+}
 
 export function Navbar() {
   const { user, loginWithGoogle, logout } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const mounted = useMounted()
 
   return (
     <header className="sticky top-0 z-40 border-b border-[#DADCE0] bg-white/95 backdrop-blur-md">
@@ -34,14 +39,14 @@ export function Navbar() {
             <div className="relative">
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
-                className="flex items-center gap-2 border border-[#DADCE0] bg-white py-1.5 pl-1.5 pr-3 text-xs font-medium text-[#3C4043] transition-all hover:bg-[#F8F9FA] focus:outline-none cursor-pointer"
+                className="flex items-center gap-2 rounded-full border border-[#DADCE0] bg-white py-1.5 pl-1.5 pr-3 text-xs font-medium text-[#3C4043] transition-all hover:bg-[#F8F9FA] hover:border-[#BDC1C6] focus:outline-none cursor-pointer shadow-2xs"
               >
                 <img
                   src={user.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=user'}
                   alt={user.name}
-                  className="h-7 w-7 border border-[#DADCE0] object-cover"
+                  className="h-7 w-7 rounded-full border border-[#DADCE0] object-cover"
                 />
-                <span className="max-w-[90px] sm:max-w-[120px] truncate">{user.name}</span>
+                <span className="max-w-[90px] sm:max-w-[120px] truncate font-medium">{user.name}</span>
                 <ChevronDown className="h-3.5 w-3.5 text-[#5F6368]" />
               </button>
 
@@ -52,21 +57,31 @@ export function Navbar() {
                     className="fixed inset-0 z-30"
                     onClick={() => setMenuOpen(false)}
                   />
-                  <div className="absolute right-0 mt-1 w-52 border border-[#DADCE0] bg-white p-2 shadow-lg z-40">
+                  <div className="absolute right-0 mt-1.5 w-56 rounded-2xl border border-[#DADCE0] bg-white p-2 shadow-lg z-40">
                     <div className="px-3 py-2 border-b border-[#F1F3F4] text-xs">
                       <p className="font-semibold text-[#202124] truncate">{user.name}</p>
-                      <p className="text-[#5F6368] truncate">{user.email}</p>
-                      <span className="mt-1 inline-block border border-[#1A73E8]/30 bg-[#E8F0FE] px-2 py-0.5 text-[10px] font-medium text-[#1967D2]">
+                      <p className="text-[#5F6368] truncate text-[11px]">{user.email}</p>
+                      <span className="mt-1.5 inline-block rounded-full border border-[#1A73E8]/30 bg-[#E8F0FE] px-2.5 py-0.5 text-[10px] font-semibold text-[#1967D2]">
                         Role: {user.role}
                       </span>
                     </div>
+
+                    {user.role === 'ADMIN' && (
+                      <Link
+                        href="/admin-panel/panel"
+                        onClick={() => setMenuOpen(false)}
+                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-[#1A73E8] hover:bg-[#E8F0FE] transition-colors cursor-pointer mt-1"
+                      >
+                        Admin Control Panel
+                      </Link>
+                    )}
 
                     <button
                       onClick={() => {
                         setMenuOpen(false)
                         logout()
                       }}
-                      className="flex w-full items-center gap-2 px-3 py-2 text-xs font-medium text-[#EA4335] hover:bg-[#FCE8E6] transition-colors cursor-pointer"
+                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-[#EA4335] hover:bg-[#FCE8E6] transition-colors cursor-pointer mt-1"
                     >
                       <LogOut className="h-4 w-4" />
                       <span>Sign Out</span>
@@ -77,13 +92,13 @@ export function Navbar() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <button
-                onClick={loginWithGoogle}
-                className="flex items-center gap-2 border border-[#DADCE0] bg-white px-3.5 py-1.5 text-xs font-medium text-[#3C4043] shadow-2xs transition-all hover:bg-[#F8F9FA] active:translate-y-0.5 cursor-pointer"
+              <Link
+                href="/login"
+                className="flex items-center gap-2 rounded-full border border-[#DADCE0] bg-white px-4 py-1.5 text-xs font-medium text-[#3C4043] shadow-2xs transition-all hover:bg-[#F8F9FA] hover:border-[#1A73E8] active:scale-[0.98] cursor-pointer"
               >
                 <GoogleG className="h-4 w-4" />
                 <span className="hidden xs:inline">Sign in with</span> Google
-              </button>
+              </Link>
             </div>
           )}
         </div>

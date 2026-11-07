@@ -18,9 +18,13 @@ function formatDuration(ms: number): string {
 }
 
 export function Podium({ entries }: PodiumProps) {
-  const first = entries[0]
-  const second = entries[1]
-  const third = entries[2]
+  const filtered = entries.filter((e) => {
+    const name = e.user?.name || ''
+    return !name.toLowerCase().includes('admin') && e.user?._id !== 'admin_master_aryan'
+  })
+  const first = filtered[0]
+  const second = filtered[1]
+  const third = filtered[2]
 
   if (!first) {
     return (

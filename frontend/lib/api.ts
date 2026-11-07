@@ -137,82 +137,8 @@ export const DEFAULT_WEND_EVENT: GdgEvent = {
 }
 
 export const DEFAULT_QUESTIONS: Record<string, QuestionData[]> = {
-  'web-dev-quiz': [
-    {
-      _id: 'q_web_1',
-      questionText: 'Which React 19 hook allows reading async resources or promises directly during render?',
-      options: ['use() hook', 'useResource()', 'usePromise()', 'useMemo()'],
-      correctOptionIndex: 0,
-      points: 100,
-      timeLimitSeconds: 30,
-      order: 1,
-    },
-    {
-      _id: 'q_web_2',
-      questionText: 'In Next.js 15 App Router, what is the default caching behavior for fetch requests?',
-      options: ['force-cache', 'no-store (uncached by default)', 'cache-first', 'stale-while-revalidate'],
-      correctOptionIndex: 1,
-      points: 100,
-      timeLimitSeconds: 30,
-      order: 2,
-    },
-    {
-      _id: 'q_web_3',
-      questionText: 'Which CSS property enables GPU hardware acceleration for smooth 60fps animations?',
-      options: ['transform: translateZ(0)', 'position: absolute', 'display: flex', 'float: left'],
-      correctOptionIndex: 0,
-      points: 100,
-      timeLimitSeconds: 30,
-      order: 3,
-    },
-    {
-      _id: 'q_web_4',
-      questionText: 'What protocol upgrade provides bidirectional, full-duplex communication over a single TCP connection?',
-      options: ['HTTP/1.1 Keep-Alive', 'WebSocket (ws://)', 'Server-Sent Events (SSE)', 'DNS over HTTPS'],
-      correctOptionIndex: 1,
-      points: 100,
-      timeLimitSeconds: 30,
-      order: 4,
-    },
-  ],
-  'mentis-quiz': [
-    {
-      _id: 'q_mentis_1',
-      questionText: "What core self-attention mechanism powers Google's Gemini and Transformer architectures?",
-      options: ['Scaled Dot-Product Attention', 'Recurrent Hidden State', 'Convolutional Kernel Filtering', 'Heuristic Search'],
-      correctOptionIndex: 0,
-      points: 100,
-      timeLimitSeconds: 30,
-      order: 1,
-    },
-    {
-      _id: 'q_mentis_2',
-      questionText: 'In algorithm analysis, which data structure provides O(1) average lookup and insertion time?',
-      options: ['Hash Map / Hash Table', 'Binary Search Tree', 'Linked List', 'Min-Heap'],
-      correctOptionIndex: 0,
-      points: 100,
-      timeLimitSeconds: 30,
-      order: 2,
-    },
-    {
-      _id: 'q_mentis_3',
-      questionText: 'What technique dynamically enhances LLM prompt context using vector embeddings similarity?',
-      options: ['RAG (Retrieval-Augmented Generation)', 'Model Pruning', 'Quantization (int8)', 'Backpropagation'],
-      correctOptionIndex: 0,
-      points: 100,
-      timeLimitSeconds: 30,
-      order: 3,
-    },
-    {
-      _id: 'q_mentis_4',
-      questionText: 'What is the worst-case time complexity of standard unoptimized QuickSort?',
-      options: ['O(n log n)', 'O(n²)', 'O(log n)', 'O(n)'],
-      correctOptionIndex: 1,
-      points: 100,
-      timeLimitSeconds: 30,
-      order: 4,
-    },
-  ],
+  'web-dev-quiz': [],
+  'mentis-quiz': [],
 }
 
 export const DEFAULT_LEADERBOARD: Record<string, LeaderboardEntry[]> = {
@@ -424,6 +350,11 @@ export const api = {
   },
 
   recordLocalAttempt(slug: string, entry: LeaderboardEntry): void {
+    const name = entry.user?.name || ''
+    if (name.toLowerCase().includes('admin') || entry.user?._id === 'admin_master_aryan') {
+      // Strictly exclude GDG Admin attempts from public competition leaderboards
+      return
+    }
     if (typeof window !== 'undefined') {
       const existing = api.getLocalLeaderboard(slug)
       const filtered = existing.filter((e) => e._id !== entry._id)
@@ -442,12 +373,20 @@ export const api = {
       })
       if (res.ok) {
         const json = await res.json()
-        if (Array.isArray(json.data) && json.data.length > 0) return json.data
+        if (Array.isArray(json.data) && json.data.length > 0) {
+          return json.data.filter((e: LeaderboardEntry) => {
+            const name = e.user?.name || ''
+            return !name.toLowerCase().includes('admin') && e.user?._id !== 'admin_master_aryan'
+          })
+        }
       }
     } catch {}
 
     if (slug) {
-      return api.getLocalLeaderboard(slug)
+      return api.getLocalLeaderboard(slug).filter((e) => {
+        const name = e.user?.name || ''
+        return !name.toLowerCase().includes('admin') && e.user?._id !== 'admin_master_aryan'
+      })
     }
     return []
   },
@@ -457,17 +396,45 @@ export const api = {
       const stored = localStorage.getItem(`gdg_questions_${slug}`)
       if (stored) {
         try {
-          return JSON.parse(stored)
+          const list = JSON.parse(stored)
+          if (Array.isArray(list)) return list
         } catch {}
       }
     }
     return DEFAULT_QUESTIONS[slug] || []
   },
 
+  async fetchQuestions(slug: string): Promise<QuestionData[]> {
+    try {
+      const res = await fetch(`${API_BASE}/events/${slug}/questions`, {
+        credentials: 'include',
+        headers: { Accept: 'application/json' },
+      })
+      if (res.ok) {
+        const json = await res.json()
+        if (Array.isArray(json.data)) {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(`gdg_questions_${slug}`, JSON.stringify(json.data))
+            window.dispatchEvent(new CustomEvent('gdg_questions_sync', { detail: { slug, questions: json.data } }))
+          }
+          return json.data
+        }
+      }
+    } catch {}
+    return api.getQuestionsForSlug(slug)
+  },
+
   saveQuestionsForSlug(slug: string, questions: QuestionData[]): void {
     if (typeof window !== 'undefined') {
       localStorage.setItem(`gdg_questions_${slug}`, JSON.stringify(questions))
+      window.dispatchEvent(new CustomEvent('gdg_questions_sync', { detail: { slug, questions } }))
     }
+    fetch(`${API_BASE}/events/${slug}/questions`, {
+      method: 'PUT',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ questions }),
+    }).catch(() => {})
   },
 
   getWendWords(): WendWord[] {
@@ -840,7 +807,11 @@ export const api = {
       }
     }
 
-    const list = Array.from(participantMap.values())
+    // Exclude GDG Admin from competition ranking & winner ceremony
+    const list = Array.from(participantMap.values()).filter((p) => {
+      const lower = p.name.toLowerCase()
+      return !lower.includes('admin') && p.id !== 'admin_master_aryan' && !p.id.includes('admin')
+    })
 
     // === STRICT TWO-TIER RANKING ALGORITHM ===
     // Priority 1: Correct answers count / total score (DESCENDING: highest score wins)
@@ -910,15 +881,48 @@ export const api = {
     return DEFAULT_WEND_BOARD
   },
 
+  async fetchWendBoard(): Promise<WendBoardConfig> {
+    try {
+      const res = await fetch(`${API_BASE}/events/wend-game/board`, {
+        headers: { Accept: 'application/json' },
+      })
+      if (res.ok) {
+        const json = await res.json()
+        if (json.data && typeof json.data === 'object') {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('gdg_wend_board_config', JSON.stringify(json.data))
+            window.dispatchEvent(new CustomEvent('gdg_wend_board_sync', { detail: json.data }))
+          }
+          return json.data as WendBoardConfig
+        }
+      }
+    } catch {}
+    return api.getWendBoard()
+  },
+
   saveWendBoard(board: WendBoardConfig): void {
     if (typeof window !== 'undefined') {
       localStorage.setItem('gdg_wend_board_config', JSON.stringify(board))
+      window.dispatchEvent(new CustomEvent('gdg_wend_board_sync', { detail: board }))
+      fetch(`${API_BASE}/events/wend-game/board`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(board),
+      }).catch(() => {})
     }
   },
 
   resetWendBoard(): WendBoardConfig {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('gdg_wend_board_config')
+      window.dispatchEvent(new CustomEvent('gdg_wend_board_sync', { detail: DEFAULT_WEND_BOARD }))
+      fetch(`${API_BASE}/events/wend-game/board`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(DEFAULT_WEND_BOARD),
+      }).catch(() => {})
     }
     return DEFAULT_WEND_BOARD
   },

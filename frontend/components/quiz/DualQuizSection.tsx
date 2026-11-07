@@ -1,6 +1,15 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useSyncExternalStore } from 'react'
+
+const emptySubscribe = () => () => {}
+function useMounted() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  )
+}
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -51,20 +60,34 @@ function formatDuration(ms: number): string {
 interface DualQuizSectionProps {
   webEvent: GdgEvent
   mentisEvent: GdgEvent
+  wendEvent?: GdgEvent
   onStatusChange?: (eventId: string, newStatus: 'LIVE' | 'UPCOMING') => void
 }
 
 export function DualQuizSection({
   webEvent: initialWeb,
   mentisEvent: initialMentis,
+  wendEvent: initialWend,
   onStatusChange,
 }: DualQuizSectionProps) {
   const { user } = useAuth()
   const router = useRouter()
   const { gameLockStates, sendLockToggle, sendWinnerCeremonyStart, sendDeleteLeaderboardEntry, liveLeaderboards } = useWebSocket()
-  const [webEvent, setWebEvent] = useState<GdgEvent>(initialWeb)
-  const [mentisEvent, setMentisEvent] = useState<GdgEvent>(initialMentis)
-  const [wendEvent, setWendEvent] = useState<GdgEvent>(DEFAULT_WEND_EVENT)
+  const [statusOverrides, setStatusOverrides] = useState<Record<string, 'LIVE' | 'UPCOMING'>>({})
+
+  const webEvent = {
+    ...initialWeb,
+    ...(statusOverrides[initialWeb._id] ? { status: statusOverrides[initialWeb._id] } : {}),
+  }
+  const mentisEvent = {
+    ...initialMentis,
+    ...(statusOverrides[initialMentis._id] ? { status: statusOverrides[initialMentis._id] } : {}),
+  }
+  const defaultWendId = initialWend?._id || DEFAULT_WEND_EVENT._id
+  const wendEvent = {
+    ...(initialWend || DEFAULT_WEND_EVENT),
+    ...(statusOverrides[defaultWendId] ? { status: statusOverrides[defaultWendId] } : {}),
+  }
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
@@ -77,10 +100,26 @@ export function DualQuizSection({
     rankedParticipants: RankedParticipant[]
   }>({ winners: [], rankedStandings: [], rankedParticipants: [] })
 
-  const [mounted, setMounted] = useState(false)
+  const mounted = useMounted()
+  const [questionCounts, setQuestionCounts] = useState<Record<string, number>>({})
+
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    let active = true
+    void Promise.all([
+      api.fetchQuestions(webEvent.slug),
+      api.fetchQuestions(mentisEvent.slug),
+    ]).then(([webQ, mentisQ]) => {
+      if (active) {
+        setQuestionCounts({
+          [webEvent.slug]: webQ?.length || 0,
+          [mentisEvent.slug]: mentisQ?.length || 0,
+        })
+      }
+    })
+    return () => {
+      active = false
+    }
+  }, [webEvent.slug, mentisEvent.slug])
 
   const isAuthed = mounted && Boolean(user)
   const isAdmin = mounted && user?.role === 'ADMIN'
@@ -105,8 +144,7 @@ export function DualQuizSection({
 
   const toggleEventLock = async (
     targetEvent: GdgEvent,
-    isCurrentlyLive: boolean,
-    setTarget: React.Dispatch<React.SetStateAction<GdgEvent>>
+    isCurrentlyLive: boolean
   ) => {
     if (!isAdmin) return
     const newStatus: 'LIVE' | 'UPCOMING' = isCurrentlyLive ? 'UPCOMING' : 'LIVE'
@@ -116,7 +154,7 @@ export function DualQuizSection({
     try {
       sendLockToggle(targetEvent.slug, isLocked, newStatus)
       await api.updateEventStatus(targetEvent._id, newStatus)
-      setTarget((prev) => ({ ...prev, status: newStatus }))
+      setStatusOverrides((prev) => ({ ...prev, [targetEvent._id]: newStatus }))
       if (onStatusChange) {
         onStatusChange(targetEvent._id, newStatus)
       }
@@ -175,7 +213,6 @@ export function DualQuizSection({
   const renderQuizCard = (
     event: GdgEvent,
     isLive: boolean,
-    setEvent: React.Dispatch<React.SetStateAction<GdgEvent>>,
     type: 'web' | 'mentis' | 'wend'
   ) => {
     const isUpdating = updatingId === event._id
@@ -216,19 +253,19 @@ export function DualQuizSection({
       ? 'bg-[#137333]'
       : 'bg-[#DADCE0]'
 
-    // Live question / word count for specs chip
+    // Live question / word count strictly based on user-created content
     const activeQuestionsCount =
       type === 'wend'
-        ? (mounted ? api.getWendBoard().targetWords.length : 8)
-        : (mounted ? api.getQuestionsForSlug(event.slug).length : 4)
+        ? (mounted ? api.getWendBoard().targetWords.length : 0)
+        : (questionCounts[event.slug] ?? (mounted ? api.getQuestionsForSlug(event.slug).length : 0))
 
     const wendLimit = api.getWendBoard().timeLimitSeconds || 120
     const specsBadge =
       type === 'wend'
-        ? `${activeQuestionsCount} Target Words • ${wendLimit}s Timer`
-        : isMentis
-        ? `${activeQuestionsCount} Logic & AI Questions • 400 Pts`
-        : `${activeQuestionsCount} Frontend Questions • 30s Each • 400 Pts`
+        ? (activeQuestionsCount > 0 ? `${activeQuestionsCount} Target Words • ${wendLimit}s Timer` : 'Setup in Admin')
+        : activeQuestionsCount > 0
+        ? `${activeQuestionsCount} Questions • 30s Each • ${activeQuestionsCount * 100} Pts`
+        : 'No Questions Published Yet'
 
     // Target Admin Panel URL with track deep-link
     const adminPanelHref =
@@ -255,25 +292,25 @@ export function DualQuizSection({
     return (
       <div
         onClick={handleCardClick}
-        className={`group relative flex flex-col justify-between overflow-hidden border transition-all duration-300 p-5 sm:p-6 cursor-pointer bg-white ${
+        className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border transition-all duration-300 p-5 sm:p-6 cursor-pointer bg-white ${
           isLive
-            ? 'border-[#34A853] shadow-xs hover:shadow-md hover:border-[#1A73E8]'
-            : 'border-[#DADCE0] hover:border-[#1A73E8] hover:shadow-xs'
+            ? 'border-[#34A853]/60 shadow-sm hover:shadow-md hover:border-[#1A73E8]'
+            : 'border-[#DADCE0] hover:border-[#1A73E8] hover:shadow-sm'
         } ${isAdmin ? 'hover:ring-1 hover:ring-[#1A73E8]' : ''}`}
         title={isAdmin ? 'Click to open Game in Admin Panel' : isLive ? 'Click to play' : 'Challenge Locked'}
       >
         {/* Subtle Architectural Tech Grid */}
-        <div className="pointer-events-none absolute inset-0 bg-tech-grid opacity-[0.05]" />
+        <div className="pointer-events-none absolute inset-0 bg-tech-dots opacity-[0.06]" />
 
-        {/* Top Sharp Status Accent Line */}
-        <div className={`absolute top-0 inset-x-0 h-[2.5px] ${topAccentColor}`} />
+        {/* Top Status Accent Line */}
+        <div className={`absolute top-0 inset-x-0 h-1 ${topAccentColor}`} />
 
         <div className="relative z-10 flex flex-col gap-3.5">
           {/* Header Row: Track Badge + Studio Link + Compact Lock Status Pill */}
           <div className="flex items-center justify-between gap-2">
-            <span className="inline-flex items-center gap-1.5 border border-[#DADCE0] bg-[#F8F9FA] px-2.5 py-1 font-mono text-[11px] font-bold text-[#3C4043] tracking-wider">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#DADCE0] bg-[#F8F9FA] px-3 py-1 text-xs font-semibold text-[#3C4043] tracking-wide">
               {icon}
-              <span>{trackLabel.toUpperCase()}</span>
+              <span>{trackLabel}</span>
             </span>
 
             <div className="flex items-center gap-1.5">
@@ -282,11 +319,11 @@ export function DualQuizSection({
                 <Link
                   href={adminPanelHref}
                   onClick={(e) => e.stopPropagation()}
-                  className="inline-flex items-center gap-1 border border-[#DADCE0] bg-white px-2 py-1 font-mono text-[10px] font-bold text-[#1A73E8] hover:border-[#1A73E8] hover:bg-[#E8F0FE] transition-all"
+                  className="inline-flex items-center gap-1 rounded-full border border-[#DADCE0] bg-white px-2.5 py-1 text-xs font-semibold text-[#1A73E8] hover:border-[#1A73E8] hover:bg-[#E8F0FE] transition-all"
                   title="Open Full Game Studio in Admin Command Center"
                 >
                   <Maximize2 className="h-3 w-3" />
-                  <span>STUDIO</span>
+                  <span>Studio</span>
                 </Link>
               )}
 
@@ -295,10 +332,10 @@ export function DualQuizSection({
                 onClick={(e) => {
                   if (isAdmin) {
                     e.stopPropagation()
-                    toggleEventLock(event, isLive, setEvent)
+                    toggleEventLock(event, isLive)
                   }
                 }}
-                className={`inline-flex items-center gap-1.5 border px-2 py-1 font-mono text-[11px] font-bold transition-all ${
+                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold transition-all ${
                   isAdmin ? 'cursor-pointer hover:shadow-2xs' : ''
                 } ${
                   isLive
@@ -313,10 +350,10 @@ export function DualQuizSection({
                   isLive={isLive}
                   isAdmin={isAdmin}
                   disabled={isUpdating}
-                  onChange={() => toggleEventLock(event, isLive, setEvent)}
+                  onChange={() => toggleEventLock(event, isLive)}
                   size="xs"
                 />
-                <span className="tracking-wider">{isLive ? 'LIVE' : 'LOCKED'}</span>
+                <span className="tracking-wide">{isLive ? 'LIVE' : 'LOCKED'}</span>
               </div>
             </div>
           </div>
@@ -324,12 +361,12 @@ export function DualQuizSection({
           {/* Title & Description */}
           <div className="flex flex-col gap-1 text-left">
             <div className="flex items-center justify-between gap-1">
-              <h3 className="text-lg sm:text-xl font-extrabold text-[#202124] tracking-tight group-hover:text-[#1A73E8] transition-colors leading-snug">
+              <h3 className="text-lg sm:text-xl font-bold text-[#202124] tracking-tight group-hover:text-[#1A73E8] transition-colors leading-snug">
                 {event.title}
               </h3>
               {isAdmin && (
-                <span className="font-mono text-[10px] font-bold text-[#1A73E8] flex items-center gap-1 shrink-0">
-                  <span>EDIT</span>
+                <span className="text-xs font-semibold text-[#1A73E8] flex items-center gap-1 shrink-0">
+                  <span>Edit</span>
                   <ExternalLink className="h-3 w-3" />
                 </span>
               )}
@@ -341,7 +378,7 @@ export function DualQuizSection({
 
           {/* Live Specs Structured Chip */}
           <div className="flex items-center justify-start">
-            <span className="inline-flex items-center gap-1.5 border border-[#DADCE0] bg-[#F8F9FA] px-2.5 py-1 font-mono text-[11px] font-medium text-[#3C4043]" suppressHydrationWarning>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#DADCE0] bg-[#F8F9FA] px-3 py-1 text-xs font-medium text-[#3C4043]" suppressHydrationWarning>
               <Clock className="h-3 w-3 text-[#5F6368]" />
               <span suppressHydrationWarning>{specsBadge}</span>
             </span>
@@ -357,7 +394,7 @@ export function DualQuizSection({
                 onClick={() => {
                   void soundManager.unlock()
                 }}
-                className={`relative flex h-11 flex-1 items-center justify-center gap-2 font-mono text-xs sm:text-sm font-extrabold uppercase tracking-wider text-white border transition-all active:translate-y-0.5 shadow-xs overflow-hidden ${
+                className={`relative flex h-11 flex-1 items-center justify-center gap-2 rounded-xl text-xs sm:text-sm font-semibold tracking-wide text-white border transition-all active:scale-[0.99] shadow-xs overflow-hidden ${
                   isWeb
                     ? 'border-[#1765CC] bg-[#1A73E8] hover:bg-[#1557B0]'
                     : isMentis
@@ -365,24 +402,24 @@ export function DualQuizSection({
                     : 'border-[#137333] bg-[#1E8E3E] hover:bg-[#137333]'
                 }`}
               >
-                <span suppressHydrationWarning>{isAuthed ? buttonText : `SIGN IN TO PLAY • ${buttonText}`}</span>
+                <span suppressHydrationWarning>{isAuthed ? buttonText : `Sign in to play • ${buttonText}`}</span>
                 <ArrowRight className="h-4 w-4" />
               </Link>
             ) : (
               <button
                 type="button"
                 disabled
-                className="flex h-11 flex-1 items-center justify-center gap-2 border border-[#DADCE0] bg-[#F1F3F4] font-mono text-xs font-bold uppercase tracking-wider text-[#80868B] cursor-not-allowed"
+                className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-[#DADCE0] bg-[#F1F3F4] text-xs font-semibold text-[#80868B] cursor-not-allowed"
               >
                 <Lock className="h-3.5 w-3.5" />
-                <span>CHALLENGE LOCKED BY HOST</span>
+                <span>Challenge Locked by Host</span>
               </button>
             )}
 
             {/* Minimalist Trophy Leaderboard Shortcut */}
             <Link
               href={leaderboardHref}
-              className="relative flex h-11 w-11 shrink-0 items-center justify-center border border-[#DADCE0] bg-white text-[#5F6368] hover:border-[#FBBC04] hover:text-[#B06000] hover:bg-[#FEF7E0] transition-all shadow-xs"
+              className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#DADCE0] bg-white text-[#5F6368] hover:border-[#FBBC04] hover:text-[#B06000] hover:bg-[#FEF7E0] transition-all shadow-xs"
               title="View live standings & victory podium"
             >
               <Trophy className="h-4 w-4" />
@@ -398,8 +435,8 @@ export function DualQuizSection({
               <button
                 type="button"
                 disabled={isUpdating}
-                onClick={() => toggleEventLock(event, isLive, setEvent)}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2.5 font-mono text-[11px] font-bold uppercase tracking-wider border transition-all cursor-pointer active:translate-y-0.5 shadow-2xs ${
+                onClick={() => toggleEventLock(event, isLive)}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold border transition-all cursor-pointer active:scale-[0.98] shadow-2xs ${
                   isLive
                     ? 'border-[#B31412] bg-[#FCE8E6] text-[#C5221F] hover:bg-[#FAD2CF]'
                     : 'border-[#137333] bg-[#E6F4EA] text-[#137333] hover:bg-[#CEEAD6]'
@@ -449,13 +486,13 @@ export function DualQuizSection({
       </div>
 
       {/* Top Div: Web Quiz Track */}
-      {renderQuizCard(webEvent, isWebLive, setWebEvent, 'web')}
+      {renderQuizCard(webEvent, isWebLive, 'web')}
 
       {/* Middle Div: Wend Word Puzzle Track */}
-      {renderQuizCard(wendEvent, isWendLive, setWendEvent, 'wend')}
+      {renderQuizCard(wendEvent, isWendLive, 'wend')}
 
       {/* Bottom Div: Mentis Quiz Track */}
-      {renderQuizCard(mentisEvent, isMentisLive, setMentisEvent, 'mentis')}
+      {renderQuizCard(mentisEvent, isMentisLive, 'mentis')}
 
       {/* ======================================================== */}
       {/* BROADCAST WINNER LEADERBOARD AUDIT & CONTROL MODAL       */}

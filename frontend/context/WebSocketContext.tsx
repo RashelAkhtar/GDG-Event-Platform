@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react'
 import { LeaderboardEntry, CeremonyWinner, WendBoardConfig, api } from '@/lib/api'
+import { useAuth } from './AuthContext'
 
 export interface ConnectedSession {
   sessionId: string
@@ -65,10 +66,12 @@ interface WebSocketContextType {
   markSecurityAlertsRead: () => void
   closeCeremony: () => void
   reconnect: () => void
+  sendQuestionsUpdate: (gameSlug: string, questions: any[]) => void
   subscribeToUserJoin: (callback: (session: ConnectedSession) => void) => () => void
   subscribeToUserLeave: (callback: (sessionId: string) => void) => () => void
   subscribeToLeaderboardReset: (callback: (gameSlug: string) => void) => () => void
   subscribeToLeaderboardUpdate: (callback: (gameSlug: string, leaderboard: LeaderboardEntry[]) => void) => () => void
+  subscribeToQuestionsUpdate: (callback: (gameSlug: string, questions: any[]) => void) => () => void
 }
 
 const WebSocketContext = createContext<WebSocketContextType>({
@@ -86,6 +89,7 @@ const WebSocketContext = createContext<WebSocketContextType>({
   sendWinnerCeremonyStart: () => {},
   sendLeaderboardReset: () => {},
   sendDeleteLeaderboardEntry: () => {},
+  sendQuestionsUpdate: () => {},
   sendWendConfigUpdate: () => {},
   sendBubbleImpulse: () => {},
   securityAlerts: [],
@@ -99,6 +103,7 @@ const WebSocketContext = createContext<WebSocketContextType>({
   subscribeToUserLeave: () => () => {},
   subscribeToLeaderboardReset: () => () => {},
   subscribeToLeaderboardUpdate: () => () => {},
+  subscribeToQuestionsUpdate: () => () => {},
 })
 
 function getWsUrl(): string {
@@ -153,6 +158,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   const userLeaveSubscribersRef = useRef<Set<(sessionId: string) => void>>(new Set())
   const leaderboardResetSubscribersRef = useRef<Set<(gameSlug: string) => void>>(new Set())
   const leaderboardUpdateSubscribersRef = useRef<Set<(gameSlug: string, leaderboard: LeaderboardEntry[]) => void>>(new Set())
+  const questionsUpdateSubscribersRef = useRef<Set<(gameSlug: string, questions: any[]) => void>>(new Set())
   const pendingMessagesRef = useRef<{ type: string; payload?: unknown }[]>([])
   const connectFnRef = useRef<(() => void) | null>(null)
 
@@ -351,6 +357,20 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
           }
           break
         }
+        case 'QUESTIONS_UPDATE': {
+          const gameSlug = payload?.gameSlug as string | undefined
+          const questions = payload?.questions as any[] | undefined
+          if (gameSlug && Array.isArray(questions)) {
+            if (typeof window !== 'undefined') {
+              localStorage.setItem(`gdg_questions_${gameSlug}`, JSON.stringify(questions))
+              window.dispatchEvent(new CustomEvent('gdg_questions_sync', { detail: payload }))
+            }
+            questionsUpdateSubscribersRef.current.forEach((cb) => {
+              try { cb(gameSlug, questions) } catch (err) { console.error('Error in questions update listener:', err) }
+            })
+          }
+          break
+        }
         case 'ADMIN_SECURITY_ALERT': {
           const alert = payload as unknown as SecurityAlert
           if (alert && alert.id) {
@@ -541,6 +561,26 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     [broadcastMessage]
   )
 
+  const { user } = useAuth()
+
+  // Sync user state with WebSocket when user logs in or reconnects
+  useEffect(() => {
+    if (user && connected) {
+      broadcastMessage({
+        type: 'USER_JOIN',
+        payload: {
+          sessionId: currentSessionId,
+          userId: user._id,
+          name: user.name,
+          avatar: user.avatar,
+          role: user.role,
+          device: detectDeviceType(),
+          joinedAt: Date.now(),
+        },
+      })
+    }
+  }, [user, connected, currentSessionId, broadcastMessage])
+
   const sendLockToggle = useCallback(
     (gameSlug: string, isLocked: boolean, status: string) => {
       setGameLockStates((prev) => ({
@@ -549,7 +589,13 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
       }))
       broadcastMessage({
         type: 'GAME_LOCK_TOGGLE',
-        payload: { gameSlug, isLocked, status },
+        payload: {
+          gameSlug,
+          isLocked,
+          status,
+          role: 'ADMIN',
+          adminAuth: true,
+        },
       })
     },
     [broadcastMessage]
@@ -559,7 +605,11 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     (gameSlug: string) => {
       broadcastMessage({
         type: 'START_COUNTDOWN',
-        payload: { gameSlug },
+        payload: {
+          gameSlug,
+          role: 'ADMIN',
+          adminAuth: true,
+        },
       })
       runCountdown(gameSlug)
     },
@@ -577,7 +627,11 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
       setActiveCeremony(enriched)
       broadcastMessage({
         type: 'START_WINNER_CEREMONY',
-        payload: enriched,
+        payload: {
+          ...enriched,
+          role: 'ADMIN',
+          adminAuth: true,
+        },
       })
     },
     [broadcastMessage]
@@ -704,6 +758,28 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     []
   )
 
+  const sendQuestionsUpdate = useCallback((gameSlug: string, questions: any[]) => {
+    broadcastMessage({
+      type: 'QUESTIONS_UPDATE',
+      payload: {
+        gameSlug,
+        questions,
+        role: 'ADMIN',
+        adminAuth: true,
+      },
+    })
+  }, [broadcastMessage])
+
+  const subscribeToQuestionsUpdate = useCallback(
+    (callback: (gameSlug: string, questions: any[]) => void) => {
+      questionsUpdateSubscribersRef.current.add(callback)
+      return () => {
+        questionsUpdateSubscribersRef.current.delete(callback)
+      }
+    },
+    []
+  )
+
   return (
     <WebSocketContext.Provider
       value={{
@@ -721,6 +797,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
         sendWinnerCeremonyStart,
         sendLeaderboardReset,
         sendDeleteLeaderboardEntry,
+        sendQuestionsUpdate,
         sendWendConfigUpdate,
         sendBubbleImpulse,
         securityAlerts,
@@ -734,6 +811,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
         subscribeToUserLeave,
         subscribeToLeaderboardReset,
         subscribeToLeaderboardUpdate,
+        subscribeToQuestionsUpdate,
       }}
     >
       {children}

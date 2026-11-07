@@ -22,16 +22,21 @@ function formatDuration(ms: number): string {
 export function RankList({ entries, startIndex = 0 }: RankListProps) {
   const { user } = useAuth()
 
+  const nonAdminEntries = entries.filter((e) => {
+    const name = e.user?.name || ''
+    return !name.toLowerCase().includes('admin') && e.user?._id !== 'admin_master_aryan'
+  })
+
   // Find user rank if exists
-  const userRankIndex = entries.findIndex(
+  const userRankIndex = nonAdminEntries.findIndex(
     (e) => e.user?.name === user?.name || (e.user?._id && e.user._id === user?._id)
   )
 
-  const userEntry = userRankIndex !== -1 ? entries[userRankIndex] : null
+  const userEntry = userRankIndex !== -1 ? nonAdminEntries[userRankIndex] : null
 
   return (
     <div className="flex flex-col gap-2 w-full pb-20">
-      {entries.map((entry, idx) => {
+      {nonAdminEntries.map((entry, idx) => {
         const rank = startIndex + idx + 1
         const isCurrentUser =
           user && (entry.user?.name === user.name || (entry.user?._id && entry.user._id === user._id))

@@ -19,15 +19,9 @@
 }
 
 /* =========================================================================
-   STRICT PRECISION ARCHITECTURE — ZERO BORDER RADIUS SYSTEM
-   Simple, structured, clean geometric lines across all elements
+   MODERN GOOGLE MATERIAL DESIGN 3 ARCHITECTURE
+   Clean, light, airy surfaces with soft rounded geometry and Google 4-color language
    ========================================================================= */
-
-*,
-*::before,
-*::after {
-  border-radius: 0 !important;
-}
 
 body {
   background-color: var(--background);
@@ -37,16 +31,17 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Precision Sharp Scrollbar */
+/* Polished Google Rounded Scrollbar */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #F1F3F4;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: #DADCE0;
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #9AA0A6;

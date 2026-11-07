@@ -152,8 +152,19 @@ export function CircleBucket() {
     const isMobile = typeof window !== 'undefined' && /mobile|iphone|android|ipad/i.test(navigator.userAgent)
     const deviceType = isMobile ? 'mobile' : 'desktop'
 
+    const isAdminUser = Boolean(
+      user &&
+      (user.role === 'ADMIN' ||
+       user.name?.toLowerCase().includes('admin') ||
+       user.email?.toLowerCase().includes('admin') ||
+       user.email === 'aryan.crores@gmail.com')
+    )
+
     if (user) {
-      dropBubble(user.name + ' (You)', user.avatar, true, `session-${currentSessionId}`)
+      // Exclude GDG Admin from entering the physics bucket simulation
+      if (!isAdminUser) {
+        dropBubble(user.name + ' (You)', user.avatar, true, `session-${currentSessionId}`)
+      }
       sendUserJoin({
         sessionId: currentSessionId,
         userId: user._id,
@@ -179,6 +190,13 @@ export function CircleBucket() {
   useEffect(() => {
     const unsub = subscribeToUserJoin((session) => {
       if (session.sessionId !== currentSessionId) {
+        // Suppress toast for GDG Admin joins
+        const isRemoteAdmin =
+          session.role === 'ADMIN' ||
+          session.name?.toLowerCase().includes('admin') ||
+          session.userId === 'admin_master_aryan'
+        if (isRemoteAdmin) return
+
         setLiveArrivalToast(`${session.name} joined the arena!`)
         const timer = setTimeout(() => setLiveArrivalToast(null), 3500)
         return () => clearTimeout(timer)
@@ -192,6 +210,13 @@ export function CircleBucket() {
     connectedSessions.forEach((sess) => {
       const isCurrentSession = sess.sessionId === currentSessionId
       if (isCurrentSession) return // Self bubble already handled
+
+      // Exclude GDG Admin sessions from appearing as bubbles in CircleBucket
+      const isRemoteAdmin =
+        sess.role === 'ADMIN' ||
+        sess.name?.toLowerCase().includes('admin') ||
+        sess.userId === 'admin_master_aryan'
+      if (isRemoteAdmin) return
 
       // Label with secondary device if same user logged in on another device!
       let displayName = sess.name

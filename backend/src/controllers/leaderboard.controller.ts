@@ -1,12 +1,23 @@
 import { type Request, type Response, type NextFunction } from 'express';
 import { QuizAttempt } from '../models/QuizAttempt.ts';
 import { Types } from 'mongoose';
+import { wsService } from '../websocket.ts';
 
 export const getLeaderboard = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const eventId = req.params.eventId;
-    if (typeof eventId !== 'string' || !Types.ObjectId.isValid(eventId)) {
+    if (typeof eventId !== 'string') {
       return res.status(400).json({ success: false, message: 'Invalid event id.' });
+    }
+
+    if (!Types.ObjectId.isValid(eventId)) {
+      const slug = eventId.replace('-id', '');
+      const liveEntries = wsService.getLeaderboard(slug);
+      const filtered = liveEntries.filter((e) => {
+        const name = e.user?.name || '';
+        return !name.toLowerCase().includes('admin') && e.user?._id !== 'admin_master_aryan';
+      });
+      return res.status(200).json({ success: true, count: filtered.length, data: filtered });
     }
 
     const leaderboard = await QuizAttempt.aggregate([
@@ -39,6 +50,13 @@ export const getLeaderboard = async (req: Request, res: Response, next: NextFunc
       },
       { $unwind: '$user' },
       {
+        // Strictly exclude GDG Admin from competition leaderboards
+        $match: {
+          'user.role': { $ne: 'ADMIN' },
+          'user.name': { $not: /admin/i },
+        },
+      },
+      {
         $project: {
           _id: 1,
           totalScore: 1,
@@ -59,8 +77,21 @@ export const getLeaderboard = async (req: Request, res: Response, next: NextFunc
 export const resetLeaderboard = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const eventId = req.params.eventId;
-    if (typeof eventId !== 'string' || !Types.ObjectId.isValid(eventId)) {
+    if (typeof eventId !== 'string') {
       return res.status(400).json({ success: false, message: 'Invalid event id.' });
+    }
+
+    if (!Types.ObjectId.isValid(eventId)) {
+      const slug = eventId.replace('-id', '');
+      wsService.broadcast({
+        type: 'RESET_GAME_LEADERBOARD',
+        payload: { gameSlug: slug },
+      });
+      return res.status(200).json({
+        success: true,
+        message: 'Leaderboard reset successfully.',
+        deletedAttempts: 0,
+      });
     }
 
     const result = await QuizAttempt.deleteMany({

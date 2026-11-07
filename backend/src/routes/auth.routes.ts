@@ -1,41 +1,28 @@
-import 'dotenv/config';
 import { Router, type Request, type Response, type NextFunction } from 'express';
+import passport from 'passport';
 import mongoose from 'mongoose';
-import passport, { isGoogleConfigured } from '../config/passport.ts';
 import { generateToken } from '../utils/jwt.ts';
 import { User, UserRole, type IUser } from '../models/User.ts';
 import { protect } from '../middlewares/auth.middleware.ts';
 
 const router = Router();
 
-// 1. Redirect to Google Consent Screen
+// 1. Initiate Google OAuth
 router.get(
   '/google',
-  (req: Request, res: Response, next: NextFunction) => {
-    if (!isGoogleConfigured) {
-      return res.status(503).json({ success: false, message: 'Google sign-in is not configured.' });
-    }
-
-    passport.authenticate('google', {
-      scope: ['profile', 'email'],
-      session: false,
-    })(req, res, next);
-  }
+  passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    prompt: 'select_account',
+  })
 );
 
-// 2. Google Redirect Callback
+// 2. Google OAuth Callback
 router.get(
   '/google/callback',
-  (req: Request, res: Response, next: NextFunction) => {
-    if (!isGoogleConfigured) {
-      return res.status(503).json({ success: false, message: 'Google sign-in is not configured.' });
-    }
-
-    passport.authenticate('google', { 
-      session: false, 
-      failureRedirect: `${process.env.CLIENT_URL || 'http://localhost:3000'}/?error=auth_failed`
-    })(req, res, next);
-  },
+  passport.authenticate('google', {
+    failureRedirect: `${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=oauth_failed`,
+    session: false,
+  }),
   (req: Request, res: Response) => {
     const user = req.user as IUser;
 
@@ -83,7 +70,28 @@ router.post('/admin/login', async (req: Request, res: Response, next: NextFuncti
 
   if (adminEmail && adminPassword && inputEmail === adminEmail && inputPassword === adminPassword) {
     if (mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ success: false, message: 'Authentication service is unavailable.' });
+      const fallbackUser = {
+        _id: 'admin_master_aryan',
+        email: adminEmail,
+        name: 'GDG Admin',
+        avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=GDGAdmin&backgroundColor=1a73e8&textColor=ffffff',
+        role: UserRole.ADMIN,
+      };
+      const token = generateToken({
+        userId: 'admin_master_aryan',
+        role: 'ADMIN',
+      });
+      res.cookie('gdg_token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+      return res.status(200).json({
+        success: true,
+        message: 'Admin authenticated successfully',
+        user: fallbackUser,
+      });
     }
 
     let user: IUser;
