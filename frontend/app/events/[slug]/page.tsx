@@ -50,7 +50,18 @@ function QuizRunnerContent() {
       router.replace(`/login?redirect=${encodeURIComponent(`/events/${slug}`)}`)
     }
   }, [authLoading, user, slug, router])
-  const { currentSessionId, subscribeToLeaderboardReset, sendSubmitAttempt, sendScreenshotViolation, subscribeToQuestionsUpdate, gameLockStates } = useWebSocket()
+
+  const { currentSessionId, subscribeToLeaderboardReset, sendSubmitAttempt, sendScreenshotViolation, subscribeToQuestionsUpdate, gameLockStates, sendGameEnter, sendGameLeave } = useWebSocket()
+
+  // Real-time active presence tracking for this specific game
+  useEffect(() => {
+    if (slug) {
+      sendGameEnter(slug)
+      return () => {
+        sendGameLeave(slug)
+      }
+    }
+  }, [slug, sendGameEnter, sendGameLeave])
   const startTimeRef = useRef<number | null>(null)
 
   const [event, setEvent] = useState<GdgEvent | null>(() => (slug === 'mentis-quiz' ? DEFAULT_MENTIS_EVENT : DEFAULT_WEB_EVENT))

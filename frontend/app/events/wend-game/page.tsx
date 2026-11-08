@@ -52,7 +52,7 @@ function formatTimer(totalSecs: number): string {
 export default function WendGamePage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
-  const { gameLockStates, subscribeToLeaderboardReset, sendSubmitAttempt, sendScreenshotViolation, currentSessionId } = useWebSocket()
+  const { gameLockStates, subscribeToLeaderboardReset, sendSubmitAttempt, sendScreenshotViolation, currentSessionId, sendGameEnter, sendGameLeave } = useWebSocket()
   const isLocked = gameLockStates['wend-game']?.isLocked ?? false
 
   // Guest Player Guard: Guest users must not play — redirect immediately to /login
@@ -61,6 +61,14 @@ export default function WendGamePage() {
       router.replace(`/login?redirect=${encodeURIComponent('/events/wend-game')}`)
     }
   }, [authLoading, user, router])
+
+  // Real-time active presence tracking for Wend Game
+  useEffect(() => {
+    sendGameEnter('wend-game')
+    return () => {
+      sendGameLeave('wend-game')
+    }
+  }, [sendGameEnter, sendGameLeave])
 
   const startTimeRef = useRef<number | null>(null)
   const [board, setBoard] = useState<WendBoardConfig>(() => {

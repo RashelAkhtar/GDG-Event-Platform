@@ -689,3 +689,446 @@ svg {
 
 
 
+
+
+/* =========================================================================
+   VOXEL MINECRAFT INTERACTIVE ANIMATIONS & PARTICLES
+   ========================================================================= */
+
+.anim-voxel-damage {
+  animation: voxel-damage-blink 0.35s ease-in-out infinite alternate;
+}
+
+.anim-voxel-tumble {
+  animation: voxel-tumble-fall 0.85s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+}
+
+.anim-voxel-poof {
+  animation: voxel-poof-burst 0.75s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.anim-voxel-feather {
+  animation: voxel-feather-float 1.8s ease-in-out forwards;
+}
+
+.anim-voxel-xp {
+  animation: voxel-xp-orb 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.anim-voxel-star {
+  animation: voxel-star-twinkle 3.2s ease-in-out infinite alternate;
+}
+
+.anim-voxel-firefly {
+  animation: voxel-firefly-float 4.5s ease-in-out infinite alternate;
+}
+
+.anim-voxel-leaf-shake {
+  animation: voxel-leaf-shake 0.4s ease-in-out 2;
+}
+
+.anim-voxel-leaf-fall {
+  animation: voxel-leaf-drop 1.4s ease-out forwards;
+}
+
+.anim-voxel-sun {
+  animation: voxel-sun-flare 3s ease-in-out infinite;
+}
+
+.anim-voxel-moon {
+  animation: voxel-moon-glow 3.5s ease-in-out infinite;
+}
+
+.anim-voxel-flower-bounce {
+  animation: voxel-flower-plucked 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes voxel-damage-blink {
+  0% {
+    filter: drop-shadow(0 0 10px #EF4444) saturate(4) brightness(0.7) sepia(1) hue-rotate(-50deg);
+    transform: scale(1.1) rotate(-15deg);
+  }
+  50% {
+    filter: drop-shadow(0 0 14px #DC2626) saturate(5) brightness(0.6) sepia(1) hue-rotate(-50deg);
+    transform: scale(1.18) rotate(-22deg);
+  }
+  100% {
+    filter: drop-shadow(0 0 6px #EF4444) saturate(3) brightness(0.8) sepia(1) hue-rotate(-50deg);
+    transform: scale(1.05) rotate(-10deg);
+  }
+}
+
+@keyframes voxel-tumble-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  25% {
+    transform: translateY(-14px) rotate(-35deg);
+  }
+  60% {
+    transform: translateY(50px) rotate(65deg);
+  }
+  100% {
+    transform: translateY(135px) rotate(110deg);
+    opacity: 0.85;
+  }
+}
+
+@keyframes voxel-poof-burst {
+  0% {
+    transform: translate(0, 0) scale(0.3);
+    opacity: 1;
+  }
+  60% {
+    transform: translate(var(--poof-x, 0px), var(--poof-y, 0px)) scale(1.15);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(calc(var(--poof-x, 0px) * 1.45), calc(var(--poof-y, 0px) * 1.45 - 12px)) scale(0.2);
+    opacity: 0;
+  }
+}
+
+@keyframes voxel-feather-float {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  40% {
+    transform: translate(10px, 14px) rotate(22deg);
+    opacity: 0.95;
+  }
+  75% {
+    transform: translate(-8px, 28px) rotate(-16deg);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(6px, 44px) rotate(10deg);
+    opacity: 0;
+  }
+}
+
+@keyframes voxel-xp-orb {
+  0% {
+    transform: translate(0, 0) scale(0.5);
+    opacity: 1;
+  }
+  30% {
+    transform: translate(4px, -18px) scale(1.2);
+    opacity: 1;
+  }
+  70% {
+    transform: translate(-3px, -36px) scale(0.95);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(2px, -52px) scale(0.3);
+    opacity: 0;
+  }
+}
+
+@keyframes voxel-star-twinkle {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.25);
+    filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.95));
+  }
+}
+
+@keyframes voxel-firefly-float {
+  0%, 100% {
+    transform: translate(0, 0);
+    opacity: 0.3;
+  }
+  25% {
+    transform: translate(6px, -12px);
+    opacity: 0.95;
+    box-shadow: 0 0 8px #A3E635;
+  }
+  50% {
+    transform: translate(-5px, -22px);
+    opacity: 0.5;
+  }
+  75% {
+    transform: translate(7px, -32px);
+    opacity: 1;
+    box-shadow: 0 0 10px #FACC15;
+  }
+}
+
+@keyframes voxel-leaf-shake {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-4deg) scale(1.04);
+  }
+  75% {
+    transform: rotate(4deg) scale(1.03);
+  }
+}
+
+@keyframes voxel-leaf-drop {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(14px, 50px) rotate(220deg);
+    opacity: 0;
+  }
+}
+
+@keyframes voxel-sun-flare {
+  0%, 100% {
+    box-shadow: 0 0 22px rgba(253, 224, 71, 0.6), 0 0 45px rgba(251, 191, 36, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 32px rgba(253, 224, 71, 0.9), 0 0 60px rgba(251, 191, 36, 0.55);
+  }
+}
+
+@keyframes voxel-moon-glow {
+  0%, 100% {
+    box-shadow: 0 0 18px rgba(186, 230, 253, 0.5), 0 0 34px rgba(147, 197, 253, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 26px rgba(186, 230, 253, 0.8), 0 0 48px rgba(147, 197, 253, 0.45);
+  }
+}
+
+@keyframes voxel-flower-plucked {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  20% {
+    transform: scale(1.25) rotate(-16deg);
+  }
+  40% {
+    transform: scale(1.15) rotate(14deg);
+  }
+  60% {
+    transform: scale(1.05) rotate(-8deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* =========================================================================
+   DARK MODE ADAPTIVE HARMONIZATION
+   ========================================================================= */
+
+html.dark {
+  --background: #080D1A;
+  --foreground: #F9FAFB;
+  --google-border: #1E293B;
+  --hairline: #1E293B;
+  color-scheme: dark;
+}
+
+html.dark body {
+  background-color: #080D1A;
+  color: #F9FAFB;
+}
+
+html.dark .bg-white {
+  background-color: #0F172A !important;
+}
+
+html.dark .bg-\[\#FAFAFA\] {
+  background-color: #080D1A !important;
+}
+
+html.dark .text-\[\#111827\] {
+  color: #F9FAFB !important;
+}
+
+html.dark .text-\[\#4B5563\] {
+  color: #94A3B8 !important;
+}
+
+html.dark .text-\[\#6B7280\] {
+  color: #94A3B8 !important;
+}
+
+html.dark .border-\[\#E5E7EB\] {
+  border-color: #1E293B !important;
+}
+
+html.dark header {
+  background-color: rgba(15, 23, 42, 0.92) !important;
+  border-color: #1E293B !important;
+}
+
+html.dark .editorial-card {
+  background: #0F172A !important;
+  border-color: #1E293B !important;
+}
+
+html.dark .hairline-divider {
+  background-color: #1E293B !important;
+}
+
+.anim-voxel-fly-dynamic-ltr {
+  animation: voxel-fly-dynamic-ltr linear forwards;
+}
+
+.anim-voxel-fly-dynamic-rtl {
+  animation: voxel-fly-dynamic-rtl linear forwards;
+}
+
+@keyframes voxel-fly-dynamic-ltr {
+  0% {
+    left: -75px;
+    transform: translateY(0);
+  }
+  20% {
+    transform: translateY(-9px);
+  }
+  45% {
+    transform: translateY(7px);
+  }
+  70% {
+    transform: translateY(-8px);
+  }
+  90% {
+    transform: translateY(4px);
+  }
+  100% {
+    left: calc(100% + 75px);
+    transform: translateY(0);
+  }
+}
+
+@keyframes voxel-fly-dynamic-rtl {
+  0% {
+    left: calc(100% + 75px);
+    transform: scaleX(-1) translateY(0);
+  }
+  20% {
+    transform: scaleX(-1) translateY(9px);
+  }
+  45% {
+    transform: scaleX(-1) translateY(-7px);
+  }
+  70% {
+    transform: scaleX(-1) translateY(8px);
+  }
+  90% {
+    transform: scaleX(-1) translateY(-4px);
+  }
+  100% {
+    left: -75px;
+    transform: scaleX(-1) translateY(0);
+  }
+}
+
+/* =========================================================================
+   REALISTIC MINECRAFT CELESTIAL ORBIT (SUNSET & SUNRISE CYCLES)
+   ========================================================================= */
+
+.anim-voxel-sun-set {
+  animation: voxel-sun-set 2.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.anim-voxel-sun-rise {
+  animation: voxel-sun-rise 2.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.anim-voxel-moon-set {
+  animation: voxel-moon-set 2.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.anim-voxel-moon-rise {
+  animation: voxel-moon-rise 2.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes voxel-sun-set {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: drop-shadow(0 0 20px #FDE047);
+    opacity: 1;
+  }
+  30% {
+    transform: translate3d(8px, 32px, 0) scale(1.1);
+    filter: drop-shadow(0 0 28px #F97316) saturate(1.8);
+    opacity: 1;
+  }
+  65% {
+    transform: translate3d(18px, 80px, 0) scale(0.96);
+    filter: drop-shadow(0 0 24px #EA580C) saturate(2.4);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate3d(30px, 140px, 0) scale(0.72);
+    filter: drop-shadow(0 0 10px #DC2626);
+    opacity: 0;
+  }
+}
+
+@keyframes voxel-sun-rise {
+  0% {
+    transform: translate3d(26px, 140px, 0) scale(0.72);
+    filter: drop-shadow(0 0 12px #EA580C);
+    opacity: 0;
+  }
+  35% {
+    transform: translate3d(16px, 75px, 0) scale(0.94);
+    filter: drop-shadow(0 0 25px #FB923C) saturate(1.6);
+    opacity: 0.85;
+  }
+  75% {
+    transform: translate3d(6px, 20px, 0) scale(1.06);
+    filter: drop-shadow(0 0 30px #FDE047);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: drop-shadow(0 0 20px #FDE047);
+    opacity: 1;
+  }
+}
+
+@keyframes voxel-moon-set {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+  35% {
+    transform: translate3d(10px, 40px, 0) scale(0.96);
+    opacity: 0.9;
+  }
+  70% {
+    transform: translate3d(20px, 90px, 0) scale(0.85);
+    opacity: 0.65;
+  }
+  100% {
+    transform: translate3d(30px, 140px, 0) scale(0.68);
+    opacity: 0;
+  }
+}
+
+@keyframes voxel-moon-rise {
+  0% {
+    transform: translate3d(26px, 140px, 0) scale(0.68);
+    opacity: 0;
+  }
+  35% {
+    transform: translate3d(16px, 75px, 0) scale(0.88);
+    opacity: 0.75;
+  }
+  75% {
+    transform: translate3d(5px, 20px, 0) scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+}

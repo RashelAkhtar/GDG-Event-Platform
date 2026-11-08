@@ -45,7 +45,7 @@ export default function HomePage() {
           <div className="inline-flex items-center gap-2 mb-3 rounded-full border border-[#E5E7EB] bg-white px-3 py-1 shadow-2xs">
             <span className="h-1.5 w-1.5 rounded-full bg-[#1A73E8] animate-pulse" />
             <span className="font-mono text-[9.5px] tracking-[0.24em] uppercase text-[#6B7280]">
-              GDG LIVE ARENA SESSIONS
+              GDGOC ORIENTATION ARENA
             </span>
           </div>
 
@@ -54,8 +54,8 @@ export default function HomePage() {
           </h1>
 
           <p className="mt-3.5 text-xs sm:text-sm text-[#4B5563] font-normal leading-relaxed max-w-md mx-auto">
-            Quick-fire dev quizzes, sneaky word mazes, and live showdowns.
-            <br className="hidden sm:inline" /> Bring your sharpest keystrokes—the podium waits for no one.
+            Quick-fire dev quizzes, sneaky word mazes, and friendly campus games.
+            <br className="hidden sm:inline" /> Jump in, test your wits, and claim your orientation bragging rights! 🚀
           </p>
 
           {/* Micro Metrics Ribbon */}
@@ -75,10 +75,12 @@ export default function HomePage() {
         </section>
 
         {/* 2. Interactive Kinetic Circle Vessel with Miniature Voxel World Behind */}
-        <section className="relative isolate mt-2 mb-8 select-none touch-none">
+        <section className="relative isolate mt-2 mb-8 select-none">
           <VoxelWorldBackdrop />
-          <div className="relative z-10">
-            <CircleBucket />
+          <div className="relative z-10 pointer-events-none">
+            <div className="pointer-events-auto">
+              <CircleBucket />
+            </div>
           </div>
         </section>
 
@@ -119,17 +121,17 @@ export default function HomePage() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#111827] text-white">
-                  <Trophy className="h-3 w-3" />
+                  <Trophy className="h-3 w-3 text-[#FBBC04]" />
                 </span>
                 <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[#9CA3AF]">
-                  LEADERBOARDS
+                  GDGOC HALL OF FAME
                 </span>
               </div>
               <h4 className="text-base font-medium tracking-tight text-[#111827] mt-1.5">
-                Official Tournament Standings
+                Campus Bragging Rights 😎
               </h4>
               <p className="text-xs text-[#6B7280] mt-0.5">
-                Verified score rankings with millisecond tie-breaker timing.
+                Zero stress, pure vibes! See who topped the games in today&apos;s orientation.
               </p>
             </div>
 

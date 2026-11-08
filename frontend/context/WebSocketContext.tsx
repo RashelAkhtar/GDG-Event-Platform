@@ -12,6 +12,15 @@ export interface ConnectedSession {
   role?: string
   device?: 'mobile' | 'desktop' | 'tablet'
   joinedAt?: number
+  activeGame?: string
+}
+
+export function normalizeGameSlug(slug: string): string {
+  const lower = (slug || '').toLowerCase().trim()
+  if (lower.includes('wend')) return 'wend-game'
+  if (lower.includes('mentis')) return 'mentis-quiz'
+  if (lower.includes('web')) return 'web-dev-quiz'
+  return slug
 }
 
 // Backward-compatible alias
@@ -72,6 +81,9 @@ interface WebSocketContextType {
   subscribeToLeaderboardReset: (callback: (gameSlug: string) => void) => () => void
   subscribeToLeaderboardUpdate: (callback: (gameSlug: string, leaderboard: LeaderboardEntry[]) => void) => () => void
   subscribeToQuestionsUpdate: (callback: (gameSlug: string, questions: QuestionData[]) => void) => () => void
+  sendGameEnter: (gameSlug: string) => void
+  sendGameLeave: (gameSlug: string) => void
+  getActiveGameCount: (gameSlug: string) => number
 }
 
 const WebSocketContext = createContext<WebSocketContextType>({
@@ -104,6 +116,9 @@ const WebSocketContext = createContext<WebSocketContextType>({
   subscribeToLeaderboardReset: () => () => {},
   subscribeToLeaderboardUpdate: () => () => {},
   subscribeToQuestionsUpdate: () => () => {},
+  sendGameEnter: () => {},
+  sendGameLeave: () => {},
+  getActiveGameCount: () => 0,
 })
 
 function getWsUrl(): string {
@@ -141,6 +156,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   const [currentSessionId] = useState<string>(() => getClientSessionId())
   const [connected, setConnected] = useState(false)
   const [connectedSessions, setConnectedSessions] = useState<ConnectedSession[]>([])
+  const [activeGamePresence, setActiveGamePresence] = useState<Record<string, string[]>>({})
   const [activeCountdown, setActiveCountdown] = useState<{ gameSlug: string; count: number } | null>(null)
   const [activeCeremony, setActiveCeremony] = useState<CeremonyData | null>(null)
   const [gameLockStates, setGameLockStates] = useState<Record<string, { isLocked: boolean; status: string }>>({
@@ -230,9 +246,10 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
 
       switch (message.type) {
         case 'USER_JOIN': {
-          const rawSession = payload as { sessionId?: string; id?: string; userId?: string; name?: string; avatar?: string; role?: string; device?: 'mobile' | 'desktop' | 'tablet'; joinedAt?: number } | undefined
+          const rawSession = payload as { sessionId?: string; id?: string; userId?: string; name?: string; avatar?: string; role?: string; device?: 'mobile' | 'desktop' | 'tablet'; joinedAt?: number; activeGame?: string } | undefined
           const sid = rawSession?.sessionId || rawSession?.id
           if (rawSession && sid) {
+            const normGame = rawSession.activeGame ? normalizeGameSlug(rawSession.activeGame) : undefined
             const normalized: ConnectedSession = {
               sessionId: sid,
               userId: rawSession.userId,
@@ -241,12 +258,36 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
               role: rawSession.role,
               device: rawSession.device,
               joinedAt: rawSession.joinedAt,
+              activeGame: normGame,
             }
             setConnectedSessions((prev) => {
               const filtered = prev.filter((s) => s.sessionId !== sid)
               return [...filtered, normalized]
             })
+            if (normGame) {
+              setActiveGamePresence((prev) => {
+                const list = prev[normGame] || []
+                return { ...prev, [normGame]: Array.from(new Set([...list, sid])) }
+              })
+            }
             notifyUserJoined(normalized)
+          }
+          break
+        }
+        case 'GAME_PRESENCE': {
+          const { sessionId, gameSlug, isPlaying } = (payload || {}) as { sessionId?: string; gameSlug?: string; isPlaying?: boolean }
+          if (sessionId && gameSlug) {
+            const norm = normalizeGameSlug(gameSlug)
+            setConnectedSessions((prev) =>
+              prev.map((s) => (s.sessionId === sessionId ? { ...s, activeGame: isPlaying ? norm : undefined } : s))
+            )
+            setActiveGamePresence((prev) => {
+              const list = prev[norm] || []
+              const updated = isPlaying
+                ? Array.from(new Set([...list, sessionId]))
+                : list.filter((id) => id !== sessionId)
+              return { ...prev, [norm]: updated }
+            })
           }
           break
         }
@@ -254,6 +295,13 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
           const sid = (payload as { sessionId?: string; id?: string })?.sessionId || (payload as { id?: string })?.id
           if (sid) {
             setConnectedSessions((prev) => prev.filter((s) => s.sessionId !== sid))
+            setActiveGamePresence((prev) => {
+              const next: Record<string, string[]> = {}
+              for (const [k, v] of Object.entries(prev)) {
+                next[k] = v.filter((id) => id !== sid)
+              }
+              return next
+            })
             notifyUserLeft(sid)
           }
           break
@@ -319,8 +367,19 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
             setGameLockStates(payload.gameStates as Record<string, { isLocked: boolean; status: string }>)
           }
           if (Array.isArray(payload?.sessions)) {
-            const sessionsList = payload.sessions as ConnectedSession[]
+            const sessionsList = (payload.sessions as ConnectedSession[]).map((s) => ({
+              ...s,
+              activeGame: s.activeGame ? normalizeGameSlug(s.activeGame) : undefined,
+            }))
             setConnectedSessions(sessionsList)
+            const presenceMap: Record<string, string[]> = {}
+            sessionsList.forEach((s) => {
+              if (s.activeGame) {
+                const norm = normalizeGameSlug(s.activeGame)
+                presenceMap[norm] = Array.from(new Set([...(presenceMap[norm] || []), s.sessionId]))
+              }
+            })
+            setActiveGamePresence(presenceMap)
           } else if (Array.isArray(payload?.users)) {
             const rawUsers = payload.users as { sessionId?: string; id?: string; userId?: string; name?: string; avatar?: string; role?: string }[]
             const mapped: ConnectedSession[] = rawUsers.map((u) => ({
@@ -516,6 +575,13 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
 
   const sendUserJoin = useCallback(
     (userPayload: Partial<ConnectedSession>) => {
+      let activeGame = userPayload.activeGame
+      if (!activeGame && typeof window !== 'undefined') {
+        try {
+          const stored = sessionStorage.getItem('gdg_active_game')
+          if (stored) activeGame = stored
+        } catch {}
+      }
       const fullSession: ConnectedSession = {
         sessionId: userPayload.sessionId || currentSessionId,
         userId: userPayload.userId,
@@ -524,6 +590,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
         role: userPayload.role || 'PARTICIPANT',
         device: userPayload.device || detectDeviceType(),
         joinedAt: Date.now(),
+        activeGame: activeGame ? normalizeGameSlug(activeGame) : undefined,
       }
 
       setConnectedSessions((prev) => {
@@ -778,6 +845,81 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     []
   )
 
+  const sendGameEnter = useCallback(
+    (gameSlug: string) => {
+      const norm = normalizeGameSlug(gameSlug)
+      try {
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('gdg_active_game', norm)
+        }
+      } catch {}
+
+      setConnectedSessions((prev) =>
+        prev.map((s) => (s.sessionId === currentSessionId ? { ...s, activeGame: norm } : s))
+      )
+      setActiveGamePresence((prev) => {
+        const list = prev[norm] || []
+        return { ...prev, [norm]: Array.from(new Set([...list, currentSessionId])) }
+      })
+
+      broadcastMessage({
+        type: 'GAME_PRESENCE',
+        payload: { sessionId: currentSessionId, gameSlug: norm, isPlaying: true },
+      })
+      sendUserJoin({ sessionId: currentSessionId, activeGame: norm })
+    },
+    [currentSessionId, broadcastMessage, sendUserJoin]
+  )
+
+  const sendGameLeave = useCallback(
+    (gameSlug: string) => {
+      const norm = normalizeGameSlug(gameSlug)
+      try {
+        if (typeof window !== 'undefined') {
+          const cur = sessionStorage.getItem('gdg_active_game')
+          if (cur === norm) {
+            sessionStorage.removeItem('gdg_active_game')
+          }
+        }
+      } catch {}
+
+      setConnectedSessions((prev) =>
+        prev.map((s) => (s.sessionId === currentSessionId ? { ...s, activeGame: undefined } : s))
+      )
+      setActiveGamePresence((prev) => {
+        const list = prev[norm] || []
+        return { ...prev, [norm]: list.filter((id) => id !== currentSessionId) }
+      })
+
+      broadcastMessage({
+        type: 'GAME_PRESENCE',
+        payload: { sessionId: currentSessionId, gameSlug: norm, isPlaying: false },
+      })
+    },
+    [currentSessionId, broadcastMessage]
+  )
+
+  const getActiveGameCount = useCallback(
+    (gameSlug: string): number => {
+      const norm = normalizeGameSlug(gameSlug)
+      const sessionsPlaying = connectedSessions.filter(
+        (s) => s.activeGame && normalizeGameSlug(s.activeGame) === norm && s.role !== 'ADMIN'
+      ).length
+
+      const presenceIds = (activeGamePresence[norm] || []).length
+
+      let isLocalPlaying = false
+      if (typeof window !== 'undefined') {
+        try {
+          isLocalPlaying = sessionStorage.getItem('gdg_active_game') === norm
+        } catch {}
+      }
+
+      return Math.max(sessionsPlaying, presenceIds, isLocalPlaying ? 1 : 0)
+    },
+    [connectedSessions, activeGamePresence]
+  )
+
   return (
     <WebSocketContext.Provider
       value={{
@@ -810,6 +952,9 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
         subscribeToLeaderboardReset,
         subscribeToLeaderboardUpdate,
         subscribeToQuestionsUpdate,
+        sendGameEnter,
+        sendGameLeave,
+        getActiveGameCount,
       }}
     >
       {children}

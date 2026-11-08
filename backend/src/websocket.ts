@@ -27,6 +27,7 @@ export interface WsMessage {
     | 'ADMIN_SECURITY_ALERT'
     | 'CLEAR_SECURITY_ALERTS'
     | 'WEND_CONFIG_UPDATE'
+    | 'GAME_PRESENCE'
     | 'SYNC_STATE';
   payload?: any;
 }
@@ -39,6 +40,7 @@ export interface ConnectedSession {
   role?: string;
   device?: 'mobile' | 'desktop' | 'tablet';
   joinedAt: number;
+  activeGame?: string;
 }
 
 
@@ -317,17 +319,19 @@ class EventWebSocketService {
   private handleMessage(ws: WebSocket, message: WsMessage) {
     switch (message.type) {
       case 'USER_JOIN': {
-        const { sessionId, id, name, avatar, role, device } = message.payload || {};
+        const { sessionId, id, name, avatar, role, device, activeGame } = message.payload || {};
         const sessId = sessionId || `sess_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
         const resolvedRole = role === 'ADMIN' ? UserRole.ADMIN : (role || 'PARTICIPANT');
+        const existing = this.sessions.get(sessId);
         const userObj: ConnectedSession = {
           sessionId: sessId,
-          userId: id,
-          name: name || 'Participant',
-          avatar: avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name || 'Participant')}`,
+          userId: id || existing?.userId,
+          name: name || existing?.name || 'Participant',
+          avatar: avatar || existing?.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name || 'Participant')}`,
           role: resolvedRole,
-          device: device || 'desktop',
-          joinedAt: Date.now(),
+          device: device || existing?.device || 'desktop',
+          joinedAt: existing?.joinedAt || Date.now(),
+          activeGame: activeGame !== undefined ? activeGame : existing?.activeGame,
         };
 
         this.sessions.set(sessId, userObj);
@@ -338,6 +342,21 @@ class EventWebSocketService {
           type: 'USER_JOIN',
           payload: userObj,
         });
+        break;
+      }
+
+      case 'GAME_PRESENCE': {
+        const { sessionId, gameSlug, isPlaying } = message.payload || {};
+        const sessId = sessionId || this.socketToSessionId.get(ws);
+        if (sessId && this.sessions.has(sessId)) {
+          const s = this.sessions.get(sessId)!;
+          s.activeGame = isPlaying ? gameSlug : undefined;
+          this.sessions.set(sessId, s);
+          this.broadcast({
+            type: 'GAME_PRESENCE',
+            payload: { sessionId: sessId, gameSlug, isPlaying, session: s },
+          });
+        }
         break;
       }
 

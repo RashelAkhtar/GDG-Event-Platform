@@ -78,6 +78,8 @@ export function DualQuizSection({
     sendWendConfigUpdate,
     liveLeaderboards,
     connectedSessions = [],
+    sendGameEnter,
+    getActiveGameCount,
   } = useWebSocket()
   const [statusOverrides, setStatusOverrides] = useState<Record<string, 'LIVE' | 'UPCOMING'>>({})
   const [manipulatingEvent, setManipulatingEvent] = useState<GdgEvent | null>(null)
@@ -340,14 +342,12 @@ export function DualQuizSection({
         ? `${activeQuestionsCount} Questions • 30s Each • ${activeQuestionsCount * 100} Pts`
         : 'No Questions Published Yet'
 
-    // Live Player count computation
+    // Live Player count computation for THIS specific game
     const localSessionsCount = mounted ? api.getAllSessionsForSlug(event.slug).length : 0
     const liveBoardCount = liveLeaderboards[event.slug]?.length || 0
-    const activeConnectedCount = (connectedSessions || []).filter((s) => s.role !== 'ADMIN').length
     const recordedCount = Math.max(localSessionsCount, liveBoardCount)
-    const livePlayingCount = isLive
-      ? Math.max(1, activeConnectedCount > 0 ? activeConnectedCount : recordedCount)
-      : recordedCount
+    const activeThisGameCount = getActiveGameCount ? getActiveGameCount(event.slug) : 0
+    const livePlayingCount = isLive ? activeThisGameCount : recordedCount
 
     // Target Admin Panel URL with track deep-link
     const adminPanelHref =
@@ -365,6 +365,7 @@ export function DualQuizSection({
         return
       }
       if (isLive) {
+        sendGameEnter?.(event.slug)
         router.push(targetHref)
       } else {
         showToast('This challenge arena is currently locked. Check back soon!')
@@ -437,7 +438,7 @@ export function DualQuizSection({
                     ? 'border-[#BBF7D0] bg-[#F0FDF4] text-[#15803D]'
                     : 'border-[#E5E7EB] bg-[#F9FAFB] text-[#6B7280]'
                 }`}
-                title={isLive ? `${livePlayingCount} players active in arena` : `${recordedCount} participants recorded`}
+                title={isLive ? `${livePlayingCount} players actively playing this game` : `${recordedCount} participants recorded`}
               >
                 <span className="relative flex h-1.5 w-1.5">
                   {isLive && (
@@ -526,6 +527,7 @@ export function DualQuizSection({
                 <Link
                   href={enterHref}
                   onClick={() => {
+                    sendGameEnter?.(event.slug)
                     void soundManager.unlock()
                   }}
                   className="flex h-11 px-4 items-center justify-center gap-1.5 rounded-xl border border-[#E5E7EB] bg-white text-xs font-medium text-[#111827] hover:border-[#111827] hover:bg-[#F9FAFB] transition-all cursor-pointer"
@@ -587,6 +589,7 @@ export function DualQuizSection({
                 <Link
                   href={enterHref}
                   onClick={() => {
+                    sendGameEnter?.(event.slug)
                     void soundManager.unlock()
                   }}
                   className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl text-xs font-medium tracking-wide text-white bg-[#111827] hover:bg-black transition-all active:scale-[0.99] shadow-xs cursor-pointer"
