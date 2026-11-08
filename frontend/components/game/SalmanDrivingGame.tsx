@@ -120,9 +120,9 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
       initialTrees.push({
         id: i + 1,
         side: i % 2 === 0 ? -1 : 1,
-        lateralOffset: 0.14 + Math.random() * 0.4,
+        lateralOffset: 0.04 + Math.random() * 0.16,
         z: (i / 20) + (Math.random() * 0.04),
-        heightScale: 0.85 + Math.random() * 0.4,
+        heightScale: 0.95 + Math.random() * 0.45,
       })
     }
     gameState.current.trees = initialTrees
@@ -665,27 +665,33 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
       ctx.lineTo(centerBottomX + roadBottomWidth * 0.505, roadCowlY + 2)
       ctx.stroke()
 
-      // --- 6. POWERFUL DUAL HIGH-BEAM HEADLIGHT SPOTLIGHT CONES ---
+      // --- 6. NATURAL HIGH-BEAM ILLUMINATION (Smooth blending over asphalt) ---
       const headlightGrad = ctx.createRadialGradient(
         centerBottomX,
-        height * 0.85,
-        50,
+        height * 0.88,
+        60,
         centerBottomX,
-        height * 0.45,
-        width * 0.80
+        height * 0.42,
+        width * 0.72
       )
-      headlightGrad.addColorStop(0, 'rgba(255, 255, 230, 0.46)')
-      headlightGrad.addColorStop(0.35, 'rgba(255, 250, 215, 0.24)')
-      headlightGrad.addColorStop(0.70, 'rgba(240, 245, 255, 0.08)')
-      headlightGrad.addColorStop(1, 'rgba(240, 245, 255, 0)')
-      ctx.fillStyle = headlightGrad
+      headlightGrad.addColorStop(0, 'rgba(255, 255, 235, 0.38)')
+      headlightGrad.addColorStop(0.40, 'rgba(255, 250, 215, 0.18)')
+      headlightGrad.addColorStop(0.75, 'rgba(235, 242, 255, 0.05)')
+      headlightGrad.addColorStop(1, 'rgba(235, 242, 255, 0)')
+
+      ctx.save()
+      // Clip headlight illumination to roadbed and shoulders so it naturally illuminates the pavement
       ctx.beginPath()
-      ctx.moveTo(centerBottomX - width * 0.28, roadCowlY)
-      ctx.lineTo(centerTopX - roadTopWidth * 0.70, horizonY)
-      ctx.lineTo(centerTopX + roadTopWidth * 0.70, horizonY)
-      ctx.lineTo(centerBottomX + width * 0.28, roadCowlY)
+      ctx.moveTo(centerTopX - roadTopWidth * 0.52, horizonY)
+      ctx.lineTo(centerTopX + roadTopWidth * 0.52, horizonY)
+      ctx.lineTo(centerBottomX + roadBottomWidth * 0.52, roadCowlY)
+      ctx.lineTo(centerBottomX - roadBottomWidth * 0.52, roadCowlY)
       ctx.closePath()
-      ctx.fill()
+      ctx.clip()
+
+      ctx.fillStyle = headlightGrad
+      ctx.fillRect(0, horizonY, width, roadCowlY - horizonY)
+      ctx.restore()
 
       // Horizon Ground Fog & Atmospheric Night Mist
       const mistGrad = ctx.createLinearGradient(0, horizonY - 12, 0, horizonY + 32)
@@ -700,8 +706,8 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
         tree.z += 0.0078 * g.playerSpeed
         if (tree.z > 1.05) {
           tree.z = 0.02
-          tree.lateralOffset = 0.14 + Math.random() * 0.4
-          tree.heightScale = 0.85 + Math.random() * 0.4
+          tree.lateralOffset = 0.04 + Math.random() * 0.16
+          tree.heightScale = 0.95 + Math.random() * 0.45
         }
 
         const treeZScale = Math.pow(tree.z, 1.6)
@@ -826,17 +832,7 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
             deerH
           )
 
-          // Soft golden rim-light highlight catching fur from high-beam headlights
-          if (d.z > 0.45) {
-            ctx.save()
-            ctx.globalCompositeOperation = 'source-atop'
-            const headlightGlow = ctx.createLinearGradient(0, -deerH, 0, 0)
-            headlightGlow.addColorStop(0, 'rgba(255, 255, 230, 0.28)')
-            headlightGlow.addColorStop(1, 'rgba(255, 240, 200, 0.05)')
-            ctx.fillStyle = headlightGlow
-            ctx.fillRect(-deerW * 0.5, -deerH, deerW, deerH)
-            ctx.restore()
-          }
+
         } else {
           // Anatomical wild deer silhouette fallback with antlers (zero cartoon shapes)
           ctx.fillStyle = '#D97706'
@@ -852,14 +848,14 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
           ctx.stroke()
         }
 
-        // Luminous Headlight Eye-Shine (Chartreuse glint precisely on the anatomical eye position: x=73.8%, y=21.5%)
+        // Luminous Headlight Eye-Shine (Chartreuse glint precisely on the anatomical eye position: x=82.8%, y=34.6%)
         ctx.fillStyle = '#CCFF00'
         ctx.shadowColor = '#CCFF00'
-        ctx.shadowBlur = Math.max(4, 14 * scale)
+        ctx.shadowBlur = Math.max(3, 10 * scale)
         ctx.beginPath()
-        const eyeX = deerW * 0.238
-        const eyeY = -deerH * 0.785
-        ctx.arc(eyeX, eyeY, Math.max(2.0, 3.8 * scale), 0, Math.PI * 2)
+        const eyeX = deerW * 0.328
+        const eyeY = -deerH * 0.654
+        ctx.arc(eyeX, eyeY, Math.max(1.8, 3.2 * scale), 0, Math.PI * 2)
         ctx.fill()
         ctx.shadowBlur = 0
 
@@ -971,8 +967,8 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
           </div>
         </div>
 
-        {/* Upper Windshield Rear-View Mirror (Positioned in Top-Right Windshield Area, Matching Reference Photo) */}
-        <div className="absolute top-3 right-28 sm:right-36 pointer-events-auto flex flex-col items-center z-25">
+        {/* Upper Windshield Rear-View Mirror (Cleanly positioned at 66% width with ample clearance from HUD buttons) */}
+        <div className="absolute top-5 sm:top-6 left-[66%] -translate-x-1/2 pointer-events-auto flex flex-col items-center z-25">
           {/* Mounting Stem */}
           <div className="w-2.5 h-3.5 bg-gradient-to-b from-[#0B0F19] to-[#1E293B] rounded-t-sm" />
           {/* Mirror Casing */}
