@@ -1811,49 +1811,7 @@ export function VoxelWorldBackdrop() {
         />
       </div>
 
-      {/* TIME OF DAY SWITCHER PILL (Top Left - Direct Switch) */}
-      <div
-        className="absolute top-2.5 left-3 sm:left-4 pointer-events-auto z-20 flex items-center gap-1 rounded-full border border-black/10 bg-white/80 dark:bg-black/60 dark:border-white/10 backdrop-blur-md p-0.5 shadow-2xs select-none"
-      >
-        <button
-          type="button"
-          onClick={() => transitionToPhase('day')}
-          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[8.5px] uppercase tracking-wider transition-all cursor-pointer ${
-            skyPhase === 'day'
-              ? 'bg-[#FDE047] text-[#78350F] font-semibold shadow-xs'
-              : 'text-[#64748B] hover:text-[#0F172A] dark:hover:text-white'
-          }`}
-        >
-          <span>☀️</span>
-          <span>Day</span>
-        </button>
 
-        <button
-          type="button"
-          onClick={() => transitionToPhase('evening')}
-          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[8.5px] uppercase tracking-wider transition-all cursor-pointer ${
-            skyPhase === 'evening'
-              ? 'bg-[#EA580C] text-white font-semibold shadow-xs'
-              : 'text-[#64748B] hover:text-[#0F172A] dark:hover:text-white'
-          }`}
-        >
-          <span>🌇</span>
-          <span>Evening</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => transitionToPhase('night')}
-          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[8.5px] uppercase tracking-wider transition-all cursor-pointer ${
-            skyPhase === 'night'
-              ? 'bg-[#1E293B] text-[#BAE6FD] font-semibold shadow-xs'
-              : 'text-[#64748B] hover:text-[#0F172A] dark:hover:text-white'
-          }`}
-        >
-          <span>🌙</span>
-          <span>Night</span>
-        </button>
-      </div>
 
       {/* Twinkling Minecraft Pixel Night Stars */}
       <div
