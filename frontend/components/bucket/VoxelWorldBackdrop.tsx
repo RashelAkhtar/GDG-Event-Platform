@@ -1887,21 +1887,14 @@ export function VoxelWorldBackdrop() {
               type="button"
               disabled={isTransitioning}
               onClick={handleSunClick}
-              aria-label={skyPhase === 'day' ? 'Sun (Day)' : 'Sunset (Evening)'}
-              className={`group pointer-events-auto relative flex items-center justify-center p-1 focus:outline-none transition-all duration-300 ${
+              aria-label={skyPhase === 'day' ? 'Sun' : 'Sunset'}
+              className={`pointer-events-auto relative flex items-center justify-center p-1 focus:outline-none transition-all duration-300 ${
                 isTransitioning
                   ? 'cursor-wait pointer-events-none'
                   : 'cursor-pointer hover:scale-115 active:scale-95'
               } ${sunAnimClass}`}
             >
               <RealisticSun isEvening={skyPhase === 'evening' || transitionMode === 'day-to-evening'} />
-
-              {/* Tooltip */}
-              {!isTransitioning && (
-                <span className="pointer-events-none absolute -bottom-6.5 right-0 whitespace-nowrap rounded-full border border-[#1E293B] bg-black/85 px-2 py-0.5 font-mono text-[8.5px] uppercase tracking-wider text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 shadow-md">
-                  {skyPhase === 'day' ? '☀️ Click Sun to set into Evening' : '🌇 Click Sunset to enter Night'}
-                </span>
-              )}
             </button>
           </div>
         )}
@@ -1913,21 +1906,14 @@ export function VoxelWorldBackdrop() {
               type="button"
               disabled={isTransitioning}
               onClick={handleMoonClick}
-              aria-label="Moon (Night)"
-              className={`group pointer-events-auto relative flex items-center justify-center p-1 focus:outline-none transition-all duration-300 ${
+              aria-label="Moon"
+              className={`pointer-events-auto relative flex items-center justify-center p-1 focus:outline-none transition-all duration-300 ${
                 isTransitioning
                   ? 'cursor-wait pointer-events-none'
                   : 'cursor-pointer hover:scale-115 active:scale-95'
               } ${moonAnimClass}`}
             >
               <RealisticMoon />
-
-              {/* Tooltip */}
-              {!isTransitioning && (
-                <span className="pointer-events-none absolute -bottom-6.5 right-0 whitespace-nowrap rounded-full border border-[#1E293B] bg-black/85 px-2 py-0.5 font-mono text-[8.5px] uppercase tracking-wider text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 shadow-md">
-                  🌙 Click Moon to rise into Day
-                </span>
-              )}
             </button>
           </div>
         )}
