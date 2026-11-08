@@ -1,8 +1,152 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
-import { HeartCrack, Home, X, Sparkles } from 'lucide-react'
+import { HeartCrack, Home, X } from 'lucide-react'
+import { soundManager } from '@/lib/sound'
+
+// ============================================================================
+// PROCEDURAL WEB AUDIO SYNTHESIZER: MOURNFUL / SORROWFUL BACKGROUND CHORDS
+// Zero external files, 100% reliable, melancholic minor cadence with gentle vibrato
+// ============================================================================
+
+class SorrowAudioSynth {
+  private ctx: AudioContext | null = null
+  private masterGain: GainNode | null = null
+  private isPlaying = false
+  private loopTimer: NodeJS.Timeout | null = null
+  private activeOscs: (OscillatorNode | GainNode)[] = []
+
+  private getContext(): AudioContext | null {
+    if (typeof window === 'undefined') return null
+    return soundManager.getAudioContext()
+  }
+
+  playSorrow() {
+    if (this.isPlaying) return
+    const ctx = this.getContext()
+    if (!ctx) return
+
+    try {
+      if (ctx.state === 'suspended') {
+        ctx.resume()
+      }
+      this.isPlaying = true
+
+      const master = ctx.createGain()
+      master.gain.setValueAtTime(0.001, ctx.currentTime)
+      master.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 0.8)
+      master.connect(ctx.destination)
+      this.masterGain = master
+
+      // Melancholic weeping progression: Dm9 -> Bbmaj7 -> Gm6 -> Asus4 -> Dm
+      const chords = [
+        [146.83, 174.61, 220.0, 261.63], // Dm7 (D3, F3, A3, C4)
+        [116.54, 174.61, 220.0, 293.66], // Bbmaj7 (Bb2, F3, A3, D4)
+        [98.0, 146.83, 196.0, 233.08], // Gm (G2, D3, G3, Bb3)
+        [110.0, 164.81, 220.0, 293.66], // Asus4 (A2, E3, A3, D4)
+      ]
+
+      let chordIdx = 0
+
+      const stepChord = () => {
+        if (!this.isPlaying) return
+        const now = ctx.currentTime
+        const freqs = chords[chordIdx % chords.length]
+        chordIdx++
+
+        // Fade out previous active oscillators
+        this.activeOscs.forEach((node) => {
+          if (node instanceof GainNode) {
+            try {
+              node.gain.linearRampToValueAtTime(0.0001, now + 0.6)
+            } catch {}
+          }
+        })
+
+        const nextOscs: (OscillatorNode | GainNode)[] = []
+
+        freqs.forEach((freq, idx) => {
+          const osc = ctx.createOscillator()
+          const noteGain = ctx.createGain()
+          const filter = ctx.createBiquadFilter()
+
+          // Warm, mournful flute/cello-like tone
+          osc.type = idx === 0 ? 'sine' : 'triangle'
+          osc.frequency.setValueAtTime(freq, now)
+
+          // Subtle mournful weeping vibrato (4.2 Hz)
+          const lfo = ctx.createOscillator()
+          const lfoGain = ctx.createGain()
+          lfo.frequency.setValueAtTime(4.2, now)
+          lfoGain.gain.setValueAtTime(1.8, now)
+          lfo.connect(osc.frequency)
+          lfo.start(now)
+
+          filter.type = 'lowpass'
+          filter.frequency.setValueAtTime(550, now)
+
+          // Soft slow envelope
+          noteGain.gain.setValueAtTime(0.001, now)
+          noteGain.gain.linearRampToValueAtTime(0.12 / freqs.length, now + 0.8)
+          noteGain.gain.exponentialRampToValueAtTime(0.005, now + 3.8)
+
+          osc.connect(filter)
+          filter.connect(noteGain)
+          noteGain.connect(master)
+
+          osc.start(now)
+          osc.stop(now + 4.0)
+          lfo.stop(now + 4.0)
+
+          nextOscs.push(osc, noteGain)
+        })
+
+        this.activeOscs = nextOscs
+
+        if (this.isPlaying) {
+          this.loopTimer = setTimeout(stepChord, 3600)
+        }
+      }
+
+      stepChord()
+    } catch {}
+  }
+
+  stopSorrow() {
+    this.isPlaying = false
+    if (this.loopTimer) {
+      clearTimeout(this.loopTimer)
+      this.loopTimer = null
+    }
+    const ctx = this.getContext()
+    if (this.masterGain && ctx) {
+      try {
+        const now = ctx.currentTime
+        this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, now)
+        this.masterGain.gain.linearRampToValueAtTime(0.0001, now + 0.35)
+        setTimeout(() => {
+          this.activeOscs.forEach((node) => {
+            if (node instanceof OscillatorNode) {
+              try {
+                node.stop()
+              } catch {}
+            }
+          })
+          this.activeOscs = []
+        }, 400)
+      } catch {}
+    }
+  }
+}
+
+const sorrowSynth = new SorrowAudioSynth()
+
+// ============================================================================
+// BIRD GUILT EASTER EGG FULL-SCREEN TAKE OVER MODAL (LIGHT THEME)
+// Uses React Portal (document.body) to render with z-[99999] in front of everything
+// ============================================================================
 
 interface BirdGuiltEasterEggModalProps {
   isOpen: boolean
@@ -20,66 +164,92 @@ export function BirdGuiltEasterEggModal({
     setMounted(true)
   }, [])
 
+  // Audio lifecycle: play sorrow music when open, stop on dismiss
+  useEffect(() => {
+    if (isOpen) {
+      sorrowSynth.playSorrow()
+      // Lock body scroll while modal is active
+      if (typeof document !== 'undefined') {
+        document.body.style.overflow = 'hidden'
+      }
+    } else {
+      sorrowSynth.stopSorrow()
+      if (typeof document !== 'undefined') {
+        document.body.style.overflow = ''
+      }
+    }
+
+    return () => {
+      sorrowSynth.stopSorrow()
+      if (typeof document !== 'undefined') {
+        document.body.style.overflow = ''
+      }
+    }
+  }, [isOpen])
+
   if (!isOpen || !mounted) return null
 
   const handleReturnHome = () => {
     try {
       localStorage.setItem('gdg_bird_catch_count', '0')
     } catch {}
+    sorrowSynth.stopSorrow()
     onClose()
     router.push('/')
   }
 
-  return (
+  const handleClose = () => {
+    sorrowSynth.stopSorrow()
+    onClose()
+  }
+
+  const modalContent = (
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-2xl animate-in fade-in duration-300"
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-slate-900/65 backdrop-blur-md animate-in fade-in duration-300 select-none"
     >
-      {/* Ambient Radial Gradient Halo */}
-      <div className="absolute inset-0 bg-radial-[circle_at_center] from-red-950/30 via-transparent to-transparent pointer-events-none" />
-
-      {/* Floating Feather Particles */}
+      {/* Floating Sorrow Feathers in Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <span className="absolute top-[10%] left-[15%] text-neutral-400/40 text-xl anim-feather-fall-1">🪶</span>
-        <span className="absolute top-[20%] right-[20%] text-neutral-400/40 text-lg anim-feather-fall-2">🪶</span>
-        <span className="absolute top-[35%] left-[30%] text-neutral-400/30 text-2xl anim-feather-fall-3">🪶</span>
-        <span className="absolute top-[15%] right-[35%] text-neutral-400/30 text-base anim-feather-fall-1">🪶</span>
+        <span className="absolute top-[8%] left-[12%] text-neutral-400/50 text-2xl anim-feather-fall-1">🪶</span>
+        <span className="absolute top-[18%] right-[16%] text-neutral-400/50 text-xl anim-feather-fall-2">🪶</span>
+        <span className="absolute top-[32%] left-[28%] text-neutral-400/40 text-3xl anim-feather-fall-3">🪶</span>
+        <span className="absolute top-[14%] right-[32%] text-neutral-400/40 text-lg anim-feather-fall-1">🪶</span>
       </div>
 
-      {/* Modal Surface */}
-      <div className="relative w-full max-w-xl rounded-3xl border border-[#334155]/60 bg-[#0B132B] p-6 sm:p-10 shadow-[0_25px_60px_rgba(0,0,0,0.6)] text-center animate-in zoom-in-95 duration-200">
+      {/* Light Theme Modal Surface */}
+      <div className="relative w-full max-w-xl rounded-3xl border border-[#E2E8F0] bg-white p-6 sm:p-10 shadow-[0_30px_90px_rgba(0,0,0,0.35)] text-center animate-in zoom-in-95 slide-in-from-bottom-3 duration-300">
         {/* Close Button */}
         <button
-          onClick={onClose}
+          onClick={handleClose}
           aria-label="Close message"
-          className="absolute top-5 right-5 h-8 w-8 rounded-full border border-neutral-700/80 bg-neutral-800/60 text-neutral-400 hover:text-white hover:border-neutral-500 transition-colors flex items-center justify-center cursor-pointer"
+          className="absolute top-4 right-4 sm:top-5 sm:right-5 h-8 w-8 rounded-full border border-neutral-200 bg-neutral-100 text-neutral-500 hover:text-black hover:border-neutral-300 transition-colors flex items-center justify-center cursor-pointer shadow-2xs"
         >
           <X className="h-4 w-4" />
         </button>
 
-        {/* Top Eyebrow Tag */}
-        <div className="inline-flex items-center gap-2 rounded-full border border-red-500/30 bg-red-500/10 px-3.5 py-1 text-[10px] font-mono tracking-[0.24em] uppercase text-red-400 mb-5">
-          <HeartCrack className="h-3.5 w-3.5 text-red-400 animate-pulse" />
-          <span>BIRD SANCTUARY ALERT • 10 BIRDS STRUCK</span>
+        {/* Top Eyebrow Tag: replaced struck with killed */}
+        <div className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-red-50 px-3.5 py-1 text-[10px] sm:text-[10.5px] font-mono tracking-[0.24em] uppercase text-red-600 mb-4 shadow-2xs">
+          <HeartCrack className="h-3.5 w-3.5 text-red-500 animate-pulse" />
+          <span>BIRD SANCTUARY ALERT • 10 BIRDS KILLED</span>
         </div>
 
         {/* Playful Animated Hand Vector Illustration */}
-        <div className="mx-auto my-3 flex justify-center">
+        <div className="mx-auto my-2 flex justify-center">
           <div className="relative anim-middle-finger-sway">
             <svg
               viewBox="0 0 100 120"
-              className="w-24 h-28 sm:w-28 sm:h-32 overflow-visible drop-shadow-[0_8px_24px_rgba(239,68,68,0.3)]"
+              className="w-22 h-26 sm:w-26 sm:h-30 overflow-visible drop-shadow-[0_8px_20px_rgba(239,68,68,0.25)]"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
               {/* Arm & Palm Shadow */}
-              <ellipse cx="50" cy="115" rx="36" ry="8" fill="#030712" opacity="0.6" />
+              <ellipse cx="50" cy="115" rx="36" ry="8" fill="#E2E8F0" opacity="0.8" />
 
               {/* Forearm Base */}
               <path
                 d="M 38 115 L 38 90 C 38 86, 62 86, 62 90 L 62 115 Z"
-                fill="#F87171"
+                fill="#FCA5A5"
               />
 
               {/* Palm Mass */}
@@ -105,13 +275,13 @@ export function BirdGuiltEasterEggModal({
                   stroke="#DC2626"
                   strokeWidth="1.5"
                 />
-                {/* Finger Knuckle Creases */}
+                {/* Knuckle Creases */}
                 <path d="M 45 42 Q 50 44 55 42" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round" />
                 <path d="M 46 32 Q 50 34 54 32" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round" />
                 {/* Fingernail */}
                 <path
                   d="M 46 22 C 46 17, 54 17, 54 22 C 54 26, 46 26, 46 22 Z"
-                  fill="#FECACA"
+                  fill="#FEE2E2"
                   stroke="#F87171"
                   strokeWidth="0.8"
                 />
@@ -141,7 +311,7 @@ export function BirdGuiltEasterEggModal({
                 strokeWidth="1.2"
               />
 
-              {/* Tiny Band-Aid on Finger for Playful Style */}
+              {/* Playful Band-Aid on Finger */}
               <rect
                 x="44"
                 y="46"
@@ -159,12 +329,12 @@ export function BirdGuiltEasterEggModal({
         </div>
 
         {/* Narrative Title */}
-        <h2 className="text-xl sm:text-2xl font-serif italic text-white tracking-tight mt-3 mb-4">
+        <h2 className="text-2xl sm:text-3xl font-serif italic text-[#111827] tracking-tight mt-2 mb-3.5 leading-tight">
           A Message from the Campus Sanctuary
         </h2>
 
-        {/* Verbatim Narrative Text */}
-        <div className="space-y-3.5 text-xs sm:text-sm text-neutral-300 font-normal leading-relaxed text-left max-h-[42vh] overflow-y-auto px-1 sm:px-2 pr-3 scrollbar-thin">
+        {/* Verbatim Narrative Text in High-Contrast Light Theme */}
+        <div className="space-y-3 text-xs sm:text-[13.5px] text-[#4B5563] font-normal leading-relaxed text-left max-h-[38vh] overflow-y-auto px-1 sm:px-2 pr-3 scrollbar-thin">
           <p>
             Congratulations on being such a heartless and cruel person. Imagine
             taking the lives of innocent birds that were simply flying around,
@@ -183,32 +353,35 @@ export function BirdGuiltEasterEggModal({
             display of cruelty, ignorance, and a complete lack of humanity.
           </p>
 
-          <p className="rounded-xl border border-red-500/30 bg-red-950/30 p-3 font-medium text-white shadow-inner">
-            <strong className="text-red-300 font-semibold">
+          <div className="rounded-2xl border border-red-200 bg-red-50/80 p-3.5 sm:p-4 text-red-900 shadow-2xs">
+            <strong className="font-semibold text-red-700 sm:text-[14.5px] text-xs tracking-tight">
               Even birds have more compassion for their families than you seem to
               have for living creatures.
             </strong>
-          </p>
+          </div>
         </div>
 
-        {/* Call to Action Button: Redirect Home */}
+        {/* Call to Action Button: Redirect Home & Seek Forgiveness */}
         <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
           <button
             onClick={handleReturnHome}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-2.5 text-xs sm:text-sm font-medium text-[#0B132B] hover:bg-neutral-200 transition-all cursor-pointer shadow-lg active:scale-98"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-[#111827] hover:bg-black text-white px-7 py-3 text-xs sm:text-sm font-medium transition-all shadow-md active:scale-98 cursor-pointer"
           >
             <Home className="h-4 w-4" />
             <span>Return Home &amp; Promise Better</span>
           </button>
 
           <button
-            onClick={onClose}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-neutral-700 bg-neutral-800/80 px-5 py-2.5 text-xs sm:text-sm font-medium text-neutral-300 hover:text-white hover:border-neutral-500 transition-all cursor-pointer"
+            onClick={handleClose}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-neutral-300 bg-neutral-100 hover:bg-neutral-200 text-[#4B5563] hover:text-[#111827] px-5 py-3 text-xs sm:text-sm font-medium transition-all cursor-pointer shadow-2xs"
           >
-            <span>Close (Dismiss Penance)</span>
+            <span>Dismiss Penance</span>
           </button>
         </div>
       </div>
     </div>
   )
+
+  // Attach modal directly to document.body so it is 100% on top of all stacking contexts
+  return createPortal(modalContent, document.body)
 }
