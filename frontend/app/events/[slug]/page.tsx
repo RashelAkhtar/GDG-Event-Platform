@@ -21,7 +21,6 @@ import {
 } from '@/lib/api'
 import confetti from 'canvas-confetti'
 import {
-  Clock,
   CheckCircle2,
   ArrowRight,
   Home,
@@ -63,7 +62,6 @@ function QuizRunnerContent() {
   const [questions, setQuestions] = useState<QuestionData[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({})
-  const [timeLeft, setTimeLeft] = useState<number>(30)
   const [isCountingDown, setIsCountingDown] = useState(true)
 
   const handleCountdownComplete = useCallback(() => {
@@ -104,7 +102,6 @@ function QuizRunnerContent() {
         setCompletedSession(null)
         setCurrentIndex(0)
         setSelectedAnswers({})
-        setTimeLeft(30)
         setIsCountingDown(true)
         startTimeRef.current = null
         api.clearSessionsForSlug(slug)
@@ -124,7 +121,6 @@ function QuizRunnerContent() {
     setShowScreenshotWarning(false)
     setCurrentIndex(0)
     setSelectedAnswers({})
-    setTimeLeft(30)
     setIsCountingDown(true)
     startTimeRef.current = Date.now()
   }, [slug, user])
@@ -331,38 +327,6 @@ function QuizRunnerContent() {
       setIsSubmitting(false)
     }
   }, [currentSessionId, event, questions, selectedAnswers, sendSubmitAttempt, slug, user])
-
-  // Question Timer Countdown
-  useEffect(() => {
-    if (completedSession || loading || questions.length === 0 || isCountingDown) return
-
-    const currentQuestion = questions[currentIndex]
-    const limit = currentQuestion?.timeLimitSeconds || 30
-    const resetTimer = setTimeout(() => {
-      setTimeLeft(limit)
-    }, 0)
-
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          if (currentIndex < questions.length - 1) {
-            setCurrentIndex((idx) => idx + 1)
-            return limit
-          } else {
-            clearInterval(timer)
-            void handleSubmitQuiz()
-            return 0
-          }
-        }
-        return prev - 1
-      })
-    }, 1000)
-
-    return () => {
-      clearTimeout(resetTimer)
-      clearInterval(timer)
-    }
-  }, [currentIndex, questions, completedSession, loading, isCountingDown, handleSubmitQuiz])
 
   const handleSelectOption = (optionIndex: number) => {
     void soundManager.unlock()
@@ -572,7 +536,7 @@ function QuizRunnerContent() {
         ) : (
           /* --- ACTIVE QUIZ QUESTION PLAYER --- */
           <div className="flex flex-col flex-1">
-            {/* Progress Bar & Timer Header */}
+            {/* Progress Header */}
             <div className="flex items-center justify-between py-2">
               <div className="flex items-center gap-2">
                 <span className="font-mono text-[11px] tracking-wider uppercase text-[#111827] font-medium">
@@ -583,17 +547,6 @@ function QuizRunnerContent() {
                 </span>
               </div>
 
-              {/* Countdown Timer */}
-              <div
-                className={`flex items-center gap-1.5 rounded-full px-3 py-1 font-mono text-xs font-medium transition-all ${
-                  timeLeft <= 5
-                    ? 'bg-[#FEF2F2] text-[#DC2626] border border-[#FEE2E2]'
-                    : 'bg-white border border-[#E5E7EB] text-[#111827]'
-                }`}
-              >
-                <Clock className={`h-3 w-3 ${timeLeft <= 5 ? 'text-[#DC2626]' : 'text-[#6B7280]'}`} />
-                <span>{timeLeft}s</span>
-              </div>
             </div>
 
             {/* Hairline Progress Line */}

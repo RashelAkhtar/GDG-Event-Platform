@@ -30,7 +30,6 @@ import {
   CheckCircle2,
   ExternalLink,
   Trophy,
-  Maximize2,
   Trash2,
   Rocket,
   X,

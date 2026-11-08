@@ -155,7 +155,6 @@ function GameManipulatorModalInner({
       options: ['Option A', 'Option B', 'Option C', 'Option D'],
       correctOptionIndex: 0,
       points: 100,
-      timeLimitSeconds: 30,
       order: questions.length + 1,
     }
     const updated = [...questions, newQ]
@@ -262,7 +261,6 @@ function GameManipulatorModalInner({
   }
 
   const totalPoints = questions.reduce((sum, q) => sum + (q.points || 100), 0)
-  const totalSeconds = questions.reduce((sum, q) => sum + (q.timeLimitSeconds || 30), 0)
 
   return (
     <div
@@ -397,10 +395,6 @@ function GameManipulatorModalInner({
                 <Award className="h-3 w-3 text-[#FBBC04]" />
                 <strong className="text-[#111827]">{totalPoints}</strong> pts
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full border border-[#E5E7EB] bg-white px-2.5 py-0.5">
-                <Clock className="h-3 w-3 text-[#1A73E8]" />
-                <strong className="text-[#111827]">{totalSeconds}s</strong> pool
-              </span>
             </div>
           )}
         </div>
@@ -483,7 +477,6 @@ function GameManipulatorModalInner({
                                   Ans: {correctChar}
                                 </span>
                                 <span>• {q.points || 100} pts</span>
-                                <span>• {q.timeLimitSeconds || 30}s</span>
                               </div>
                             </div>
                           </div>
@@ -595,8 +588,8 @@ function GameManipulatorModalInner({
                       </div>
                     </div>
 
-                    {/* Question Scoring & Timer Settings */}
-                    <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[#F3F4F6]">
+                    {/* Question Scoring */}
+                    <div className="grid grid-cols-1 gap-3 pt-2 border-t border-[#F3F4F6]">
                       <div>
                         <label className="block font-mono text-[9.5px] uppercase tracking-wider text-[#6B7280] mb-1">
                           Scoring Points
@@ -612,20 +605,6 @@ function GameManipulatorModalInner({
                         />
                       </div>
 
-                      <div>
-                        <label className="block font-mono text-[9.5px] uppercase tracking-wider text-[#6B7280] mb-1">
-                          Round Time Limit (Seconds)
-                        </label>
-                        <input
-                          type="number"
-                          min={5}
-                          max={300}
-                          step={5}
-                          value={activeQuestion.timeLimitSeconds || 30}
-                          onChange={(e) => handleUpdateActiveQuestion('timeLimitSeconds', Number(e.target.value))}
-                          className="w-full rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] px-3 py-2 font-mono text-xs font-semibold text-[#111827] focus:outline-none focus:border-[#111827] focus:bg-white"
-                        />
-                      </div>
                     </div>
                   </>
                 ) : (
@@ -876,9 +855,6 @@ function GameManipulatorModalInner({
               <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#F3F4F6]">
                 <span className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-[#6B7280]">
                   PARTICIPANT PERSPECTIVE
-                </span>
-                <span className="rounded-full bg-[#FEF7E0] border border-[#FDE68A] px-2.5 py-0.5 font-mono text-[10px] font-medium text-[#B45309]">
-                  {activeQuestion.timeLimitSeconds || 30}s Timer
                 </span>
               </div>
 
