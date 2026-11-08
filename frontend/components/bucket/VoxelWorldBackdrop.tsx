@@ -1082,14 +1082,15 @@ function ContinuousMeadowTerrain({
   onFlowerClick: (id: string) => void
   flowerBounce: Record<string, boolean>
 }) {
-  // Calibrated terrain palette across day, evening, and night
-  const turfDeep = isNight ? '#021812' : isEvening ? '#3B1304' : '#0B381A'
-  const turfMid = isNight ? '#042A1F' : isEvening ? '#713F12' : '#14532D'
-  const turfBright = isNight ? '#065F46' : isEvening ? '#CA8A04' : '#15803D'
-  const turfSunlit = isNight ? '#047857' : isEvening ? '#EAB308' : '#22C55E'
-  const bladeTip = isNight ? 'rgba(110, 231, 183, 0.65)' : isEvening ? '#FDE047' : '#86EFAC'
+  // Calibrated terrain palette across day, evening, and night (matching botanical matrix)
+  const horizonRear = isNight ? '#031F19' : isEvening ? '#78350F' : '#15803D'
+  const horizonRearOp = isNight ? 0.65 : isEvening ? 0.6 : 0.55
+  const turfMid = isNight ? '#064E3B' : isEvening ? '#B45309' : '#16A34A'
+  const turfDeep = isNight ? '#021812' : isEvening ? '#451A03' : '#14532D'
+  const turfSunlit = isNight ? '#047857' : isEvening ? '#EA580C' : '#22C55E'
+  const bladeTip = isNight ? '#34D399' : isEvening ? '#FDE047' : '#86EFAC'
   const earthDeep = isNight ? '#020C0A' : isEvening ? '#200802' : '#041F0E'
-  const horizonRidge = isNight ? '#031713' : isEvening ? '#4A1D07' : '#0D4220'
+  const crestHighlight = isNight ? 'rgba(52, 211, 153, 0.45)' : isEvening ? '#FDE047' : '#86EFAC'
 
   return (
     <div className="absolute inset-0 pointer-events-none select-none">
@@ -1103,7 +1104,7 @@ function ContinuousMeadowTerrain({
         <defs>
           <linearGradient id="continuous-soil-grad" x1="0" y1="40" x2="0" y2="80" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stopColor={turfMid} />
-            <stop offset="35%" stopColor={turfDeep} />
+            <stop offset="45%" stopColor={turfDeep} />
             <stop offset="100%" stopColor={earthDeep} />
           </linearGradient>
 
@@ -1112,28 +1113,33 @@ function ContinuousMeadowTerrain({
             <stop offset="45%" stopColor={turfSunlit} />
             <stop offset="100%" stopColor={turfDeep} />
           </linearGradient>
-
-          <linearGradient id="horizon-ridge-grad" x1="0" y1="35" x2="0" y2="80" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor={horizonRidge} stopOpacity="0.85" />
-            <stop offset="100%" stopColor={earthDeep} stopOpacity="0.95" />
-          </linearGradient>
         </defs>
 
-        {/* 1. CONTINUOUS BACKGROUND HORIZON RIDGE (Gentle unbroken hill roll) */}
+        {/* 1. TIER 1: REAR HILL HORIZON RIDGE (Distant Depth Layer with Atmospheric Fade) */}
         <path
-          d="M 0 52 C 180 40, 360 36, 540 46 C 600 50, 660 50, 720 46 C 900 36, 1080 40, 1200 52 L 1200 80 L 0 80 Z"
-          fill="url(#horizon-ridge-grad)"
+          d="M 0 50 C 180 38, 360 34, 540 44 C 600 48, 660 48, 720 44 C 900 34, 1080 38, 1200 50 L 1200 80 L 0 80 Z"
+          fill={horizonRear}
+          opacity={horizonRearOp}
         />
 
-        {/* 2. CONTINUOUS FERTILE SOIL BEDROCK (100% Edge-to-Edge across bottom, perfectly smooth center) */}
+        {/* 2. TIER 2: MIDGROUND LIVING MEADOW TURF (100% Edge-to-Edge across bottom, gentle valley cradle) */}
         <path
           d="M 0 54 C 200 48, 400 45, 550 49 C 600 51, 650 51, 700 49 C 850 45, 1050 48, 1200 54 L 1200 80 L 0 80 Z"
           fill="url(#continuous-soil-grad)"
         />
 
-        {/* 3. REAR DENSE SHADOW BLADE TUFTS (Clustered multi-blade botanical tufts) */}
+        {/* 3. TIER 3: FOREGROUND CREST HIGHLIGHT LINE (Luminous sunlit/moonlit contour edge) */}
+        <path
+          d="M 0 54 C 200 48, 400 45, 550 49 C 600 51, 650 51, 700 49 C 850 45, 1050 48, 1200 54"
+          stroke={crestHighlight}
+          strokeWidth="1.4"
+          strokeLinecap="round"
+          opacity="0.65"
+        />
+
+        {/* 4. REAR DENSE SHADOW BLADE TUFTS (Clustered multi-blade botanical tufts) */}
         <g fill={turfMid} opacity="0.85" className="anim-grass-wind-sway-delayed">
-            <path d="M 50.0 50.0 C 48.0 41.1, 44.0 32.2, 39.3 26.8 C 42.0 33.9, 47.0 42.0, 52.0 50.0 Z M 48.0 50.0 C 45.0 42.9, 41.1 36.6, 36.6 32.2 C 42.9 37.5, 46.0 43.8, 50.0 50.0 Z M 51.0 50.0 C 56.0 43.8, 60.7 38.4, 65.2 34.8 C 59.8 39.3, 54.0 44.6, 53.0 50.0 Z M 49.5 50.0 C 49.0 42.0, 49.0 33.9, 47.3 28.6 C 48.0 34.8, 51.0 42.9, 51.5 50.0 Z M 47.0 50.0 C 44.0 45.5, 41.1 42.9, 38.4 41.1 C 42.9 43.8, 46.0 46.4, 48.5 50.0 Z" />
+          <path d="M 50.0 50.0 C 48.0 41.1, 44.0 32.2, 39.3 26.8 C 42.0 33.9, 47.0 42.0, 52.0 50.0 Z M 48.0 50.0 C 45.0 42.9, 41.1 36.6, 36.6 32.2 C 42.9 37.5, 46.0 43.8, 50.0 50.0 Z M 51.0 50.0 C 56.0 43.8, 60.7 38.4, 65.2 34.8 C 59.8 39.3, 54.0 44.6, 53.0 50.0 Z M 49.5 50.0 C 49.0 42.0, 49.0 33.9, 47.3 28.6 C 48.0 34.8, 51.0 42.9, 51.5 50.0 Z M 47.0 50.0 C 44.0 45.5, 41.1 42.9, 38.4 41.1 C 42.9 43.8, 46.0 46.4, 48.5 50.0 Z" />
             <path d="M 100.0 47.0 C 102.0 37.2, 106.0 27.5, 111.7 21.6 C 108.0 29.4, 103.0 38.2, 102.0 47.0 Z M 98.0 47.0 C 95.0 39.2, 90.2 32.3, 85.3 27.5 C 92.2 33.3, 96.0 40.2, 100.0 47.0 Z M 101.0 47.0 C 106.0 40.2, 111.7 34.3, 116.6 30.4 C 110.8 35.3, 104.0 41.1, 103.0 47.0 Z M 99.5 47.0 C 99.0 38.2, 101.0 29.4, 102.9 23.5 C 102.0 30.4, 101.0 39.2, 101.5 47.0 Z M 97.0 47.0 C 94.0 42.1, 90.2 39.2, 87.3 37.2 C 92.2 40.2, 96.0 43.1, 98.5 47.0 Z" />
             <path d="M 160.0 44.0 C 158.0 33.8, 154.0 23.6, 147.8 17.5 C 152.0 25.6, 157.0 34.8, 162.0 44.0 Z M 158.0 44.0 C 155.0 35.8, 149.8 28.7, 144.7 23.6 C 151.8 29.7, 156.0 36.9, 160.0 44.0 Z M 161.0 44.0 C 166.0 36.9, 172.2 30.7, 177.3 26.7 C 171.2 31.8, 164.0 37.9, 163.0 44.0 Z M 159.5 44.0 C 159.0 34.8, 159.0 25.6, 156.9 19.5 C 158.0 26.7, 161.0 35.8, 161.5 44.0 Z M 157.0 44.0 C 154.0 38.9, 149.8 35.8, 146.7 33.8 C 151.8 36.9, 156.0 39.9, 158.5 44.0 Z" />
             <path d="M 225.0 43.0 C 227.0 33.6, 231.0 24.3, 236.2 18.7 C 233.0 26.2, 228.0 34.6, 227.0 43.0 Z M 223.0 43.0 C 220.0 35.5, 215.7 29.0, 211.0 24.3 C 217.5 29.9, 221.0 36.5, 225.0 43.0 Z M 226.0 43.0 C 231.0 36.5, 236.2 30.8, 240.9 27.1 C 235.3 31.8, 229.0 37.4, 228.0 43.0 Z M 224.5 43.0 C 224.0 34.6, 226.0 26.2, 227.8 20.6 C 227.0 27.1, 226.0 35.5, 226.5 43.0 Z M 222.0 43.0 C 219.0 38.3, 215.7 35.5, 212.8 33.6 C 217.5 36.5, 221.0 39.3, 223.5 43.0 Z" />
@@ -1151,9 +1157,9 @@ function ContinuousMeadowTerrain({
             <path d="M 1190.0 50.0 C 1192.0 41.1, 1196.0 32.2, 1200.7 26.8 C 1198.0 33.9, 1193.0 42.0, 1192.0 50.0 Z M 1188.0 50.0 C 1185.0 42.9, 1181.1 36.6, 1176.6 32.2 C 1182.9 37.5, 1186.0 43.8, 1190.0 50.0 Z M 1191.0 50.0 C 1196.0 43.8, 1200.7 38.4, 1205.2 34.8 C 1199.8 39.3, 1194.0 44.6, 1193.0 50.0 Z M 1189.5 50.0 C 1189.0 42.0, 1191.0 33.9, 1192.7 28.6 C 1192.0 34.8, 1191.0 42.9, 1191.5 50.0 Z M 1187.0 50.0 C 1184.0 45.5, 1181.1 42.9, 1178.4 41.1 C 1182.9 43.8, 1186.0 46.4, 1188.5 50.0 Z" />
         </g>
 
-        {/* 4. FOREGROUND VIBRANT GRASS BLADE TUFTS (Clustered botanical grass with highlighted tips) */}
+        {/* 5. FOREGROUND VIBRANT GRASS BLADE TUFTS (Clustered botanical grass with highlighted tips) */}
         <g fill="url(#continuous-blade-grad)" className="anim-grass-wind-sway">
-            <path d="M 35.0 52.0 C 37.0 41.5, 41.0 31.0, 47.6 24.7 C 43.0 33.1, 38.0 42.5, 37.0 52.0 Z M 33.0 52.0 C 30.0 43.6, 24.5 36.2, 19.2 31.0 C 26.6 37.3, 31.0 44.6, 35.0 52.0 Z M 36.0 52.0 C 41.0 44.6, 47.6 38.4, 52.9 34.1 C 46.5 39.4, 39.0 45.7, 38.0 52.0 Z M 34.5 52.0 C 34.0 42.5, 36.0 33.1, 38.1 26.8 C 37.0 34.1, 36.0 43.6, 36.5 52.0 Z M 32.0 52.0 C 29.0 46.8, 24.5 43.6, 21.4 41.5 C 26.6 44.6, 31.0 47.8, 33.5 52.0 Z" />
+          <path d="M 35.0 52.0 C 37.0 41.5, 41.0 31.0, 47.6 24.7 C 43.0 33.1, 38.0 42.5, 37.0 52.0 Z M 33.0 52.0 C 30.0 43.6, 24.5 36.2, 19.2 31.0 C 26.6 37.3, 31.0 44.6, 35.0 52.0 Z M 36.0 52.0 C 41.0 44.6, 47.6 38.4, 52.9 34.1 C 46.5 39.4, 39.0 45.7, 38.0 52.0 Z M 34.5 52.0 C 34.0 42.5, 36.0 33.1, 38.1 26.8 C 37.0 34.1, 36.0 43.6, 36.5 52.0 Z M 32.0 52.0 C 29.0 46.8, 24.5 43.6, 21.4 41.5 C 26.6 44.6, 31.0 47.8, 33.5 52.0 Z" />
             <path d="M 85.0 49.0 C 83.0 37.5, 79.0 26.0, 71.2 19.1 C 77.0 28.3, 82.0 38.6, 87.0 49.0 Z M 83.0 49.0 C 80.0 39.8, 73.5 31.8, 67.8 26.0 C 75.8 32.9, 81.0 41.0, 85.0 49.0 Z M 86.0 49.0 C 91.0 41.0, 98.8 34.0, 104.5 29.5 C 97.7 35.2, 89.0 42.1, 88.0 49.0 Z M 84.5 49.0 C 84.0 38.6, 84.0 28.3, 81.5 21.4 C 83.0 29.5, 86.0 39.8, 86.5 49.0 Z M 82.0 49.0 C 79.0 43.2, 73.5 39.8, 70.0 37.5 C 75.8 41.0, 81.0 44.4, 83.5 49.0 Z" />
             <path d="M 145.0 46.0 C 147.0 34.0, 151.0 22.0, 159.4 14.8 C 153.0 24.4, 148.0 35.2, 147.0 46.0 Z M 143.0 46.0 C 140.0 36.4, 133.0 28.0, 127.0 22.0 C 135.4 29.2, 141.0 37.6, 145.0 46.0 Z M 146.0 46.0 C 151.0 37.6, 159.4 30.4, 165.4 25.6 C 158.2 31.6, 149.0 38.8, 148.0 46.0 Z M 144.5 46.0 C 144.0 35.2, 146.0 24.4, 148.6 17.2 C 147.0 25.6, 146.0 36.4, 146.5 46.0 Z M 142.0 46.0 C 139.0 40.0, 133.0 36.4, 129.4 34.0 C 135.4 37.6, 141.0 41.2, 143.5 46.0 Z" />
             <path d="M 210.0 45.0 C 208.0 34.0, 204.0 23.0, 196.8 16.4 C 202.0 25.2, 207.0 35.1, 212.0 45.0 Z M 208.0 45.0 C 205.0 36.2, 199.0 28.5, 193.5 23.0 C 201.2 29.6, 206.0 37.3, 210.0 45.0 Z M 211.0 45.0 C 216.0 37.3, 223.2 30.7, 228.7 26.3 C 222.1 31.8, 214.0 38.4, 213.0 45.0 Z M 209.5 45.0 C 209.0 35.1, 209.0 25.2, 206.7 18.6 C 208.0 26.3, 211.0 36.2, 211.5 45.0 Z M 207.0 45.0 C 204.0 39.5, 199.0 36.2, 195.7 34.0 C 201.2 37.3, 206.0 40.6, 208.5 45.0 Z" />
@@ -1172,8 +1178,8 @@ function ContinuousMeadowTerrain({
         </g>
       </svg>
 
-      {/* 5. NESTLED BOTANICAL FLORA (Strategically placed in clear view, never occluded by trunks) */}
-      {/* Left Sector: Scarlet Poppy - Positioned clearly in the open grass */}
+      {/* 6. NESTLED BOTANICAL FLORA (Strategically placed in open glades, never occluded by trunks) */}
+      {/* Left Glade: Scarlet Poppy - Clear of oak trunk */}
       <div
         onClick={() => onFlowerClick('poppy')}
         aria-label="Poppy"
@@ -1182,7 +1188,15 @@ function ContinuousMeadowTerrain({
         <RealisticPoppy bouncing={!!flowerBounce['poppy']} />
       </div>
 
-      {/* Left Sector: Forest Amanita Mushroom */}
+      {/* Left Glade: Ground-hugging 3-Leaf Clover Tuft */}
+      <div
+        aria-label="Clover"
+        className="absolute bottom-1.5 left-[24%] sm:left-[26%] pointer-events-auto"
+      >
+        <RealisticClover />
+      </div>
+
+      {/* Left Glade: Forest Amanita Mushroom */}
       <div
         onClick={() => onFlowerClick('shroom')}
         aria-label="Mushroom"
@@ -1200,7 +1214,7 @@ function ContinuousMeadowTerrain({
         <RealisticBluebell bouncing={!!flowerBounce['bluebell']} />
       </div>
 
-      {/* Right Sector: Azure Wild Orchid */}
+      {/* Right Glade: Azure Wild Orchid */}
       <div
         onClick={() => onFlowerClick('orchid')}
         aria-label="Blue Orchid"
@@ -1209,7 +1223,7 @@ function ContinuousMeadowTerrain({
         <RealisticBlueOrchid bouncing={!!flowerBounce['orchid']} />
       </div>
 
-      {/* Right Sector: Golden Dandelion - Positioned clearly in the open grass */}
+      {/* Right Glade: Golden Dandelion - Clear of birch trunk */}
       <div
         onClick={() => onFlowerClick('dandelion')}
         aria-label="Dandelion"
@@ -1217,6 +1231,25 @@ function ContinuousMeadowTerrain({
       >
         <RealisticDandelion bouncing={!!flowerBounce['dandelion']} />
       </div>
+    </div>
+  )
+}
+
+function RealisticClover() {
+  return (
+    <div className="relative select-none cursor-pointer group origin-bottom transition-transform hover:scale-115 active:scale-95">
+      <svg
+        viewBox="0 0 18 16"
+        className="w-3.5 h-3 sm:w-4 sm:h-3.5 overflow-visible drop-shadow-xs"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path d="M 9 8 C 8.5 11, 9 14, 9 16" stroke="#16A34A" strokeWidth="0.8" strokeLinecap="round" />
+        <path d="M 9 8 C 6 6, 6 2, 9 3.5 C 12 2, 12 6, 9 8 Z" fill="#22C55E" />
+        <circle cx="9" cy="4" r="0.6" fill="#86EFAC" opacity="0.6" />
+        <path d="M 9 8 C 7 11, 3 11, 4.5 8 C 3 5, 7 5, 9 8 Z" fill="#16A34A" />
+        <path d="M 9 8 C 11 11, 15 11, 13.5 8 C 15 5, 11 5, 9 8 Z" fill="#15803D" />
+      </svg>
     </div>
   )
 }
