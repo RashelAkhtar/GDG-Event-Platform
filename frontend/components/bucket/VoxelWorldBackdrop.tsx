@@ -2062,10 +2062,7 @@ export function VoxelWorldBackdrop() {
                 <RealisticBird species={bird.species} isHit={false} />
               </div>
 
-              {/* Hover Badge Tooltip */}
-              <span className="pointer-events-none absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-[#1E293B] bg-black/85 px-2 py-0.5 font-mono text-[8px] uppercase tracking-wider text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 shadow-md z-40">
-                {bird.name} • Click to catch! 🎯
-              </span>
+
             </button>
           </div>
         )
