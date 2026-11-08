@@ -1444,112 +1444,138 @@ html.dark .hairline-divider {
   }
 }
 
-/* Realistic Sunset Descent: From High in Sky -> Sinking to Horizon */
-.anim-sun-descend-to-evening {
-  animation: sun-descend-evening 1.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+/* =========================================================================
+   FULL-HORIZON CELESTIAL TRANSITIONS (DAY ⇄ EVENING ⇄ NIGHT)
+   ========================================================================= */
+
+/* 1. Day -> Evening: Sun descends to dusk perch (130px) */
+.anim-sun-descend-to-dusk {
+  animation: sun-descend-to-dusk-perch 1.35s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
-@keyframes sun-descend-evening {
+@keyframes sun-descend-to-dusk-perch {
   0% {
     transform: translate3d(0, 0, 0) scale(1);
     filter: drop-shadow(0 0 18px rgba(253, 224, 71, 0.8));
     opacity: 1;
   }
   100% {
-    transform: translate3d(6px, 32px, 0) scale(1.1);
-    filter: drop-shadow(0 0 30px rgba(234, 88, 12, 0.9));
+    transform: translate3d(6px, 130px, 0) scale(1.15);
+    filter: drop-shadow(0 0 32px rgba(234, 88, 12, 1));
     opacity: 1;
   }
 }
 
-/* Sunset Sinking Below Horizon: From Evening Horizon -> Below Horizon */
-.anim-sun-sink-below-horizon {
-  animation: sun-sink-below 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+/* 2. Evening -> Night: Sun plunges all the way down below horizon (430px) */
+.anim-sun-sink-all-the-way {
+  animation: sun-sink-all-the-way-down 1.15s cubic-bezier(0.4, 0, 0.6, 1) forwards;
 }
 
-@keyframes sun-sink-below {
+@keyframes sun-sink-all-the-way-down {
   0% {
-    transform: translate3d(6px, 32px, 0) scale(1.1);
-    filter: drop-shadow(0 0 30px rgba(234, 88, 12, 0.9));
+    transform: translate3d(6px, 130px, 0) scale(1.15);
+    filter: drop-shadow(0 0 32px rgba(234, 88, 12, 1));
     opacity: 1;
   }
-  60% {
-    transform: translate3d(12px, 65px, 0) scale(0.95);
-    filter: drop-shadow(0 0 20px rgba(220, 38, 38, 0.7));
-    opacity: 0.7;
+  45% {
+    transform: translate3d(12px, 260px, 0) scale(1.05);
+    filter: drop-shadow(0 0 22px rgba(220, 38, 38, 0.8));
+    opacity: 0.9;
+  }
+  80% {
+    transform: translate3d(16px, 370px, 0) scale(0.95);
+    filter: drop-shadow(0 0 10px rgba(185, 28, 28, 0.5));
+    opacity: 0.4;
   }
   100% {
-    transform: translate3d(18px, 110px, 0) scale(0.75);
-    filter: drop-shadow(0 0 8px rgba(220, 38, 38, 0));
+    transform: translate3d(18px, 430px, 0) scale(0.85);
+    filter: drop-shadow(0 0 0px rgba(0, 0, 0, 0));
     opacity: 0;
   }
 }
 
-/* Moon Rising from Horizon into Night Sky */
-.anim-moon-rise-from-horizon {
-  animation: moon-rise-night 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+/* 3. Evening -> Night: Moon rises to zenith after Sun submerges (starts at 0.95s) */
+.anim-moon-rise-all-the-way {
+  animation: moon-rise-all-the-way-up 1.25s cubic-bezier(0.16, 1, 0.3, 1) 0.95s forwards;
+  opacity: 0;
 }
 
-@keyframes moon-rise-night {
+@keyframes moon-rise-all-the-way-up {
   0% {
-    transform: translate3d(18px, 110px, 0) scale(0.75);
-    filter: drop-shadow(0 0 4px rgba(186, 230, 253, 0));
+    transform: translate3d(18px, 430px, 0) scale(0.8);
+    filter: drop-shadow(0 0 2px rgba(186, 230, 253, 0));
     opacity: 0;
   }
-  40% {
-    transform: translate3d(10px, 55px, 0) scale(0.9);
-    filter: drop-shadow(0 0 16px rgba(186, 230, 253, 0.6));
+  20% {
+    transform: translate3d(14px, 320px, 0) scale(0.88);
+    filter: drop-shadow(0 0 10px rgba(186, 230, 253, 0.5));
     opacity: 0.8;
   }
+  70% {
+    transform: translate3d(4px, 60px, 0) scale(1.02);
+    filter: drop-shadow(0 0 22px rgba(186, 230, 253, 0.85));
+    opacity: 1;
+  }
   100% {
     transform: translate3d(0, 0, 0) scale(1);
-    filter: drop-shadow(0 0 20px rgba(186, 230, 253, 0.8));
+    filter: drop-shadow(0 0 18px rgba(186, 230, 253, 0.75));
     opacity: 1;
   }
 }
 
-/* Moon Setting Below Horizon */
-.anim-moon-sink-below-horizon {
-  animation: moon-sink-below 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+/* 4. Night -> Day: Moon plunges all the way down below horizon (430px) */
+.anim-moon-sink-all-the-way {
+  animation: moon-sink-all-the-way-down 1.15s cubic-bezier(0.4, 0, 0.6, 1) forwards;
 }
 
-@keyframes moon-sink-below {
+@keyframes moon-sink-all-the-way-down {
   0% {
     transform: translate3d(0, 0, 0) scale(1);
-    filter: drop-shadow(0 0 20px rgba(186, 230, 253, 0.8));
+    filter: drop-shadow(0 0 18px rgba(186, 230, 253, 0.75));
     opacity: 1;
   }
-  60% {
-    transform: translate3d(10px, 60px, 0) scale(0.9);
-    filter: drop-shadow(0 0 10px rgba(186, 230, 253, 0.5));
-    opacity: 0.6;
-  }
-  100% {
-    transform: translate3d(18px, 110px, 0) scale(0.75);
-    filter: drop-shadow(0 0 4px rgba(186, 230, 253, 0));
-    opacity: 0;
-  }
-}
-
-/* Sun Rising from Below Horizon into Day Sky */
-.anim-sun-rise-to-day {
-  animation: sun-rise-day 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes sun-rise-day {
-  0% {
-    transform: translate3d(18px, 110px, 0) scale(0.75);
-    filter: drop-shadow(0 0 6px rgba(253, 224, 71, 0));
-    opacity: 0;
-  }
-  40% {
-    transform: translate3d(10px, 50px, 0) scale(0.95);
-    filter: drop-shadow(0 0 20px rgba(251, 146, 60, 0.8));
+  45% {
+    transform: translate3d(10px, 200px, 0) scale(0.95);
+    filter: drop-shadow(0 0 12px rgba(186, 230, 253, 0.5));
     opacity: 0.85;
   }
+  80% {
+    transform: translate3d(16px, 360px, 0) scale(0.85);
+    filter: drop-shadow(0 0 4px rgba(186, 230, 253, 0.2));
+    opacity: 0.35;
+  }
+  100% {
+    transform: translate3d(18px, 430px, 0) scale(0.75);
+    filter: drop-shadow(0 0 0px rgba(0, 0, 0, 0));
+    opacity: 0;
+  }
+}
+
+/* 5. Night -> Day: Sun rises to zenith after Moon submerges (starts at 0.95s) */
+.anim-sun-rise-all-the-way {
+  animation: sun-rise-all-the-way-up 1.25s cubic-bezier(0.16, 1, 0.3, 1) 0.95s forwards;
+  opacity: 0;
+}
+
+@keyframes sun-rise-all-the-way-up {
+  0% {
+    transform: translate3d(18px, 430px, 0) scale(0.8);
+    filter: drop-shadow(0 0 4px rgba(251, 146, 60, 0));
+    opacity: 0;
+  }
+  20% {
+    transform: translate3d(14px, 320px, 0) scale(0.9);
+    filter: drop-shadow(0 0 18px rgba(251, 146, 60, 0.7));
+    opacity: 0.85;
+  }
+  70% {
+    transform: translate3d(4px, 50px, 0) scale(1.05);
+    filter: drop-shadow(0 0 30px rgba(253, 224, 71, 0.9));
+    opacity: 1;
+  }
   100% {
     transform: translate3d(0, 0, 0) scale(1);
-    filter: drop-shadow(0 0 20px rgba(253, 224, 71, 0.85));
+    filter: drop-shadow(0 0 20px rgba(253, 224, 71, 0.8));
     opacity: 1;
   }
 }

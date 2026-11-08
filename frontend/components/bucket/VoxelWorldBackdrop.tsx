@@ -1658,12 +1658,12 @@ export function VoxelWorldBackdrop() {
         } catch {}
       }
 
-      // Smooth 1.4s celestial transition
+      // Orchestrated 2.25s celestial transition (setting submerged before rising starts)
       setTimeout(() => {
         setSkyPhase(target)
         setTransitionMode(null)
         setIsTransitioning(false)
-      }, 1400)
+      }, 2250)
     },
     [isTransitioning, skyPhase]
   )
@@ -1780,22 +1780,22 @@ export function VoxelWorldBackdrop() {
 
   let sunAnimClass = ''
   if (transitionMode === 'day-to-evening') {
-    sunAnimClass = 'anim-sun-descend-to-evening'
+    sunAnimClass = 'anim-sun-descend-to-dusk'
   } else if (transitionMode === 'evening-to-night') {
-    sunAnimClass = 'anim-sun-sink-below-horizon'
+    sunAnimClass = 'anim-sun-sink-all-the-way'
   } else if (transitionMode === 'night-to-day') {
-    sunAnimClass = 'anim-sun-rise-to-day'
+    sunAnimClass = 'anim-sun-rise-all-the-way'
   } else if (skyPhase === 'evening') {
-    sunAnimClass = 'translate-x-[6px] translate-y-[32px] scale-110'
+    sunAnimClass = 'translate-x-[6px] translate-y-[130px] scale-115'
   } else if (skyPhase === 'day') {
     sunAnimClass = 'anim-celestial-sun-day'
   }
 
   let moonAnimClass = ''
   if (transitionMode === 'evening-to-night') {
-    moonAnimClass = 'anim-moon-rise-from-horizon'
+    moonAnimClass = 'anim-moon-rise-all-the-way'
   } else if (transitionMode === 'night-to-day') {
-    moonAnimClass = 'anim-moon-sink-below-horizon'
+    moonAnimClass = 'anim-moon-sink-all-the-way'
   } else if (skyPhase === 'night') {
     moonAnimClass = 'anim-celestial-moon-night'
   }
@@ -1869,7 +1869,7 @@ export function VoxelWorldBackdrop() {
       {/* ======================================================== */}
       {/* 1. CELESTIAL ANCHOR: SUN & MOON (PERFECTLY CENTERED, NEVER DISPLACED) */}
       {/* ======================================================== */}
-      <div className="absolute top-2.5 right-4 sm:right-8 z-30 pointer-events-auto h-12 w-12 flex items-center justify-center">
+      <div className="absolute top-2.5 right-4 sm:right-8 z-15 pointer-events-auto h-12 w-12 flex items-center justify-center">
         {/* THE SUN */}
         {showSun && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -2071,7 +2071,7 @@ export function VoxelWorldBackdrop() {
       {/* ======================================================== */}
       {/* 5. REALISTIC BOTANICAL TERRAIN: TREES, GRASS & MEADOWS   */}
       {/* ======================================================== */}
-      <div className="absolute bottom-0 inset-x-0 flex items-end justify-between z-20 pointer-events-none px-2 sm:px-4">
+      <div className="absolute bottom-0 inset-x-0 flex items-end justify-between z-25 pointer-events-none px-2 sm:px-4">
         {/* Continuous Soft Ground Horizon Baseline */}
         <div className="absolute bottom-0 inset-x-0 h-2 bg-gradient-to-t from-[#14532D]/30 dark:from-[#042F2E]/35 to-transparent pointer-events-none -z-10" />
 
