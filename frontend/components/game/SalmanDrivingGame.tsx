@@ -10,7 +10,6 @@ import {
   Compass,
   Trophy,
   RotateCcw,
-  Zap,
 } from 'lucide-react'
 
 interface SalmanDrivingGameProps {
@@ -64,6 +63,7 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const animFrameRef = useRef<number | null>(null)
+  const deerImageRef = useRef<HTMLImageElement | null>(null)
 
   // Mutable Game Physics State
   const gameState = useRef({
@@ -88,17 +88,23 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
     comboTimer: 0,
   })
 
-  // Initialize roadside scenery trees (16 evergreen pines scrolling along highway)
+  // Preload photorealistic stag sprite for high-performance canvas rendering
   useEffect(() => {
     setMounted(true)
+    if (typeof window !== 'undefined') {
+      const img = new Image()
+      img.src = '/game/deer_stag.png'
+      deerImageRef.current = img
+    }
+
     const initialTrees: RoadsideTree[] = []
-    for (let i = 0; i < 18; i++) {
+    for (let i = 0; i < 20; i++) {
       initialTrees.push({
         id: i + 1,
         side: i % 2 === 0 ? -1 : 1,
-        lateralOffset: 0.12 + Math.random() * 0.35,
-        z: (i / 18) + (Math.random() * 0.05),
-        heightScale: 0.8 + Math.random() * 0.45,
+        lateralOffset: 0.14 + Math.random() * 0.4,
+        z: (i / 20) + (Math.random() * 0.04),
+        heightScale: 0.85 + Math.random() * 0.4,
       })
     }
     gameState.current.trees = initialTrees
@@ -366,7 +372,9 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
 
       // Horizon line placed at 30% of screen height for wide scenic highway
       const horizonY = height * 0.30
-      const roadBottomWidth = width * 1.70
+      // Road bottom is clipped before screen bottom to ensure zero bleed under dashboard
+      const roadCowlY = height * 0.88
+      const roadBottomWidth = width * 1.60
       const roadTopWidth = width * 0.22
 
       // A. Nocturnal Sky & Distant Mountain Ridge
@@ -413,12 +421,12 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
       ctx.beginPath()
       ctx.moveTo(centerTopX - roadTopWidth * 0.5, horizonY)
       ctx.lineTo(centerTopX + roadTopWidth * 0.5, horizonY)
-      ctx.lineTo(centerBottomX + roadBottomWidth * 0.5, height)
-      ctx.lineTo(centerBottomX - roadBottomWidth * 0.5, height)
+      ctx.lineTo(centerBottomX + roadBottomWidth * 0.5, roadCowlY)
+      ctx.lineTo(centerBottomX - roadBottomWidth * 0.5, roadCowlY)
       ctx.closePath()
 
       // Asphalt gradient illuminated by dual headlights
-      const asphaltGrad = ctx.createLinearGradient(0, horizonY, 0, height)
+      const asphaltGrad = ctx.createLinearGradient(0, horizonY, 0, roadCowlY)
       asphaltGrad.addColorStop(0, '#1E2530')
       asphaltGrad.addColorStop(0.45, '#2D3748')
       asphaltGrad.addColorStop(0.85, '#3E4C5F')
@@ -432,13 +440,13 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
       ctx.strokeStyle = '#94A3B8'
       ctx.beginPath()
       ctx.moveTo(centerTopX - roadTopWidth * 0.505, horizonY)
-      ctx.lineTo(centerBottomX - roadBottomWidth * 0.505, height)
+      ctx.lineTo(centerBottomX - roadBottomWidth * 0.505, roadCowlY)
       ctx.stroke()
 
       // Right Guardrail Beam
       ctx.beginPath()
       ctx.moveTo(centerTopX + roadTopWidth * 0.505, horizonY)
-      ctx.lineTo(centerBottomX + roadBottomWidth * 0.505, height)
+      ctx.lineTo(centerBottomX + roadBottomWidth * 0.505, roadCowlY)
       ctx.stroke()
 
       // Repeating Guardrail Stanchion Posts with Amber Reflectors
@@ -448,7 +456,7 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
         const postP = (p + roadStripeOffset) / guardrailPosts
         if (postP > 1) continue
         const postZ = Math.pow(postP, 1.7)
-        const postY = horizonY + postZ * (height - horizonY)
+        const postY = horizonY + postZ * (roadCowlY - horizonY)
         const postRcx = centerTopX + (centerBottomX - centerTopX) * postZ
         const postRw = roadTopWidth + (roadBottomWidth - roadTopWidth) * postZ
 
@@ -474,11 +482,11 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
       ctx.shadowBlur = 6
       ctx.beginPath()
       ctx.moveTo(centerTopX - roadTopWidth * 0.47, horizonY)
-      ctx.lineTo(centerBottomX - roadBottomWidth * 0.47, height)
+      ctx.lineTo(centerBottomX - roadBottomWidth * 0.47, roadCowlY)
       ctx.stroke()
       ctx.beginPath()
       ctx.moveTo(centerTopX + roadTopWidth * 0.47, horizonY)
-      ctx.lineTo(centerBottomX + roadBottomWidth * 0.47, height)
+      ctx.lineTo(centerBottomX + roadBottomWidth * 0.47, roadCowlY)
       ctx.stroke()
       ctx.shadowBlur = 0
 
@@ -492,8 +500,8 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
         const z1 = Math.pow(p1, 1.8)
         const z2 = Math.pow(Math.min(1, p2), 1.8)
 
-        const sy1 = horizonY + z1 * (height - horizonY)
-        const sy2 = horizonY + z2 * (height - horizonY)
+        const sy1 = horizonY + z1 * (roadCowlY - horizonY)
+        const sy2 = horizonY + z2 * (roadCowlY - horizonY)
 
         const rcx1 = centerTopX + (centerBottomX - centerTopX) * z1
         const rcx2 = centerTopX + (centerBottomX - centerTopX) * z2
@@ -532,10 +540,10 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
       headlightGrad.addColorStop(1, 'rgba(255, 255, 200, 0)')
       ctx.fillStyle = headlightGrad
       ctx.beginPath()
-      ctx.moveTo(centerBottomX - width * 0.25, height)
+      ctx.moveTo(centerBottomX - width * 0.25, roadCowlY)
       ctx.lineTo(centerTopX - roadTopWidth * 0.65, horizonY)
       ctx.lineTo(centerTopX + roadTopWidth * 0.65, horizonY)
-      ctx.lineTo(centerBottomX + width * 0.25, height)
+      ctx.lineTo(centerBottomX + width * 0.25, roadCowlY)
       ctx.closePath()
       ctx.fill()
 
@@ -544,8 +552,8 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
         tree.z += 0.0078 * g.playerSpeed
         if (tree.z > 1.05) {
           tree.z = 0.02
-          tree.lateralOffset = 0.12 + Math.random() * 0.38
-          tree.heightScale = 0.8 + Math.random() * 0.45
+          tree.lateralOffset = 0.14 + Math.random() * 0.4
+          tree.heightScale = 0.85 + Math.random() * 0.4
         }
 
         const treeZScale = Math.pow(tree.z, 1.6)
@@ -603,7 +611,7 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
         })
       }
 
-      // Update & Draw Deers with Linear Scale & Luminous Eye-Shine
+      // Update & Draw Deers with Photorealistic Stag Sprite & Luminous Eye-Shine
       for (let i = g.deers.length - 1; i >= 0; i--) {
         const d = g.deers[i]
 
@@ -635,15 +643,15 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
 
         // Perspective Screen Position
         const deerZScale = Math.pow(d.z, 1.45)
-        const deerY = horizonY + deerZScale * (height - horizonY)
+        const deerY = horizonY + deerZScale * (roadCowlY - horizonY)
         const roadCenterXAtZ = centerTopX + (centerBottomX - centerTopX) * deerZScale
         const roadWidthAtZ = roadTopWidth + (roadBottomWidth - roadTopWidth) * deerZScale
         const deerX = roadCenterXAtZ + (d.x * roadWidthAtZ * 0.48)
 
         // Linear Scale Model: 0.38 at horizon -> 1.55 at bumper
-        const scale = 0.38 + d.z * 1.2
-        const deerW = 74 * scale
-        const deerH = 68 * scale
+        const scale = 0.38 + d.z * 1.25
+        const deerW = 120 * scale
+        const deerH = 80 * scale
 
         ctx.save()
         ctx.translate(deerX, deerY)
@@ -651,97 +659,38 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
           ctx.rotate(d.tumbleAngle)
         }
 
-        // High-Contrast Body Colors
-        const bodyColor = d.species === 'stag' ? '#F59E0B' : d.species === 'buck' ? '#D97706' : '#EA580C'
-        ctx.fillStyle = bodyColor
-
-        // Torso
-        ctx.beginPath()
-        ctx.ellipse(0, -deerH * 0.5, deerW * 0.44, deerH * 0.27, 0, 0, Math.PI * 2)
-        ctx.fill()
-
-        // High-Beam Rim Light Contour
-        ctx.strokeStyle = '#FEF3C7'
-        ctx.lineWidth = Math.max(1.2, 2.4 * scale)
-        ctx.stroke()
-
-        // Neck & Head
+        // Direction flip: if crossing from right to left, flip horizontally
         const headDir = d.crossingSpeedX > 0 ? 1 : -1
-        ctx.fillStyle = bodyColor
-        ctx.beginPath()
-        ctx.ellipse(headDir * deerW * 0.32, -deerH * 0.84, deerW * 0.17, deerH * 0.22, 0.3 * headDir, 0, Math.PI * 2)
-        ctx.fill()
+        ctx.scale(headDir, 1)
 
-        // White Tail & Muzzle
-        ctx.fillStyle = '#FFFFFF'
-        ctx.beginPath()
-        ctx.arc(-headDir * deerW * 0.42, -deerH * 0.58, deerW * 0.09, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.beginPath()
-        ctx.arc(headDir * deerW * 0.42, -deerH * 0.84, deerW * 0.08, 0, Math.PI * 2)
-        ctx.fill()
+        // Draw photorealistic stag sprite image
+        if (deerImageRef.current && deerImageRef.current.complete) {
+          ctx.drawImage(
+            deerImageRef.current,
+            -deerW * 0.5,
+            -deerH,
+            deerW,
+            deerH
+          )
+        } else {
+          // Instant high-contrast vector fallback while asset is caching
+          const bodyColor = d.species === 'stag' ? '#F59E0B' : d.species === 'buck' ? '#D97706' : '#EA580C'
+          ctx.fillStyle = bodyColor
+          ctx.beginPath()
+          ctx.ellipse(0, -deerH * 0.5, deerW * 0.4, deerH * 0.3, 0, 0, Math.PI * 2)
+          ctx.fill()
+        }
 
-        // Luminous Headlight Eye-Shine (Bright Chartreuse Glint)
+        // Luminous Headlight Eye-Shine (Bright Chartreuse Glint on the deer's eye)
         ctx.fillStyle = '#CCFF00'
         ctx.shadowColor = '#CCFF00'
         ctx.shadowBlur = Math.max(4, 12 * scale)
         ctx.beginPath()
-        const eyeX = headDir * deerW * 0.35
-        const eyeY = -deerH * 0.88
+        const eyeX = deerW * 0.32
+        const eyeY = -deerH * 0.76
         ctx.arc(eyeX, eyeY, Math.max(2.0, 3.8 * scale), 0, Math.PI * 2)
         ctx.fill()
         ctx.shadowBlur = 0
-
-        // Realistic Branching Antlers for Buck and Stag
-        if (d.species === 'buck' || d.species === 'stag') {
-          ctx.strokeStyle = d.species === 'stag' ? '#FDE047' : '#D97706'
-          ctx.lineWidth = Math.max(1.8, 3.4 * scale)
-          ctx.beginPath()
-          const antlerBaseX = headDir * deerW * 0.30
-          const antlerBaseY = -deerH * 1.0
-
-          // Main Beam
-          ctx.moveTo(antlerBaseX, antlerBaseY)
-          ctx.lineTo(antlerBaseX - 12 * scale, antlerBaseY - 18 * scale)
-          ctx.lineTo(antlerBaseX - 22 * scale, antlerBaseY - 26 * scale)
-          // Brow Tine
-          ctx.moveTo(antlerBaseX - 6 * scale, antlerBaseY - 10 * scale)
-          ctx.lineTo(antlerBaseX + 6 * scale, antlerBaseY - 16 * scale)
-          // Trez Tine
-          ctx.moveTo(antlerBaseX - 16 * scale, antlerBaseY - 20 * scale)
-          ctx.lineTo(antlerBaseX - 10 * scale, antlerBaseY - 28 * scale)
-
-          // Right Beam
-          ctx.moveTo(antlerBaseX, antlerBaseY)
-          ctx.lineTo(antlerBaseX + 12 * scale, antlerBaseY - 18 * scale)
-          ctx.lineTo(antlerBaseX + 22 * scale, antlerBaseY - 26 * scale)
-          // Brow Tine Right
-          ctx.moveTo(antlerBaseX + 6 * scale, antlerBaseY - 10 * scale)
-          ctx.lineTo(antlerBaseX + 14 * scale, antlerBaseY - 16 * scale)
-
-          ctx.stroke()
-        }
-
-        // Dynamic 4-Leg Running Trot Cycle
-        ctx.strokeStyle = bodyColor
-        ctx.lineWidth = Math.max(2.0, 3.8 * scale)
-        const legRunCycle1 = Math.sin(Date.now() * 0.016 + d.id * 3) * 16 * scale
-        const legRunCycle2 = Math.cos(Date.now() * 0.016 + d.id * 3) * 16 * scale
-
-        ctx.beginPath()
-        // Front Lead Leg
-        ctx.moveTo(deerW * 0.22, -deerH * 0.32)
-        ctx.lineTo(deerW * 0.30 + legRunCycle1, 0)
-        // Front Lag Leg
-        ctx.moveTo(deerW * 0.16, -deerH * 0.32)
-        ctx.lineTo(deerW * 0.20 - legRunCycle1, 0)
-        // Rear Lead Leg
-        ctx.moveTo(-deerW * 0.22, -deerH * 0.32)
-        ctx.lineTo(-deerW * 0.30 - legRunCycle2, 0)
-        // Rear Lag Leg
-        ctx.moveTo(-deerW * 0.16, -deerH * 0.32)
-        ctx.lineTo(-deerW * 0.18 + legRunCycle2, 0)
-        ctx.stroke()
 
         ctx.restore()
       }
@@ -818,11 +767,23 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
           </svg>
         </div>
 
+        {/* Left Driver Door Sill & Armrest Panel (Matching Reference Photo) */}
+        <div className="absolute bottom-0 left-0 w-24 sm:w-36 h-[34vh] bg-gradient-to-t from-[#080B12] via-[#0E131E] to-[#182130] border-r-2 border-[#242E40] shadow-[10px_0_30px_rgba(0,0,0,0.85)] flex flex-col justify-between p-3 pointer-events-none z-24">
+          <div className="w-full h-1 bg-[#2C384D] rounded-full opacity-50" />
+          {/* Silver Door Handle Release */}
+          <div className="w-12 h-4 rounded-md bg-gradient-to-r from-slate-400 to-slate-200 border border-slate-500 shadow-md" />
+          {/* Power Window Switch Console */}
+          <div className="w-16 h-8 rounded-lg bg-black/60 border border-neutral-700 p-1 flex gap-1">
+            <div className="w-3 h-5 bg-neutral-800 rounded-sm" />
+            <div className="w-3 h-5 bg-neutral-800 rounded-sm" />
+          </div>
+        </div>
+
         {/* Ceiling Header Trim across top of windshield */}
         <div className="absolute top-0 inset-x-0 h-4 bg-gradient-to-b from-[#080B11] via-[#10141D] to-transparent pointer-events-none" />
 
         {/* Left Wing Mirror (Structurally Mounted to Door Base behind A-Pillar) */}
-        <div className="absolute left-2 sm:left-6 top-[30%] sm:top-[28%] pointer-events-auto">
+        <div className="absolute left-2 sm:left-6 top-[30%] sm:top-[28%] pointer-events-auto z-23">
           {/* Mirror Door Bracket Triangle */}
           <div className="relative w-24 sm:w-32 h-16 sm:h-22 rounded-2xl border-4 border-[#18202F] bg-[#0A0E17] shadow-[0_12px_36px_rgba(0,0,0,0.8)] overflow-hidden -rotate-3">
             {/* Mirror Reflective Glass showing receding highway */}
@@ -839,12 +800,12 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
           </div>
         </div>
 
-        {/* Upper Windshield Rear-View Mirror (Suspended from Ceiling, Safely Clears Top HUD) */}
-        <div className="absolute top-2 left-[58%] -translate-x-1/2 pointer-events-auto flex flex-col items-center">
+        {/* Upper Windshield Rear-View Mirror (Positioned in Top-Right Windshield Area, Matching Reference Photo) */}
+        <div className="absolute top-3 right-28 sm:right-36 pointer-events-auto flex flex-col items-center z-25">
           {/* Mounting Stem */}
           <div className="w-2.5 h-3.5 bg-gradient-to-b from-[#0B0F19] to-[#1E293B] rounded-t-sm" />
           {/* Mirror Casing */}
-          <div className="w-36 sm:w-48 h-11 sm:h-13 rounded-2xl border-3 border-[#1E293B] bg-[#090D16] shadow-[0_10px_30px_rgba(0,0,0,0.7)] overflow-hidden flex items-center justify-center">
+          <div className="w-36 sm:w-44 h-11 sm:h-13 rounded-2xl border-3 border-[#1E293B] bg-[#090D16] shadow-[0_10px_30px_rgba(0,0,0,0.7)] overflow-hidden flex items-center justify-center -rotate-2">
             <div className="relative w-full h-full bg-gradient-to-t from-[#1A2333] to-[#0B111D] flex items-center justify-center">
               {/* Receding Highway Reflection */}
               <div className="w-0.5 h-full bg-white/40 rotate-15" />
@@ -858,39 +819,49 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
       </div>
 
       {/* ==================================================================== */}
-      {/* LAYER 3: SCULPTED LEATHER COCKPIT & ROTATING ANATOMICAL WHEEL        */}
-      {/* Molded cowl, turbine AC vents, illuminated dials, anatomical hands   */}
+      {/* LAYER 3: SOLID WALL-TO-WALL DASHBOARD & PHOTOREALISTIC WHEEL/HANDS   */}
+      {/* Zero rounded corners at screen edges: completely eliminates cutouts  */}
       {/* ==================================================================== */}
-      <div className="absolute inset-0 pointer-events-none flex flex-col justify-end z-25">
-        {/* Sculpted Dashboard (26vh preserving 74% road view) */}
-        <div className="relative w-full h-[25vh] sm:h-[27vh] bg-gradient-to-t from-[#080B12] via-[#0F1420] to-[#1A2232] rounded-t-[44px] sm:rounded-t-[64px] border-t-4 border-[#2E3B50] shadow-[0_-20px_60px_rgba(0,0,0,0.92)] flex items-center justify-center">
+      <div className="absolute inset-x-0 bottom-0 pointer-events-none flex flex-col justify-end z-25">
+        {/* Solid Automotive Deck: Full Width, Edge to Edge */}
+        <div className="relative w-full h-[25vh] sm:h-[27vh] bg-gradient-to-t from-[#080B12] via-[#0E1420] to-[#172030] border-t-4 border-[#2E3B50] shadow-[0_-20px_60px_rgba(0,0,0,0.95)] flex items-center justify-center">
 
           {/* Double Leather Stitching Highlight Line */}
-          <div className="absolute top-2 inset-x-8 sm:inset-x-20 border-t border-dashed border-sky-400/30 h-0.5" />
+          <div className="absolute top-2 inset-x-0 border-t border-dashed border-sky-400/25 h-0.5" />
 
           {/* Left Turbine AC Vent (Matching Reference Photo) */}
-          <div className="hidden sm:flex absolute left-8 top-5 w-12 h-12 rounded-full border-2 border-[#334155] bg-gradient-to-b from-[#1E293B] to-[#0A0F1D] shadow-inner items-center justify-center">
+          <div className="hidden sm:flex absolute left-32 top-4 w-12 h-12 rounded-full border-2 border-[#334155] bg-gradient-to-b from-[#1E293B] to-[#0A0F1D] shadow-inner items-center justify-center">
             <div className="w-8 h-8 rounded-full border border-neutral-700 bg-[#0F172A] flex items-center justify-center">
               <div className="w-full h-0.5 bg-neutral-600 rotate-45" />
               <div className="w-full h-0.5 bg-neutral-600 -rotate-45" />
             </div>
           </div>
 
-          {/* Center-Right Turbine AC Vent */}
-          <div className="hidden sm:flex absolute right-16 top-5 w-12 h-12 rounded-full border-2 border-[#334155] bg-gradient-to-b from-[#1E293B] to-[#0A0F1D] shadow-inner items-center justify-center">
-            <div className="w-8 h-8 rounded-full border border-neutral-700 bg-[#0F172A] flex items-center justify-center">
-              <div className="w-full h-0.5 bg-neutral-600 rotate-45" />
-              <div className="w-full h-0.5 bg-neutral-600 -rotate-45" />
+          {/* Center-Right Turbine AC Vents (Matching Reference Photo) */}
+          <div className="hidden sm:flex absolute right-24 top-4 gap-3 items-center">
+            <div className="w-12 h-12 rounded-full border-2 border-[#334155] bg-gradient-to-b from-[#1E293B] to-[#0A0F1D] shadow-inner flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full border border-neutral-700 bg-[#0F172A] flex items-center justify-center">
+                <div className="w-full h-0.5 bg-neutral-600 rotate-45" />
+                <div className="w-full h-0.5 bg-neutral-600 -rotate-45" />
+              </div>
+            </div>
+            <div className="w-12 h-12 rounded-full border-2 border-[#334155] bg-gradient-to-b from-[#1E293B] to-[#0A0F1D] shadow-inner flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full border border-neutral-700 bg-[#0F172A] flex items-center justify-center">
+                <div className="w-full h-0.5 bg-neutral-600 rotate-45" />
+                <div className="w-full h-0.5 bg-neutral-600 -rotate-45" />
+              </div>
             </div>
           </div>
 
-          {/* Driver Instrument Cluster Binnacle Cowl */}
-          <div className="absolute top-2.5 sm:top-3 left-1/2 -translate-x-1/2 w-72 sm:w-88 h-15 sm:h-18 rounded-2xl bg-[#070A10]/95 border border-neutral-800 p-2 shadow-[inset_0_2px_8px_rgba(0,0,0,0.8)] flex items-center justify-around">
-            {/* RPM Tachometer Dial Face */}
+          {/* Driver Instrument Binnacle Hood Arcing over Steering Wheel */}
+          <div className="absolute top-[-18px] sm:top-[-24px] left-1/2 -translate-x-1/2 w-80 sm:w-96 h-12 rounded-t-3xl bg-gradient-to-b from-[#1E293B] to-[#0E1420] border-t-2 border-x-2 border-[#3B4961] shadow-lg" />
+
+          {/* Illuminated Digital Instrument Cluster */}
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 w-72 sm:w-88 h-14 sm:h-16 rounded-2xl bg-[#06090F]/95 border border-neutral-800 p-2 shadow-[inset_0_2px_8px_rgba(0,0,0,0.85)] flex items-center justify-around z-26">
+            {/* RPM Tachometer Dial */}
             <div className="flex flex-col items-center">
-              <div className="relative w-11 sm:w-13 h-11 sm:h-13 rounded-full border border-neutral-700/80 bg-neutral-950 flex items-center justify-center shadow-inner">
+              <div className="relative w-10 sm:w-12 h-10 sm:h-12 rounded-full border border-neutral-700/80 bg-neutral-950 flex items-center justify-center shadow-inner">
                 <span className="text-[7px] font-mono text-cyan-400">RPM</span>
-                {/* Dynamic Cyan Needle */}
                 <div
                   className="absolute w-0.5 h-4 sm:h-5 bg-cyan-400 origin-bottom shadow-[0_0_6px_#22D3EE]"
                   style={{
@@ -914,11 +885,10 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
               </span>
             </div>
 
-            {/* Speed Gauge Dial Face */}
+            {/* Speed Gauge Dial */}
             <div className="flex flex-col items-center">
-              <div className="relative w-11 sm:w-13 h-11 sm:h-13 rounded-full border border-neutral-700/80 bg-neutral-950 flex items-center justify-center shadow-inner">
+              <div className="relative w-10 sm:w-12 h-10 sm:h-12 rounded-full border border-neutral-700/80 bg-neutral-950 flex items-center justify-center shadow-inner">
                 <span className="text-[7px] font-mono text-red-500">SPD</span>
-                {/* Dynamic Red Needle */}
                 <div
                   className="absolute w-0.5 h-4 sm:h-5 bg-red-500 origin-bottom shadow-[0_0_6px_#EF4444]"
                   style={{
@@ -930,151 +900,34 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
             </div>
           </div>
 
-          {/* Steering Wheel with Anatomically Shaded Human Hands Gripping at 9-and-3 */}
+          {/* ============================================================== */}
+          {/* PHOTOREALISTIC STEERING WHEEL WITH REAL HUMAN HANDS AT 9 & 3   */}
+          {/* Smooth Real-time CSS Rotation (-28° to +28°) on Steering Input  */}
+          {/* ============================================================== */}
           <div
-            className="absolute bottom-[-35px] sm:bottom-[-48px] left-1/2 w-[310px] sm:w-[410px] h-[310px] sm:h-[410px] pointer-events-auto cursor-grab active:cursor-grabbing transition-transform duration-75"
+            className="absolute bottom-[-14px] sm:bottom-[-20px] left-1/2 w-[340px] sm:w-[440px] md:w-[480px] aspect-square pointer-events-auto cursor-grab active:cursor-grabbing transition-transform duration-75 select-none z-28"
             style={{
               transform: `translateX(-50%) rotate(${steerAngle}deg)`,
-              transformOrigin: '50% 58%',
+              transformOrigin: '50% 50%',
             }}
             onClick={() => salmanAudio.playHorn()}
             title="Click or Tap to Honk Horn!"
           >
-            <svg viewBox="0 0 400 400" className="w-full h-full drop-shadow-[0_20px_40px_rgba(0,0,0,0.95)]" fill="none">
-              <defs>
-                {/* Perforated Charcoal Leather Steering Rim Gradient */}
-                <linearGradient id="salman-rim-grad" x1="40" y1="40" x2="360" y2="360" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#2D3748" />
-                  <stop offset="30%" stopColor="#1A202C" />
-                  <stop offset="70%" stopColor="#111827" />
-                  <stop offset="100%" stopColor="#0B0F17" />
-                </linearGradient>
-
-                {/* Brushed Aluminum Spoke Gradient */}
-                <linearGradient id="salman-spoke-grad" x1="140" y1="180" x2="260" y2="280" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#94A3B8" />
-                  <stop offset="50%" stopColor="#475569" />
-                  <stop offset="100%" stopColor="#1E293B" />
-                </linearGradient>
-
-                {/* Anatomical Human Skin Warm Lighting Gradient */}
-                <linearGradient id="salman-hand-skin" x1="0" y1="150" x2="200" y2="400" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#F7CEBD" />
-                  <stop offset="35%" stopColor="#E2A08A" />
-                  <stop offset="70%" stopColor="#B66B56" />
-                  <stop offset="100%" stopColor="#7E3A28" />
-                </linearGradient>
-                <linearGradient id="salman-hand-skin-r" x1="400" y1="150" x2="200" y2="400" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#F7CEBD" />
-                  <stop offset="35%" stopColor="#E2A08A" />
-                  <stop offset="70%" stopColor="#B66B56" />
-                  <stop offset="100%" stopColor="#7E3A28" />
-                </linearGradient>
-              </defs>
-
-              {/* Outer Leather Steering Wheel Rim */}
-              <circle cx="200" cy="200" r="150" stroke="url(#salman-rim-grad)" strokeWidth="32" />
-              <circle cx="200" cy="200" r="134" stroke="#475569" strokeWidth="2.5" opacity="0.65" />
-              <circle cx="200" cy="200" r="166" stroke="#0F172A" strokeWidth="2" opacity="0.85" />
-
-              {/* Ergonomic Molded Thumb Rests at 10 and 2 */}
-              <ellipse cx="98" cy="118" rx="16" ry="10" fill="#1E293B" transform="rotate(-35 98 118)" />
-              <ellipse cx="302" cy="118" rx="16" ry="10" fill="#1E293B" transform="rotate(35 302 118)" />
-
-              {/* 3-Spoke Brushed Metal Steering Architecture */}
-              {/* Left Spoke */}
-              <path d="M 52 196 L 148 196 L 148 232 L 54 220 Z" fill="url(#salman-spoke-grad)" />
-              {/* Left Steering Wheel Control Buttons */}
-              <rect x="96" y="200" width="14" height="10" rx="3" fill="#1E293B" stroke="#64748B" strokeWidth="1" />
-              <rect x="114" y="200" width="14" height="10" rx="3" fill="#1E293B" stroke="#64748B" strokeWidth="1" />
-
-              {/* Right Spoke */}
-              <path d="M 348 196 L 252 196 L 252 232 L 346 220 Z" fill="url(#salman-spoke-grad)" />
-              {/* Right Steering Wheel Control Buttons */}
-              <rect x="272" y="200" width="14" height="10" rx="3" fill="#1E293B" stroke="#64748B" strokeWidth="1" />
-              <rect x="290" y="200" width="14" height="10" rx="3" fill="#1E293B" stroke="#64748B" strokeWidth="1" />
-
-              {/* Bottom Center Spoke */}
-              <path d="M 184 240 L 216 240 L 210 334 L 190 334 Z" fill="url(#salman-spoke-grad)" />
-
-              {/* Center Airbag Hub & Horn Pad */}
-              <rect x="144" y="156" width="112" height="92" rx="26" fill="#0F172A" stroke="#334155" strokeWidth="3" />
-              <ellipse cx="200" cy="202" rx="25" ry="15" fill="#1E293B" stroke="#94A3B8" strokeWidth="1.5" />
-              <text x="200" y="206" textAnchor="middle" fill="#FFFFFF" fontSize="9" fontFamily="monospace" fontWeight="bold" letterSpacing="0.1em">
-                SALMAN
-              </text>
-
-              {/* ============================================================= */}
-              {/* ANATOMICAL LEFT DRIVER HAND & FOREARM (Gripping at 9 o'clock) */}
-              {/* ============================================================= */}
-              <g id="anatomical-left-hand">
-                {/* Realistic Forearm entering from bottom-left corner with natural contour */}
-                <path
-                  d="M -10 400 C 18 350, 42 270, 52 208 L 86 214 C 76 276, 50 365, 24 415 Z"
-                  fill="url(#salman-hand-skin)"
-                />
-                {/* Forearm Muscle Highlight */}
-                <path d="M 12 375 C 32 320, 52 250, 60 216" stroke="#FDE8E0" strokeWidth="3" opacity="0.4" fill="none" strokeLinecap="round" />
-
-                {/* 4 Shaded Curled Fingers Wrapped over Wheel Rim */}
-                {/* Index Finger */}
-                <rect x="42" y="174" width="30" height="15" rx="7" fill="#F4BAA7" stroke="#873F2D" strokeWidth="1.2" />
-                <line x1="58" y1="175" x2="58" y2="188" stroke="#873F2D" strokeWidth="0.8" opacity="0.6" />
-                {/* Middle Finger */}
-                <rect x="39" y="190" width="32" height="15" rx="7" fill="#ECA996" stroke="#873F2D" strokeWidth="1.2" />
-                <line x1="57" y1="191" x2="57" y2="204" stroke="#873F2D" strokeWidth="0.8" opacity="0.6" />
-                {/* Ring Finger */}
-                <rect x="41" y="206" width="30" height="15" rx="7" fill="#DF9783" stroke="#873F2D" strokeWidth="1.2" />
-                <line x1="57" y1="207" x2="57" y2="220" stroke="#873F2D" strokeWidth="0.8" opacity="0.6" />
-                {/* Pinky Finger */}
-                <rect x="45" y="222" width="26" height="14" rx="7" fill="#D28470" stroke="#873F2D" strokeWidth="1.2" />
-
-                {/* Thumb resting naturally over front spoke */}
-                <ellipse cx="80" cy="190" rx="15" ry="9" fill="#F5C0AE" transform="rotate(-30 80 190)" stroke="#873F2D" strokeWidth="1.2" />
-                {/* Thumb Nail */}
-                <ellipse cx="87" cy="186" rx="4" ry="2.5" fill="#FFEFEA" transform="rotate(-30 87 186)" opacity="0.7" />
-              </g>
-
-              {/* ============================================================== */}
-              {/* ANATOMICAL RIGHT DRIVER HAND & FOREARM (Gripping at 3 o'clock) */}
-              {/* ============================================================== */}
-              <g id="anatomical-right-hand">
-                {/* Realistic Forearm entering from bottom-right corner */}
-                <path
-                  d="M 410 400 C 382 350, 358 270, 348 208 L 314 214 C 324 276, 350 365, 376 415 Z"
-                  fill="url(#salman-hand-skin-r)"
-                />
-                {/* Forearm Muscle Highlight */}
-                <path d="M 388 375 C 368 320, 348 250, 340 216" stroke="#FDE8E0" strokeWidth="3" opacity="0.4" fill="none" strokeLinecap="round" />
-
-                {/* 4 Shaded Curled Fingers Wrapped over Wheel Rim */}
-                {/* Index Finger */}
-                <rect x="328" y="174" width="30" height="15" rx="7" fill="#F4BAA7" stroke="#873F2D" strokeWidth="1.2" />
-                <line x1="342" y1="175" x2="342" y2="188" stroke="#873F2D" strokeWidth="0.8" opacity="0.6" />
-                {/* Middle Finger */}
-                <rect x="329" y="190" width="32" height="15" rx="7" fill="#ECA996" stroke="#873F2D" strokeWidth="1.2" />
-                <line x1="343" y1="191" x2="343" y2="204" stroke="#873F2D" strokeWidth="0.8" opacity="0.6" />
-                {/* Ring Finger */}
-                <rect x="329" y="206" width="30" height="15" rx="7" fill="#DF9783" stroke="#873F2D" strokeWidth="1.2" />
-                <line x1="343" y1="207" x2="343" y2="220" stroke="#873F2D" strokeWidth="0.8" opacity="0.6" />
-                {/* Pinky Finger */}
-                <rect x="329" y="222" width="26" height="14" rx="7" fill="#D28470" stroke="#873F2D" strokeWidth="1.2" />
-
-                {/* Thumb resting naturally over front spoke */}
-                <ellipse cx="320" cy="190" rx="15" ry="9" fill="#F5C0AE" transform="rotate(30 320 190)" stroke="#873F2D" strokeWidth="1.2" />
-                {/* Thumb Nail */}
-                <ellipse cx="313" cy="186" rx="4" ry="2.5" fill="#FFEFEA" transform="rotate(30 313 186)" opacity="0.7" />
-              </g>
-            </svg>
+            <img
+              src="/game/steering_wheel_hands.png"
+              alt="Steering Wheel & Real Hands"
+              className="w-full h-full object-contain pointer-events-none drop-shadow-[0_24px_50px_rgba(0,0,0,0.98)]"
+            />
           </div>
         </div>
       </div>
 
       {/* ==================================================================== */}
       {/* LAYER 4: TOP HUD, ARCADE STREAK BANNER & CONTROLS                    */}
+      {/* Completely non-conflicting layout with 0 mirror overlap              */}
       {/* ==================================================================== */}
       <div className="absolute top-0 inset-x-0 p-3 sm:p-5 flex items-center justify-between z-30 pointer-events-auto">
-        {/* Score & Deer Counter */}
+        {/* Top-Left: Score & Deer Counter */}
         <div className="flex items-center gap-3">
           <div className="bg-black/80 backdrop-blur-md border border-neutral-700/80 rounded-2xl px-3 sm:px-4 py-2 flex items-center gap-3 text-white shadow-xl">
             <div className="flex flex-col">
@@ -1094,7 +947,7 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
           </div>
         </div>
 
-        {/* Center Title Badge & Arcade Streak Ribbon (Isolated from road horizon) */}
+        {/* Top-Center: Title Badge & Dynamic Streak Ribbon */}
         <div className="flex flex-col items-center">
           <div className="hidden md:flex flex-col items-center bg-black/60 backdrop-blur-sm border border-neutral-700 px-4 py-1.5 rounded-full">
             <span className="text-xs font-mono font-extrabold tracking-[0.25em] text-white">
@@ -1114,7 +967,7 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
           )}
         </div>
 
-        {/* Audio, Gyro & Exit Controls (Cleanly positioned with ample clearance) */}
+        {/* Top-Right: Audio, Gyro & Exit Controls */}
         <div className="flex items-center gap-2">
           {gyroSupported && (
             <button
