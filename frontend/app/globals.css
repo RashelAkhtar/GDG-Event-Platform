@@ -1247,6 +1247,115 @@ html.dark .hairline-divider {
   filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.95)) drop-shadow(0 0 18px rgba(220, 38, 38, 0.6));
 }
 
+/* =========================================================================
+   REALISTIC BOTANICAL SWAY & LEAF FALL
+   ========================================================================= */
+
+.anim-grass-wind-sway {
+  animation: grass-wind-sway 3.4s ease-in-out infinite alternate;
+  transform-origin: bottom center;
+}
+
+.anim-grass-wind-sway-delayed {
+  animation: grass-wind-sway 3.8s ease-in-out -1.2s infinite alternate;
+  transform-origin: bottom center;
+}
+
+@keyframes grass-wind-sway {
+  0% {
+    transform: skewX(-2.5deg) rotate(-1.5deg);
+  }
+  50% {
+    transform: skewX(1deg) rotate(0.5deg);
+  }
+  100% {
+    transform: skewX(3.5deg) rotate(2.5deg);
+  }
+}
+
+.anim-tree-breeze {
+  animation: tree-breeze-subtle 5s ease-in-out infinite alternate;
+  transform-origin: bottom center;
+}
+
+@keyframes tree-breeze-subtle {
+  0% {
+    transform: rotate(-0.7deg);
+  }
+  100% {
+    transform: rotate(1deg);
+  }
+}
+
+.anim-tree-rustle-shake {
+  animation: tree-rustle-jolt 0.55s ease-in-out;
+  transform-origin: bottom center;
+}
+
+@keyframes tree-rustle-jolt {
+  0%, 100% {
+    transform: rotate(0deg) scale(1);
+  }
+  20% {
+    transform: rotate(-3.5deg) scale(1.03);
+  }
+  45% {
+    transform: rotate(3deg) scale(1.02);
+  }
+  70% {
+    transform: rotate(-1.5deg) scale(1.01);
+  }
+  88% {
+    transform: rotate(0.8deg);
+  }
+}
+
+.anim-organic-leaf-fall-1 {
+  animation: organic-leaf-fall-1 1.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.anim-organic-leaf-fall-2 {
+  animation: organic-leaf-fall-2 1.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.12s forwards;
+}
+
+@keyframes organic-leaf-fall-1 {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  35% {
+    transform: translate(8px, 16px) rotate(65deg);
+    opacity: 0.9;
+  }
+  70% {
+    transform: translate(-3px, 36px) rotate(150deg);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(12px, 58px) rotate(230deg);
+    opacity: 0;
+  }
+}
+
+@keyframes organic-leaf-fall-2 {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  40% {
+    transform: translate(-10px, 18px) rotate(-60deg);
+    opacity: 0.85;
+  }
+  75% {
+    transform: translate(6px, 40px) rotate(-140deg);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(-8px, 62px) rotate(-220deg);
+    opacity: 0;
+  }
+}
+
 /* Celestial Sky Ripple on Background Click */
 @keyframes celestial-sky-ripple {
   0% {

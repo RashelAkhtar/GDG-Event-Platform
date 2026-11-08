@@ -792,6 +792,447 @@ function RealisticMoon() {
 }
 
 // ============================================================================
+// REALISTIC BOTANICAL COMPONENTS: TREES, ROLLING MEADOW GRASS & FLOWERS
+// ============================================================================
+
+function RealisticOakTree({
+  isEvening,
+  isNight,
+  rustling,
+}: {
+  isEvening: boolean
+  isNight: boolean
+  rustling: boolean
+}) {
+  const foliageBack = isNight ? '#0F291E' : isEvening ? '#78350F' : '#14532D'
+  const foliageMid = isNight ? '#115E59' : isEvening ? '#CA8A04' : '#16A34A'
+  const foliageFront = isNight ? '#14B8A6' : isEvening ? '#F59E0B' : '#22C55E'
+  const foliageHighlight = isNight ? '#5EEAD4' : isEvening ? '#FDE047' : '#86EFAC'
+  const trunkBase = isNight ? '#1E293B' : isEvening ? '#451A03' : '#451A03'
+  const trunkBark = isNight ? '#334155' : isEvening ? '#78350F' : '#78350F'
+  const trunkHighlight = isNight ? '#475569' : isEvening ? '#B45309' : '#92400E'
+
+  return (
+    <div
+      className={`relative select-none transition-transform duration-300 origin-bottom cursor-pointer group ${
+        rustling ? 'anim-tree-rustle-shake' : 'hover:scale-105 active:scale-95'
+      }`}
+    >
+      <svg
+        viewBox="0 0 74 86"
+        className="w-14 h-16 sm:w-16 sm:h-19 overflow-visible drop-shadow-[0_4px_10px_rgba(0,0,0,0.18)] anim-tree-breeze"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <linearGradient id="oak-trunk-grad" x1="28" y1="42" x2="44" y2="84" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor={trunkHighlight} />
+            <stop offset="45%" stopColor={trunkBark} />
+            <stop offset="100%" stopColor={trunkBase} />
+          </linearGradient>
+
+          <radialGradient id="oak-foliage-back" cx="50%" cy="40%" r="55%">
+            <stop offset="0%" stopColor={foliageMid} />
+            <stop offset="100%" stopColor={foliageBack} />
+          </radialGradient>
+
+          <radialGradient id="oak-foliage-main" cx="45%" cy="35%" r="60%">
+            <stop offset="0%" stopColor={foliageFront} />
+            <stop offset="65%" stopColor={foliageMid} />
+            <stop offset="100%" stopColor={foliageBack} />
+          </radialGradient>
+        </defs>
+
+        {/* 1. GNARLED OAK TRUNK & BRANCHES */}
+        <g>
+          <path
+            d="M 31 84 C 33 72, 32 58, 34 46 C 35 40, 31 34, 25 28 C 24 27, 26 25, 29 28 C 34 33, 37 40, 38 46 C 41 38, 47 32, 54 26 C 56 25, 57 27, 54 29 C 48 35, 43 43, 41 52 C 43 62, 41 74, 46 84 Z"
+            fill="url(#oak-trunk-grad)"
+          />
+          <path
+            d="M 35 78 C 36 68, 36 56, 38 48"
+            stroke={trunkHighlight}
+            strokeWidth="0.8"
+            strokeLinecap="round"
+            opacity="0.8"
+          />
+          <path
+            d="M 39 80 C 40 70, 39 60, 42 54"
+            stroke={trunkBase}
+            strokeWidth="0.8"
+            strokeLinecap="round"
+            opacity="0.6"
+          />
+        </g>
+
+        {/* 2. BACKGROUND FOLIAGE SHADOW CANOPY */}
+        <path
+          d="M 22 46 C 14 44, 8 36, 12 28 C 14 23, 20 20, 26 21 C 28 12, 42 8, 50 14 C 58 12, 68 18, 66 28 C 72 34, 68 44, 60 46 C 54 50, 44 48, 40 46 C 32 50, 26 48, 22 46 Z"
+          fill="url(#oak-foliage-back)"
+          opacity="0.9"
+        />
+
+        {/* 3. MAIN FOREGROUND LOBED CANOPY */}
+        <path
+          d="M 26 42 C 18 40, 14 32, 17 25 C 20 20, 25 18, 29 20 C 31 12, 42 10, 48 15 C 55 11, 64 16, 62 24 C 68 30, 64 38, 57 40 C 52 44, 42 42, 38 39 C 32 44, 28 43, 26 42 Z"
+          fill="url(#oak-foliage-main)"
+        />
+
+        {/* 4. CANOPY SPECULAR LIGHT DAPPLES & HIGHLIGHT PUFFS */}
+        <path
+          d="M 34 16 C 38 12, 46 12, 50 15 C 46 16, 38 17, 34 16 Z"
+          fill={foliageHighlight}
+          opacity="0.75"
+        />
+        <circle cx="24" cy="24" r="5" fill={foliageHighlight} opacity="0.35" />
+        <circle cx="23" cy="23" r="2.5" fill={foliageHighlight} opacity="0.5" />
+        <circle cx="56" cy="25" r="5" fill={foliageHighlight} opacity="0.35" />
+        <circle cx="55" cy="24" r="2.5" fill={foliageHighlight} opacity="0.5" />
+
+        {/* Tiny Woodland Berries / Apples */}
+        <circle cx="28" cy="34" r="1.6" fill={isNight ? '#67E8F9' : isEvening ? '#FB923C' : '#EF4444'} />
+        <circle cx="48" cy="32" r="1.5" fill={isNight ? '#67E8F9' : isEvening ? '#FB923C' : '#DC2626'} />
+        <circle cx="38" cy="22" r="1.4" fill={isNight ? '#67E8F9' : isEvening ? '#FB923C' : '#EF4444'} />
+      </svg>
+
+      {/* Floating Falling Leaf Particles when clicked */}
+      {rustling && (
+        <>
+          <span
+            className="absolute top-4 left-4 h-1.5 w-1 rounded-full anim-organic-leaf-fall-1 pointer-events-none"
+            style={{ backgroundColor: foliageFront }}
+          />
+          <span
+            className="absolute top-6 right-5 h-1.5 w-1 rounded-full anim-organic-leaf-fall-2 pointer-events-none"
+            style={{ backgroundColor: foliageHighlight }}
+          />
+        </>
+      )}
+    </div>
+  )
+}
+
+function RealisticBirchTree({
+  isEvening,
+  isNight,
+  rustling,
+}: {
+  isEvening: boolean
+  isNight: boolean
+  rustling: boolean
+}) {
+  const foliageBack = isNight ? '#064E3B' : isEvening ? '#854D0E' : '#15803D'
+  const foliageMid = isNight ? '#0D9488' : isEvening ? '#D97706' : '#22C55E'
+  const foliageFront = isNight ? '#2DD4BF' : isEvening ? '#FACC15' : '#4ADE80'
+  const foliageHighlight = isNight ? '#99F6E4' : isEvening ? '#FEF08A' : '#A7F3D0'
+  const trunkBase = isNight ? '#1E293B' : isEvening ? '#F5F5F4' : '#F8FAFC'
+  const trunkShadow = isNight ? '#0F172A' : isEvening ? '#D6D3D1' : '#CBD5E1'
+  const lenticelColor = isNight ? '#090D16' : isEvening ? '#292524' : '#1E293B'
+
+  return (
+    <div
+      className={`relative select-none transition-transform duration-300 origin-bottom cursor-pointer group ${
+        rustling ? 'anim-tree-rustle-shake' : 'hover:scale-105 active:scale-95'
+      }`}
+    >
+      <svg
+        viewBox="0 0 64 86"
+        className="w-12 h-16 sm:w-14 sm:h-19 overflow-visible drop-shadow-[0_4px_10px_rgba(0,0,0,0.18)] anim-tree-breeze"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <linearGradient id="birch-trunk-grad" x1="26" y1="40" x2="38" y2="84" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor={trunkBase} />
+            <stop offset="60%" stopColor={trunkBase} />
+            <stop offset="100%" stopColor={trunkShadow} />
+          </linearGradient>
+
+          <radialGradient id="birch-foliage-main" cx="45%" cy="35%" r="60%">
+            <stop offset="0%" stopColor={foliageFront} />
+            <stop offset="60%" stopColor={foliageMid} />
+            <stop offset="100%" stopColor={foliageBack} />
+          </radialGradient>
+        </defs>
+
+        {/* 1. SLENDER BIRCH TRUNK (Ivory White Bark with Dark Lenticels) */}
+        <g>
+          <path
+            d="M 28 84 C 30 70, 29 55, 30 42 C 31 34, 28 26, 23 20 C 22 19, 24 17, 26 20 C 31 25, 33 34, 34 42 C 36 34, 40 28, 45 22 C 47 21, 48 23, 46 25 C 41 30, 38 38, 37 48 C 38 60, 37 72, 40 84 Z"
+            fill="url(#birch-trunk-grad)"
+          />
+
+          {/* Characteristic Birch Bark Charcoal Markings / Lenticels */}
+          <path d="M 29 78 L 33 78" stroke={lenticelColor} strokeWidth="1.2" strokeLinecap="round" />
+          <path d="M 35 73 L 39 74" stroke={lenticelColor} strokeWidth="1.4" strokeLinecap="round" />
+          <path d="M 29.5 66 L 34 66.5" stroke={lenticelColor} strokeWidth="1" strokeLinecap="round" />
+          <path d="M 33 58 L 37 59" stroke={lenticelColor} strokeWidth="1.2" strokeLinecap="round" />
+          <path d="M 30.5 50 L 33.5 50.5" stroke={lenticelColor} strokeWidth="0.9" strokeLinecap="round" />
+          <path d="M 32 42 L 35.5 42" stroke={lenticelColor} strokeWidth="1" strokeLinecap="round" />
+        </g>
+
+        {/* 2. DELICATE AIRY BIRCH CANOPY */}
+        <path
+          d="M 18 42 C 12 38, 10 28, 16 22 C 20 18, 28 16, 32 18 C 36 10, 48 10, 52 16 C 58 14, 64 22, 60 28 C 64 34, 58 42, 50 42 C 44 46, 36 44, 32 40 C 26 44, 20 44, 18 42 Z"
+          fill={foliageBack}
+          opacity="0.85"
+        />
+
+        <path
+          d="M 20 38 C 14 34, 13 26, 18 20 C 22 16, 28 15, 32 17 C 36 9, 46 9, 50 15 C 56 13, 61 20, 58 26 C 62 32, 56 38, 48 38 C 42 42, 35 40, 32 37 C 26 41, 22 41, 20 38 Z"
+          fill="url(#birch-foliage-main)"
+        />
+
+        {/* Sunlight Highlights on Canopy Tops */}
+        <ellipse cx="33" cy="14" rx="8" ry="3" fill={foliageHighlight} opacity="0.65" />
+        <ellipse cx="48" cy="18" rx="6" ry="2.5" fill={foliageHighlight} opacity="0.5" />
+        <ellipse cx="22" cy="22" rx="5" ry="2.5" fill={foliageHighlight} opacity="0.5" />
+      </svg>
+
+      {/* Floating Falling Leaf Particles when clicked */}
+      {rustling && (
+        <>
+          <span
+            className="absolute top-4 left-3 h-1.5 w-1 rounded-full anim-organic-leaf-fall-1 pointer-events-none"
+            style={{ backgroundColor: foliageFront }}
+          />
+          <span
+            className="absolute top-6 right-4 h-1.5 w-1 rounded-full anim-organic-leaf-fall-2 pointer-events-none"
+            style={{ backgroundColor: foliageHighlight }}
+          />
+        </>
+      )}
+    </div>
+  )
+}
+
+function RealisticGrassMeadow({
+  isEvening,
+  isNight,
+  side,
+}: {
+  isEvening: boolean
+  isNight: boolean
+  side: 'left' | 'right'
+}) {
+  const turfBack = isNight ? '#042F2E' : isEvening ? '#713F12' : '#14532D'
+  const turfMid = isNight ? '#0F766E' : isEvening ? '#CA8A04' : '#16A34A'
+  const turfFront = isNight ? '#14B8A6' : isEvening ? '#EAB308' : '#22C55E'
+  const bladeTip = isNight ? '#5EEAD4' : isEvening ? '#FDE047' : '#86EFAC'
+  const earthBase = isNight ? '#0F172A' : isEvening ? '#451A03' : '#451A03'
+
+  return (
+    <div className="relative select-none pointer-events-none">
+      <svg
+        viewBox="0 0 110 32"
+        className="w-24 h-7 sm:w-28 sm:h-8 overflow-visible"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <linearGradient id={`meadow-earth-${side}`} x1="0" y1="16" x2="0" y2="32" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor={turfBack} />
+            <stop offset="100%" stopColor={earthBase} />
+          </linearGradient>
+
+          <linearGradient id={`meadow-blade-grad-${side}`} x1="0" y1="2" x2="0" y2="28" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor={bladeTip} />
+            <stop offset="45%" stopColor={turfFront} />
+            <stop offset="100%" stopColor={turfBack} />
+          </linearGradient>
+        </defs>
+
+        {/* 1. ORGANIC ROLLING EARTHEN KNOLL MOUND */}
+        <path
+          d={
+            side === 'left'
+              ? 'M 0 32 L 0 18 C 15 16, 35 12, 60 16 C 85 20, 100 24, 110 32 Z'
+              : 'M 0 32 C 10 24, 25 20, 50 16 C 75 12, 95 16, 110 18 L 110 32 Z'
+          }
+          fill={`url(#meadow-earth-${side})`}
+        />
+
+        {/* 2. REAR GRASS TUFTS (Deeper shadow green) */}
+        <g fill={turfMid} opacity="0.9" className="anim-grass-wind-sway-delayed">
+          <path d="M 12 24 C 13 14, 16 6, 22 2 C 18 10, 15 18, 14 25 Z" />
+          <path d="M 18 25 C 20 16, 25 8, 32 4 C 28 12, 23 19, 21 26 Z" />
+          <path d="M 26 26 C 25 17, 21 10, 16 5 C 20 12, 24 19, 28 27 Z" />
+
+          <path d="M 52 24 C 53 15, 57 8, 64 3 C 60 11, 56 18, 54 25 Z" />
+          <path d="M 60 25 C 62 17, 68 10, 75 6 C 71 13, 65 20, 63 26 Z" />
+          <path d="M 70 26 C 68 18, 64 12, 58 7 C 63 13, 67 20, 72 27 Z" />
+
+          <path d="M 88 26 C 89 18, 93 11, 100 7 C 96 14, 92 20, 90 27 Z" />
+          <path d="M 96 27 C 97 20, 101 13, 107 10 C 103 16, 99 22, 98 28 Z" />
+        </g>
+
+        {/* 3. FOREGROUND CRISP GRASS TUFTS (Sunlit tips, organic wind sway) */}
+        <g fill={`url(#meadow-blade-grad-${side})`} className="anim-grass-wind-sway">
+          <path d="M 6 26 C 7 16, 11 8, 17 3 C 14 11, 10 19, 9 27 Z" />
+          <path d="M 14 27 C 16 18, 22 10, 28 6 C 24 14, 19 21, 17 28 Z" />
+          <path d="M 22 28 C 21 20, 17 13, 11 8 C 16 15, 20 22, 24 29 Z" />
+
+          <path d="M 40 26 C 41 16, 45 8, 52 3 C 48 11, 44 19, 43 27 Z" />
+          <path d="M 48 27 C 50 17, 56 9, 63 4 C 59 12, 53 20, 51 28 Z" />
+          <path d="M 58 28 C 57 19, 52 11, 45 7 C 50 14, 55 21, 60 29 Z" />
+
+          <path d="M 76 27 C 77 18, 82 10, 89 5 C 85 13, 80 20, 79 28 Z" />
+          <path d="M 84 28 C 85 20, 91 12, 98 8 C 94 15, 88 22, 87 29 Z" />
+          <path d="M 92 29 C 91 22, 86 15, 80 10 C 85 16, 89 23, 94 30 Z" />
+        </g>
+      </svg>
+    </div>
+  )
+}
+
+function RealisticPoppy({ bouncing }: { bouncing: boolean }) {
+  return (
+    <div
+      className={`relative select-none cursor-pointer group origin-bottom transition-transform ${
+        bouncing ? 'anim-voxel-flower-bounce' : 'anim-badge-sway hover:scale-115 active:scale-95'
+      }`}
+    >
+      <svg
+        viewBox="0 0 24 34"
+        className="w-5 h-7 sm:w-6 sm:h-8 overflow-visible drop-shadow-sm"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <linearGradient id="poppy-petal-grad" x1="12" y1="2" x2="12" y2="18" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#F87171" />
+            <stop offset="40%" stopColor="#EF4444" />
+            <stop offset="100%" stopColor="#B91C1C" />
+          </linearGradient>
+        </defs>
+
+        {/* Slender Curving Flower Stem */}
+        <path d="M 12 16 C 11 22, 13 28, 12 34" stroke="#16A34A" strokeWidth="1.2" strokeLinecap="round" />
+        <path d="M 12 24 C 15 22, 17 24, 18 25 C 16 26, 13 25, 12 25" fill="#22C55E" />
+
+        {/* Layered Poppy Petals */}
+        <ellipse cx="8" cy="8" rx="5.5" ry="5" fill="#DC2626" />
+        <ellipse cx="16" cy="8" rx="5.5" ry="5" fill="#DC2626" />
+        <circle cx="12" cy="7" r="6" fill="url(#poppy-petal-grad)" />
+        <ellipse cx="12" cy="11" rx="6" ry="4" fill="url(#poppy-petal-grad)" />
+
+        {/* Dark Poppy Center Pod */}
+        <circle cx="12" cy="8.5" r="2.4" fill="#18181B" />
+        <circle cx="10.8" cy="7.5" r="0.6" fill="#FDE047" />
+        <circle cx="13.2" cy="7.5" r="0.6" fill="#FDE047" />
+        <circle cx="12" cy="9.8" r="0.6" fill="#FDE047" />
+      </svg>
+    </div>
+  )
+}
+
+function RealisticMushroom() {
+  return (
+    <div className="relative select-none cursor-pointer group origin-bottom transition-transform hover:scale-115 active:scale-95">
+      <svg
+        viewBox="0 0 20 24"
+        className="w-4 h-5 sm:w-5 sm:h-6 overflow-visible drop-shadow-sm"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <linearGradient id="shroom-cap-grad" x1="10" y1="2" x2="10" y2="14" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#EF4444" />
+            <stop offset="85%" stopColor="#DC2626" />
+            <stop offset="100%" stopColor="#991B1B" />
+          </linearGradient>
+        </defs>
+
+        <path
+          d="M 8 12 C 7 16, 7 20, 6 24 L 14 24 C 13 20, 13 16, 12 12 Z"
+          fill="#F1F5F9"
+          stroke="#CBD5E1"
+          strokeWidth="0.5"
+        />
+        <path d="M 2 13 C 2 6, 6 2, 10 2 C 14 2, 18 6, 18 13 C 14 14, 6 14, 2 13 Z" fill="url(#shroom-cap-grad)" />
+        <circle cx="6" cy="7" r="1.2" fill="#FFFFFF" opacity="0.9" />
+        <circle cx="11" cy="5" r="1.4" fill="#FFFFFF" opacity="0.9" />
+        <circle cx="14" cy="8" r="1.1" fill="#FFFFFF" opacity="0.9" />
+        <circle cx="8" cy="11" r="0.9" fill="#FFFFFF" opacity="0.85" />
+      </svg>
+    </div>
+  )
+}
+
+function RealisticBlueOrchid({ bouncing }: { bouncing: boolean }) {
+  return (
+    <div
+      className={`relative select-none cursor-pointer group origin-bottom transition-transform ${
+        bouncing ? 'anim-voxel-flower-bounce' : 'anim-badge-sway hover:scale-115 active:scale-95'
+      }`}
+    >
+      <svg
+        viewBox="0 0 24 34"
+        className="w-5 h-7 sm:w-6 sm:h-8 overflow-visible drop-shadow-sm"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <linearGradient id="orchid-petal-grad" x1="12" y1="2" x2="12" y2="18" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#7DD3FC" />
+            <stop offset="50%" stopColor="#38BDF8" />
+            <stop offset="100%" stopColor="#0284C7" />
+          </linearGradient>
+        </defs>
+
+        <path d="M 12 16 C 13 22, 11 28, 12 34" stroke="#16A34A" strokeWidth="1.2" strokeLinecap="round" />
+        <path d="M 12 25 C 10 23, 8 24, 7 25 C 9 26, 11 25, 12 25" fill="#22C55E" />
+
+        <ellipse cx="12" cy="5" rx="3.5" ry="5" fill="url(#orchid-petal-grad)" />
+        <ellipse cx="7" cy="10" rx="4.5" ry="3.5" fill="url(#orchid-petal-grad)" />
+        <ellipse cx="17" cy="10" rx="4.5" ry="3.5" fill="url(#orchid-petal-grad)" />
+        <ellipse cx="12" cy="11" rx="3.5" ry="4" fill="#BAE6FD" />
+        <circle cx="12" cy="9.5" r="1.4" fill="#FFFFFF" />
+        <circle cx="12" cy="9.5" r="0.6" fill="#FDE047" />
+      </svg>
+    </div>
+  )
+}
+
+function RealisticDandelion({ bouncing }: { bouncing: boolean }) {
+  return (
+    <div
+      className={`relative select-none cursor-pointer group origin-bottom transition-transform ${
+        bouncing ? 'anim-voxel-flower-bounce' : 'anim-badge-sway hover:scale-115 active:scale-95'
+      }`}
+    >
+      <svg
+        viewBox="0 0 24 34"
+        className="w-5 h-7 sm:w-6 sm:h-8 overflow-visible drop-shadow-sm"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <linearGradient id="dandelion-petal-grad" x1="12" y1="2" x2="12" y2="18" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#FEF08A" />
+            <stop offset="60%" stopColor="#FACC15" />
+            <stop offset="100%" stopColor="#D97706" />
+          </linearGradient>
+        </defs>
+
+        <path d="M 12 16 C 11 22, 12 28, 12 34" stroke="#16A34A" strokeWidth="1.2" strokeLinecap="round" />
+
+        <g fill="url(#dandelion-petal-grad)">
+          <ellipse cx="12" cy="9" rx="7" ry="3" />
+          <ellipse cx="12" cy="9" rx="3" ry="7" />
+          <ellipse cx="12" cy="9" rx="6.5" ry="4" transform="rotate(30 12 9)" />
+          <ellipse cx="12" cy="9" rx="6.5" ry="4" transform="rotate(60 12 9)" />
+          <ellipse cx="12" cy="9" rx="6.5" ry="4" transform="rotate(-30 12 9)" />
+          <ellipse cx="12" cy="9" rx="6.5" ry="4" transform="rotate(-60 12 9)" />
+        </g>
+        <circle cx="12" cy="9" r="2.4" fill="#B45309" />
+        <circle cx="12" cy="9" r="1.6" fill="#F59E0B" />
+      </svg>
+    </div>
+  )
+}
+
+// ============================================================================
 // DYNAMIC RANDOM BIRD DATA TYPES & CELESTIAL TYPES
 // ============================================================================
 
@@ -1575,244 +2016,89 @@ export function VoxelWorldBackdrop() {
         )
       })}
 
-      {/* 5. STEPPED MINECRAFT TERRAIN: TREES, GRASS & MEADOWS     */}
       {/* ======================================================== */}
-      <div className="absolute bottom-1 inset-x-2 sm:inset-x-5 flex items-end justify-between z-10">
+      {/* 5. REALISTIC BOTANICAL TERRAIN: TREES, GRASS & MEADOWS   */}
+      {/* ======================================================== */}
+      <div className="absolute bottom-0 inset-x-2 sm:inset-x-5 flex items-end justify-between z-10 pointer-events-none">
         {/* ---------------------------------------------------- */}
-        {/* LEFT FLANK: MAJESTIC MINECRAFT OAK GROVE + POPPY     */}
+        {/* LEFT FLANK: MAJESTIC OAK GROVE + MEADOW + POPPY & MUSHROOM */}
         {/* ---------------------------------------------------- */}
-        <div className="flex items-end gap-1.5">
-          {/* Detailed Minecraft 3D Oak Tree */}
-          <div
-            onClick={() => handleTreeClick('left')}
-            aria-label="Oak Tree"
-            className={`flex flex-col items-center mb-0.5 pointer-events-auto cursor-pointer group transition-transform hover:scale-105 active:scale-95 ${
-              treeRustleLeft ? 'anim-voxel-leaf-shake' : ''
-            }`}
-          >
-            {/* Multi-tier Leaf Block Canopy */}
-            <div className="relative">
-              {/* Top Leaf Dome */}
-              <div
-                className={`h-3 w-8 rounded-t-[1px] border border-[#14532D] shadow-[0_1px_0_0_#14532D] transition-colors duration-1000 ${
-                  isNight ? 'bg-[#15803D]' : isSunset ? 'bg-[#16A34A]' : 'bg-[#22C55E]'
-                } flex items-center justify-between px-1`}
-              >
-                <span className="h-1 w-1 bg-[#4ADE80] rounded-[0.2px]" />
-                <span className="h-1 w-1 bg-[#166534] rounded-[0.2px]" />
-              </div>
-              {/* Mid Layer Leaf Blocks with Pixel Dapples */}
-              <div
-                className={`relative h-6 w-11 border border-[#14532D] shadow-[0_2px_0_0_#14532D] transition-colors duration-1000 ${
-                  isNight ? 'bg-[#166534]' : 'bg-[#16A34A]'
-                } p-0.5 flex flex-col justify-between`}
-              >
-                <div className="flex justify-between">
-                  <span className="h-1.5 w-1.5 bg-[#4ADE80] rounded-[0.2px]" />
-                  <span className="h-1.5 w-2 bg-[#15803D] rounded-[0.2px]" />
-                </div>
-                {/* Tiny Minecraft Red Apple */}
-                <div className="flex justify-end pr-1">
-                  <span className="h-1.5 w-1.5 bg-[#EA4335] rounded-[0.2px] border border-[#991B1B] shadow-2xs" />
-                </div>
-                <div className="flex justify-between">
-                  <span className="h-1.5 w-2 bg-[#14532D] rounded-[0.2px]" />
-                  <span className="h-1.5 w-1.5 bg-[#4ADE80] rounded-[0.2px]" />
-                </div>
-              </div>
-            </div>
-
-            {/* Textured Oak Wood Trunk */}
-            <div className="h-5 w-3 rounded-[0.5px] border border-[#451A03] bg-[#78350F] flex flex-col justify-between py-0.5">
-              <span className="h-0.5 w-full bg-[#92400E]" />
-              <span className="h-0.5 w-full bg-[#451A03]" />
-            </div>
-
-            {/* Falling Leaf Particles on Click */}
-            {treeRustleLeft && (
-              <span className="absolute -top-1 left-2 h-1 w-1 bg-[#4ADE80] anim-voxel-leaf-fall" />
-            )}
+        <div className="flex items-end gap-1 sm:gap-2 pointer-events-auto select-none">
+          {/* Detailed Realistic Oak Tree */}
+          <div onClick={() => handleTreeClick('left')} aria-label="Oak Tree">
+            <RealisticOakTree
+              isEvening={isEvening}
+              isNight={isNight}
+              rustling={treeRustleLeft}
+            />
           </div>
 
-          {/* Stepped Grass & Dirt Block Ridge */}
-          <div className="flex items-end shadow-xs">
-            {/* Block 1 */}
-            <div className="flex flex-col items-center">
-              {/* Top Grass Turf with Overhang Fringe */}
-              <div
-                className={`h-2.5 w-5 border-t border-x rounded-t-[1px] relative transition-colors duration-1000 ${
-                  isNight
-                    ? 'border-[#14532D] bg-[#16A34A]'
-                    : isSunset
-                    ? 'border-[#CA8A04] bg-[#65A30D]'
-                    : 'border-[#15803D] bg-[#22C55E]'
-                }`}
-              >
-                <span className="absolute -bottom-1 left-1 h-1 w-1 bg-[#22C55E] rounded-b-[0.2px]" />
-              </div>
-              <div className="h-3 w-5 border-b border-x border-[#451A03] bg-[#78350F]" />
+          {/* Organic Rolling Meadow & Grass Blade Fringe */}
+          <div className="relative flex items-end -ml-3 sm:-ml-2">
+            <RealisticGrassMeadow
+              isEvening={isEvening}
+              isNight={isNight}
+              side="left"
+            />
+
+            {/* Poppy nestled naturally inside meadow grass */}
+            <div
+              onClick={() => handleFlowerClick('poppy')}
+              aria-label="Poppy"
+              className="absolute bottom-1 left-5 sm:left-7 pointer-events-auto"
+            >
+              <RealisticPoppy bouncing={!!flowerBounce['poppy']} />
             </div>
 
-            {/* Block 2 (Elevated Center) */}
-            <div className="flex flex-col items-center">
-              <div
-                className={`h-3.5 w-6 border-t border-x rounded-t-[1px] relative transition-colors duration-1000 ${
-                  isNight
-                    ? 'border-[#14532D] bg-[#16A34A]'
-                    : isSunset
-                    ? 'border-[#CA8A04] bg-[#65A30D]'
-                    : 'border-[#15803D] bg-[#22C55E]'
-                }`}
-              >
-                <span className="absolute -bottom-1 left-1.5 h-1 w-1.5 bg-[#22C55E] rounded-b-[0.2px]" />
-                <span className="absolute -bottom-1.5 right-1 h-1.5 w-1 bg-[#22C55E] rounded-b-[0.2px]" />
-              </div>
-              <div className="h-5 w-6 border-b border-x border-[#451A03] bg-[#78350F] relative">
-                {/* Iron / Coal Ore Specks in Dirt */}
-                <span className="absolute top-1 left-1 h-1 w-1 bg-[#1F2937] rounded-[0.2px]" />
-                <span className="absolute bottom-1 right-1.5 h-1 w-1 bg-[#94A3B8] rounded-[0.2px]" />
-              </div>
+            {/* Wild forest mushroom in grass */}
+            <div
+              onClick={() => handleFlowerClick('shroom')}
+              aria-label="Mushroom"
+              className="absolute bottom-0.5 right-3 sm:right-5 pointer-events-auto"
+            >
+              <RealisticMushroom />
             </div>
-
-            {/* Block 3 */}
-            <div className="flex flex-col items-center">
-              <div
-                className={`h-2.5 w-5 border-t border-x rounded-t-[1px] transition-colors duration-1000 ${
-                  isNight
-                    ? 'border-[#14532D] bg-[#16A34A]'
-                    : isSunset
-                    ? 'border-[#CA8A04] bg-[#65A30D]'
-                    : 'border-[#15803D] bg-[#22C55E]'
-                }`}
-              />
-              <div className="h-3 w-5 border-b border-x border-[#451A03] bg-[#78350F]" />
-            </div>
-          </div>
-
-          {/* Interactive Minecraft Red Poppy */}
-          <div
-            onClick={() => handleFlowerClick('poppy')}
-            aria-label="Poppy"
-            className={`flex flex-col items-center mb-1 pointer-events-auto cursor-pointer group origin-bottom anim-badge-sway ${
-              flowerBounce['poppy'] ? 'anim-voxel-flower-bounce' : ''
-            }`}
-          >
-            <div className="h-3 w-3 rounded-[0.5px] border border-[#991B1B] bg-[#EA4335] shadow-2xs flex items-center justify-center group-hover:scale-120 transition-transform">
-              <span className="h-1 w-1 bg-[#450A0A] rounded-[0.2px]" />
-            </div>
-            <div className="h-3.5 w-0.5 bg-[#16A34A]" />
-          </div>
-
-          {/* Minecraft Red Spotted Mushroom (Amanita) */}
-          <div
-            onClick={() => handleFlowerClick('shroom')}
-            aria-label="Mushroom"
-            className="flex flex-col items-center mb-0.5 pointer-events-auto cursor-pointer group"
-          >
-            <div className="h-2 w-3 rounded-t-[1px] border border-[#991B1B] bg-[#DC2626] flex items-center justify-center gap-0.5">
-              <span className="h-0.5 w-0.5 bg-white rounded-[0.2px]" />
-              <span className="h-0.5 w-0.5 bg-white rounded-[0.2px]" />
-            </div>
-            <div className="h-2 w-1 bg-[#E2E8F0] border-x border-[#94A3B8]" />
           </div>
         </div>
 
         {/* ---------------------------------------------------- */}
-        {/* RIGHT FLANK: MINECRAFT BIRCH TREE + DANDELION + BLUE ORCHID */}
+        {/* RIGHT FLANK: MEADOW + ORCHID & DANDELION + BIRCH GROVE */}
         {/* ---------------------------------------------------- */}
-        <div className="flex items-end gap-1.5">
-          {/* Minecraft Blue Orchid */}
-          <div
-            onClick={() => handleFlowerClick('orchid')}
-            aria-label="Blue Orchid"
-            className={`flex flex-col items-center mb-1 pointer-events-auto cursor-pointer group origin-bottom anim-badge-sway ${
-              flowerBounce['orchid'] ? 'anim-voxel-flower-bounce' : ''
-            }`}
-          >
-            <div className="h-2.5 w-2.5 rounded-[0.5px] border border-[#0284C7] bg-[#38BDF8] flex items-center justify-center">
-              <span className="h-1 w-1 bg-white rounded-[0.2px]" />
-            </div>
-            <div className="h-3.5 w-0.5 bg-[#16A34A]" />
-          </div>
+        <div className="flex items-end gap-1 sm:gap-2 pointer-events-auto select-none">
+          {/* Organic Rolling Meadow & Grass Blade Fringe */}
+          <div className="relative flex items-end -mr-3 sm:-mr-2">
+            <RealisticGrassMeadow
+              isEvening={isEvening}
+              isNight={isNight}
+              side="right"
+            />
 
-          {/* Interactive Minecraft Yellow Dandelion */}
-          <div
-            onClick={() => handleFlowerClick('dandelion')}
-            aria-label="Dandelion"
-            className={`flex flex-col items-center mb-1 pointer-events-auto cursor-pointer group origin-bottom anim-badge-sway ${
-              flowerBounce['dandelion'] ? 'anim-voxel-flower-bounce' : ''
-            }`}
-          >
-            <div className="h-2.5 w-2.5 rounded-[0.5px] border border-[#B45309] bg-[#FBBC04] shadow-2xs group-hover:scale-120 transition-transform" />
-            <div className="h-3 w-0.5 bg-[#16A34A]" />
-          </div>
-
-          {/* Stepped Grass Blocks */}
-          <div className="flex items-end shadow-xs">
-            <div className="flex flex-col items-center">
-              <div
-                className={`h-2.5 w-5 border-t border-x rounded-t-[1px] relative transition-colors duration-1000 ${
-                  isNight
-                    ? 'border-[#14532D] bg-[#16A34A]'
-                    : isSunset
-                    ? 'border-[#CA8A04] bg-[#65A30D]'
-                    : 'border-[#15803D] bg-[#22C55E]'
-                }`}
-              >
-                <span className="absolute -bottom-1 right-1 h-1 w-1 bg-[#22C55E] rounded-b-[0.2px]" />
-              </div>
-              <div className="h-3 w-5 border-b border-x border-[#451A03] bg-[#78350F]" />
+            {/* Blue Orchid nestled in grass */}
+            <div
+              onClick={() => handleFlowerClick('orchid')}
+              aria-label="Blue Orchid"
+              className="absolute bottom-1 left-3 sm:left-5 pointer-events-auto"
+            >
+              <RealisticBlueOrchid bouncing={!!flowerBounce['orchid']} />
             </div>
-            <div className="flex flex-col items-center">
-              <div
-                className={`h-3.5 w-6 border-t border-x rounded-t-[1px] relative transition-colors duration-1000 ${
-                  isNight
-                    ? 'border-[#14532D] bg-[#16A34A]'
-                    : isSunset
-                    ? 'border-[#CA8A04] bg-[#65A30D]'
-                    : 'border-[#15803D] bg-[#22C55E]'
-                }`}
-              >
-                <span className="absolute -bottom-1 left-1.5 h-1 w-1.5 bg-[#22C55E] rounded-b-[0.2px]" />
-              </div>
-              <div className="h-4.5 w-6 border-b border-x border-[#451A03] bg-[#78350F]" />
+
+            {/* Golden Dandelion nestled in grass */}
+            <div
+              onClick={() => handleFlowerClick('dandelion')}
+              aria-label="Dandelion"
+              className="absolute bottom-1 right-5 sm:right-7 pointer-events-auto"
+            >
+              <RealisticDandelion bouncing={!!flowerBounce['dandelion']} />
             </div>
           </div>
 
-          {/* Minecraft Birch Tree */}
-          <div
-            onClick={() => handleTreeClick('right')}
-            aria-label="Birch Tree"
-            className={`flex flex-col items-center mb-0.5 pointer-events-auto cursor-pointer group transition-transform hover:scale-105 active:scale-95 ${
-              treeRustleRight ? 'anim-voxel-leaf-shake' : ''
-            }`}
-          >
-            {/* Birch Foliage Canopy */}
-            <div className="relative">
-              <div
-                className={`h-2.5 w-7 rounded-t-[1px] border border-[#14532D] transition-colors duration-1000 ${
-                  isNight ? 'bg-[#15803D]' : isSunset ? 'bg-[#16A34A]' : 'bg-[#4ADE80]'
-                }`}
-              />
-              <div
-                className={`h-5 w-9 border border-[#14532D] transition-colors duration-1000 ${
-                  isNight ? 'bg-[#166534]' : isSunset ? 'bg-[#15803D]' : 'bg-[#22C55E]'
-                } p-0.5 flex justify-between`}
-              >
-                <span className="h-1.5 w-1.5 bg-[#86EFAC] rounded-[0.2px]" />
-                <span className="h-1.5 w-1.5 bg-[#15803D] rounded-[0.2px]" />
-              </div>
-            </div>
-
-            {/* Characteristic Birch White Trunk with Dark Clefts */}
-            <div className="h-4.5 w-2.5 rounded-[0.5px] border border-[#94A3B8] bg-[#F8FAFC] flex flex-col justify-between py-0.5">
-              <span className="h-0.5 w-1.5 bg-[#1E293B]" />
-              <span className="h-0.5 w-2 bg-[#0F172A] self-end" />
-            </div>
-
-            {treeRustleRight && (
-              <span className="absolute -top-1 right-2 h-1 w-1 bg-[#86EFAC] anim-voxel-leaf-fall" />
-            )}
+          {/* Slender Realistic Birch Tree */}
+          <div onClick={() => handleTreeClick('right')} aria-label="Birch Tree">
+            <RealisticBirchTree
+              isEvening={isEvening}
+              isNight={isNight}
+              rustling={treeRustleRight}
+            />
           </div>
         </div>
       </div>
