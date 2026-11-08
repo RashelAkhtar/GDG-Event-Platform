@@ -795,6 +795,10 @@ function RealisticMoon() {
 // REALISTIC BOTANICAL COMPONENTS: TREES, ROLLING MEADOW GRASS & FLOWERS
 // ============================================================================
 
+// ============================================================================
+// REALISTIC BOTANICAL COMPONENTS: TREES, CONTINUOUS MEADOW & FLORA
+// ============================================================================
+
 function RealisticOakTree({
   isEvening,
   isNight,
@@ -804,14 +808,18 @@ function RealisticOakTree({
   isNight: boolean
   rustling: boolean
 }) {
-  const foliageDeep = isNight ? '#064E3B' : isEvening ? '#78350F' : '#14532D'
-  const foliageMid = isNight ? '#0D9488' : isEvening ? '#B45309' : '#15803D'
-  const foliageLush = isNight ? '#0F766E' : isEvening ? '#D97706' : '#16A34A'
-  const foliageBright = isNight ? '#14B8A6' : isEvening ? '#EAB308' : '#22C55E'
-  const foliageHighlight = isNight ? '#5EEAD4' : isEvening ? '#FEF08A' : '#86EFAC'
-  const trunkBase = isNight ? '#0F172A' : isEvening ? '#451A03' : '#451A03'
-  const trunkBark = isNight ? '#1E293B' : isEvening ? '#78350F' : '#78350F'
-  const trunkHighlight = isNight ? '#334155' : isEvening ? '#92400E' : '#92400E'
+  // Calibrated botanical palette: rich forest in Day, warm sienna in Evening, deep midnight spruce in Night (zero neon cyan)
+  const foliageShadow = isNight ? '#021812' : isEvening ? '#3B1304' : '#0A3318'
+  const foliageDeep = isNight ? '#042A1F' : isEvening ? '#5C1D06' : '#0F4D25'
+  const foliageMid = isNight ? '#064E3B' : isEvening ? '#9A3412' : '#15803D'
+  const foliageLush = isNight ? '#065F46' : isEvening ? '#C2410C' : '#16A34A'
+  const foliageSunlit = isNight ? '#047857' : isEvening ? '#EA580C' : '#22C55E'
+  const foliageHighlight = isNight ? 'rgba(52, 211, 153, 0.4)' : isEvening ? '#FDE047' : '#86EFAC'
+
+  const trunkBase = isNight ? '#080E18' : isEvening ? '#2B0E04' : '#2E1305'
+  const trunkBark = isNight ? '#131D2C' : isEvening ? '#5C2409' : '#5C2409'
+  const trunkHighlight = isNight ? '#243348' : isEvening ? '#9A3412' : '#85370D'
+  const woodGrain = isNight ? '#1A2638' : isEvening ? '#782E0B' : '#712E0B'
 
   return (
     <div
@@ -820,93 +828,119 @@ function RealisticOakTree({
       }`}
     >
       <svg
-        viewBox="0 0 92 104"
-        className="w-18 h-21 sm:w-22 sm:h-25 overflow-visible drop-shadow-[0_6px_14px_rgba(0,0,0,0.16)] anim-tree-breeze"
+        viewBox="0 0 140 148"
+        className="w-24 h-26 sm:w-30 sm:h-32 md:w-36 md:h-38 overflow-visible drop-shadow-[0_8px_18px_rgba(0,0,0,0.22)] anim-oak-canopy-breeze"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
-          <linearGradient id="oak-trunk-wood" x1="40" y1="50" x2="52" y2="102" gradientUnits="userSpaceOnUse">
+          <linearGradient id="oak-trunk-grain" x1="45" y1="70" x2="95" y2="148" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stopColor={trunkHighlight} />
-            <stop offset="50%" stopColor={trunkBark} />
-            <stop offset="100%" stopColor={trunkBase} />
+            <stop offset="35%" stopColor={trunkBark} />
+            <stop offset="85%" stopColor={trunkBase} />
           </linearGradient>
 
-          <radialGradient id="oak-foliage-deep" cx="48%" cy="40%" r="55%">
-            <stop offset="0%" stopColor={foliageMid} />
+          <radialGradient id="oak-canopy-main" cx="50%" cy="38%" r="58%">
+            <stop offset="0%" stopColor={foliageSunlit} />
+            <stop offset="45%" stopColor={foliageLush} />
+            <stop offset="80%" stopColor={foliageMid} />
+            <stop offset="100%" stopColor={foliageShadow} />
+          </radialGradient>
+
+          <radialGradient id="oak-bough-left" cx="42%" cy="36%" r="55%">
+            <stop offset="0%" stopColor={foliageSunlit} />
+            <stop offset="50%" stopColor={foliageLush} />
             <stop offset="100%" stopColor={foliageDeep} />
           </radialGradient>
 
-          <radialGradient id="oak-foliage-canopy" cx="45%" cy="32%" r="58%">
-            <stop offset="0%" stopColor={foliageBright} />
-            <stop offset="65%" stopColor={foliageLush} />
+          <radialGradient id="oak-bough-right" cx="58%" cy="36%" r="55%">
+            <stop offset="0%" stopColor={foliageSunlit} />
+            <stop offset="50%" stopColor={foliageLush} />
             <stop offset="100%" stopColor={foliageDeep} />
           </radialGradient>
         </defs>
 
-        {/* 1. LAYER 1: DEEP SHADOW FOLIAGE MASS (Behind Trunk & Branches) */}
+        {/* 1. LAYER 1: DEEP UNDERSTORY SHADOW FOLIAGE MASS (Behind Trunk Limbs) */}
         <path
-          d="M 28 62 C 16 60, 10 48, 14 36 C 18 27, 27 24, 34 25 C 38 14, 54 10, 64 16 C 74 13, 84 22, 82 34 C 88 42, 84 54, 74 58 C 66 64, 54 62, 48 58 C 40 64, 33 63, 28 62 Z"
-          fill="url(#oak-foliage-deep)"
+          d="M 36 86 C 18 82, 12 66, 18 50 C 24 38, 38 34, 46 36 C 52 20, 74 16, 88 24 C 102 18, 118 28, 116 44 C 126 56, 120 72, 108 80 C 96 88, 80 84, 72 80 C 60 88, 48 88, 36 86 Z"
+          fill={foliageShadow}
           opacity="0.95"
         />
 
-        {/* 2. GNARLED OAK TRUNK WITH ROOTS & MAIN BOUGHS */}
+        {/* 2. GNARLED OAK TRUNK WITH FORKING LIMBS & BUTTRESS ROOTS */}
         <g>
-          {/* Main Root Flare & Trunk Body */}
+          {/* Main Buttressed Trunk Body extending into ground */}
           <path
-            d="M 34 102 C 37 92, 41 80, 42 66 C 43 56, 38 48, 28 40 C 27 38, 29 36, 32 39 C 40 46, 44 54, 46 62 C 49 52, 56 42, 68 34 C 70 33, 72 35, 69 38 C 59 47, 54 58, 52 70 C 54 82, 55 92, 62 102 Z"
-            fill="url(#oak-trunk-wood)"
+            d="M 38 148 C 44 140, 52 128, 56 112 C 58 98, 53 88, 42 76 C 40 73, 43 70, 46 73 C 58 83, 62 94, 64 104 C 67 92, 74 80, 88 70 C 91 68, 93 71, 90 75 C 78 86, 73 98, 71 114 C 73 128, 79 140, 88 148 Z"
+            fill="url(#oak-trunk-grain)"
           />
-          {/* Central Crown Branch */}
+
+          {/* Left Buttress Root Flare Gripping Soil */}
           <path
-            d="M 46 62 C 47 50, 48 40, 47 30 C 47 28, 49 28, 50 30 C 51 40, 50 50, 49 62 Z"
-            fill={trunkBark}
+            d="M 52 126 C 45 132, 34 140, 24 148 C 22 148, 28 144, 38 136 C 46 128, 52 124, 52 126 Z"
+            fill={trunkBase}
           />
-          {/* Natural Bark Texture Ribs */}
-          <path d="M 40 98 C 43 86, 44 74, 45 64" stroke={trunkHighlight} strokeWidth="1" strokeLinecap="round" opacity="0.75" />
-          <path d="M 48 99 C 50 88, 49 76, 51 68" stroke={trunkBase} strokeWidth="1" strokeLinecap="round" opacity="0.65" />
-          <path d="M 44 94 C 45 84, 46 76, 47 70" stroke={trunkHighlight} strokeWidth="0.8" strokeLinecap="round" opacity="0.8" />
+          {/* Right Buttress Root Flare Gripping Soil */}
+          <path
+            d="M 74 126 C 82 133, 96 142, 108 148 C 107 147, 98 141, 86 134 C 78 127, 74 125, 74 126 Z"
+            fill={trunkBase}
+          />
+
+          {/* Central Crown Fork Boughs reaching into canopy */}
+          <path d="M 64 104 C 65 88, 66 74, 63 60 C 62 58, 65 57, 67 59 C 70 73, 69 88, 68 104 Z" fill={trunkBark} />
+          <path d="M 60 92 C 53 80, 42 70, 34 64" stroke={trunkBark} strokeWidth="2.2" strokeLinecap="round" />
+          <path d="M 68 90 C 76 78, 88 70, 98 64" stroke={trunkBark} strokeWidth="2.2" strokeLinecap="round" />
+
+          {/* Natural Wood Grain Fissures */}
+          <path d="M 58 142 C 60 126, 61 110, 62 96" stroke={trunkHighlight} strokeWidth="1.2" strokeLinecap="round" opacity="0.8" />
+          <path d="M 68 144 C 69 130, 68 114, 70 102" stroke={woodGrain} strokeWidth="1.4" strokeLinecap="round" opacity="0.75" />
+          <path d="M 64 136 C 65 122, 66 112, 66 104" stroke={trunkHighlight} strokeWidth="0.9" strokeLinecap="round" opacity="0.85" />
+          <path d="M 48 136 C 52 128, 55 120, 56 112" stroke={woodGrain} strokeWidth="1.1" strokeLinecap="round" opacity="0.7" />
+          <path d="M 78 138 C 76 128, 73 120, 71 114" stroke={trunkHighlight} strokeWidth="1.1" strokeLinecap="round" opacity="0.7" />
         </g>
 
-        {/* 3. LAYER 2: MIDGROUND LOBED CANOPY BOUGHS */}
-        {/* Left Bough Foliage Cluster */}
+        {/* 3. LAYER 2: SCALLOPED CANOPY BOUGHS WITH NATURAL LEAF CLUSTERS */}
+        {/* Lower Left Bough Mass */}
         <path
-          d="M 18 46 C 12 40, 14 30, 22 26 C 30 22, 38 27, 36 36 C 34 44, 24 48, 18 46 Z"
-          fill="url(#oak-foliage-canopy)"
+          d="M 28 68 C 16 64, 14 50, 24 42 C 18 36, 24 26, 34 28 C 42 22, 52 28, 50 38 C 58 44, 54 56, 44 62 C 38 68, 32 68, 28 68 Z"
+          fill="url(#oak-bough-left)"
         />
-        {/* Right Bough Foliage Cluster */}
+        {/* Lower Right Bough Mass */}
         <path
-          d="M 64 48 C 58 42, 60 30, 70 26 C 78 22, 86 28, 84 38 C 82 46, 72 50, 64 48 Z"
-          fill="url(#oak-foliage-canopy)"
+          d="M 88 70 C 80 64, 82 50, 92 42 C 88 34, 98 26, 108 30 C 116 26, 124 34, 120 44 C 126 52, 120 64, 110 66 C 102 70, 94 70, 88 70 Z"
+          fill="url(#oak-bough-right)"
         />
-        {/* Central Upper Crown Canopy */}
+        {/* Central & Upper Main Canopy Mass */}
         <path
-          d="M 30 42 C 22 38, 22 26, 30 20 C 36 14, 48 12, 56 16 C 64 12, 74 18, 72 28 C 76 36, 68 44, 60 44 C 54 48, 44 46, 38 42 C 34 44, 31 43, 30 42 Z"
-          fill="url(#oak-foliage-canopy)"
+          d="M 44 60 C 32 54, 30 38, 42 28 C 40 20, 50 14, 60 16 C 66 10, 80 10, 86 16 C 96 14, 104 22, 102 32 C 112 40, 108 54, 98 58 C 92 64, 84 62, 78 58 C 68 64, 52 64, 44 60 Z"
+          fill="url(#oak-canopy-main)"
         />
 
-        {/* 4. LAYER 3: FOREGROUND CREST HIGHLIGHTS (Dappled Sunlight) */}
+        {/* Organic Sky Holes (Negative space where background sky filters through foliage) */}
+        <ellipse cx="56" cy="48" rx="2.5" ry="3.5" fill={foliageShadow} opacity="0.65" />
+        <ellipse cx="82" cy="46" rx="2.8" ry="3.2" fill={foliageShadow} opacity="0.65" />
+
+        {/* 4. LAYER 3: DAPPLED LEAF CREST HIGHLIGHTS (Sunlit/Moonlit Leaf Rims) */}
         <path
-          d="M 38 18 C 44 14, 52 14, 56 17 C 52 19, 44 19, 38 18 Z"
+          d="M 54 18 C 64 13, 76 13, 82 17 C 76 20, 62 20, 54 18 Z"
           fill={foliageHighlight}
-          opacity="0.8"
+          opacity="0.85"
         />
-        <ellipse cx="26" cy="24" rx="6" ry="3.5" fill={foliageHighlight} opacity="0.45" />
-        <ellipse cx="70" cy="26" rx="6" ry="3.5" fill={foliageHighlight} opacity="0.45" />
-        <ellipse cx="48" cy="22" rx="8" ry="4" fill={foliageHighlight} opacity="0.4" />
-        <circle cx="48" cy="20" r="2.5" fill={foliageHighlight} opacity="0.6" />
+        <ellipse cx="36" cy="30" rx="7" ry="4" fill={foliageHighlight} opacity="0.5" />
+        <ellipse cx="102" cy="32" rx="7" ry="4" fill={foliageHighlight} opacity="0.5" />
+        <ellipse cx="68" cy="24" rx="10" ry="5" fill={foliageHighlight} opacity="0.45" />
+        <circle cx="68" cy="22" r="3" fill={foliageHighlight} opacity="0.65" />
       </svg>
 
       {/* Floating Falling Leaf Particles when clicked */}
       {rustling && (
         <>
           <span
-            className="absolute top-4 left-4 h-1.5 w-1 rounded-full anim-organic-leaf-fall-1 pointer-events-none"
-            style={{ backgroundColor: foliageBright }}
+            className="absolute top-5 left-5 h-2 w-1.2 rounded-full anim-organic-leaf-fall-1 pointer-events-none"
+            style={{ backgroundColor: foliageSunlit }}
           />
           <span
-            className="absolute top-6 right-5 h-1.5 w-1 rounded-full anim-organic-leaf-fall-2 pointer-events-none"
+            className="absolute top-7 right-6 h-2 w-1.2 rounded-full anim-organic-leaf-fall-2 pointer-events-none"
             style={{ backgroundColor: foliageHighlight }}
           />
         </>
@@ -924,14 +958,18 @@ function RealisticBirchTree({
   isNight: boolean
   rustling: boolean
 }) {
-  const foliageDeep = isNight ? '#064E3B' : isEvening ? '#78350F' : '#14532D'
-  const foliageMid = isNight ? '#0D9488' : isEvening ? '#B45309' : '#16A34A'
-  const foliageBright = isNight ? '#14B8A6' : isEvening ? '#F59E0B' : '#22C55E'
-  const foliageAiry = isNight ? '#2DD4BF' : isEvening ? '#FACC15' : '#4ADE80'
-  const foliageHighlight = isNight ? '#99F6E4' : isEvening ? '#FEF08A' : '#A7F3D0'
-  const trunkBase = isNight ? '#1E293B' : isEvening ? '#F5F5F4' : '#F8FAFC'
-  const trunkShadow = isNight ? '#0F172A' : isEvening ? '#D6D3D1' : '#CBD5E1'
-  const lenticelColor = isNight ? '#0B0F19' : isEvening ? '#292524' : '#1E293B'
+  // Calibrated birch palette: fresh lime/golden in Day, warm autumn amber in Evening, frosted silver-sage in Night (zero neon cyan)
+  const foliageShadow = isNight ? '#021812' : isEvening ? '#451A03' : '#1B430E'
+  const foliageDeep = isNight ? '#042A1F' : isEvening ? '#782E0B' : '#2D5A16'
+  const foliageMid = isNight ? '#064E3B' : isEvening ? '#9A3412' : '#4D7C0F'
+  const foliageLush = isNight ? '#047857' : isEvening ? '#D97706' : '#65A30D'
+  const foliageAiry = isNight ? '#059669' : isEvening ? '#F59E0B' : '#84CC16'
+  const foliageHighlight = isNight ? 'rgba(110, 231, 183, 0.45)' : isEvening ? '#FEF08A' : '#BEF264'
+
+  const trunkBase = isNight ? '#94A3B8' : isEvening ? '#FEF3C7' : '#F8FAFC'
+  const trunkShadow = isNight ? '#475569' : isEvening ? '#FCD34D' : '#CBD5E1'
+  const lenticelColor = isNight ? '#0F172A' : isEvening ? '#292524' : '#1E293B'
+  const basalCollar = isNight ? '#090D16' : isEvening ? '#291004' : '#18181B'
 
   return (
     <div
@@ -940,83 +978,92 @@ function RealisticBirchTree({
       }`}
     >
       <svg
-        viewBox="0 0 84 104"
-        className="w-16 h-21 sm:w-20 sm:h-25 overflow-visible drop-shadow-[0_6px_14px_rgba(0,0,0,0.16)] anim-tree-breeze"
+        viewBox="0 0 120 152"
+        className="w-22 h-26 sm:w-28 sm:h-32 md:w-34 md:h-38 overflow-visible drop-shadow-[0_8px_18px_rgba(0,0,0,0.22)] anim-birch-weep-breeze"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
-          <linearGradient id="birch-trunk-bark" x1="36" y1="46" x2="48" y2="102" gradientUnits="userSpaceOnUse">
+          <linearGradient id="birch-trunk-bark-v2" x1="50" y1="50" x2="68" y2="150" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stopColor={trunkBase} />
-            <stop offset="65%" stopColor={trunkBase} />
+            <stop offset="70%" stopColor={trunkBase} />
             <stop offset="100%" stopColor={trunkShadow} />
           </linearGradient>
 
-          <radialGradient id="birch-foliage-cluster" cx="46%" cy="36%" r="58%">
+          <radialGradient id="birch-canopy-cluster" cx="48%" cy="38%" r="60%">
             <stop offset="0%" stopColor={foliageAiry} />
-            <stop offset="60%" stopColor={foliageBright} />
+            <stop offset="55%" stopColor={foliageLush} />
+            <stop offset="85%" stopColor={foliageMid} />
             <stop offset="100%" stopColor={foliageDeep} />
           </radialGradient>
         </defs>
 
-        {/* 1. SLENDER WEEPING BIRCH TRUNK & GRACEFUL BRANCHES */}
+        {/* 1. SLENDER PAPER BIRCH TRUNK WITH HORIZONTAL LENTICELS & BASAL COLLAR */}
         <g>
+          {/* Dark lichen basal collar anchored into soil */}
+          <path d="M 52 144 C 54 136, 62 136, 68 144 L 72 152 L 48 152 Z" fill={basalCollar} opacity="0.9" />
+
           {/* Slender Arched Trunk */}
           <path
-            d="M 37 102 C 39 88, 38 72, 40 56 C 41 46, 37 38, 30 30 C 29 29, 31 27, 33 29 C 39 35, 42 44, 43 54 C 45 44, 50 36, 58 28 C 60 27, 61 29, 59 31 C 53 38, 49 48, 48 60 C 49 74, 48 88, 51 102 Z"
-            fill="url(#birch-trunk-bark)"
+            d="M 54 150 C 56 132, 55 110, 58 84 C 59 70, 54 58, 44 46 C 42 44, 45 42, 48 45 C 57 54, 61 68, 62 82 C 65 68, 72 56, 84 44 C 87 42, 88 45, 86 48 C 77 58, 71 74, 70 90 C 71 112, 70 132, 73 150 Z"
+            fill="url(#birch-trunk-bark-v2)"
           />
 
           {/* Delicate Arching Upper Branches */}
-          <path d="M 43 54 C 44 42, 43 32, 42 22" stroke={trunkBase} strokeWidth="1.2" strokeLinecap="round" />
-          <path d="M 41 46 C 36 40, 28 36, 22 34" stroke={trunkBase} strokeWidth="0.9" strokeLinecap="round" />
-          <path d="M 45 44 C 52 38, 60 36, 66 34" stroke={trunkBase} strokeWidth="0.9" strokeLinecap="round" />
+          <path d="M 62 82 C 63 64, 62 48, 60 34" stroke={trunkBase} strokeWidth="1.6" strokeLinecap="round" />
+          <path d="M 59 70 C 52 60, 40 54, 30 50" stroke={trunkBase} strokeWidth="1.2" strokeLinecap="round" />
+          <path d="M 66 68 C 76 58, 88 54, 98 52" stroke={trunkBase} strokeWidth="1.2" strokeLinecap="round" />
 
           {/* Characteristic Birch Bark Charcoal Lenticels & Knot Markings */}
-          <path d="M 38 96 L 43 96.5" stroke={lenticelColor} strokeWidth="1.3" strokeLinecap="round" />
-          <path d="M 45 91 L 49 92" stroke={lenticelColor} strokeWidth="1.4" strokeLinecap="round" />
-          <path d="M 39 83 L 44 83.5" stroke={lenticelColor} strokeWidth="1.2" strokeLinecap="round" />
-          <path d="M 43 75 L 47 76" stroke={lenticelColor} strokeWidth="1.3" strokeLinecap="round" />
-          <path d="M 40 66 L 43.5 66.5" stroke={lenticelColor} strokeWidth="1.1" strokeLinecap="round" />
-          <path d="M 41 57 L 44.5 57" stroke={lenticelColor} strokeWidth="1" strokeLinecap="round" />
-          {/* Branch Scar Diamond Knot */}
-          <polygon points="42,70 44,68 44,72 42,74" fill={lenticelColor} opacity="0.8" />
+          <path d="M 55 140 L 62 141" stroke={lenticelColor} strokeWidth="1.6" strokeLinecap="round" />
+          <path d="M 64 133 L 70 134.5" stroke={lenticelColor} strokeWidth="1.8" strokeLinecap="round" />
+          <path d="M 56 122 L 63 123" stroke={lenticelColor} strokeWidth="1.5" strokeLinecap="round" />
+          <path d="M 62 110 L 68 111.5" stroke={lenticelColor} strokeWidth="1.6" strokeLinecap="round" />
+          <path d="M 57 98 L 62 99" stroke={lenticelColor} strokeWidth="1.4" strokeLinecap="round" />
+          <path d="M 60 86 L 65 86.5" stroke={lenticelColor} strokeWidth="1.3" strokeLinecap="round" />
+          <path d="M 58 74 L 62.5 74.5" stroke={lenticelColor} strokeWidth="1.2" strokeLinecap="round" />
+
+          {/* Diamond Knot Branch Scars */}
+          <polygon points="61,102 63.5,99 63.5,105 61,107" fill={lenticelColor} opacity="0.85" />
+          <polygon points="64,126 66.5,123 66.5,129 64,131" fill={lenticelColor} opacity="0.85" />
         </g>
 
-        {/* 2. AIRY WEEPING BIRCH CANOPY CLUSTERS */}
-        {/* Rear Canopy Shadow */}
+        {/* 2. AIRY WEEPING BIRCH FOLIAGE CANOPY */}
+        {/* Rear Deep Foliage Shadow */}
         <path
-          d="M 22 48 C 14 42, 12 30, 18 22 C 24 16, 34 14, 40 16 C 44 8, 58 8, 64 14 C 72 12, 78 22, 74 30 C 78 38, 72 48, 62 48 C 54 52, 44 50, 38 46 C 30 50, 24 50, 22 48 Z"
-          fill={foliageDeep}
-          opacity="0.85"
+          d="M 32 68 C 20 60, 18 44, 26 32 C 34 24, 48 20, 56 24 C 62 12, 80 12, 88 20 C 100 18, 108 32, 102 44 C 108 54, 100 68, 86 68 C 76 74, 62 72, 54 66 C 42 72, 34 72, 32 68 Z"
+          fill={foliageShadow}
+          opacity="0.88"
         />
 
-        {/* Midground Weeping Foliage Mass */}
+        {/* Midground Cascading Canopy Mass */}
         <path
-          d="M 24 44 C 16 38, 15 28, 22 20 C 28 14, 36 13, 40 16 C 44 7, 56 7, 62 14 C 68 12, 75 20, 70 28 C 76 34, 68 44, 58 44 C 52 48, 42 46, 38 42 C 30 46, 26 46, 24 44 Z"
-          fill="url(#birch-foliage-cluster)"
+          d="M 34 62 C 22 54, 22 40, 32 28 C 40 20, 52 18, 58 22 C 64 10, 80 10, 86 20 C 96 16, 104 28, 98 40 C 106 48, 96 62, 82 62 C 74 68, 60 66, 54 58 C 44 64, 38 64, 34 62 Z"
+          fill="url(#birch-canopy-cluster)"
         />
 
-        {/* Delicate Cascading Fringe Drops */}
-        <ellipse cx="22" cy="34" rx="7" ry="9" fill="url(#birch-foliage-cluster)" opacity="0.9" />
-        <ellipse cx="66" cy="34" rx="7" ry="9" fill="url(#birch-foliage-cluster)" opacity="0.9" />
-        <ellipse cx="44" cy="18" rx="14" ry="10" fill="url(#birch-foliage-cluster)" />
+        {/* Cascading Weeping Tendril Droplets */}
+        <path d="M 32 48 C 30 58, 34 68, 36 78 C 38 72, 36 62, 38 52 Z" fill={foliageMid} />
+        <path d="M 94 48 C 96 58, 92 68, 90 78 C 88 72, 90 62, 88 52 Z" fill={foliageMid} />
+        <ellipse cx="30" cy="46" rx="9" ry="12" fill="url(#birch-canopy-cluster)" opacity="0.95" />
+        <ellipse cx="90" cy="46" rx="9" ry="12" fill="url(#birch-canopy-cluster)" opacity="0.95" />
+        <ellipse cx="60" cy="26" rx="18" ry="14" fill="url(#birch-canopy-cluster)" />
 
-        {/* Sunlit Highlights on Canopy Tops */}
-        <ellipse cx="44" cy="14" rx="9" ry="3.5" fill={foliageHighlight} opacity="0.75" />
-        <ellipse cx="60" cy="18" rx="6" ry="2.8" fill={foliageHighlight} opacity="0.55" />
-        <ellipse cx="28" cy="22" rx="6" ry="2.8" fill={foliageHighlight} opacity="0.55" />
+        {/* Sunlit/Moonlit Leaf Flutter Highlights on Top of Canopy */}
+        <ellipse cx="60" cy="20" rx="12" ry="5" fill={foliageHighlight} opacity="0.75" />
+        <ellipse cx="82" cy="26" rx="8" ry="4" fill={foliageHighlight} opacity="0.6" />
+        <ellipse cx="38" cy="32" rx="8" ry="4" fill={foliageHighlight} opacity="0.6" />
       </svg>
 
       {/* Floating Falling Leaf Particles when clicked */}
       {rustling && (
         <>
           <span
-            className="absolute top-4 left-3 h-1.5 w-1 rounded-full anim-organic-leaf-fall-1 pointer-events-none"
-            style={{ backgroundColor: foliageBright }}
+            className="absolute top-5 left-4 h-1.8 w-1 rounded-full anim-organic-leaf-fall-1 pointer-events-none"
+            style={{ backgroundColor: foliageAiry }}
           />
           <span
-            className="absolute top-6 right-4 h-1.5 w-1 rounded-full anim-organic-leaf-fall-2 pointer-events-none"
+            className="absolute top-8 right-5 h-1.8 w-1 rounded-full anim-organic-leaf-fall-2 pointer-events-none"
             style={{ backgroundColor: foliageHighlight }}
           />
         </>
@@ -1025,93 +1072,239 @@ function RealisticBirchTree({
   )
 }
 
-function RealisticGrassMeadow({
+function ContinuousMeadowTerrain({
   isEvening,
   isNight,
-  side,
+  onFlowerClick,
+  flowerBounce,
 }: {
   isEvening: boolean
   isNight: boolean
-  side: 'left' | 'right'
+  onFlowerClick: (id: string) => void
+  flowerBounce: Record<string, boolean>
 }) {
-  const turfDeep = isNight ? '#042F2E' : isEvening ? '#713F12' : '#14532D'
-  const turfMid = isNight ? '#0F766E' : isEvening ? '#CA8A04' : '#15803D'
-  const turfBright = isNight ? '#14B8A6' : isEvening ? '#EAB308' : '#22C55E'
-  const bladeTip = isNight ? '#5EEAD4' : isEvening ? '#FDE047' : '#86EFAC'
-  const earthDeep = isNight ? '#090D16' : isEvening ? '#451A03' : '#14532D'
+  // Calibrated terrain palette across day, evening, and night
+  const turfDeep = isNight ? '#021812' : isEvening ? '#3B1304' : '#0B381A'
+  const turfMid = isNight ? '#042A1F' : isEvening ? '#713F12' : '#14532D'
+  const turfBright = isNight ? '#065F46' : isEvening ? '#CA8A04' : '#15803D'
+  const turfSunlit = isNight ? '#047857' : isEvening ? '#EAB308' : '#22C55E'
+  const bladeTip = isNight ? 'rgba(110, 231, 183, 0.65)' : isEvening ? '#FDE047' : '#86EFAC'
+  const earthDeep = isNight ? '#020C0A' : isEvening ? '#200802' : '#041F0E'
+  const horizonRidge = isNight ? '#031713' : isEvening ? '#4A1D07' : '#0D4220'
 
   return (
-    <div className="relative select-none pointer-events-none">
+    <div className="absolute inset-0 pointer-events-none select-none">
       <svg
-        viewBox="0 0 150 42"
-        className="w-34 h-9 sm:w-42 sm:h-11 overflow-visible"
+        viewBox="0 0 1200 80"
+        preserveAspectRatio="none"
+        className="w-full h-full overflow-visible"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
-          <linearGradient id={`meadow-earth-${side}`} x1="0" y1="12" x2="0" y2="42" gradientUnits="userSpaceOnUse">
+          <linearGradient id="continuous-soil-grad" x1="0" y1="40" x2="0" y2="80" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stopColor={turfMid} />
-            <stop offset="40%" stopColor={turfDeep} />
+            <stop offset="35%" stopColor={turfDeep} />
             <stop offset="100%" stopColor={earthDeep} />
           </linearGradient>
 
-          <linearGradient id={`meadow-blade-grad-${side}`} x1="0" y1="2" x2="0" y2="36" gradientUnits="userSpaceOnUse">
+          <linearGradient id="continuous-blade-grad" x1="0" y1="20" x2="0" y2="65" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stopColor={bladeTip} />
-            <stop offset="45%" stopColor={turfBright} />
+            <stop offset="45%" stopColor={turfSunlit} />
             <stop offset="100%" stopColor={turfDeep} />
+          </linearGradient>
+
+          <linearGradient id="horizon-ridge-grad" x1="0" y1="35" x2="0" y2="80" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor={horizonRidge} stopOpacity="0.85" />
+            <stop offset="100%" stopColor={earthDeep} stopOpacity="0.95" />
           </linearGradient>
         </defs>
 
-        {/* 1. NATURAL ROLLING EARTHEN KNOLL (Lush Verdant Contour) */}
+        {/* 1. CONTINUOUS BACKGROUND HORIZON RIDGE (Dips gently in center valley cradle) */}
         <path
-          d={
-            side === 'left'
-              ? 'M 0 42 L 0 22 C 25 18, 55 14, 95 18 C 122 21, 140 28, 150 42 Z'
-              : 'M 0 42 C 10 28, 28 21, 55 18 C 95 14, 125 18, 150 22 L 150 42 Z'
-          }
-          fill={`url(#meadow-earth-${side})`}
+          d="M 0 55 C 180 42, 360 38, 540 48 C 600 52, 660 52, 720 48 C 900 38, 1080 42, 1200 55 L 1200 80 L 0 80 Z"
+          fill="url(#horizon-ridge-grad)"
         />
 
-        {/* 2. REAR SHADOW GRASS BLADES (Curved, slender, swaying with delay) */}
-        <g fill={turfMid} opacity="0.9" className="anim-grass-wind-sway-delayed">
-          {/* Cluster 1 */}
-          <path d="M 10 32 C 11 20, 15 10, 22 4 C 18 12, 14 24, 13 33 Z" />
-          <path d="M 18 33 C 21 21, 28 12, 36 6 C 30 16, 24 25, 22 34 Z" />
-          <path d="M 28 34 C 27 22, 22 13, 16 7 C 22 16, 26 25, 30 35 Z" />
+        {/* 2. CONTINUOUS FERTILE SOIL BEDROCK (100% Edge-to-Edge across bottom) */}
+        <path
+          d="M 0 52 C 200 46, 400 44, 550 50 C 600 52, 650 52, 700 50 C 850 44, 1050 46, 1200 52 L 1200 80 L 0 80 Z"
+          fill="url(#continuous-soil-grad)"
+        />
 
-          {/* Cluster 2 */}
-          <path d="M 50 30 C 52 18, 58 10, 68 4 C 62 14, 56 22, 54 31 Z" />
-          <path d="M 62 31 C 65 20, 74 11, 84 6 C 78 16, 70 24, 66 32 Z" />
-          <path d="M 76 32 C 74 22, 68 14, 60 8 C 66 16, 72 24, 78 33 Z" />
-
-          {/* Cluster 3 */}
-          <path d="M 98 32 C 100 21, 106 12, 116 7 C 110 16, 104 24, 102 33 Z" />
-          <path d="M 112 33 C 114 23, 122 14, 132 10 C 126 18, 118 26, 116 34 Z" />
-          <path d="M 126 34 C 124 24, 118 16, 110 11 C 116 18, 122 26, 128 35 Z" />
-          <path d="M 136 36 C 137 26, 142 18, 148 13 C 144 21, 139 29, 138 37 Z" />
+        {/* 3. REAR DENSE SHADOW BLADES (Curved slender beziers, delayed wind wave) */}
+        <g fill={turfMid} opacity="0.92" className="anim-grass-wind-sway-delayed">
+            <path d="M 15.0 51.0 C 16.3 42.4, 19.5 34.7, 21.4 31.8 C 21.2 35.7, 18.3 43.3, 17.1 51.0 Z" />
+            <path d="M 39.1 50.5 C 36.8 38.0, 30.8 26.9, 27.3 22.7 C 34.2 28.3, 39.5 39.4, 41.8 50.5 Z" />
+            <path d="M 65.5 50.0 C 63.7 39.5, 59.2 30.2, 56.5 26.7 C 62.8 31.3, 66.8 40.6, 68.7 50.0 Z" />
+            <path d="M 85.4 49.6 C 85.7 39.8, 86.3 31.1, 86.7 27.9 C 88.5 32.2, 87.9 40.9, 87.6 49.6 Z" />
+            <path d="M 115.7 50.1 C 115.5 39.8, 114.9 30.6, 114.5 27.2 C 117.1 31.8, 117.7 40.9, 117.9 50.1 Z" />
+            <path d="M 142.7 51.8 C 141.6 44.9, 138.6 38.8, 136.8 36.5 C 141.3 39.5, 144.0 45.7, 145.1 51.8 Z" />
+            <path d="M 161.0 51.7 C 161.9 41.4, 164.0 32.2, 165.3 28.8 C 166.0 33.4, 164.1 42.6, 163.2 51.7 Z" />
+            <path d="M 190.9 51.1 C 192.4 44.7, 196.1 39.1, 198.3 37.0 C 197.6 39.8, 194.3 45.4, 192.8 51.1 Z" />
+            <path d="M 219.2 51.6 C 217.5 40.0, 213.1 29.7, 210.5 25.9 C 216.2 31.0, 220.1 41.3, 221.8 51.6 Z" />
+            <path d="M 238.5 51.1 C 239.9 39.2, 243.4 28.5, 245.5 24.5 C 245.9 29.9, 242.8 40.5, 241.4 51.1 Z" />
+            <path d="M 270.2 51.1 C 271.2 43.2, 273.8 36.2, 275.4 33.6 C 275.5 37.1, 273.2 44.1, 272.1 51.1 Z" />
+            <path d="M 295.6 51.7 C 297.3 41.5, 301.5 32.5, 304.0 29.1 C 303.1 33.6, 299.3 42.7, 297.6 51.7 Z" />
+            <path d="M 320.9 53.3 C 318.6 41.9, 312.9 31.7, 309.5 27.9 C 316.5 33.0, 321.7 43.1, 324.0 53.3 Z" />
+            <path d="M 345.4 51.9 C 346.8 39.7, 350.3 28.9, 352.4 24.9 C 352.9 30.3, 349.7 41.1, 348.3 51.9 Z" />
+            <path d="M 371.5 51.9 C 372.9 40.7, 376.5 30.6, 378.7 26.9 C 378.1 31.9, 374.9 41.9, 373.4 51.9 Z" />
+            <path d="M 397.4 52.0 C 396.3 40.5, 393.7 30.4, 392.1 26.6 C 396.4 31.6, 398.8 41.8, 399.8 52.0 Z" />
+            <path d="M 422.4 52.2 C 421.4 45.7, 419.0 40.0, 417.6 37.8 C 421.3 40.7, 423.5 46.4, 424.4 52.2 Z" />
+            <path d="M 448.4 54.1 C 447.8 46.1, 446.2 38.9, 445.2 36.2 C 449.0 39.8, 450.5 46.9, 451.1 54.1 Z" />
+            <path d="M 474.8 53.3 C 476.7 41.0, 481.4 30.2, 484.2 26.1 C 482.9 31.5, 478.7 42.4, 476.8 53.3 Z" />
+            <path d="M 493.9 54.4 C 493.4 46.4, 492.2 39.3, 491.5 36.7 C 494.3 40.2, 495.4 47.3, 495.9 54.4 Z" />
+            <path d="M 523.8 53.0 C 523.1 42.9, 521.4 33.9, 520.3 30.6 C 524.1 35.1, 525.6 44.1, 526.3 53.0 Z" />
+            <path d="M 548.1 53.1 C 549.8 42.3, 554.0 32.7, 556.5 29.1 C 555.4 33.9, 551.6 43.5, 549.9 53.1 Z" />
+            <path d="M 573.3 54.3 C 572.5 43.4, 570.5 33.6, 569.3 30.0 C 573.5 34.8, 575.2 44.6, 576.0 54.3 Z" />
+            <path d="M 595.1 54.4 C 596.4 46.0, 599.7 38.5, 601.7 35.7 C 601.6 39.5, 598.6 46.9, 597.3 54.4 Z" />
+            <path d="M 625.8 53.3 C 625.1 45.1, 623.6 37.8, 622.6 35.0 C 626.1 38.7, 627.5 46.0, 628.1 53.3 Z" />
+            <path d="M 647.9 52.8 C 648.4 43.8, 649.9 35.9, 650.8 32.9 C 652.9 36.9, 651.6 44.8, 651.0 52.8 Z" />
+            <path d="M 678.2 53.8 C 675.8 45.6, 669.8 38.3, 666.2 35.5 C 673.0 39.2, 678.4 46.5, 680.8 53.8 Z" />
+            <path d="M 698.8 53.2 C 698.4 43.2, 697.6 34.4, 697.0 31.1 C 700.4 35.5, 701.2 44.3, 701.5 53.2 Z" />
+            <path d="M 725.5 52.5 C 726.6 43.2, 729.4 34.9, 731.0 31.9 C 732.2 36.0, 729.7 44.2, 728.6 52.5 Z" />
+            <path d="M 748.9 52.0 C 747.9 42.5, 745.6 34.0, 744.2 30.8 C 748.5 35.0, 750.6 43.5, 751.5 52.0 Z" />
+            <path d="M 779.5 53.4 C 778.0 42.9, 774.2 33.5, 771.9 30.0 C 776.7 34.7, 780.1 44.0, 781.7 53.4 Z" />
+            <path d="M 798.7 52.1 C 796.6 42.8, 791.4 34.5, 788.3 31.4 C 794.9 35.5, 799.6 43.8, 801.7 52.1 Z" />
+            <path d="M 827.3 52.8 C 827.1 45.3, 826.5 38.6, 826.2 36.1 C 829.4 39.4, 829.9 46.1, 830.1 52.8 Z" />
+            <path d="M 851.5 52.7 C 852.4 46.4, 854.9 40.7, 856.4 38.6 C 857.5 41.4, 855.3 47.1, 854.3 52.7 Z" />
+            <path d="M 875.9 52.0 C 875.7 44.6, 875.4 38.0, 875.2 35.5 C 878.6 38.8, 878.9 45.4, 879.0 52.0 Z" />
+            <path d="M 900.9 51.4 C 902.0 39.7, 904.8 29.4, 906.5 25.5 C 907.0 30.7, 904.5 41.0, 903.3 51.4 Z" />
+            <path d="M 931.3 53.0 C 932.9 42.9, 936.7 34.0, 939.0 30.6 C 939.4 35.1, 936.0 44.0, 934.5 53.0 Z" />
+            <path d="M 956.4 52.2 C 956.4 42.7, 956.4 34.2, 956.5 31.1 C 959.4 35.3, 959.4 43.7, 959.4 52.2 Z" />
+            <path d="M 984.2 52.0 C 982.9 42.7, 979.6 34.5, 977.6 31.4 C 982.1 35.5, 985.0 43.8, 986.3 52.0 Z" />
+            <path d="M 1007.6 51.9 C 1006.4 42.3, 1003.4 33.8, 1001.6 30.6 C 1006.4 34.9, 1009.1 43.4, 1010.3 51.9 Z" />
+            <path d="M 1028.6 50.6 C 1028.6 42.6, 1028.5 35.5, 1028.5 32.8 C 1030.8 36.4, 1030.8 43.5, 1030.9 50.6 Z" />
+            <path d="M 1054.6 50.3 C 1052.5 39.7, 1047.2 30.2, 1044.0 26.6 C 1050.5 31.4, 1055.3 40.8, 1057.4 50.3 Z" />
+            <path d="M 1082.3 50.9 C 1081.7 42.0, 1080.3 34.0, 1079.5 31.1 C 1082.6 35.0, 1083.8 43.0, 1084.4 50.9 Z" />
+            <path d="M 1111.7 50.8 C 1112.7 40.1, 1115.1 30.6, 1116.6 27.1 C 1117.9 31.8, 1115.7 41.3, 1114.7 50.8 Z" />
+            <path d="M 1133.0 49.3 C 1134.4 40.7, 1137.8 33.2, 1139.8 30.3 C 1140.3 34.1, 1137.3 41.7, 1135.9 49.3 Z" />
+            <path d="M 1163.1 50.1 C 1163.4 39.0, 1164.0 29.3, 1164.4 25.6 C 1166.5 30.5, 1165.9 40.3, 1165.7 50.1 Z" />
         </g>
 
-        {/* 3. FOREGROUND VIBRANT GRASS BLADES (Curved botanical blades, sunlit tips) */}
-        <g fill={`url(#meadow-blade-grad-${side})`} className="anim-grass-wind-sway">
-          {/* Cluster 1 */}
-          <path d="M 6 34 C 7 21, 12 11, 20 5 C 16 14, 11 25, 10 35 Z" />
-          <path d="M 14 35 C 17 22, 25 12, 34 7 C 28 17, 21 26, 18 36 Z" />
-          <path d="M 24 36 C 23 25, 18 16, 11 10 C 17 19, 22 28, 26 37 Z" />
-
-          {/* Cluster 2 */}
-          <path d="M 40 32 C 42 19, 48 9, 58 3 C 52 13, 46 23, 44 33 Z" />
-          <path d="M 48 33 C 52 20, 60 11, 70 5 C 64 15, 56 24, 52 34 Z" />
-          <path d="M 58 34 C 57 23, 50 13, 42 8 C 48 17, 54 26, 60 35 Z" />
-
-          {/* Cluster 3 */}
-          <path d="M 84 33 C 86 21, 92 11, 102 5 C 96 15, 90 24, 88 34 Z" />
-          <path d="M 94 34 C 97 22, 105 13, 116 8 C 110 18, 102 26, 98 35 Z" />
-          <path d="M 106 35 C 105 24, 98 15, 90 10 C 96 18, 102 27, 108 36 Z" />
-
-          {/* Cluster 4 */}
-          <path d="M 120 36 C 122 25, 128 16, 138 10 C 132 19, 126 28, 124 37 Z" />
-          <path d="M 130 37 C 133 27, 140 18, 147 13 C 142 22, 136 30, 134 38 Z" />
+        {/* 4. FOREGROUND VIBRANT GRASS BLADES (Sunlit/Moonlit tips, primary wind wave) */}
+        <g fill="url(#continuous-blade-grad)" className="anim-grass-wind-sway">
+            <path d="M 8.8 50.9 C 10.1 41.7, 13.2 33.6, 15.0 30.5 C 15.6 34.6, 12.8 42.8, 11.5 50.9 Z" />
+            <path d="M 32.0 53.2 C 30.1 45.3, 25.4 38.4, 22.6 35.8 C 28.9 39.2, 33.1 46.2, 35.0 53.2 Z" />
+            <path d="M 52.1 52.4 C 53.0 45.0, 55.1 38.4, 56.4 35.9 C 57.6 39.2, 55.6 45.8, 54.8 52.4 Z" />
+            <path d="M 77.0 51.8 C 75.0 40.4, 70.1 30.2, 67.1 26.4 C 74.1 31.5, 78.5 41.7, 80.5 51.8 Z" />
+            <path d="M 101.4 53.2 C 103.6 43.5, 109.2 34.9, 112.5 31.7 C 111.2 36.0, 106.3 44.6, 104.1 53.2 Z" />
+            <path d="M 121.5 51.8 C 122.2 43.9, 123.8 36.9, 124.8 34.3 C 127.2 37.8, 125.8 44.8, 125.1 51.8 Z" />
+            <path d="M 147.2 53.5 C 146.9 42.5, 146.1 32.6, 145.6 29.0 C 149.9 33.9, 150.7 43.7, 151.0 53.5 Z" />
+            <path d="M 168.6 53.9 C 169.2 42.3, 170.5 31.9, 171.3 28.0 C 174.0 33.2, 172.8 43.6, 172.2 53.9 Z" />
+            <path d="M 192.4 52.2 C 190.8 43.4, 186.7 35.5, 184.2 32.5 C 189.9 36.5, 193.6 44.3, 195.2 52.2 Z" />
+            <path d="M 212.5 52.5 C 212.1 43.3, 211.1 35.1, 210.5 32.0 C 214.5 36.1, 215.4 44.3, 215.8 52.5 Z" />
+            <path d="M 236.2 52.9 C 237.1 43.8, 239.2 35.6, 240.5 32.6 C 242.7 36.7, 240.8 44.8, 239.9 52.9 Z" />
+            <path d="M 260.6 52.9 C 260.2 40.5, 259.4 29.4, 258.9 25.3 C 262.1 30.8, 262.9 41.9, 263.2 52.9 Z" />
+            <path d="M 285.7 54.2 C 287.4 43.0, 291.7 33.1, 294.3 29.3 C 294.6 34.3, 290.8 44.3, 289.1 54.2 Z" />
+            <path d="M 307.4 53.4 C 306.5 46.0, 304.5 39.4, 303.2 36.9 C 307.5 40.2, 309.4 46.8, 310.2 53.4 Z" />
+            <path d="M 326.9 55.2 C 327.7 41.7, 330.0 29.7, 331.3 25.2 C 332.6 31.2, 330.6 43.2, 329.7 55.2 Z" />
+            <path d="M 350.9 55.3 C 350.0 44.8, 347.7 35.5, 346.3 32.0 C 350.7 36.7, 352.7 46.0, 353.6 55.3 Z" />
+            <path d="M 374.8 53.9 C 374.5 42.5, 373.9 32.4, 373.6 28.6 C 377.6 33.6, 378.2 43.8, 378.4 53.9 Z" />
+            <path d="M 395.6 55.8 C 393.8 45.0, 389.3 35.3, 386.7 31.7 C 392.3 36.5, 396.4 46.2, 398.1 55.8 Z" />
+            <path d="M 417.9 55.1 C 416.1 42.2, 411.8 30.7, 409.3 26.4 C 415.3 32.2, 419.1 43.6, 420.8 55.1 Z" />
+            <path d="M 442.4 56.1 C 444.2 45.1, 448.6 35.3, 451.3 31.7 C 452.0 36.6, 447.9 46.4, 446.1 56.1 Z" />
+            <path d="M 463.1 55.6 C 462.2 43.5, 460.2 32.7, 458.9 28.7 C 463.5 34.1, 465.4 44.9, 466.2 55.6 Z" />
+            <path d="M 489.7 54.3 C 491.9 44.0, 497.4 34.8, 500.7 31.4 C 499.9 36.0, 495.0 45.2, 492.8 54.3 Z" />
+            <path d="M 514.1 54.9 C 516.1 44.1, 521.1 34.5, 524.1 30.8 C 523.3 35.7, 518.7 45.3, 516.7 54.9 Z" />
+            <path d="M 536.9 55.1 C 535.6 43.3, 532.3 32.8, 530.3 28.9 C 535.9 34.1, 538.8 44.6, 540.2 55.1 Z" />
+            <path d="M 559.2 55.8 C 557.2 43.0, 552.2 31.6, 549.2 27.4 C 555.8 33.1, 560.3 44.4, 562.3 55.8 Z" />
+            <path d="M 579.4 54.7 C 581.1 40.8, 585.3 28.5, 587.7 23.8 C 588.5 30.0, 584.7 42.4, 583.1 54.7 Z" />
+            <path d="M 602.2 54.9 C 600.6 41.4, 596.6 29.4, 594.1 24.9 C 600.7 30.9, 604.3 42.9, 606.0 54.9 Z" />
+            <path d="M 626.2 54.8 C 624.8 42.1, 621.2 30.8, 619.0 26.6 C 625.0 32.3, 628.3 43.5, 629.7 54.8 Z" />
+            <path d="M 649.1 55.8 C 648.9 46.7, 648.6 38.6, 648.4 35.6 C 652.2 39.6, 652.5 47.7, 652.7 55.8 Z" />
+            <path d="M 670.4 55.6 C 669.7 43.2, 668.2 32.1, 667.2 27.9 C 671.0 33.5, 672.4 44.6, 673.1 55.6 Z" />
+            <path d="M 698.0 55.7 C 696.5 45.4, 692.8 36.1, 690.6 32.7 C 696.3 37.3, 699.6 46.5, 701.1 55.7 Z" />
+            <path d="M 716.2 54.8 C 715.2 43.4, 712.6 33.2, 711.1 29.4 C 715.6 34.5, 717.9 44.7, 719.0 54.8 Z" />
+            <path d="M 738.2 55.4 C 740.0 46.5, 744.5 38.7, 747.1 35.7 C 747.7 39.7, 743.7 47.5, 741.9 55.4 Z" />
+            <path d="M 761.1 54.3 C 759.7 42.3, 756.2 31.6, 754.0 27.6 C 759.2 32.9, 762.4 43.6, 763.8 54.3 Z" />
+            <path d="M 789.2 54.9 C 790.8 44.3, 794.6 34.9, 797.0 31.3 C 797.8 36.1, 794.3 45.5, 792.7 54.9 Z" />
+            <path d="M 807.6 53.6 C 807.7 43.3, 807.8 34.2, 807.9 30.8 C 810.8 35.3, 810.7 44.5, 810.6 53.6 Z" />
+            <path d="M 833.8 54.9 C 833.5 40.6, 833.0 27.9, 832.6 23.1 C 835.6 29.5, 836.1 42.2, 836.3 54.9 Z" />
+            <path d="M 854.3 55.2 C 854.3 46.2, 854.2 38.2, 854.2 35.2 C 856.9 39.2, 857.0 47.2, 857.0 55.2 Z" />
+            <path d="M 877.7 53.6 C 877.7 44.6, 877.6 36.6, 877.5 33.6 C 881.3 37.6, 881.4 45.6, 881.4 53.6 Z" />
+            <path d="M 903.3 54.1 C 904.9 46.5, 909.1 39.8, 911.7 37.3 C 912.5 40.7, 908.7 47.4, 907.1 54.1 Z" />
+            <path d="M 926.8 54.8 C 927.0 41.5, 927.3 29.7, 927.5 25.3 C 929.9 31.2, 929.6 43.0, 929.4 54.8 Z" />
+            <path d="M 945.2 53.5 C 947.5 45.8, 953.4 39.1, 956.9 36.5 C 955.7 39.9, 950.4 46.7, 948.1 53.5 Z" />
+            <path d="M 968.4 54.2 C 970.6 43.7, 976.1 34.4, 979.5 30.9 C 978.6 35.6, 973.6 44.9, 971.4 54.2 Z" />
+            <path d="M 995.7 53.5 C 995.0 41.1, 993.2 30.1, 992.2 26.0 C 996.0 31.5, 997.6 42.5, 998.3 53.5 Z" />
+            <path d="M 1018.4 53.4 C 1016.7 42.3, 1012.3 32.4, 1009.7 28.7 C 1016.2 33.7, 1020.1 43.5, 1021.9 53.4 Z" />
+            <path d="M 1039.0 53.1 C 1041.2 39.7, 1046.8 27.9, 1050.1 23.4 C 1048.9 29.4, 1043.9 41.2, 1041.6 53.1 Z" />
+            <path d="M 1058.9 52.2 C 1057.9 40.7, 1055.5 30.5, 1054.1 26.7 C 1059.1 31.8, 1061.3 42.0, 1062.2 52.2 Z" />
+            <path d="M 1082.0 53.7 C 1082.7 44.8, 1084.6 36.8, 1085.6 33.8 C 1087.6 37.8, 1086.0 45.7, 1085.3 53.7 Z" />
+            <path d="M 1106.7 52.8 C 1105.6 41.9, 1102.9 32.1, 1101.2 28.5 C 1106.8 33.3, 1109.3 43.1, 1110.4 52.8 Z" />
+            <path d="M 1131.4 51.8 C 1130.7 41.8, 1129.0 32.8, 1128.0 29.5 C 1132.5 34.0, 1134.1 42.9, 1134.7 51.8 Z" />
+            <path d="M 1151.9 52.9 C 1154.3 45.2, 1160.3 38.3, 1163.9 35.8 C 1162.7 39.2, 1157.3 46.1, 1154.9 52.9 Z" />
+            <path d="M 1178.9 51.1 C 1181.0 42.4, 1186.2 34.6, 1189.4 31.7 C 1188.5 35.6, 1183.8 43.4, 1181.6 51.1 Z" />
         </g>
+      </svg>
+
+      {/* 5. NESTLED BOTANICAL FLORA (Nestled inside the continuous meadow) */}
+      {/* Left Sector: Scarlet Poppy */}
+      <div
+        onClick={() => onFlowerClick('poppy')}
+        aria-label="Poppy"
+        className="absolute bottom-2 left-[12%] sm:left-[15%] pointer-events-auto"
+      >
+        <RealisticPoppy bouncing={!!flowerBounce['poppy']} />
+      </div>
+
+      {/* Left Sector: Forest Amanita Mushroom */}
+      <div
+        onClick={() => onFlowerClick('shroom')}
+        aria-label="Mushroom"
+        className="absolute bottom-1.5 left-[23%] sm:left-[26%] pointer-events-auto"
+      >
+        <RealisticMushroom />
+      </div>
+
+      {/* Center Valley Cradle: Wild Bluebells (Nestled under the CircleBucket!) */}
+      <div
+        onClick={() => onFlowerClick('bluebell')}
+        aria-label="Bluebells"
+        className="absolute bottom-1 left-[48%] sm:left-[49%] pointer-events-auto"
+      >
+        <RealisticBluebell bouncing={!!flowerBounce['bluebell']} />
+      </div>
+
+      {/* Right Sector: Azure Wild Orchid */}
+      <div
+        onClick={() => onFlowerClick('orchid')}
+        aria-label="Blue Orchid"
+        className="absolute bottom-2 right-[23%] sm:right-[26%] pointer-events-auto"
+      >
+        <RealisticBlueOrchid bouncing={!!flowerBounce['orchid']} />
+      </div>
+
+      {/* Right Sector: Golden Dandelion */}
+      <div
+        onClick={() => onFlowerClick('dandelion')}
+        aria-label="Dandelion"
+        className="absolute bottom-2 right-[12%] sm:right-[15%] pointer-events-auto"
+      >
+        <RealisticDandelion bouncing={!!flowerBounce['dandelion']} />
+      </div>
+    </div>
+  )
+}
+
+function RealisticBluebell({ bouncing }: { bouncing: boolean }) {
+  return (
+    <div
+      className={`relative select-none cursor-pointer group origin-bottom transition-transform ${
+        bouncing ? 'anim-voxel-flower-bounce' : 'anim-badge-sway hover:scale-115 active:scale-95'
+      }`}
+    >
+      <svg
+        viewBox="0 0 20 28"
+        className="w-4 h-6 sm:w-5 sm:h-7 overflow-visible drop-shadow-sm"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path d="M 10 12 C 9 18, 10 24, 10 28" stroke="#16A34A" strokeWidth="1" strokeLinecap="round" />
+        <path d="M 4 8 C 4 3, 16 3, 16 8 C 16 13, 13 14, 10 14 C 7 14, 4 13, 4 8 Z" fill="#818CF8" />
+        <path d="M 6 9 C 6 5, 14 5, 14 9 C 14 12, 12 13, 10 13 C 8 13, 6 12, 6 9 Z" fill="#A5B4FC" />
+        <circle cx="10" cy="14" r="1.2" fill="#E0E7FF" />
       </svg>
     </div>
   )
@@ -2071,94 +2264,45 @@ export function VoxelWorldBackdrop() {
       {/* ======================================================== */}
       {/* 5. REALISTIC BOTANICAL TERRAIN: TREES, GRASS & MEADOWS   */}
       {/* ======================================================== */}
-      <div className="absolute bottom-0 inset-x-0 flex items-end justify-between z-25 pointer-events-none px-2 sm:px-4">
+      <div className="absolute bottom-0 inset-x-0 h-22 sm:h-26 md:h-30 z-25 pointer-events-none select-none overflow-hidden">
         {/* Continuous Soft Ground Horizon Baseline */}
         <div className="absolute bottom-0 inset-x-0 h-2 bg-gradient-to-t from-[#14532D]/30 dark:from-[#042F2E]/35 to-transparent pointer-events-none -z-10" />
 
-        {/* ---------------------------------------------------- */}
-        {/* LEFT FLANK: MAJESTIC OAK GROVE + MEADOW + POPPY & MUSHROOM */}
-        {/* ---------------------------------------------------- */}
-        <div className="flex items-end gap-1 sm:gap-2 pointer-events-auto select-none">
-          {/* Detailed Realistic Oak Tree */}
-          <div onClick={() => handleTreeClick('left')} aria-label="Oak Tree">
-            <RealisticOakTree
-              isEvening={isEvening}
-              isNight={isNight}
-              rustling={treeRustleLeft}
-            />
-          </div>
+        {/* Unbroken 100% Edge-to-Edge Meadow Terrain spanning under trees and bucket */}
+        <ContinuousMeadowTerrain
+          isEvening={isEvening}
+          isNight={isNight}
+          onFlowerClick={handleFlowerClick}
+          flowerBounce={flowerBounce}
+        />
 
-          {/* Organic Rolling Meadow & Grass Blade Fringe */}
-          <div className="relative flex items-end -ml-3 sm:-ml-2">
-            <RealisticGrassMeadow
-              isEvening={isEvening}
-              isNight={isNight}
-              side="left"
-            />
-
-            {/* Poppy nestled naturally inside meadow grass */}
-            <div
-              onClick={() => handleFlowerClick('poppy')}
-              aria-label="Poppy"
-              className="absolute bottom-1 left-7 sm:left-9 pointer-events-auto"
-            >
-              <RealisticPoppy bouncing={!!flowerBounce['poppy']} />
-            </div>
-
-            {/* Wild forest mushroom in grass */}
-            <div
-              onClick={() => handleFlowerClick('shroom')}
-              aria-label="Mushroom"
-              className="absolute bottom-0.5 right-4 sm:right-6 pointer-events-auto"
-            >
-              <RealisticMushroom />
-            </div>
-          </div>
+        {/* Oak Tree: Rooted securely into the continuous left turf */}
+        <div
+          onClick={() => handleTreeClick('left')}
+          aria-label="Oak Tree"
+          className="absolute left-1 sm:left-4 md:left-6 bottom-0.5 sm:bottom-1 z-26 pointer-events-auto select-none"
+        >
+          <RealisticOakTree
+            isEvening={isEvening}
+            isNight={isNight}
+            rustling={treeRustleLeft}
+          />
         </div>
 
-        {/* ---------------------------------------------------- */}
-        {/* RIGHT FLANK: MEADOW + ORCHID & DANDELION + BIRCH GROVE */}
-        {/* ---------------------------------------------------- */}
-        <div className="flex items-end gap-1 sm:gap-2 pointer-events-auto select-none">
-          {/* Organic Rolling Meadow & Grass Blade Fringe */}
-          <div className="relative flex items-end -mr-3 sm:-mr-2">
-            <RealisticGrassMeadow
-              isEvening={isEvening}
-              isNight={isNight}
-              side="right"
-            />
-
-            {/* Blue Orchid nestled in grass */}
-            <div
-              onClick={() => handleFlowerClick('orchid')}
-              aria-label="Blue Orchid"
-              className="absolute bottom-1 left-5 sm:left-7 pointer-events-auto"
-            >
-              <RealisticBlueOrchid bouncing={!!flowerBounce['orchid']} />
-            </div>
-
-            {/* Golden Dandelion nestled in grass */}
-            <div
-              onClick={() => handleFlowerClick('dandelion')}
-              aria-label="Dandelion"
-              className="absolute bottom-1 right-7 sm:right-9 pointer-events-auto"
-            >
-              <RealisticDandelion bouncing={!!flowerBounce['dandelion']} />
-            </div>
-          </div>
-
-          {/* Slender Realistic Birch Tree */}
-          <div onClick={() => handleTreeClick('right')} aria-label="Birch Tree">
-            <RealisticBirchTree
-              isEvening={isEvening}
-              isNight={isNight}
-              rustling={treeRustleRight}
-            />
-          </div>
+        {/* Birch Tree: Rooted securely into the continuous right turf */}
+        <div
+          onClick={() => handleTreeClick('right')}
+          aria-label="Birch Tree"
+          className="absolute right-1 sm:right-4 md:right-6 bottom-0.5 sm:bottom-1 z-26 pointer-events-auto select-none"
+        >
+          <RealisticBirchTree
+            isEvening={isEvening}
+            isNight={isNight}
+            rustling={treeRustleRight}
+          />
         </div>
       </div>
 
-      {/* ======================================================== */}
       {/* 6. AMBIENT PARTICLES: DAYTIME MOTES / NIGHT FIREFLIES     */}
       {/* ======================================================== */}
       {skyPhase === 'day' ? (

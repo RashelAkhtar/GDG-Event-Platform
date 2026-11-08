@@ -1281,6 +1281,51 @@ html.dark .hairline-divider {
   }
 }
 
+.anim-oak-canopy-breeze {
+  animation: oak-canopy-breeze 5.6s ease-in-out infinite alternate;
+  transform-origin: bottom center;
+}
+
+@keyframes oak-canopy-breeze {
+  0% {
+    transform: rotate(-0.8deg) scaleY(0.99);
+  }
+  100% {
+    transform: rotate(1.1deg) scaleY(1.01);
+  }
+}
+
+.anim-birch-weep-breeze {
+  animation: birch-weep-breeze 4.2s ease-in-out infinite alternate;
+  transform-origin: top center;
+}
+
+@keyframes birch-weep-breeze {
+  0% {
+    transform: rotate(-1.5deg) skewX(-1.2deg);
+  }
+  50% {
+    transform: rotate(0.6deg) skewX(0.5deg);
+  }
+  100% {
+    transform: rotate(2deg) skewX(1.6deg);
+  }
+}
+
+.anim-grass-wave-slow {
+  animation: grass-wave-slow 4.6s ease-in-out -2.3s infinite alternate;
+  transform-origin: bottom center;
+}
+
+@keyframes grass-wave-slow {
+  0% {
+    transform: skewX(-3deg) rotate(-2deg);
+  }
+  100% {
+    transform: skewX(2.5deg) rotate(1.8deg);
+  }
+}
+
 .anim-organic-leaf-fall-1 {
   animation: organic-leaf-fall-1 1.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
