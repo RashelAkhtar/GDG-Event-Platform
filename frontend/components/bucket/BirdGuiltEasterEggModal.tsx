@@ -295,7 +295,7 @@ function RealisticHandSalute({ onBounce }: { onBounce?: () => void }) {
         <div className="anim-hand-cheeky-sway">
           <svg
             viewBox="0 0 180 220"
-            className="w-32 h-40 sm:w-38 sm:h-48 overflow-visible drop-shadow-[0_14px_32px_rgba(0,0,0,0.2)]"
+            className="w-20 h-24 sm:w-32 sm:h-40 overflow-visible drop-shadow-[0_8px_20px_rgba(0,0,0,0.18)] sm:drop-shadow-[0_14px_32px_rgba(0,0,0,0.2)]"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
           >
@@ -614,36 +614,36 @@ export function BirdGuiltEasterEggModal({
       onClick={() => {
         if (!isAudioMuted) playSorrowRequiemAudio()
       }}
-      className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-slate-900/65 backdrop-blur-md animate-in fade-in duration-300 select-none"
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-3 xs:p-4 sm:p-6 bg-slate-900/65 backdrop-blur-md animate-in fade-in duration-300 select-none overflow-y-auto"
     >
       {/* Floating Sorrow Feathers in Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <span className="absolute top-[8%] left-[12%] text-neutral-400/50 text-2xl anim-feather-fall-1">🪶</span>
-        <span className="absolute top-[18%] right-[16%] text-neutral-400/50 text-xl anim-feather-fall-2">🪶</span>
-        <span className="absolute top-[32%] left-[28%] text-neutral-400/40 text-3xl anim-feather-fall-3">🪶</span>
-        <span className="absolute top-[14%] right-[32%] text-neutral-400/40 text-lg anim-feather-fall-1">🪶</span>
+        <span className="absolute top-[8%] left-[12%] text-neutral-400/50 text-xl sm:text-2xl anim-feather-fall-1">🪶</span>
+        <span className="absolute top-[18%] right-[16%] text-neutral-400/50 text-lg sm:text-xl anim-feather-fall-2">🪶</span>
+        <span className="absolute top-[32%] left-[28%] text-neutral-400/40 text-2xl sm:text-3xl anim-feather-fall-3">🪶</span>
+        <span className="absolute top-[14%] right-[32%] text-neutral-400/40 text-base sm:text-lg anim-feather-fall-1">🪶</span>
       </div>
 
       {/* Light Theme Modal Surface */}
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-xl rounded-3xl border border-[#E2E8F0] bg-white p-6 sm:p-10 shadow-[0_30px_90px_rgba(0,0,0,0.35)] text-center animate-in zoom-in-95 slide-in-from-bottom-3 duration-300"
+        className="relative w-full max-w-lg md:max-w-xl max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-3.5rem)] rounded-2xl sm:rounded-3xl border border-[#E2E8F0] bg-white p-4 pt-11 sm:p-7 md:p-9 shadow-[0_30px_90px_rgba(0,0,0,0.35)] text-center animate-in zoom-in-95 slide-in-from-bottom-3 duration-300 flex flex-col my-auto overflow-hidden"
       >
         {/* Audio Toggle & Close Buttons */}
-        <div className="absolute top-4 right-4 sm:top-5 sm:right-5 flex items-center gap-2">
+        <div className="absolute top-2.5 right-2.5 sm:top-5 sm:right-5 flex items-center gap-1.5 sm:gap-2 z-10">
           <button
             onClick={handleToggleAudio}
             title={isAudioMuted ? 'Unmute Sorrow Requiem' : 'Mute Sorrow Requiem'}
-            className="h-8 px-2.5 rounded-full border border-neutral-200 bg-neutral-100 hover:bg-neutral-200 text-neutral-600 hover:text-black transition-colors flex items-center gap-1.5 cursor-pointer text-[11px] font-mono shadow-2xs"
+            className="h-7 sm:h-8 px-2 sm:px-2.5 rounded-full border border-neutral-200 bg-neutral-100 hover:bg-neutral-200 text-neutral-600 hover:text-black transition-colors flex items-center gap-1 sm:gap-1.5 cursor-pointer text-[10px] sm:text-[11px] font-mono shadow-2xs"
           >
             {isAudioMuted ? (
               <>
-                <VolumeX className="h-3.5 w-3.5 text-neutral-400" />
+                <VolumeX className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-neutral-400" />
                 <span className="text-neutral-400">Muted</span>
               </>
             ) : (
               <>
-                <Volume2 className="h-3.5 w-3.5 text-red-500 animate-pulse" />
+                <Volume2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-red-500 animate-pulse" />
                 <span className="text-red-600">Requiem</span>
               </>
             )}
@@ -652,30 +652,30 @@ export function BirdGuiltEasterEggModal({
           <button
             onClick={handleClose}
             aria-label="Close message"
-            className="h-8 w-8 rounded-full border border-neutral-200 bg-neutral-100 text-neutral-500 hover:text-black hover:border-neutral-300 transition-colors flex items-center justify-center cursor-pointer shadow-2xs"
+            className="h-7 w-7 sm:h-8 sm:w-8 rounded-full border border-neutral-200 bg-neutral-100 text-neutral-500 hover:text-black hover:border-neutral-300 transition-colors flex items-center justify-center cursor-pointer shadow-2xs"
           >
-            <X className="h-4 w-4" />
+            <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </button>
         </div>
 
         {/* Top Eyebrow Tag: 10 BIRDS KILLED */}
-        <div className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-red-50 px-3.5 py-1 text-[10px] sm:text-[10.5px] font-mono tracking-[0.24em] uppercase text-red-600 mb-3 shadow-2xs">
-          <HeartCrack className="h-3.5 w-3.5 text-red-500 animate-pulse" />
+        <div className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-red-200 bg-red-50 px-2.5 sm:px-3.5 py-0.5 sm:py-1 text-[9px] sm:text-[10.5px] font-mono tracking-[0.16em] sm:tracking-[0.24em] uppercase text-red-600 mb-1 sm:mb-2 shadow-2xs self-center">
+          <HeartCrack className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-red-500 animate-pulse" />
           <span>BIRD SANCTUARY ALERT • 10 BIRDS KILLED</span>
         </div>
 
         {/* Realistic Anatomical Hand & Playful Salute Illustration */}
-        <div className="mx-auto my-1 flex justify-center">
+        <div className="mx-auto my-0.5 sm:my-1 flex justify-center shrink-0">
           <RealisticHandSalute onBounce={() => playSorrowRequiemAudio()} />
         </div>
 
         {/* Narrative Title */}
-        <h2 className="text-2xl sm:text-3xl font-serif italic text-[#111827] tracking-tight mt-1 mb-3.5 leading-tight">
+        <h2 className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-serif italic text-[#111827] tracking-tight mt-0.5 sm:mt-1 mb-2 sm:mb-3 leading-tight shrink-0">
           A Message from the Campus Sanctuary
         </h2>
 
         {/* Verbatim Narrative Text in High-Contrast Light Theme */}
-        <div className="space-y-3 text-xs sm:text-[13.5px] text-[#4B5563] font-normal leading-relaxed text-left max-h-[36vh] overflow-y-auto px-1 sm:px-2 pr-3 scrollbar-thin">
+        <div className="space-y-2.5 sm:space-y-3 text-[12px] sm:text-[13.5px] text-[#4B5563] font-normal leading-relaxed text-left flex-1 min-h-0 overflow-y-auto px-1 sm:px-2 pr-2 sm:pr-3 scrollbar-thin">
           <p>
             Congratulations on being such a heartless and cruel person. Imagine
             taking the lives of innocent birds that were simply flying around,
@@ -694,8 +694,8 @@ export function BirdGuiltEasterEggModal({
             display of cruelty, ignorance, and a complete lack of humanity.
           </p>
 
-          <div className="rounded-2xl border border-red-200 bg-red-50/80 p-3.5 sm:p-4 text-red-900 shadow-2xs">
-            <strong className="font-semibold text-red-700 sm:text-[14.5px] text-xs tracking-tight">
+          <div className="rounded-xl sm:rounded-2xl border border-red-200 bg-red-50/80 p-2.5 sm:p-3.5 text-red-900 shadow-2xs">
+            <strong className="font-semibold text-red-700 text-xs sm:text-[13.5px] tracking-tight block">
               Even birds have more compassion for their families than you seem to
               have for living creatures.
             </strong>
@@ -703,20 +703,20 @@ export function BirdGuiltEasterEggModal({
         </div>
 
         {/* Action Buttons: Feeling Sorry (resets and can reappear) vs No Remorse (permanently suppressed) */}
-        <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <div className="mt-3.5 sm:mt-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 sm:gap-3 shrink-0">
           <button
             onClick={handleFeelSorry}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-[#111827] hover:bg-black text-white px-7 py-3 text-xs sm:text-sm font-medium transition-all shadow-md active:scale-98 cursor-pointer"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-[#111827] hover:bg-black text-white px-5 sm:px-7 py-2.5 sm:py-3 text-xs sm:text-sm font-medium transition-all shadow-md active:scale-98 cursor-pointer"
           >
-            <Home className="h-4 w-4" />
-            <span>I&apos;m Truly Sorry &amp; Promise Better</span>
+            <Home className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+            <span className="truncate">I&apos;m Truly Sorry &amp; Promise Better</span>
           </button>
 
           <button
             onClick={handleNoRemorse}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-neutral-300 bg-neutral-100 hover:bg-neutral-200 text-[#4B5563] hover:text-[#111827] px-6 py-3 text-xs sm:text-sm font-medium transition-all cursor-pointer shadow-2xs active:scale-98"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-neutral-300 bg-neutral-100 hover:bg-neutral-200 text-[#4B5563] hover:text-[#111827] px-5 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-medium transition-all cursor-pointer shadow-2xs active:scale-98"
           >
-            <span>I Have No Remorse</span>
+            <span className="truncate">I Have No Remorse</span>
           </button>
         </div>
       </div>
