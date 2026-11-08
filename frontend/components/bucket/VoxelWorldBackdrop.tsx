@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { soundManager } from '@/lib/sound'
-import { BirdGuiltEasterEggModal } from './BirdGuiltEasterEggModal'
+import { BirdGuiltEasterEggModal, sorrowSynth } from './BirdGuiltEasterEggModal'
 
 // ============================================================================
 // SELF-CONTAINED PROCEDURAL MINECRAFT WEB AUDIO SYNTHESIZER
@@ -2004,6 +2004,7 @@ export function VoxelWorldBackdrop() {
           localStorage.setItem('gdg_bird_catch_count', String(next))
         } catch {}
         if (next >= 10) {
+          sorrowSynth.preWarm()
           setTimeout(() => {
             setShowBirdGuiltModal(true)
           }, 950)

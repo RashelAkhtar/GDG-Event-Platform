@@ -1603,35 +1603,77 @@ html.dark .hairline-divider {
    SECRET EASTER EGG & PENANCE MODAL KEYFRAMES
    ========================================================================= */
 
-.anim-middle-finger-sway {
-  animation: finger-gentle-sway 3s ease-in-out infinite;
+.anim-hand-spring-pop {
+  animation: hand-spring-pop 0.85s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  transform-origin: 50% 95%;
+}
+
+@keyframes hand-spring-pop {
+  0% {
+    transform: translateY(70px) scale(0.65) rotate(-6deg);
+    opacity: 0;
+  }
+  45% {
+    transform: translateY(-16px) scale(1.1) rotate(4deg);
+    opacity: 1;
+  }
+  70% {
+    transform: translateY(4px) scale(0.97) rotate(-2deg);
+  }
+  85% {
+    transform: translateY(-2px) scale(1.01) rotate(1deg);
+  }
+  100% {
+    transform: translateY(0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.anim-hand-cheeky-sway {
+  animation: hand-cheeky-sway 3.2s ease-in-out infinite alternate;
   transform-origin: 50% 90%;
 }
 
-@keyframes finger-gentle-sway {
+@keyframes hand-cheeky-sway {
+  0% {
+    transform: rotate(-3.5deg) translateY(0);
+  }
+  50% {
+    transform: rotate(0deg) translateY(-4px);
+  }
+  100% {
+    transform: rotate(3.5deg) translateY(0);
+  }
+}
+
+.anim-middle-finger-salute {
+  animation: finger-salute-pulse 2.2s ease-in-out infinite;
+  transform-origin: 50% 90%;
+}
+
+@keyframes finger-salute-pulse {
   0%, 100% {
-    transform: rotate(0deg);
+    transform: scaleY(1) translateY(0);
   }
-  25% {
-    transform: rotate(-4deg) translateY(-2px);
+  35% {
+    transform: scaleY(1.04) translateY(-3px);
   }
-  75% {
-    transform: rotate(4deg) translateY(-2px);
+  50% {
+    transform: scaleY(0.98) translateY(1px);
   }
+  65% {
+    transform: scaleY(1.02) translateY(-1.5px);
+  }
+}
+
+.anim-middle-finger-sway {
+  animation: hand-cheeky-sway 3.2s ease-in-out infinite alternate;
+  transform-origin: 50% 90%;
 }
 
 .anim-middle-finger-pulse {
-  animation: finger-bob-pulse 2s ease-in-out infinite;
-  transform-origin: 50% 50%;
-}
-
-@keyframes finger-bob-pulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05) translateY(-3px);
-  }
+  animation: finger-salute-pulse 2.2s ease-in-out infinite;
+  transform-origin: 50% 90%;
 }
 
 .anim-feather-fall-1 {
