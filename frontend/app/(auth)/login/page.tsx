@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { GdgLogoBadge, GoogleG } from '@/components/ui/GoogleBrand'
+import Loader from '@/components/ui/Loader'
 import { ArrowLeft, AlertCircle, CheckCircle2, Mail, Users, UserCheck } from 'lucide-react'
 
 function LoginContent() {

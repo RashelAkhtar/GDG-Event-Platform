@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/ui/Navbar'
 import { ScreenshotWarningModal } from '@/components/security/ScreenshotWarningModal'
 import { LocalGameCountdown } from '@/components/realtime/LocalGameCountdown'
+import Loader from '@/components/ui/Loader'
 import {
   api,
   WendBoardConfig,
@@ -556,12 +557,12 @@ export default function WendGamePage() {
 
   if (authLoading || !user) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F9FA] bg-tech-grid">
-        <div className="h-9 w-9 border-3 border-[#34A853] border-t-transparent animate-spin" />
-        <p className="mt-4 font-mono text-xs font-bold uppercase tracking-wider text-[#3C4043]">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F9FA] dark:bg-[#080D1A] transition-colors duration-500">
+        <Loader text="Authenticating..." />
+        <p className="mt-4 font-mono text-xs font-bold uppercase tracking-wider text-[#3C4043] dark:text-[#94A3B8]">
           Authenticating participant...
         </p>
-        <p className="mt-1 font-mono text-[11px] text-[#5F6368]">
+        <p className="mt-1 font-mono text-[11px] text-[#5F6368] dark:text-[#64748B]">
           Guest players are restricted. Redirecting to sign in.
         </p>
       </div>

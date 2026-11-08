@@ -20,6 +20,7 @@ import {
   DEFAULT_MENTIS_EVENT,
 } from '@/lib/api'
 import confetti from 'canvas-confetti'
+import Loader from '@/components/ui/Loader'
 import {
   CheckCircle2,
   ArrowRight,
@@ -350,12 +351,12 @@ function QuizRunnerContent() {
 
   if (authLoading || !user) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F9FA] bg-tech-grid">
-        <div className="h-9 w-9 border-3 border-[#1A73E8] border-t-transparent animate-spin" />
-        <p className="mt-4 font-mono text-xs font-bold uppercase tracking-wider text-[#3C4043]">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F9FA] dark:bg-[#080D1A] transition-colors duration-500">
+        <Loader text="Authenticating..." />
+        <p className="mt-4 font-mono text-xs font-bold uppercase tracking-wider text-[#3C4043] dark:text-[#94A3B8]">
           Verifying participant authentication...
         </p>
-        <p className="mt-1 font-mono text-[11px] text-[#5F6368]">
+        <p className="mt-1 font-mono text-[11px] text-[#5F6368] dark:text-[#64748B]">
           Guest players are restricted. Redirecting to sign in.
         </p>
       </div>
@@ -364,9 +365,9 @@ function QuizRunnerContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F9FA]">
-        <div className="h-9 w-9 border-3 border-[#1A73E8] border-t-transparent animate-spin" />
-        <p className="mt-3 font-mono text-xs text-[#5F6368]">Loading quiz questions...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F9FA] dark:bg-[#080D1A] transition-colors duration-500">
+        <Loader text="Loading quiz..." />
+        <p className="mt-3 font-mono text-xs text-[#5F6368] dark:text-[#94A3B8]">Loading quiz questions...</p>
       </div>
     )
   }
@@ -685,8 +686,8 @@ export default function QuizRunnerPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-[#F8F9FA]">
-          <div className="h-8 w-8 animate-spin rounded-full border-3 border-[#1A73E8] border-t-transparent" />
+        <div className="min-h-screen flex items-center justify-center bg-[#F8F9FA] dark:bg-[#080D1A]">
+          <Loader />
         </div>
       }
     >

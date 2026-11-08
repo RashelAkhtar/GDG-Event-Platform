@@ -1,14 +1,15 @@
 'use client'
 
 import React, { Suspense } from 'react'
+import Loader from '@/components/ui/Loader'
 import { LeaderboardContent } from '@/app/events/[slug]/leaderboard/page'
 
 export default function WendLeaderboardPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA]">
-          <div className="h-7 w-7 animate-spin rounded-full border-2 border-[#111827] border-t-transparent" />
+        <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA] dark:bg-[#080D1A]">
+          <Loader />
         </div>
       }
     >

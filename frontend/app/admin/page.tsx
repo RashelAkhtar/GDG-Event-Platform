@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
+import Loader from '@/components/ui/Loader'
 import {
   api,
   DEFAULT_WEB_EVENT,
@@ -579,14 +580,9 @@ function AdminPageContent() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#FAFAFA] text-[#111827]">
-        <div className="flex flex-col items-center gap-4 p-8 bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_12px_40px_rgba(0,0,0,0.03)] max-w-sm text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#111827] border-t-transparent" />
-          <div>
-            <h2 className="text-sm font-medium text-[#111827] tracking-tight">Verifying Host Authorization</h2>
-            <p className="text-xs text-[#6B7280] mt-1">Connecting to command center session...</p>
-          </div>
-        </div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#FAFAFA] dark:bg-[#080D1A] text-[#111827] dark:text-[#F9FAFB]">
+        <Loader text="Authenticating..." />
+        <p className="text-xs text-[#6B7280] dark:text-[#94A3B8] mt-2">Connecting to command center session...</p>
       </div>
     )
   }
@@ -2361,9 +2357,8 @@ export default function AdminPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F9FA]">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#1A73E8] border-t-transparent" />
-          <p className="mt-3 text-xs text-[#5F6368]">Loading Command Center...</p>
+        <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F9FA] dark:bg-[#080D1A]">
+          <Loader text="Loading command..." />
         </div>
       }
     >

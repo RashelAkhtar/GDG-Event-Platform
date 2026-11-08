@@ -7,6 +7,7 @@ import { Navbar } from '@/components/ui/Navbar'
 import { Podium } from '@/components/leaderboard/Podium'
 import { RankList } from '@/components/leaderboard/RankList'
 import { api, DEFAULT_LEADERBOARD, LeaderboardEntry } from '@/lib/api'
+import Loader from '@/components/ui/Loader'
 import { ArrowLeft, RefreshCw, Trophy, Home } from 'lucide-react'
 
 export function LeaderboardContent({ customSlug }: { customSlug?: string }) {
@@ -89,9 +90,8 @@ export function LeaderboardContent({ customSlug }: { customSlug?: string }) {
         </div>
 
         {loading ? (
-          <div className="my-12 flex flex-col items-center justify-center">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#111827] border-t-transparent" />
-            <p className="mt-3 font-mono text-[10px] uppercase tracking-wider text-[#6B7280]">Syncing standings...</p>
+          <div className="my-8 flex flex-col items-center justify-center">
+            <Loader text="Syncing standings..." />
           </div>
         ) : leaderboard.length === 0 ? (
           <div className="my-12 flex flex-col items-center rounded-2xl border border-[#E5E7EB] dark:border-[#1E293B] bg-white dark:bg-[#0F172A] p-8 text-center shadow-[0_12px_40px_rgba(0,0,0,0.03)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.4)]">
