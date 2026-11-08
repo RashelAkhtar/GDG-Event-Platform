@@ -640,10 +640,6 @@ export function DualQuizSection({
             LIVE CHALLENGE ARENAS
           </h2>
         </div>
-        <span className="inline-flex items-center gap-1.5 bg-white dark:bg-[#0F172A] border border-[#34A853] px-2.5 py-1 font-mono text-[11px] font-bold text-[#137333] dark:text-[#4ADE80] shadow-2xs">
-          <span className="h-2 w-2 bg-[#34A853] animate-pulse" />
-          <span>REALTIME SYNC</span>
-        </span>
       </div>
 
       {/* Mobile Scroll-Linked Track Navigator Bar */}
