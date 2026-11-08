@@ -1997,13 +1997,19 @@ export function VoxelWorldBackdrop() {
       // 1. Play hit sound immediately
       voxelAudio.playHurt()
 
-      // Track caught birds for secret penance easter egg (triggers on 10 birds)
+      // Track caught birds for secret penance easter egg (triggers on 10 birds unless user selected No Remorse)
       setBirdCatchCount((prev) => {
         const next = prev + 1
         try {
           localStorage.setItem('gdg_bird_catch_count', String(next))
         } catch {}
-        if (next >= 10) {
+
+        let hasNoRemorse = false
+        try {
+          hasNoRemorse = typeof window !== 'undefined' && localStorage.getItem('gdg_bird_guilt_no_remorse') === 'true'
+        } catch {}
+
+        if (!hasNoRemorse && next >= 10 && next % 10 === 0) {
           playSorrowRequiemAudio()
           setTimeout(() => {
             setShowBirdGuiltModal(true)
@@ -2429,7 +2435,16 @@ export function VoxelWorldBackdrop() {
       {/* Secret Penance Easter Egg Full-Page Overlay */}
       <BirdGuiltEasterEggModal
         isOpen={showBirdGuiltModal}
-        onClose={() => setShowBirdGuiltModal(false)}
+        onClose={() => {
+          setShowBirdGuiltModal(false)
+          try {
+            const saved = parseInt(localStorage.getItem('gdg_bird_catch_count') || '0', 10)
+            if (!isNaN(saved)) setBirdCatchCount(saved)
+          } catch {}
+        }}
+        onResetCount={() => {
+          setBirdCatchCount(0)
+        }}
       />
 
       {/* 6. AMBIENT PARTICLES: DAYTIME MOTES / NIGHT FIREFLIES     */}

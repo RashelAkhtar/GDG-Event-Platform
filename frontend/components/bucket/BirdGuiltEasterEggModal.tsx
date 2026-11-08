@@ -532,11 +532,13 @@ function RealisticHandSalute({ onBounce }: { onBounce?: () => void }) {
 interface BirdGuiltEasterEggModalProps {
   isOpen: boolean
   onClose: () => void
+  onResetCount?: () => void
 }
 
 export function BirdGuiltEasterEggModal({
   isOpen,
   onClose,
+  onResetCount,
 }: BirdGuiltEasterEggModalProps) {
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
@@ -568,14 +570,24 @@ export function BirdGuiltEasterEggModal({
     }
   }, [isOpen])
 
-  const handleReturnHome = useCallback(() => {
+  const handleFeelSorry = useCallback(() => {
     try {
+      localStorage.removeItem('gdg_bird_guilt_no_remorse')
       localStorage.setItem('gdg_bird_catch_count', '0')
     } catch {}
+    onResetCount?.()
     stopSorrowRequiemAudio()
     onClose()
     router.push('/')
-  }, [onClose, router])
+  }, [onClose, onResetCount, router])
+
+  const handleNoRemorse = useCallback(() => {
+    try {
+      localStorage.setItem('gdg_bird_guilt_no_remorse', 'true')
+    } catch {}
+    stopSorrowRequiemAudio()
+    onClose()
+  }, [onClose])
 
   const handleClose = useCallback(() => {
     stopSorrowRequiemAudio()
@@ -690,21 +702,21 @@ export function BirdGuiltEasterEggModal({
           </div>
         </div>
 
-        {/* Call to Action Button: Redirect Home & Seek Forgiveness */}
+        {/* Action Buttons: Feeling Sorry (resets and can reappear) vs No Remorse (permanently suppressed) */}
         <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
           <button
-            onClick={handleReturnHome}
+            onClick={handleFeelSorry}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-[#111827] hover:bg-black text-white px-7 py-3 text-xs sm:text-sm font-medium transition-all shadow-md active:scale-98 cursor-pointer"
           >
             <Home className="h-4 w-4" />
-            <span>Return Home &amp; Promise Better</span>
+            <span>I&apos;m Truly Sorry &amp; Promise Better</span>
           </button>
 
           <button
-            onClick={handleClose}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-neutral-300 bg-neutral-100 hover:bg-neutral-200 text-[#4B5563] hover:text-[#111827] px-5 py-3 text-xs sm:text-sm font-medium transition-all cursor-pointer shadow-2xs"
+            onClick={handleNoRemorse}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-neutral-300 bg-neutral-100 hover:bg-neutral-200 text-[#4B5563] hover:text-[#111827] px-6 py-3 text-xs sm:text-sm font-medium transition-all cursor-pointer shadow-2xs active:scale-98"
           >
-            <span>Dismiss Penance</span>
+            <span>I Have No Remorse</span>
           </button>
         </div>
       </div>
