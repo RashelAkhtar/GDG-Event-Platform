@@ -101,7 +101,6 @@ function AdminPageContent() {
   const [options, setOptions] = useState(['', '', '', ''])
   const [correctOptionIndex, setCorrectOptionIndex] = useState(0)
   const [points, setPoints] = useState(100)
-  const [timeLimitSeconds, setTimeLimitSeconds] = useState(30)
 
   // Wend Snake Board Studio state
   const [wendBoard, setWendBoard] = useState<WendBoardConfig>(() => api.getWendBoard())
@@ -130,7 +129,6 @@ function AdminPageContent() {
   const [editQOptions, setEditQOptions] = useState(['', '', '', ''])
   const [editQCorrectIndex, setEditQCorrectIndex] = useState(0)
   const [editQPoints, setEditQPoints] = useState(100)
-  const [editQTimeLimit, setEditQTimeLimit] = useState(30)
 
   // Target Word Inline Editing (Panel 3: Wend Snake Board Studio)
   const [editingTargetWordId, setEditingTargetWordId] = useState<string | null>(null)
@@ -327,7 +325,6 @@ function AdminPageContent() {
     setEditQOptions([...q.options])
     setEditQCorrectIndex(q.correctOptionIndex ?? 0)
     setEditQPoints(q.points || 100)
-    setEditQTimeLimit(q.timeLimitSeconds || 30)
   }
 
   const handleCancelEditQuestion = () => {
@@ -354,7 +351,6 @@ function AdminPageContent() {
           options: cleanOpts,
           correctOptionIndex: editQCorrectIndex,
           points: Number(editQPoints),
-          timeLimitSeconds: Number(editQTimeLimit),
         }
       }
       return q
@@ -433,7 +429,6 @@ function AdminPageContent() {
       options: cleanOptions,
       correctOptionIndex,
       points: Number(points),
-      timeLimitSeconds: Number(timeLimitSeconds),
       order: questionsList.length + 1,
     }
 
@@ -627,10 +622,6 @@ function AdminPageContent() {
                   <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-[#FAFAFA] border border-[#E5E7EB] px-2 py-0.5 font-mono text-[8.5px] uppercase tracking-wider text-[#6B7280]">
                     Host Session
                   </span>
-                </div>
-                <div className="mt-1 flex items-center gap-1.5 font-mono text-[11px] text-[#6B7280]">
-                  <span>Active Session:</span>
-                  <strong className="font-semibold text-[#111827]">aryan.crores@gmail.com</strong>
                 </div>
               </div>
             </div>
@@ -994,23 +985,6 @@ function AdminPageContent() {
                   </div>
                 </div>
               </div>
-
-              <div className="relative overflow-hidden rounded-3xl border border-[#E5E7EB]/80 bg-white/90 backdrop-blur-md p-4 sm:p-5 shadow-xs hover:shadow-md transition-all">
-                <div className="absolute top-0 left-0 right-0 h-1 bg-[#FBBC04]" />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="block text-2xl sm:text-3xl font-black text-[#B06000] tracking-tight">
-                      {questionsList.reduce((acc, q) => acc + (q.timeLimitSeconds || 30), 0)}s
-                    </span>
-                    <span className="mt-1 block text-xs font-semibold text-[#5F6368]">
-                      Total Duration ({Math.ceil(questionsList.reduce((acc, q) => acc + (q.timeLimitSeconds || 30), 0) / 60)}m)
-                    </span>
-                  </div>
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FEF7E0] text-[#B06000]">
-                    <Clock className="h-5 w-5" />
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* Track Settings & Title/Description Editor */}
@@ -1191,23 +1165,6 @@ function AdminPageContent() {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-[11px] font-bold uppercase tracking-wider text-[#3C4043] mb-1">
-                      Question Timer Limit
-                    </label>
-                    <div className="flex items-center gap-2 rounded-xl border border-[#E5E7EB] bg-[#F8F9FA] px-3 py-2">
-                      <Clock className="h-4 w-4 text-[#5F6368] shrink-0" />
-                      <input
-                        type="number"
-                        value={timeLimitSeconds}
-                        onChange={(e) => setTimeLimitSeconds(Number(e.target.value))}
-                        className="w-full text-xs font-bold text-[#202124] bg-transparent focus:outline-none"
-                        min={5}
-                        max={300}
-                      />
-                      <span className="text-[11px] font-semibold text-[#5F6368]">seconds</span>
-                    </div>
-                  </div>
                 </div>
 
                 <button
@@ -1335,22 +1292,6 @@ function AdminPageContent() {
                               </div>
                             </div>
 
-                            <div>
-                              <label className="block text-[10px] font-bold text-[#3C4043] uppercase tracking-wider mb-1">
-                                Time Limit (Sec)
-                              </label>
-                              <div className="flex items-center gap-1.5 rounded-xl border border-[#E5E7EB] bg-[#F8F9FA] px-3 py-1.5">
-                                <Clock className="h-3.5 w-3.5 text-[#5F6368]" />
-                                <input
-                                  type="number"
-                                  value={editQTimeLimit}
-                                  onChange={(e) => setEditQTimeLimit(Number(e.target.value))}
-                                  className="w-full text-xs font-bold text-[#202124] bg-transparent focus:outline-none"
-                                  min={5}
-                                  max={300}
-                                />
-                              </div>
-                            </div>
                           </div>
 
                           <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#E5E7EB]">
@@ -1442,10 +1383,6 @@ function AdminPageContent() {
                         <span className="inline-flex items-center gap-1 font-semibold">
                           <Award className="h-3 w-3 text-[#FBBC04]" />
                           <span>Award: <strong>{q.points || 100} pts</strong></span>
-                        </span>
-                        <span className="inline-flex items-center gap-1 font-semibold">
-                          <Clock className="h-3 w-3 text-[#5F6368]" />
-                          <span>Timer Limit: <strong>{q.timeLimitSeconds || 30}s</strong></span>
                         </span>
                       </div>
                     </div>
