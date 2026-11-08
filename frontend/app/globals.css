@@ -1373,6 +1373,44 @@ html.dark .hairline-divider {
 }
 
 /* =========================================================================
+   REALISTIC VOLUMETRIC CLOUD DRIFT & AMBIENT FLOAT
+   ========================================================================= */
+
+.anim-realistic-cloud-slow {
+  animation: realistic-cloud-drift 56s linear infinite;
+}
+
+.anim-realistic-cloud-med {
+  animation: realistic-cloud-drift 40s linear infinite;
+}
+
+.anim-realistic-cloud-fast {
+  animation: realistic-cloud-drift 30s linear infinite;
+}
+
+@keyframes realistic-cloud-drift {
+  0% {
+    left: -260px;
+  }
+  100% {
+    left: calc(100% + 260px);
+  }
+}
+
+.anim-cloud-float-subtle {
+  animation: cloud-float-bob 4.5s ease-in-out infinite alternate;
+}
+
+@keyframes cloud-float-bob {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-4px);
+  }
+}
+
+/* =========================================================================
    REALISTIC CELESTIAL ORBIT & TRANSITIONS (DAY, EVENING, NIGHT)
    ========================================================================= */
 

@@ -1233,6 +1233,230 @@ function RealisticDandelion({ bouncing }: { bouncing: boolean }) {
 }
 
 // ============================================================================
+// REALISTIC VOLUMETRIC ATMOSPHERIC CLOUDS (ORGANIC BILLOWS & RIM LIGHTING)
+// ============================================================================
+
+function RealisticCloud({
+  variant,
+  isEvening,
+  isNight,
+}: {
+  variant: 'grand' | 'fluffy' | 'wisp'
+  isEvening: boolean
+  isNight: boolean
+}) {
+  const prefix = `cloud-${variant}`
+
+  // Atmospheric color states
+  // Day: Luminous pure white crown, soft periwinkle-cerulean atmospheric base
+  // Evening: Radiant sunset gold rim, glowing apricot coral mid, twilight plum/violet base
+  // Night: Ethereal silver-cyan moonlit rim, slate-indigo core, midnight navy base
+  const rimColor = isNight ? '#BAE6FD' : isEvening ? '#FEF08A' : '#FFFFFF'
+  const topColor = isNight ? '#E2E8F0' : isEvening ? '#FED7AA' : '#FFFFFF'
+  const midColor = isNight ? '#475569' : isEvening ? '#FB923C' : '#F8FAFC'
+  const baseColor = isNight ? '#0F172A' : isEvening ? '#581C87' : '#E0F2FE'
+  const creaseColor = isNight ? '#0B1329' : isEvening ? '#701A75' : '#BAE6FD'
+
+  if (variant === 'grand') {
+    return (
+      <div className="relative select-none anim-cloud-float-subtle">
+        <svg
+          viewBox="0 0 170 56"
+          className="w-44 sm:w-56 overflow-visible drop-shadow-[0_8px_20px_rgba(0,0,0,0.12)]"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <linearGradient id={`${prefix}-grad`} x1="85" y1="2" x2="85" y2="52" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor={topColor} />
+              <stop offset="35%" stopColor={midColor} />
+              <stop offset="75%" stopColor={isEvening ? '#C026D3' : midColor} />
+              <stop offset="100%" stopColor={baseColor} />
+            </linearGradient>
+
+            <linearGradient id={`${prefix}-rim`} x1="40" y1="2" x2="130" y2="30" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor={rimColor} stopOpacity="0.95" />
+              <stop offset="70%" stopColor={rimColor} stopOpacity="0.6" />
+              <stop offset="100%" stopColor={rimColor} stopOpacity="0.1" />
+            </linearGradient>
+          </defs>
+
+          {/* 1. Main Volumetric Cumulus Body */}
+          <path
+            d="M 24 46 C 12 46, 2 38, 5 28 C 7 19, 17 16, 26 18 C 31 8, 48 2, 65 6 C 74 0, 96 0, 107 8 C 117 4, 136 8, 142 19 C 154 20, 165 28, 161 38 C 158 45, 147 46, 138 46 Z"
+            fill={`url(#${prefix}-grad)`}
+            opacity="0.95"
+          />
+
+          {/* 2. Silver / Golden Rim Highlights on Upper Domes */}
+          <path
+            d="M 68 8 C 78 1, 95 1, 105 8"
+            stroke={`url(#${prefix}-rim)`}
+            strokeWidth="3.2"
+            strokeLinecap="round"
+          />
+          <path
+            d="M 33 12 C 42 6, 54 5, 62 9"
+            stroke={`url(#${prefix}-rim)`}
+            strokeWidth="2.5"
+            strokeLinecap="round"
+          />
+          <path
+            d="M 112 9 C 124 6, 134 10, 140 18"
+            stroke={`url(#${prefix}-rim)`}
+            strokeWidth="2.4"
+            strokeLinecap="round"
+          />
+          <path
+            d="M 10 24 C 12 18, 19 16, 25 18"
+            stroke={`url(#${prefix}-rim)`}
+            strokeWidth="2"
+            strokeLinecap="round"
+            opacity="0.8"
+          />
+
+          {/* 3. Volumetric Billow Creases */}
+          <path
+            d="M 48 28 C 58 24, 76 26, 84 32"
+            stroke={creaseColor}
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            opacity="0.35"
+          />
+          <path
+            d="M 90 30 C 102 26, 118 28, 126 34"
+            stroke={creaseColor}
+            strokeWidth="2"
+            strokeLinecap="round"
+            opacity="0.3"
+          />
+          <path
+            d="M 28 32 C 34 28, 42 30, 46 34"
+            stroke={creaseColor}
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            opacity="0.25"
+          />
+        </svg>
+      </div>
+    )
+  }
+
+  if (variant === 'fluffy') {
+    return (
+      <div className="relative select-none anim-cloud-float-subtle [animation-delay:-2.2s]">
+        <svg
+          viewBox="0 0 140 48"
+          className="w-36 sm:w-46 overflow-visible drop-shadow-[0_6px_16px_rgba(0,0,0,0.1)]"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <linearGradient id={`${prefix}-grad`} x1="70" y1="2" x2="70" y2="44" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor={topColor} />
+              <stop offset="40%" stopColor={midColor} />
+              <stop offset="80%" stopColor={isEvening ? '#A21CAF' : midColor} />
+              <stop offset="100%" stopColor={baseColor} />
+            </linearGradient>
+
+            <linearGradient id={`${prefix}-rim`} x1="30" y1="2" x2="110" y2="24" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor={rimColor} stopOpacity="0.9" />
+              <stop offset="100%" stopColor={rimColor} stopOpacity="0.2" />
+            </linearGradient>
+          </defs>
+
+          {/* Main Stratocumulus Body */}
+          <path
+            d="M 20 40 C 10 40, 2 33, 5 24 C 7 17, 16 14, 22 16 C 27 7, 42 3, 55 7 C 63 1, 82 2, 91 9 C 99 5, 114 9, 119 18 C 129 19, 136 27, 132 35 C 128 40, 119 40, 110 40 Z"
+            fill={`url(#${prefix}-grad)`}
+            opacity="0.92"
+          />
+
+          {/* Rim Lighting */}
+          <path
+            d="M 60 7 C 72 2, 84 3, 92 10"
+            stroke={`url(#${prefix}-rim)`}
+            strokeWidth="2.8"
+            strokeLinecap="round"
+          />
+          <path
+            d="M 30 11 C 39 6, 48 6, 54 10"
+            stroke={`url(#${prefix}-rim)`}
+            strokeWidth="2.2"
+            strokeLinecap="round"
+          />
+          <path
+            d="M 98 10 C 108 8, 116 11, 120 18"
+            stroke={`url(#${prefix}-rim)`}
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+
+          {/* Inner Billow Creases */}
+          <path
+            d="M 42 24 C 52 20, 68 22, 76 28"
+            stroke={creaseColor}
+            strokeWidth="2"
+            strokeLinecap="round"
+            opacity="0.3"
+          />
+          <path
+            d="M 82 26 C 94 22, 106 24, 112 30"
+            stroke={creaseColor}
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            opacity="0.25"
+          />
+        </svg>
+      </div>
+    )
+  }
+
+  // variant === 'wisp'
+  return (
+    <div className="relative select-none anim-cloud-float-subtle [animation-delay:-3.8s]">
+      <svg
+        viewBox="0 0 110 36"
+        className="w-28 sm:w-36 overflow-visible drop-shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <linearGradient id={`${prefix}-grad`} x1="55" y1="2" x2="55" y2="32" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor={topColor} />
+            <stop offset="50%" stopColor={midColor} />
+            <stop offset="100%" stopColor={baseColor} />
+          </linearGradient>
+        </defs>
+
+        {/* Ethereal Wisp Cloudlet Body */}
+        <path
+          d="M 14 26 C 6 26, 0 21, 4 15 C 8 9, 20 9, 28 13 C 35 6, 54 4, 66 10 C 74 6, 88 8, 93 15 C 102 17, 105 24, 98 27 C 92 28, 84 26, 75 26 Z"
+          fill={`url(#${prefix}-grad)`}
+          opacity="0.82"
+        />
+
+        {/* Top Whispy Highlights */}
+        <path
+          d="M 38 9 C 48 5, 58 5, 66 11"
+          stroke={rimColor}
+          strokeWidth="2"
+          strokeLinecap="round"
+          opacity="0.8"
+        />
+        <path
+          d="M 72 10 C 80 8, 88 10, 92 16"
+          stroke={rimColor}
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          opacity="0.75"
+        />
+      </svg>
+    </div>
+  )
+}
+
+// ============================================================================
 // DYNAMIC RANDOM BIRD DATA TYPES & CELESTIAL TYPES
 // ============================================================================
 
@@ -1767,109 +1991,21 @@ export function VoxelWorldBackdrop() {
       </div>
 
       {/* ======================================================== */}
-      {/* 2. PROCEDURAL 3D VOLUMETRIC MINECRAFT CLOUDS             */}
+      {/* 2. REALISTIC VOLUMETRIC ATMOSPHERIC CLOUDS (PARALLAX)    */}
       {/* ======================================================== */}
-      {/* Cloud 1: High-Altitude Stepped 3D Voxel Cloud */}
-      <div className="absolute top-2 left-0 anim-voxel-cloud-slow pointer-events-none">
-        <div className="flex flex-col items-center">
-          <div
-            className={`h-2.5 w-20 rounded-t-[1px] border-t border-x transition-colors duration-1000 ${
-              isNight
-                ? 'border-[#475569] bg-[#64748B]/90'
-                : isSunset
-                ? 'border-[#EA580C] bg-[#FFEDD5]'
-                : isSunrise
-                ? 'border-[#FB923C] bg-[#FFF7ED]'
-                : 'border-[#E2E8F0] bg-white'
-            }`}
-          />
-          <div
-            className={`h-4 w-36 border shadow-[0_2px_0_0_rgba(0,0,0,0.06)] transition-colors duration-1000 ${
-              isNight
-                ? 'border-[#334155] bg-[#475569]/90'
-                : isSunset
-                ? 'border-[#EA580C]/80 bg-[#FEF08A]/95'
-                : isSunrise
-                ? 'border-[#F43F5E]/70 bg-[#FFF1F2]/95'
-                : 'border-[#CBD5E1] bg-white'
-            }`}
-          />
-          <div
-            className={`h-2 w-24 rounded-b-[1px] border-b border-x transition-colors duration-1000 ${
-              isNight
-                ? 'border-[#1E293B] bg-[#1E293B]/90'
-                : isSunset
-                ? 'border-[#C2410C] bg-[#FED7AA]'
-                : isSunrise
-                ? 'border-[#BE185D] bg-[#FCE7F3]'
-                : 'border-[#94A3B8] bg-[#E2E8F0]'
-            }`}
-          />
-        </div>
+      {/* Cloud 1: High-Altitude Majestic Cumulus Bank */}
+      <div className="absolute top-1 sm:top-2 left-0 anim-realistic-cloud-slow pointer-events-none [animation-delay:-16s] z-10">
+        <RealisticCloud variant="grand" isEvening={isEvening} isNight={isNight} />
       </div>
 
-      {/* Cloud 2: Mid-Altitude Trailing Stepped Cloud */}
-      <div className="absolute top-12 left-0 anim-voxel-cloud-med pointer-events-none">
-        <div className="flex flex-col items-center">
-          <div
-            className={`h-2 w-14 rounded-t-[1px] border-t border-x transition-colors duration-1000 ${
-              isNight
-                ? 'border-[#475569] bg-[#64748B]/80'
-                : isSunset
-                ? 'border-[#EA580C] bg-[#FFEDD5]'
-                : 'border-[#E2E8F0] bg-white'
-            }`}
-          />
-          <div
-            className={`h-3 w-28 border transition-colors duration-1000 ${
-              isNight
-                ? 'border-[#334155] bg-[#475569]/80'
-                : isSunset
-                ? 'border-[#EA580C]/80 bg-[#FEF08A]/90'
-                : 'border-[#CBD5E1] bg-white'
-            }`}
-          />
-          <div
-            className={`h-1.5 w-18 rounded-b-[1px] border-b border-x transition-colors duration-1000 ${
-              isNight
-                ? 'border-[#1E293B] bg-[#1E293B]/80'
-                : isSunset
-                ? 'border-[#C2410C] bg-[#FED7AA]'
-                : 'border-[#94A3B8] bg-[#E2E8F0]'
-            }`}
-          />
-        </div>
+      {/* Cloud 2: Mid-Altitude Stratocumulus Bank */}
+      <div className="absolute top-9 sm:top-12 left-0 anim-realistic-cloud-med pointer-events-none [animation-delay:-32s] z-10">
+        <RealisticCloud variant="fluffy" isEvening={isEvening} isNight={isNight} />
       </div>
 
-      {/* Cloud 3: Foreground Crisp Cloud */}
-      <div className="absolute top-22 left-0 anim-voxel-cloud-slow pointer-events-none [animation-delay:-24s]">
-        <div className="flex flex-col items-center">
-          <div
-            className={`h-1.5 w-10 border-t border-x transition-colors duration-1000 ${
-              isNight
-                ? 'border-[#475569] bg-[#64748B]/70'
-                : isSunset
-                ? 'border-[#EA580C] bg-[#FFEDD5]'
-                : 'border-[#E2E8F0] bg-white'
-            }`}
-          />
-          <div
-            className={`h-2.5 w-20 border transition-colors duration-1000 ${
-              isNight
-                ? 'border-[#334155] bg-[#475569]/70'
-                : isSunset
-                ? 'border-[#EA580C]/80 bg-[#FEF08A]/85'
-                : 'border-[#CBD5E1] bg-white'
-            }`}
-          />
-          <div
-            className={`h-1 w-12 border-b border-x transition-colors duration-1000 ${
-              isNight
-                ? 'border-[#1E293B] bg-[#1E293B]/70'
-                : 'border-[#94A3B8] bg-[#E2E8F0]'
-            }`}
-          />
-        </div>
+      {/* Cloud 3: Foreground Ethereal Wispy Cloudlet */}
+      <div className="absolute top-16 sm:top-20 left-0 anim-realistic-cloud-fast pointer-events-none [animation-delay:-8s] z-10">
+        <RealisticCloud variant="wisp" isEvening={isEvening} isNight={isNight} />
       </div>
 
       {/* ======================================================== */}
