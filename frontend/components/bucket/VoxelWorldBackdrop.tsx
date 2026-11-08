@@ -1747,6 +1747,9 @@ export function VoxelWorldBackdrop() {
       if (savedTheme === 'true') {
         setSkyPhase('night')
         document.documentElement.classList.add('dark')
+      } else {
+        setSkyPhase('day')
+        document.documentElement.classList.remove('dark')
       }
     } catch {}
   }, [])
@@ -1848,8 +1851,12 @@ export function VoxelWorldBackdrop() {
 
       // 2. Synchronized Sky Crossfade & Horizon Crossover Theme Timing
       if (mode === 'day-to-evening') {
-        // Immediate smooth sky crossfade from daytime to golden hour
+        // Immediate smooth sky crossfade from daytime to golden hour (remains in warm light mode)
         setTargetSkyPhase('evening')
+        try {
+          localStorage.setItem('minecraft_dark_mode', 'false')
+          document.documentElement.classList.remove('dark')
+        } catch {}
         setTimeout(() => {
           setSkyPhase('evening')
           setTargetSkyPhase(null)

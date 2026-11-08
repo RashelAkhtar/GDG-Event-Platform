@@ -30,8 +30,24 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-[#FAFAFA] text-[#111827]">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                if (localStorage.getItem('minecraft_dark_mode') === 'true') {
+                  document.documentElement.classList.add('dark');
+                } else {
+                  document.documentElement.classList.remove('dark');
+                }
+              } catch (e) {}
+            `,
+          }}
+        />
+      </head>
+      <body className="min-h-full flex flex-col bg-[#FAFAFA] dark:bg-[#080D1A] text-[#111827] dark:text-[#F9FAFB] transition-colors duration-500">
         <AuthProvider>
           <WebSocketProvider>
             {children}
