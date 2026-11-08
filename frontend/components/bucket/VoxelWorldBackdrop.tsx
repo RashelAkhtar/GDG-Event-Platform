@@ -402,8 +402,8 @@ function RealisticBird({
 
   return (
     <div
-      className={`relative select-none transition-all duration-200 ${
-        isHit ? 'filter-red-flash scale-90' : ''
+      className={`relative select-none transition-all duration-300 ${
+        isHit ? 'filter-red-flash scale-95' : ''
       }`}
     >
       <svg
@@ -411,8 +411,27 @@ function RealisticBird({
         className="w-13 h-9 sm:w-14 sm:h-10 overflow-visible drop-shadow-[0_4px_8px_rgba(0,0,0,0.18)]"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
+        style={
+          isHit
+            ? {
+                filter: `url(#${prefix}-hurt-red) drop-shadow(0 0 10px rgba(220, 38, 38, 0.9))`,
+              }
+            : undefined
+        }
       >
         <defs>
+          {/* Intense Crimson Damage Color Matrix: shifts feather tones into rich hurt red while preserving darks and highlights */}
+          <filter id={`${prefix}-hurt-red`} colorInterpolationFilters="sRGB">
+            <feColorMatrix
+              type="matrix"
+              values="
+                1.75  0.25  0.25  0  0.30
+                0.08  0.15  0.08  0  0.02
+                0.08  0.08  0.15  0  0.02
+                0     0     0     1  0"
+            />
+          </filter>
+
           <linearGradient id={`${prefix}-body`} x1="38" y1="9" x2="32" y2="38" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stopColor={p.bodyHighlight} />
             <stop offset="40%" stopColor={p.bodyPrimary} />
@@ -446,8 +465,8 @@ function RealisticBird({
           </linearGradient>
         </defs>
 
-        {/* 1. FAR WING (Background - Flaps in perspective behind body) */}
-        <g className="anim-bird-wing-far">
+        {/* 1. FAR WING (Limp wounded flutter on hit; flight stroke when flying) */}
+        <g className={isHit ? 'anim-bird-wing-limp' : 'anim-bird-wing-far'}>
           <path
             d="M 28 19 C 24 10, 16 3, 9 1 C 11 6, 13 13, 16 18 C 19 21, 23 22, 28 20 Z"
             fill={`url(#${prefix}-wing-far)`}
@@ -460,7 +479,7 @@ function RealisticBird({
         </g>
 
         {/* 2. TAIL FEATHERS (Layered Rectrices with wind flex) */}
-        <g className="anim-bird-tail-flex">
+        <g className={isHit ? undefined : 'anim-bird-tail-flex'}>
           <path
             d="M 19 26 C 13 27, 7 30, 0 33 C 4 34, 11 33, 18 29 Z"
             fill={`url(#${prefix}-tail)`}
@@ -497,7 +516,7 @@ function RealisticBird({
         </g>
 
         {/* 4. MAIN BIRD BODY (Mantle, Nape, Breast, Belly, Eye, Beak) */}
-        <g className="anim-bird-body-bob">
+        <g className={isHit ? undefined : 'anim-bird-body-bob'}>
           <path
             d="M 40 10 C 47 9, 53 12, 55 17 C 54 21, 52 26, 47 31 C 41 36, 30 36, 24 34 C 19 32, 17 28, 19 25 C 24 20, 32 16, 40 10 Z"
             fill={`url(#${prefix}-body)`}
@@ -507,6 +526,15 @@ function RealisticBird({
             d="M 54 18 C 53 22, 51 26, 47 30 C 42 34, 33 35, 27 34 C 33 36, 43 35, 48 29 C 52 24, 54 20, 54 18 Z"
             fill={`url(#${prefix}-breast)`}
           />
+
+          {/* Crimson plumage flush overlay when hit */}
+          {isHit && (
+            <path
+              d="M 40 10 C 47 9, 53 12, 55 17 C 54 21, 52 26, 47 31 C 41 36, 30 36, 24 34 C 19 32, 17 28, 19 25 C 24 20, 32 16, 40 10 Z"
+              fill="#DC2626"
+              opacity="0.32"
+            />
+          )}
 
           {/* Crown Crest */}
           <path
@@ -540,17 +568,30 @@ function RealisticBird({
             <circle cx="48" cy="20" r="3.2" fill={p.cheekBlush} opacity="0.88" />
           )}
 
-          {/* REALISTIC EYE */}
-          <g>
-            <circle cx="50" cy="15.2" r="3.2" fill="#09090B" opacity="0.25" />
-            <circle cx="50" cy="15.2" r="2.5" fill={p.eyeIris} />
-            <circle cx="50" cy="15.2" r="1.6" fill="#09090B" />
-            <circle cx="50.8" cy="14.4" r="0.8" fill="#FFFFFF" />
-            <circle cx="49.3" cy="15.9" r="0.4" fill="#FFFFFF" opacity="0.8" />
-          </g>
+          {/* REALISTIC EYE (Squints shut in pain when hit) */}
+          {isHit ? (
+            <g>
+              <path
+                d="M 47.5 13.8 L 51 15.2 L 47.5 16.6"
+                stroke="#1E1B4B"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
+            </g>
+          ) : (
+            <g>
+              <circle cx="50" cy="15.2" r="3.2" fill="#09090B" opacity="0.25" />
+              <circle cx="50" cy="15.2" r="2.5" fill={p.eyeIris} />
+              <circle cx="50" cy="15.2" r="1.6" fill="#09090B" />
+              <circle cx="50.8" cy="14.4" r="0.8" fill="#FFFFFF" />
+              <circle cx="49.3" cy="15.9" r="0.4" fill="#FFFFFF" opacity="0.8" />
+            </g>
+          )}
 
-          {/* TWO-PIECE BEAK */}
-          <g>
+          {/* TWO-PIECE BEAK (Slight agape reflex on hit) */}
+          <g transform={isHit ? 'rotate(6 54 18)' : undefined}>
             <path
               d="M 54 14.5 C 58 15, 62 16.5, 66 18.5 C 62 18.8, 58 18.6, 54 17.5 Z"
               fill={`url(#${prefix}-beak)`}
@@ -577,8 +618,8 @@ function RealisticBird({
           </g>
         </g>
 
-        {/* 5. NEAR FOREGROUND WING (Coverts + Primaries + Secondaries) */}
-        <g className="anim-bird-wing-near">
+        {/* 5. NEAR FOREGROUND WING (Limp flutter on hit; flight stroke when flying) */}
+        <g className={isHit ? 'anim-bird-wing-limp' : 'anim-bird-wing-near'}>
           <path
             d="M 34 21 C 28 11, 20 4, 12 1.5 C 14 7, 16 13, 20 18 C 24 23, 29 24, 35 22 Z"
             fill={`url(#${prefix}-wing-near)`}
@@ -766,6 +807,8 @@ interface ActiveBird {
   scale: number
   status: BirdStatus
   hitKey: number
+  hitLeftPercent?: number
+  hitTopPercent?: number
 }
 
 export type SkyPhase = 'day' | 'evening' | 'night'
@@ -803,6 +846,7 @@ export function VoxelWorldBackdrop() {
   const [flowerBounce, setFlowerBounce] = useState<Record<string, boolean>>({})
   const [skyRipples, setSkyRipples] = useState<{ id: number; x: number; y: number }[]>([])
   const birdTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const backdropRef = useRef<HTMLDivElement>(null)
 
   // Initialize day/night mode from localStorage and sync with HTML dark class
   useEffect(() => {
@@ -974,34 +1018,56 @@ export function VoxelWorldBackdrop() {
     [isTransitioning, cycleNextPhase]
   )
 
-  // Handle clicking a bird (Red damage blink, tumble, death poof, drops)
-  const handleBirdClick = useCallback((id: string, name: string) => {
-    setActiveBirds((prev) =>
-      prev.map((b) => {
-        if (b.id !== id || b.status !== 'flying') return b
+  // Handle clicking a bird (Red damage flash, realistic gravity fall, landing poof & drops)
+  const handleBirdClick = useCallback(
+    (id: string, name: string, e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation()
 
-        // 1. Play hit sound & flash red damage
-        voxelAudio.playHurt()
+      // Calculate exact coordinates relative to the backdrop container
+      let hitLeftPercent = 50
+      let hitTopPercent = 20
+      if (backdropRef.current) {
+        const backdropRect = backdropRef.current.getBoundingClientRect()
+        const buttonRect = e.currentTarget.getBoundingClientRect()
+        const centerXPx = buttonRect.left + buttonRect.width / 2 - backdropRect.left
+        const centerYPx = buttonRect.top + buttonRect.height / 2 - backdropRect.top
+        hitLeftPercent = Math.max(3, Math.min(94, (centerXPx / backdropRect.width) * 100))
+        hitTopPercent = Math.max(3, Math.min(75, (centerYPx / backdropRect.height) * 100))
+      }
 
-        // 2. Schedule death poof and loot drop after damage tumble
+      // 1. Play hit sound immediately
+      voxelAudio.playHurt()
+
+      // 2. Transition bird to 'hit' status locked at exact clicked coordinates
+      setActiveBirds((prev) =>
+        prev.map((b) => {
+          if (b.id !== id || b.status !== 'flying') return b
+          return {
+            ...b,
+            status: 'hit',
+            hitLeftPercent,
+            hitTopPercent,
+          }
+        })
+      )
+
+      // 3. Fall lasts 1.15s - play poof and xp chime upon ground impact
+      setTimeout(() => {
+        voxelAudio.playPoof()
+        voxelAudio.playXp()
+
+        setActiveBirds((inner) =>
+          inner.map((item) => (item.id === id ? { ...item, status: 'dead' } : item))
+        )
+
+        // 4. Remove dead bird after explosion finishes (1.2s)
         setTimeout(() => {
-          voxelAudio.playPoof()
-          voxelAudio.playXp()
-
-          setActiveBirds((inner) =>
-            inner.map((item) => (item.id === id ? { ...item, status: 'dead' } : item))
-          )
-
-          // 3. Remove dead bird after explosion finishes (1.4s)
-          setTimeout(() => {
-            setActiveBirds((inner) => inner.filter((item) => item.id !== id))
-          }, 1400)
-        }, 550)
-
-        return { ...b, status: 'hit' }
-      })
-    )
-  }, [])
+          setActiveBirds((inner) => inner.filter((item) => item.id !== id))
+        }, 1200)
+      }, 1150)
+    },
+    []
+  )
 
   // Handle tree click interaction
   const handleTreeClick = useCallback((side: 'left' | 'right') => {
@@ -1067,6 +1133,7 @@ export function VoxelWorldBackdrop() {
 
   return (
     <div
+      ref={backdropRef}
       aria-label="Interactive Minecraft Backdrop"
       className="pointer-events-none absolute -inset-x-2 sm:-inset-x-5 -inset-y-3 sm:-inset-y-5 z-0 select-none overflow-hidden rounded-3xl transition-all duration-700"
     >
@@ -1369,14 +1436,18 @@ export function VoxelWorldBackdrop() {
       {/* ======================================================== */}
       {activeBirds.map((bird) => {
         if (bird.status === 'dead') {
-          // Render Smoke Poof Burst & Dropped Feather / XP Orb at hit position
+          // Render Smoke Poof Burst & Dropped Feather / XP Orb at impact landing spot
+          const landingTop = Math.min(88, (bird.hitTopPercent ?? bird.topPercent) + 38)
+          const landingLeft = bird.hitLeftPercent ?? (bird.direction === 'ltr' ? 55 : 45)
+
           return (
             <div
               key={`${bird.id}-poof-${bird.hitKey}`}
-              className="absolute pointer-events-none z-20 flex flex-col items-center"
+              className="absolute pointer-events-none z-30 flex flex-col items-center"
               style={{
-                top: `${bird.topPercent}%`,
-                left: bird.direction === 'ltr' ? '45%' : '55%',
+                top: `${landingTop}%`,
+                left: `${landingLeft}%`,
+                transform: 'translate(-50%, -50%)',
               }}
             >
               {/* 8-Piece Minecraft Voxel Smoke Poof Explosion */}
@@ -1424,7 +1495,46 @@ export function VoxelWorldBackdrop() {
           )
         }
 
-        const isHit = bird.status === 'hit'
+        if (bird.status === 'hit') {
+          // Bird hit: locked at clicked coordinates, redded up, tumbling down under gravity
+          const fallAnimClass =
+            bird.direction === 'ltr'
+              ? 'anim-realistic-bird-fall-ltr'
+              : 'anim-realistic-bird-fall-rtl'
+
+          return (
+            <div
+              key={bird.id}
+              className="absolute z-30 pointer-events-none"
+              style={{
+                left: `${bird.hitLeftPercent ?? 50}%`,
+                top: `${bird.hitTopPercent ?? bird.topPercent}%`,
+                transform: 'translate(-50%, -50%)',
+              }}
+            >
+              <div className={fallAnimClass}>
+                {/* Facing wrapper */}
+                <div
+                  style={{
+                    transform: `scale(${bird.scale}) scaleX(${bird.direction === 'rtl' ? -1 : 1})`,
+                    transformOrigin: 'center center',
+                  }}
+                >
+                  <RealisticBird species={bird.species} isHit={true} />
+                </div>
+
+                {/* Loose shedding feathers drifting in wind as bird falls */}
+                <div className="absolute top-2 left-2 pointer-events-none">
+                  <span className="absolute h-1.5 w-2 rounded-[0.5px] bg-[#DC2626]/85 anim-shed-feather-1" />
+                  <span className="absolute h-1 w-1.5 rounded-[0.5px] bg-[#EF4444]/85 anim-shed-feather-2" />
+                  <span className="absolute h-1 w-2 rounded-[0.5px] bg-[#F59E0B]/85 anim-shed-feather-3" />
+                </div>
+              </div>
+            </div>
+          )
+        }
+
+        // Flying bird
         const animClass =
           bird.direction === 'ltr'
             ? 'anim-voxel-fly-dynamic-ltr'
@@ -1442,19 +1552,10 @@ export function VoxelWorldBackdrop() {
           >
             <button
               type="button"
-              onClick={() => handleBirdClick(bird.id, bird.name)}
+              onClick={(e) => handleBirdClick(bird.id, bird.name, e)}
               aria-label={bird.name}
-              className={`group relative flex items-center p-2 focus:outline-none cursor-pointer transition-transform select-none ${
-                isHit
-                  ? 'anim-voxel-damage anim-voxel-tumble pointer-events-none'
-                  : 'hover:scale-115'
-              }`}
+              className="group relative flex items-center p-2 focus:outline-none cursor-pointer transition-transform select-none hover:scale-115 active:scale-95"
             >
-              {/* Hit Red Damage Overlay Tint */}
-              {isHit && (
-                <div className="absolute inset-0 bg-red-600/40 rounded-full animate-ping pointer-events-none" />
-              )}
-
               {/* Facing & Scaling wrapper: faces RIGHT when ltr, faces LEFT when rtl */}
               <div
                 style={{
@@ -1462,15 +1563,13 @@ export function VoxelWorldBackdrop() {
                   transformOrigin: 'center center',
                 }}
               >
-                <RealisticBird species={bird.species} isHit={isHit} />
+                <RealisticBird species={bird.species} isHit={false} />
               </div>
 
               {/* Hover Badge Tooltip */}
-              {!isHit && (
-                <span className="pointer-events-none absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-[#1E293B] bg-black/85 px-2 py-0.5 font-mono text-[8px] uppercase tracking-wider text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 shadow-md z-40">
-                  {bird.name} • Click to catch! 🎯
-                </span>
-              )}
+              <span className="pointer-events-none absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-[#1E293B] bg-black/85 px-2 py-0.5 font-mono text-[8px] uppercase tracking-wider text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 shadow-md z-40">
+                {bird.name} • Click to catch! 🎯
+              </span>
             </button>
           </div>
         )
