@@ -2,6 +2,16 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { createPortal } from 'react-dom'
+// Module-level preloads for instantaneous texture rendering
+let cachedDeerImg: HTMLImageElement | null = null
+let cachedWheelImg: HTMLImageElement | null = null
+if (typeof window !== 'undefined') {
+  cachedDeerImg = new Image()
+  cachedDeerImg.src = '/game/deer_stag.png'
+  cachedWheelImg = new Image()
+  cachedWheelImg.src = '/game/steering_wheel_hands.png'
+}
+
 import { salmanAudio } from '@/lib/salmanAudio'
 import {
   Volume2,
@@ -648,46 +658,69 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
         const roadWidthAtZ = roadTopWidth + (roadBottomWidth - roadTopWidth) * deerZScale
         const deerX = roadCenterXAtZ + (d.x * roadWidthAtZ * 0.48)
 
-        // Linear Scale Model: 0.38 at horizon -> 1.55 at bumper
-        const scale = 0.38 + d.z * 1.25
-        const deerW = 120 * scale
-        const deerH = 80 * scale
+        // True-to-life majestic stag proportions: 65px at horizon to 285px at car bumper
+        const scale = 0.35 + d.z * 1.55
+        const deerW = 165 * scale
+        const deerH = deerW * (697 / 954) // Exact 1:1 aspect ratio of cropped high-res stag sprite
 
         ctx.save()
-        ctx.translate(deerX, deerY)
+        // Subtle realistic gallop stride bobbing
+        const gallopBob = !d.isHit ? Math.sin(Date.now() * 0.015 + d.id * 3) * (4 * scale) : 0
+        ctx.translate(deerX, deerY + gallopBob)
+
         if (d.isHit) {
           ctx.rotate(d.tumbleAngle)
         }
 
-        // Direction flip: if crossing from right to left, flip horizontally
+        // Direction flip: if crossing from right to left, flip horizontally (sprite naturally faces right)
         const headDir = d.crossingSpeedX > 0 ? 1 : -1
         ctx.scale(headDir, 1)
 
-        // Draw photorealistic stag sprite image
-        if (deerImageRef.current && deerImageRef.current.complete) {
+        const activeDeerImg = deerImageRef.current || cachedDeerImg
+
+        // Draw photorealistic stag sprite image with high-beam illumination
+        if (activeDeerImg && activeDeerImg.complete && activeDeerImg.naturalWidth > 0) {
           ctx.drawImage(
-            deerImageRef.current,
+            activeDeerImg,
             -deerW * 0.5,
             -deerH,
             deerW,
             deerH
           )
+
+          // Soft golden rim-light highlight catching fur from high-beam headlights
+          if (d.z > 0.45) {
+            ctx.save()
+            ctx.globalCompositeOperation = 'source-atop'
+            const headlightGlow = ctx.createLinearGradient(0, -deerH, 0, 0)
+            headlightGlow.addColorStop(0, 'rgba(255, 255, 230, 0.28)')
+            headlightGlow.addColorStop(1, 'rgba(255, 240, 200, 0.05)')
+            ctx.fillStyle = headlightGlow
+            ctx.fillRect(-deerW * 0.5, -deerH, deerW, deerH)
+            ctx.restore()
+          }
         } else {
-          // Instant high-contrast vector fallback while asset is caching
-          const bodyColor = d.species === 'stag' ? '#F59E0B' : d.species === 'buck' ? '#D97706' : '#EA580C'
-          ctx.fillStyle = bodyColor
+          // Anatomical wild deer silhouette fallback with antlers (zero cartoon shapes)
+          ctx.fillStyle = '#D97706'
           ctx.beginPath()
-          ctx.ellipse(0, -deerH * 0.5, deerW * 0.4, deerH * 0.3, 0, 0, Math.PI * 2)
+          ctx.ellipse(0, -deerH * 0.45, deerW * 0.42, deerH * 0.28, 0, 0, Math.PI * 2)
           ctx.fill()
+          // Antlers
+          ctx.strokeStyle = '#FDE047'
+          ctx.lineWidth = Math.max(1.5, 3 * scale)
+          ctx.beginPath()
+          ctx.moveTo(deerW * 0.24, -deerH * 0.8)
+          ctx.lineTo(deerW * 0.35, -deerH * 1.05)
+          ctx.stroke()
         }
 
-        // Luminous Headlight Eye-Shine (Bright Chartreuse Glint on the deer's eye)
+        // Luminous Headlight Eye-Shine (Chartreuse glint precisely on the anatomical eye position: x=73.8%, y=21.5%)
         ctx.fillStyle = '#CCFF00'
         ctx.shadowColor = '#CCFF00'
-        ctx.shadowBlur = Math.max(4, 12 * scale)
+        ctx.shadowBlur = Math.max(4, 14 * scale)
         ctx.beginPath()
-        const eyeX = deerW * 0.32
-        const eyeY = -deerH * 0.76
+        const eyeX = deerW * 0.238
+        const eyeY = -deerH * 0.785
         ctx.arc(eyeX, eyeY, Math.max(2.0, 3.8 * scale), 0, Math.PI * 2)
         ctx.fill()
         ctx.shadowBlur = 0
