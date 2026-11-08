@@ -1728,6 +1728,7 @@ const NIGHT_STARS = [
 
 export function VoxelWorldBackdrop() {
   const [skyPhase, setSkyPhase] = useState<SkyPhase>('day')
+  const [targetSkyPhase, setTargetSkyPhase] = useState<SkyPhase | null>(null)
   const [transitionMode, setTransitionMode] = useState<TransitionMode>(null)
   const [isTransitioning, setIsTransitioning] = useState<boolean>(false)
   const [activeBirds, setActiveBirds] = useState<ActiveBird[]>([])
@@ -1834,29 +1835,60 @@ export function VoxelWorldBackdrop() {
       setIsTransitioning(true)
       setTransitionMode(mode)
 
-      // Audio cue based on target phase
+      // 1. Audio cues
       if (target === 'evening') {
         voxelAudio.playSunset()
       } else if (target === 'night') {
         voxelAudio.playNight()
-        try {
-          localStorage.setItem('minecraft_dark_mode', 'true')
-          document.documentElement.classList.add('dark')
-        } catch {}
       } else if (target === 'day') {
         voxelAudio.playDay()
-        try {
-          localStorage.setItem('minecraft_dark_mode', 'false')
-          document.documentElement.classList.remove('dark')
-        } catch {}
       }
 
-      // Orchestrated 2.25s celestial transition (setting submerged before rising starts)
-      setTimeout(() => {
-        setSkyPhase(target)
-        setTransitionMode(null)
-        setIsTransitioning(false)
-      }, 2250)
+      // 2. Synchronized Sky Crossfade & Horizon Crossover Theme Timing
+      if (mode === 'day-to-evening') {
+        // Immediate smooth sky crossfade from daytime to golden hour
+        setTargetSkyPhase('evening')
+        setTimeout(() => {
+          setSkyPhase('evening')
+          setTargetSkyPhase(null)
+          setTransitionMode(null)
+          setIsTransitioning(false)
+        }, 1250)
+      } else if (mode === 'evening-to-night') {
+        // Horizon Crossover at 950ms: as Sun submerges behind earth line, switch sky to night & toggle dark mode
+        setTimeout(() => {
+          setTargetSkyPhase('night')
+          try {
+            localStorage.setItem('minecraft_dark_mode', 'true')
+            document.documentElement.classList.add('dark')
+          } catch {}
+        }, 950)
+
+        // Complete transition at 2100ms when Moon locks into Night Zenith
+        setTimeout(() => {
+          setSkyPhase('night')
+          setTargetSkyPhase(null)
+          setTransitionMode(null)
+          setIsTransitioning(false)
+        }, 2100)
+      } else if (mode === 'night-to-day') {
+        // Horizon Crossover at 950ms: as Moon submerges behind earth line, dawn breaks & toggle light mode
+        setTimeout(() => {
+          setTargetSkyPhase('day')
+          try {
+            localStorage.setItem('minecraft_dark_mode', 'false')
+            document.documentElement.classList.remove('dark')
+          } catch {}
+        }, 950)
+
+        // Complete transition at 2100ms when Sun locks into Day Zenith
+        setTimeout(() => {
+          setSkyPhase('day')
+          setTargetSkyPhase(null)
+          setTransitionMode(null)
+          setIsTransitioning(false)
+        }, 2100)
+      }
     },
     [isTransitioning, skyPhase]
   )
@@ -1952,9 +1984,10 @@ export function VoxelWorldBackdrop() {
     }, 600)
   }, [])
 
-  const isNight = skyPhase === 'night'
-  const isEvening = skyPhase === 'evening'
-  const isDay = skyPhase === 'day'
+  const displayPhase = targetSkyPhase || skyPhase
+  const isNight = displayPhase === 'night'
+  const isEvening = displayPhase === 'evening'
+  const isDay = displayPhase === 'day'
   const isSunset = isEvening
   const isSunrise = transitionMode === 'night-to-day'
 
@@ -1979,7 +2012,7 @@ export function VoxelWorldBackdrop() {
   } else if (transitionMode === 'night-to-day') {
     sunAnimClass = 'anim-sun-rise-all-the-way'
   } else if (skyPhase === 'evening') {
-    sunAnimClass = 'translate-x-[6px] translate-y-[130px] scale-115'
+    sunAnimClass = 'anim-celestial-sun-evening'
   } else if (skyPhase === 'day') {
     sunAnimClass = 'anim-celestial-sun-day'
   }
@@ -2005,31 +2038,31 @@ export function VoxelWorldBackdrop() {
       <div className="absolute inset-0 z-0 pointer-events-none rounded-3xl overflow-hidden">
         {/* 0A. DAYTIME SKY LAYER */}
         <div
-          className={`absolute inset-0 rounded-3xl border transition-opacity duration-1000 ${
-            skyPhase === 'day' ? 'opacity-100 z-0' : 'opacity-0 -z-10'
+          className={`absolute inset-0 rounded-3xl border transition-opacity duration-1200 ease-in-out ${
+            displayPhase === 'day' ? 'opacity-100 z-0' : 'opacity-0 -z-10'
           } bg-gradient-to-b from-[#7DD3FC]/55 via-[#BAE6FD]/35 to-[#F0FDF4]/30 border-[#7DD3FC]/40 shadow-[inset_0_0_60px_rgba(255,255,255,0.4)]`}
         />
 
         {/* 0B. EVENING / SUNSET / GOLDEN HOUR SKY LAYER */}
         <div
-          className={`absolute inset-0 rounded-3xl border transition-opacity duration-1000 ${
-            skyPhase === 'evening' ? 'opacity-100 z-0' : 'opacity-0 -z-10'
+          className={`absolute inset-0 rounded-3xl border transition-opacity duration-1200 ease-in-out ${
+            displayPhase === 'evening' ? 'opacity-100 z-0' : 'opacity-0 -z-10'
           } bg-gradient-to-b from-[#2E1065] via-[#701A75]/90 via-[#C2410C]/85 via-[#EA580C]/85 to-[#FBBF24]/80 border-[#EA580C]/70 shadow-[inset_0_0_90px_rgba(234,88,12,0.45)]`}
         />
 
         {/* 0C. DEEP STARRY MIDNIGHT SKY LAYER */}
         <div
-          className={`absolute inset-0 rounded-3xl border transition-opacity duration-1000 ${
-            skyPhase === 'night' ? 'opacity-100 z-0' : 'opacity-0 -z-10'
+          className={`absolute inset-0 rounded-3xl border transition-opacity duration-1200 ease-in-out ${
+            displayPhase === 'night' ? 'opacity-100 z-0' : 'opacity-0 -z-10'
           } bg-gradient-to-b from-[#020617] via-[#0B0F19] via-[#0F172A] to-[#1E1B4B]/90 border-[#38BDF8]/25 shadow-[inset_0_0_80px_rgba(15,23,42,0.8)]`}
         />
 
         {/* HORIZON VOLUMETRIC ATMOSPHERIC GLOW STRIP */}
         <div
-          className={`absolute bottom-0 inset-x-0 h-28 pointer-events-none transition-opacity duration-1000 rounded-b-3xl ${
-            isEvening
+          className={`absolute bottom-0 inset-x-0 h-28 pointer-events-none transition-opacity duration-1200 ease-in-out rounded-b-3xl ${
+            displayPhase === 'evening'
               ? 'opacity-100 bg-gradient-to-t from-[#EA580C]/60 via-[#F97316]/30 to-transparent'
-              : isNight
+              : displayPhase === 'night'
               ? 'opacity-100 bg-gradient-to-t from-[#1E1B4B]/40 via-[#0F172A]/20 to-transparent'
               : 'opacity-0'
           }`}
@@ -2040,8 +2073,8 @@ export function VoxelWorldBackdrop() {
 
       {/* Twinkling Minecraft Pixel Night Stars */}
       <div
-        className={`absolute inset-0 pointer-events-none transition-opacity duration-1000 ${
-          isNight ? 'opacity-100' : isEvening ? 'opacity-25' : 'opacity-0'
+        className={`absolute inset-0 pointer-events-none transition-opacity duration-1200 ease-in-out ${
+          displayPhase === 'night' ? 'opacity-100' : displayPhase === 'evening' ? 'opacity-25' : 'opacity-0'
         }`}
       >
         {NIGHT_STARS.map((star, idx) => (
