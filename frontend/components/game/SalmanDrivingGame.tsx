@@ -5,11 +5,14 @@ import { createPortal } from 'react-dom'
 // Module-level preloads for instantaneous texture rendering
 let cachedDeerImg: HTMLImageElement | null = null
 let cachedWheelImg: HTMLImageElement | null = null
+let cachedAsphaltImg: HTMLImageElement | null = null
 if (typeof window !== 'undefined') {
   cachedDeerImg = new Image()
   cachedDeerImg.src = '/game/deer_stag.png'
   cachedWheelImg = new Image()
   cachedWheelImg.src = '/game/steering_wheel_hands.png'
+  cachedAsphaltImg = new Image()
+  cachedAsphaltImg.src = '/game/asphalt_texture.jpg'
 }
 
 import { salmanAudio } from '@/lib/salmanAudio'
@@ -74,6 +77,7 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const animFrameRef = useRef<number | null>(null)
   const deerImageRef = useRef<HTMLImageElement | null>(null)
+  const asphaltImageRef = useRef<HTMLImageElement | null>(null)
 
   // Mutable Game Physics State
   const gameState = useRef({
@@ -105,6 +109,10 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
       const img = new Image()
       img.src = '/game/deer_stag.png'
       deerImageRef.current = img
+
+      const aImg = new Image()
+      aImg.src = '/game/asphalt_texture.jpg'
+      asphaltImageRef.current = aImg
     }
 
     const initialTrees: RoadsideTree[] = []
@@ -424,87 +432,129 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
       ctx.fillStyle = grassGrad
       ctx.fillRect(0, horizonY, width, height - horizonY)
 
-      // C. High-Contrast Asphalt Highway Surface
+      // C. Hyper-Realistic Multi-Layer Highway Roadway & Infrastructure
       const centerBottomX = width * 0.5 - g.playerX * (width * 0.52)
       const centerTopX = width * 0.5 + g.curveOffset * (width * 0.22)
 
-      ctx.beginPath()
-      ctx.moveTo(centerTopX - roadTopWidth * 0.5, horizonY)
-      ctx.lineTo(centerTopX + roadTopWidth * 0.5, horizonY)
-      ctx.lineTo(centerBottomX + roadBottomWidth * 0.5, roadCowlY)
-      ctx.lineTo(centerBottomX - roadBottomWidth * 0.5, roadCowlY)
-      ctx.closePath()
+      const activeAsphaltImg = asphaltImageRef.current || cachedAsphaltImg
 
-      // Asphalt gradient illuminated by dual headlights
-      const asphaltGrad = ctx.createLinearGradient(0, horizonY, 0, roadCowlY)
-      asphaltGrad.addColorStop(0, '#1E2530')
-      asphaltGrad.addColorStop(0.45, '#2D3748')
-      asphaltGrad.addColorStop(0.85, '#3E4C5F')
-      asphaltGrad.addColorStop(1, '#475569')
-      ctx.fillStyle = asphaltGrad
-      ctx.fill()
-
-      // Metal Highway Guardrails on Edges
-      // Left Guardrail Beam
-      ctx.lineWidth = 4.5
-      ctx.strokeStyle = '#94A3B8'
+      // --- 1. ASPHALT ROADBED WITH REAL AGGREGATE TEXTURE PATTERN ---
+      ctx.save()
       ctx.beginPath()
       ctx.moveTo(centerTopX - roadTopWidth * 0.505, horizonY)
-      ctx.lineTo(centerBottomX - roadBottomWidth * 0.505, roadCowlY)
-      ctx.stroke()
-
-      // Right Guardrail Beam
-      ctx.beginPath()
-      ctx.moveTo(centerTopX + roadTopWidth * 0.505, horizonY)
+      ctx.lineTo(centerTopX + roadTopWidth * 0.505, horizonY)
       ctx.lineTo(centerBottomX + roadBottomWidth * 0.505, roadCowlY)
-      ctx.stroke()
+      ctx.lineTo(centerBottomX - roadBottomWidth * 0.505, roadCowlY)
+      ctx.closePath()
+      ctx.clip()
 
-      // Repeating Guardrail Stanchion Posts with Amber Reflectors
-      const guardrailPosts = 16
-      roadStripeOffset = (roadStripeOffset + g.playerSpeed * 0.10) % 1
-      for (let p = 0; p < guardrailPosts; p++) {
-        const postP = (p + roadStripeOffset) / guardrailPosts
-        if (postP > 1) continue
-        const postZ = Math.pow(postP, 1.7)
-        const postY = horizonY + postZ * (roadCowlY - horizonY)
-        const postRcx = centerTopX + (centerBottomX - centerTopX) * postZ
-        const postRw = roadTopWidth + (roadBottomWidth - roadTopWidth) * postZ
-
-        const leftPostX = postRcx - postRw * 0.505
-        const rightPostX = postRcx + postRw * 0.505
-        const postH = 6 + postZ * 20
-
-        // Vertical steel post
-        ctx.fillStyle = '#64748B'
-        ctx.fillRect(leftPostX - 2, postY - postH, 4, postH)
-        ctx.fillRect(rightPostX - 2, postY - postH, 4, postH)
-
-        // Amber reflector stud
-        ctx.fillStyle = '#F59E0B'
-        ctx.fillRect(leftPostX - 1.5, postY - postH + 2, 3, 4)
-        ctx.fillRect(rightPostX - 1.5, postY - postH + 2, 3, 4)
+      // Fill with authentic granular asphalt texture pattern
+      if (activeAsphaltImg && activeAsphaltImg.complete && activeAsphaltImg.naturalWidth > 0) {
+        const pattern = ctx.createPattern(activeAsphaltImg, 'repeat')
+        if (pattern) {
+          ctx.fillStyle = pattern
+          ctx.fillRect(0, horizonY, width, roadCowlY - horizonY)
+        }
+      } else {
+        const asphaltGrad = ctx.createLinearGradient(0, horizonY, 0, roadCowlY)
+        asphaltGrad.addColorStop(0, '#151A22')
+        asphaltGrad.addColorStop(0.45, '#1E2530')
+        asphaltGrad.addColorStop(0.85, '#2D3748')
+        asphaltGrad.addColorStop(1, '#3A4659')
+        ctx.fillStyle = asphaltGrad
+        ctx.fillRect(0, horizonY, width, roadCowlY - horizonY)
       }
 
-      // Solid Luminous Yellow Shoulder Lines
+      // Nocturnal Atmospheric Falloff & Depth Gradient
+      const depthGrad = ctx.createLinearGradient(0, horizonY, 0, roadCowlY)
+      depthGrad.addColorStop(0, 'rgba(4, 8, 16, 0.88)')
+      depthGrad.addColorStop(0.35, 'rgba(11, 16, 26, 0.65)')
+      depthGrad.addColorStop(0.75, 'rgba(15, 23, 42, 0.35)')
+      depthGrad.addColorStop(1, 'rgba(15, 23, 42, 0.15)')
+      ctx.fillStyle = depthGrad
+      ctx.fillRect(0, horizonY, width, roadCowlY - horizonY)
+
+      // Dual Polished Tire Wear Tracks down each of the 3 highway lanes
+      for (const laneOffset of [-0.33, 0, 0.33]) {
+        for (const wheelOffset of [-0.07, 0.07]) {
+          const twGrad = ctx.createLinearGradient(0, horizonY, 0, roadCowlY)
+          twGrad.addColorStop(0, 'rgba(10, 14, 22, 0.20)')
+          twGrad.addColorStop(1, 'rgba(4, 7, 12, 0.52)')
+          ctx.fillStyle = twGrad
+          ctx.beginPath()
+          ctx.moveTo(centerTopX + roadTopWidth * (laneOffset + wheelOffset) - 1.5, horizonY)
+          ctx.lineTo(centerTopX + roadTopWidth * (laneOffset + wheelOffset) + 1.5, horizonY)
+          ctx.lineTo(centerBottomX + roadBottomWidth * (laneOffset + wheelOffset) + 14, roadCowlY)
+          ctx.lineTo(centerBottomX + roadBottomWidth * (laneOffset + wheelOffset) - 14, roadCowlY)
+          ctx.closePath()
+          ctx.fill()
+        }
+      }
+
+      // Crushed-Stone Gravel Shoulder Bands (Macadam berm outside yellow lines)
+      const gravelGrad = ctx.createLinearGradient(0, horizonY, 0, roadCowlY)
+      gravelGrad.addColorStop(0, '#1A1816')
+      gravelGrad.addColorStop(1, '#2B2622')
+      // Left Gravel Shoulder
+      ctx.fillStyle = gravelGrad
+      ctx.beginPath()
+      ctx.moveTo(centerTopX - roadTopWidth * 0.505, horizonY)
+      ctx.lineTo(centerTopX - roadTopWidth * 0.465, horizonY)
+      ctx.lineTo(centerBottomX - roadBottomWidth * 0.465, roadCowlY)
+      ctx.lineTo(centerBottomX - roadBottomWidth * 0.505, roadCowlY)
+      ctx.closePath()
+      ctx.fill()
+
+      // Right Gravel Shoulder
+      ctx.beginPath()
+      ctx.moveTo(centerTopX + roadTopWidth * 0.465, horizonY)
+      ctx.lineTo(centerTopX + roadTopWidth * 0.505, horizonY)
+      ctx.lineTo(centerBottomX + roadBottomWidth * 0.505, roadCowlY)
+      ctx.lineTo(centerBottomX + roadBottomWidth * 0.465, roadCowlY)
+      ctx.closePath()
+      ctx.fill()
+
+      ctx.restore() // End roadbed clip
+
+      // --- 2. NOTCHED SHOULDER RUMBLE STRIPS ---
+      const numRumble = 28
+      for (let r = 0; r < numRumble; r++) {
+        const rp = (r + roadStripeOffset * 2) / numRumble
+        if (rp > 1) continue
+        const rz = Math.pow(rp, 1.8)
+        const ry = horizonY + rz * (roadCowlY - horizonY)
+        const rcx = centerTopX + (centerBottomX - centerTopX) * rz
+        const rw = roadTopWidth + (roadBottomWidth - roadTopWidth) * rz
+        const rH = 2 + rz * 5
+        const rW = 3 + rz * 12
+
+        ctx.fillStyle = r % 2 === 0 ? 'rgba(15, 12, 10, 0.75)' : 'rgba(75, 70, 65, 0.65)'
+        // Left rumble notch
+        ctx.fillRect(rcx - rw * 0.468, ry - rH * 0.5, rW, rH)
+        // Right rumble notch
+        ctx.fillRect(rcx + rw * 0.468 - rW, ry - rH * 0.5, rW, rH)
+      }
+
+      // --- 3. LUMINOUS YELLOW SHOULDER MARKINGS ---
       ctx.lineWidth = 3.5
       ctx.strokeStyle = '#FACC15'
       ctx.shadowColor = '#FACC15'
-      ctx.shadowBlur = 6
+      ctx.shadowBlur = 8
       ctx.beginPath()
-      ctx.moveTo(centerTopX - roadTopWidth * 0.47, horizonY)
-      ctx.lineTo(centerBottomX - roadBottomWidth * 0.47, roadCowlY)
+      ctx.moveTo(centerTopX - roadTopWidth * 0.465, horizonY)
+      ctx.lineTo(centerBottomX - roadBottomWidth * 0.465, roadCowlY)
       ctx.stroke()
       ctx.beginPath()
-      ctx.moveTo(centerTopX + roadTopWidth * 0.47, horizonY)
-      ctx.lineTo(centerBottomX + roadBottomWidth * 0.47, roadCowlY)
+      ctx.moveTo(centerTopX + roadTopWidth * 0.465, horizonY)
+      ctx.lineTo(centerBottomX + roadBottomWidth * 0.465, roadCowlY)
       ctx.stroke()
       ctx.shadowBlur = 0
 
-      // D. Expansive 3-Lane Highway: Dual Dashed Center Lane Dividers
+      // --- 4. 3D THERMOPLASTIC DASHED LANE MARKINGS WITH RETROREFLECTIVE CAT'S EYES ---
       const numStripes = 14
       for (let s = 0; s < numStripes; s++) {
         const p1 = (s + roadStripeOffset) / numStripes
-        const p2 = (s + 0.45 + roadStripeOffset) / numStripes
+        const p2 = (s + 0.42 + roadStripeOffset) / numStripes
         if (p1 > 1) continue
 
         const z1 = Math.pow(p1, 1.8)
@@ -518,44 +568,132 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
         const rw1 = roadTopWidth + (roadBottomWidth - roadTopWidth) * z1
         const rw2 = roadTopWidth + (roadBottomWidth - roadTopWidth) * z2
 
-        const stripeWidth = 2.5 + z2 * 12
+        const stripeWidth = 2.5 + z2 * 14
 
+        // Thermoplastic raised paint drop shadow
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.45)'
+        ctx.lineWidth = stripeWidth + 2.5
+        ctx.beginPath()
+        ctx.moveTo(rcx1 - rw1 * 0.16 + 1, sy1 + 1)
+        ctx.lineTo(rcx2 - rw2 * 0.16 + 1, sy2 + 1)
+        ctx.moveTo(rcx1 + rw1 * 0.16 + 1, sy1 + 1)
+        ctx.lineTo(rcx2 + rw2 * 0.16 + 1, sy2 + 1)
+        ctx.stroke()
+
+        // Crisp white thermoplastic reflective paint body
         ctx.strokeStyle = '#FFFFFF'
         ctx.lineWidth = stripeWidth
-
-        // Left Lane Divider (-0.16 lateral)
         ctx.beginPath()
         ctx.moveTo(rcx1 - rw1 * 0.16, sy1)
         ctx.lineTo(rcx2 - rw2 * 0.16, sy2)
-        ctx.stroke()
-
-        // Right Lane Divider (+0.16 lateral)
-        ctx.beginPath()
         ctx.moveTo(rcx1 + rw1 * 0.16, sy1)
         ctx.lineTo(rcx2 + rw2 * 0.16, sy2)
         ctx.stroke()
+
+        // Retroreflective Cat's Eyes (Raised Pavement Markers) glinting under headlights
+        if (z2 > 0.10) {
+          const studSize = 2.5 + z2 * 7.5
+          ctx.fillStyle = '#FFFFFF'
+          ctx.shadowColor = '#FEF08A'
+          ctx.shadowBlur = Math.max(3, 11 * z2)
+          // Left lane marker stud
+          ctx.fillRect(rcx2 - rw2 * 0.16 - studSize * 0.5, sy2 - studSize * 0.5, studSize, studSize)
+          // Right lane marker stud
+          ctx.fillRect(rcx2 + rw2 * 0.16 - studSize * 0.5, sy2 - studSize * 0.5, studSize, studSize)
+          ctx.shadowBlur = 0
+        }
       }
 
-      // E. Powerful Dual Headlight Beam Cones
+      // --- 5. 3D CORRUGATED GALVANIZED STEEL W-BEAM GUARDRAILS ---
+      // Vertical Steel I-Beam Stanchions
+      const guardrailPosts = 18
+      for (let p = 0; p < guardrailPosts; p++) {
+        const postP = (p + roadStripeOffset) / guardrailPosts
+        if (postP > 1) continue
+        const postZ = Math.pow(postP, 1.7)
+        const postY = horizonY + postZ * (roadCowlY - horizonY)
+        const postRcx = centerTopX + (centerBottomX - centerTopX) * postZ
+        const postRw = roadTopWidth + (roadBottomWidth - roadTopWidth) * postZ
+
+        const leftPostX = postRcx - postRw * 0.505
+        const rightPostX = postRcx + postRw * 0.505
+        const postW = 3 + postZ * 8
+        const postH = 8 + postZ * 26
+
+        // Galvanized steel vertical post
+        ctx.fillStyle = '#64748B'
+        ctx.fillRect(leftPostX - postW * 0.5, postY - postH, postW, postH)
+        ctx.fillRect(rightPostX - postW * 0.5, postY - postH, postW, postH)
+
+        // Amber retroreflective trapezoid tab on each post
+        ctx.fillStyle = '#F59E0B'
+        ctx.shadowColor = '#F59E0B'
+        ctx.shadowBlur = Math.max(2, 9 * postZ)
+        ctx.fillRect(leftPostX - 1.5, postY - postH + 2, 3 + postZ * 3, 4 + postZ * 4)
+        ctx.fillRect(rightPostX - 1.5, postY - postH + 2, 3 + postZ * 3, 4 + postZ * 4)
+        ctx.shadowBlur = 0
+      }
+
+      // Corrugated W-Beam Ribbon: Top Specular Crown, Center Shadow Valley, Bottom Lip
+      // Top Specular Crown
+      ctx.lineWidth = 3.5
+      ctx.strokeStyle = '#CBD5E1'
+      ctx.beginPath()
+      ctx.moveTo(centerTopX - roadTopWidth * 0.505, horizonY - 4)
+      ctx.lineTo(centerBottomX - roadBottomWidth * 0.505, roadCowlY - 14)
+      ctx.moveTo(centerTopX + roadTopWidth * 0.505, horizonY - 4)
+      ctx.lineTo(centerBottomX + roadBottomWidth * 0.505, roadCowlY - 14)
+      ctx.stroke()
+
+      // Center Recessed Shadow Valley
+      ctx.lineWidth = 2.5
+      ctx.strokeStyle = '#334155'
+      ctx.beginPath()
+      ctx.moveTo(centerTopX - roadTopWidth * 0.505, horizonY - 1)
+      ctx.lineTo(centerBottomX - roadBottomWidth * 0.505, roadCowlY - 6)
+      ctx.moveTo(centerTopX + roadTopWidth * 0.505, horizonY - 1)
+      ctx.lineTo(centerBottomX + roadBottomWidth * 0.505, roadCowlY - 6)
+      ctx.stroke()
+
+      // Bottom Structural Lip
+      ctx.lineWidth = 3.0
+      ctx.strokeStyle = '#94A3B8'
+      ctx.beginPath()
+      ctx.moveTo(centerTopX - roadTopWidth * 0.505, horizonY + 2)
+      ctx.lineTo(centerBottomX - roadBottomWidth * 0.505, roadCowlY + 2)
+      ctx.moveTo(centerTopX + roadTopWidth * 0.505, horizonY + 2)
+      ctx.lineTo(centerBottomX + roadBottomWidth * 0.505, roadCowlY + 2)
+      ctx.stroke()
+
+      // --- 6. POWERFUL DUAL HIGH-BEAM HEADLIGHT SPOTLIGHT CONES ---
       const headlightGrad = ctx.createRadialGradient(
         centerBottomX,
         height * 0.85,
-        40,
+        50,
         centerBottomX,
-        height * 0.50,
-        width * 0.75
+        height * 0.45,
+        width * 0.80
       )
-      headlightGrad.addColorStop(0, 'rgba(255, 255, 230, 0.42)')
-      headlightGrad.addColorStop(0.45, 'rgba(255, 255, 210, 0.18)')
-      headlightGrad.addColorStop(1, 'rgba(255, 255, 200, 0)')
+      headlightGrad.addColorStop(0, 'rgba(255, 255, 230, 0.46)')
+      headlightGrad.addColorStop(0.35, 'rgba(255, 250, 215, 0.24)')
+      headlightGrad.addColorStop(0.70, 'rgba(240, 245, 255, 0.08)')
+      headlightGrad.addColorStop(1, 'rgba(240, 245, 255, 0)')
       ctx.fillStyle = headlightGrad
       ctx.beginPath()
-      ctx.moveTo(centerBottomX - width * 0.25, roadCowlY)
-      ctx.lineTo(centerTopX - roadTopWidth * 0.65, horizonY)
-      ctx.lineTo(centerTopX + roadTopWidth * 0.65, horizonY)
-      ctx.lineTo(centerBottomX + width * 0.25, roadCowlY)
+      ctx.moveTo(centerBottomX - width * 0.28, roadCowlY)
+      ctx.lineTo(centerTopX - roadTopWidth * 0.70, horizonY)
+      ctx.lineTo(centerTopX + roadTopWidth * 0.70, horizonY)
+      ctx.lineTo(centerBottomX + width * 0.28, roadCowlY)
       ctx.closePath()
       ctx.fill()
+
+      // Horizon Ground Fog & Atmospheric Night Mist
+      const mistGrad = ctx.createLinearGradient(0, horizonY - 12, 0, horizonY + 32)
+      mistGrad.addColorStop(0, 'rgba(15, 23, 42, 0)')
+      mistGrad.addColorStop(0.5, 'rgba(30, 41, 59, 0.35)')
+      mistGrad.addColorStop(1, 'rgba(15, 23, 42, 0)')
+      ctx.fillStyle = mistGrad
+      ctx.fillRect(0, horizonY - 12, width, 44)
 
       // F. Parallax Roadside Pine Trees (Flanking Highway)
       for (const tree of g.trees) {
