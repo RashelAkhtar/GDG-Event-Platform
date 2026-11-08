@@ -38,6 +38,7 @@ import {
   HelpCircle,
   Clock,
   Sliders,
+  Users,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useWebSocket } from '@/context/WebSocketContext'
@@ -76,6 +77,7 @@ export function DualQuizSection({
     sendQuestionsUpdate,
     sendWendConfigUpdate,
     liveLeaderboards,
+    connectedSessions = [],
   } = useWebSocket()
   const [statusOverrides, setStatusOverrides] = useState<Record<string, 'LIVE' | 'UPCOMING'>>({})
   const [manipulatingEvent, setManipulatingEvent] = useState<GdgEvent | null>(null)
@@ -338,6 +340,15 @@ export function DualQuizSection({
         ? `${activeQuestionsCount} Questions • 30s Each • ${activeQuestionsCount * 100} Pts`
         : 'No Questions Published Yet'
 
+    // Live Player count computation
+    const localSessionsCount = mounted ? api.getAllSessionsForSlug(event.slug).length : 0
+    const liveBoardCount = liveLeaderboards[event.slug]?.length || 0
+    const activeConnectedCount = (connectedSessions || []).filter((s) => s.role !== 'ADMIN').length
+    const recordedCount = Math.max(localSessionsCount, liveBoardCount)
+    const livePlayingCount = isLive
+      ? Math.max(1, activeConnectedCount > 0 ? activeConnectedCount : recordedCount)
+      : recordedCount
+
     // Target Admin Panel URL with track deep-link
     const adminPanelHref =
       type === 'wend'
@@ -419,6 +430,26 @@ export function DualQuizSection({
             </div>
 
             <div className="flex items-center gap-2">
+              {/* Live Player Count Badge */}
+              <div
+                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-wider transition-all shadow-2xs ${
+                  isLive
+                    ? 'border-[#BBF7D0] bg-[#F0FDF4] text-[#15803D]'
+                    : 'border-[#E5E7EB] bg-[#F9FAFB] text-[#6B7280]'
+                }`}
+                title={isLive ? `${livePlayingCount} players active in arena` : `${recordedCount} participants recorded`}
+              >
+                <span className="relative flex h-1.5 w-1.5">
+                  {isLive && (
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16A34A] opacity-75" />
+                  )}
+                  <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${isLive ? 'bg-[#16A34A]' : 'bg-[#9CA3AF]'}`} />
+                </span>
+                <Users className="h-2.5 w-2.5" />
+                <span className="font-bold text-[#111827]">{livePlayingCount}</span>
+                <span className="hidden xs:inline">{isLive ? 'Playing' : 'Contenders'}</span>
+              </div>
+
               {isAdmin && (
                 <button
                   type="button"
@@ -460,11 +491,17 @@ export function DualQuizSection({
             </p>
           </div>
 
-          {/* Live Specs */}
+          {/* Live Specs & Contenders Counter */}
           <div className="pt-2.5 mt-1 border-t border-[#F3F4F6] flex items-center justify-between">
             <span className="font-mono text-[10px] tracking-wider uppercase text-[#9CA3AF] flex items-center gap-1.5" suppressHydrationWarning>
               <Clock className="h-3 w-3 text-[#9CA3AF]" />
               <span suppressHydrationWarning>{specsBadge}</span>
+            </span>
+
+            <span className="font-mono text-[9.5px] tracking-wider uppercase text-[#6B7280] flex items-center gap-1.5 shrink-0" suppressHydrationWarning>
+              <Users className="h-3 w-3 text-[#1A73E8]" />
+              <span className="font-bold text-[#111827]">{livePlayingCount}</span>
+              <span>{isLive ? 'Active' : 'Contenders'}</span>
             </span>
           </div>
         </div>

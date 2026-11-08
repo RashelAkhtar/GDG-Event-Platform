@@ -8,7 +8,8 @@ import { soundManager } from '@/lib/sound'
 import { Trophy, Crown, Medal, Award, Sparkles, X, Clock, Zap, Home, ArrowRight } from 'lucide-react'
 import confetti from 'canvas-confetti'
 
-const CELEBRATION_COLORS = ['#4285F4', '#EA4335', '#FBBC04', '#34A853', '#8B5CF6', '#EC4899', '#00E5FF']
+// Curated light celebration palette: gold leaf, deep carbon, crisp white, and archival ink accents
+const CELEBRATION_PALETTE = ['#D4AF37', '#111827', '#FFFFFF', '#1A73E8', '#EA4335', '#FBBC04', '#34A853']
 
 type CeremonyStep =
   | 'COUNTDOWN_3RD'
@@ -20,7 +21,7 @@ type CeremonyStep =
   | 'SHOWCASE_ALL'
 
 function formatDuration(ms: number): string {
-  if (!ms || ms <= 0) return '0s'
+  if (!ms || ms <= 0) return '0.0s'
   const seconds = (ms / 1000).toFixed(1)
   if (ms < 60000) return `${seconds}s`
   const minutes = Math.floor(ms / 60000)
@@ -56,19 +57,19 @@ function WinnerAnnouncementStage({ ceremony }: { ceremony: CeremonyData }) {
   const third = winners.find((w) => w.rank === 3)
   const fullLeaderboard = ceremony.fullLeaderboard || []
 
-  // Fire celebratory fireworks / confetti against the dark cinematic canvas
-  const fireBurst = (colors = CELEBRATION_COLORS, particleCount = 100) => {
+  // Confetti bursts using our archival ink palette
+  const fireBurst = (colors = CELEBRATION_PALETTE, particleCount = 100) => {
     try {
       confetti({
         particleCount,
         spread: 90,
-        origin: { y: 0.55 },
+        origin: { y: 0.52 },
         colors,
       })
     } catch {}
   }
 
-  // Sequence controller: Dynamic adaptive stages (3rd -> 2nd -> 1st) with crisp SFX
+  // Sequence controller: Adaptive stages (3rd -> 2nd -> 1st) with SFX
   useEffect(() => {
     if (!ceremony) return
     if (typeof window !== 'undefined') {
@@ -115,13 +116,13 @@ function WinnerAnnouncementStage({ ceremony }: { ceremony: CeremonyData }) {
       runCountdownStage('COUNTDOWN_1ST', () => {
         setStep('REVEAL_1ST')
         soundManager.playWinner()
-        fireBurst(CELEBRATION_COLORS, 160)
-        setTimeout(() => fireBurst(['#FFD700', '#FFA000', '#FF4081', '#7C4DFF'], 120), 400)
-        setTimeout(() => fireBurst(['#00E5FF', '#76FF03', '#FFD600'], 90), 800)
+        fireBurst(CELEBRATION_PALETTE, 160)
+        setTimeout(() => fireBurst(['#D4AF37', '#111827', '#FBBC04', '#FFFFFF'], 120), 400)
+        setTimeout(() => fireBurst(['#1A73E8', '#34A853', '#EA4335'], 90), 800)
 
         setTimeout(() => {
           setStep('SHOWCASE_ALL')
-          fireBurst(CELEBRATION_COLORS, 80)
+          fireBurst(CELEBRATION_PALETTE, 90)
         }, 5000)
       })
     }
@@ -130,7 +131,7 @@ function WinnerAnnouncementStage({ ceremony }: { ceremony: CeremonyData }) {
       runCountdownStage('COUNTDOWN_2ND', () => {
         setStep('REVEAL_2ND')
         soundManager.playWinner()
-        fireBurst(['#00E5FF', '#38BDF8', '#818CF8', '#FFFFFF'], 90)
+        fireBurst(['#6B7280', '#9CA3AF', '#111827', '#FFFFFF', '#1A73E8'], 90)
 
         setTimeout(() => {
           runGrand1st()
@@ -142,7 +143,7 @@ function WinnerAnnouncementStage({ ceremony }: { ceremony: CeremonyData }) {
       runCountdownStage('COUNTDOWN_3RD', () => {
         setStep('REVEAL_3RD')
         soundManager.playWinner()
-        fireBurst(['#FB923C', '#F97316', '#EA580C', '#FFE082'], 70)
+        fireBurst(['#D97706', '#B45309', '#111827', '#FEF3C7'], 75)
 
         setTimeout(() => {
           if (hasSecond) {
@@ -168,7 +169,7 @@ function WinnerAnnouncementStage({ ceremony }: { ceremony: CeremonyData }) {
     }
   }, [ceremony, third, second])
 
-  // Staggered reveal of ranklist rows in SHOWCASE_ALL stage
+  // Staggered reveal of standings rows in SHOWCASE_ALL stage
   useEffect(() => {
     if (step === 'SHOWCASE_ALL' && fullLeaderboard.length > 0) {
       const stagger = setInterval(() => {
@@ -177,38 +178,39 @@ function WinnerAnnouncementStage({ ceremony }: { ceremony: CeremonyData }) {
           clearInterval(stagger)
           return prev
         })
-      }, 120)
+      }, 100)
       return () => clearInterval(stagger)
     }
   }, [step, fullLeaderboard.length])
-
 
   return (
     <div
       onClick={() => void soundManager.unlock()}
       onTouchStart={() => void soundManager.unlock()}
-      className="fixed inset-0 z-50 flex flex-col items-center justify-between overflow-y-auto bg-[#070B14]/98 p-4 sm:p-6 backdrop-blur-3xl text-white selection:bg-fuchsia-500 selection:text-white"
+      className="fixed inset-0 z-50 flex flex-col items-center justify-between overflow-y-auto bg-[#FBFBF9]/96 p-4 sm:p-6 backdrop-blur-3xl text-[#111827] selection:bg-[#111827] selection:text-white"
     >
-      {/* Cinematic Ambient Multi-Color Aurora Mesh & Laser Flares */}
+      {/* Pristine Light Canvas Atmosphere & Architectural Hairline Grid */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-40 -left-40 h-[500px] w-[500px] rounded-full bg-blue-600/20 blur-[130px] animate-aurora" />
-        <div className="absolute top-1/4 -right-40 h-[550px] w-[550px] rounded-full bg-fuchsia-600/25 blur-[140px] animate-aurora" style={{ animationDelay: '-5s' }} />
-        <div className="absolute -bottom-40 left-1/4 h-[500px] w-[500px] rounded-full bg-emerald-500/20 blur-[130px] animate-aurora" style={{ animationDelay: '-9s' }} />
-        {/* Subtle grid pattern for high-tech arena feel */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-40" />
+        {/* Soft Pearlescent Ambient Prisms */}
+        <div className="absolute -top-32 -left-32 h-[480px] w-[480px] rounded-full bg-amber-200/25 blur-[120px]" />
+        <div className="absolute top-1/3 -right-32 h-[500px] w-[500px] rounded-full bg-sky-200/25 blur-[130px]" />
+        <div className="absolute -bottom-32 left-1/4 h-[460px] w-[460px] rounded-full bg-emerald-100/30 blur-[120px]" />
+
+        {/* Minimal Architectural Grid Structure */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#0000000a_1px,transparent_1px),linear-gradient(to_bottom,#0000000a_1px,transparent_1px)] bg-[size:3.5rem_3.5rem] [mask-image:radial-gradient(ellipse_70%_60%_at_50%_50%,#000_70%,transparent_100%)] opacity-70" />
       </div>
 
-      {/* Top Header Bar */}
+      {/* Top Technical Masthead */}
       <div className="relative z-10 flex w-full max-w-xl items-center justify-between pt-2">
-        <div className="flex items-center gap-2.5 rounded-full border border-white/15 bg-white/10 px-4.5 py-1.5 shadow-[0_4px_20px_rgba(0,0,0,0.4)] backdrop-blur-xl">
+        <div className="flex items-center gap-2.5 rounded-full border border-[#E5E7EB] bg-white px-4 py-1.5 shadow-[0_4px_16px_rgba(0,0,0,0.04)]">
           <span className="flex items-center gap-1.5" aria-hidden="true">
-            <span className="h-2 w-2 rounded-full bg-[#EA4335] animate-ping" />
+            <span className="h-2 w-2 rounded-full bg-[#1A73E8]" />
+            <span className="h-2 w-2 rounded-full bg-[#EA4335]" />
             <span className="h-2 w-2 rounded-full bg-[#FBBC04]" />
             <span className="h-2 w-2 rounded-full bg-[#34A853]" />
-            <span className="h-2 w-2 rounded-full bg-[#4285F4]" />
           </span>
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
-            {ceremony.gameTitle} • Victory Broadcast
+          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#111827]">
+            {ceremony.gameTitle} • VICTORY DISPATCH
           </span>
         </div>
 
@@ -217,8 +219,8 @@ function WinnerAnnouncementStage({ ceremony }: { ceremony: CeremonyData }) {
             closeCeremony()
             router.push('/')
           }}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/10 text-slate-300 shadow-md backdrop-blur-xl hover:bg-white/20 hover:text-white active:scale-95 transition-all cursor-pointer"
-          title="Redirect Home"
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-[#4B5563] shadow-xs hover:border-[#111827] hover:text-[#111827] active:scale-95 transition-all cursor-pointer"
+          title="Dismiss Broadcast"
         >
           <X className="h-4 w-4" />
         </button>
@@ -229,83 +231,111 @@ function WinnerAnnouncementStage({ ceremony }: { ceremony: CeremonyData }) {
       {/* ======================================================== */}
       {step === 'COUNTDOWN_3RD' && (
         <div className="relative z-10 my-auto flex flex-col items-center text-center animate-in fade-in duration-300">
-          <span className="mb-4 inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-orange-500/40 bg-gradient-to-r from-orange-600/30 to-amber-600/30 px-5 py-2 text-xs font-black uppercase tracking-widest text-orange-300 shadow-[0_0_25px_rgba(234,88,12,0.35)] backdrop-blur-xl animate-float">
-            <Medal className="h-4 w-4 text-orange-400" />
-            <span>Bronze Medal • 3rd Place Reveal</span>
-          </span>
-          <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-white drop-shadow-[0_4px_25px_rgba(255,255,255,0.2)]">
-            Announcing 3rd Place In
-          </h2>
-
-          {/* Animated Concentric Radar Wave Container */}
-          <div className="relative my-9 flex h-52 w-52 sm:h-60 sm:w-60 items-center justify-center">
-            <div className="absolute inset-0 rounded-full border-2 border-orange-500/50 shadow-[0_0_25px_rgba(249,115,22,0.5)] animate-ripple-1 pointer-events-none" />
-            <div className="absolute inset-0 rounded-full border-2 border-amber-500/40 shadow-[0_0_30px_rgba(245,158,11,0.4)] animate-ripple-2 pointer-events-none" />
-            <div className="absolute inset-0 rounded-full border-2 border-yellow-500/30 shadow-[0_0_35px_rgba(234,179,8,0.3)] animate-ripple-3 pointer-events-none" />
-
-            <div className="relative flex h-40 w-40 sm:h-44 sm:w-44 items-center justify-center rounded-full border-2 border-orange-500/40 bg-gradient-to-b from-slate-900/90 to-slate-950/95 shadow-[0_0_50px_rgba(234,88,12,0.45)] ring-10 ring-orange-500/15 backdrop-blur-2xl">
-              <span
-                key={countdown}
-                className="text-8xl sm:text-9xl font-black select-none animate-count-pop bg-gradient-to-b from-white via-orange-200 to-orange-500 bg-clip-text text-transparent drop-shadow-[0_0_35px_rgba(249,115,22,0.8)]"
-              >
-                {countdown}
-              </span>
+          {/* Rotating Orbital Stamp Ring */}
+          <div className="relative mb-5 flex h-20 w-20 items-center justify-center">
+            <div className="absolute inset-0 rounded-full border border-dashed border-[#D97706]/50 anim-stamp-orbit" />
+            <div className="flex h-13 w-13 items-center justify-center rounded-full border border-[#E5E7EB] bg-white shadow-xs">
+              <Medal className="h-6 w-6 text-[#D97706]" />
             </div>
           </div>
-          <div className="flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-4.5 py-1.5 text-xs font-semibold text-slate-300 backdrop-blur-xl animate-pulse">
-            <Sparkles className="h-3.5 w-3.5 text-orange-400" />
-            <span>Hold your breath for the bronze podium champion...</span>
+
+          <span className="font-mono text-[9.5px] font-bold uppercase tracking-[0.26em] text-[#B45309]">
+            OFFICIAL PODIUM // BRONZE REVEAL
+          </span>
+          <h2 className="mt-1.5 text-3xl sm:text-4xl font-normal tracking-[-0.035em] text-[#111827]">
+            Announcing 3rd Place
+          </h2>
+
+          {/* Monumental Architectural Ticker Box */}
+          <div className="relative my-7 flex h-44 w-44 sm:h-52 sm:w-52 items-center justify-center rounded-2xl border-2 border-[#111827] bg-white shadow-[8px_8px_0px_#111827]">
+            <span className="absolute top-2 left-2.5 font-mono text-[8px] text-[#9CA3AF] uppercase">RANK.03</span>
+            <span className="absolute top-2 right-2.5 font-mono text-[8px] text-[#9CA3AF] uppercase">CHRONO</span>
+            <span className="absolute bottom-2 left-2.5 font-mono text-[8px] text-[#9CA3AF] uppercase">AUTO</span>
+            <span className="absolute bottom-2 right-2.5 font-mono text-[8px] text-[#9CA3AF] uppercase">LOCK</span>
+
+            <span
+              key={countdown}
+              className="font-mono text-7xl sm:text-8xl font-black text-[#111827] select-none anim-ticker-pop tracking-tighter"
+            >
+              0{countdown}
+            </span>
+          </div>
+
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#E5E7EB] bg-white px-4 py-1.5 shadow-2xs">
+            <Sparkles className="h-3 w-3 text-[#D97706]" />
+            <span className="font-mono text-[10px] uppercase tracking-wider text-[#4B5563]">
+              Verifying bronze placement accuracy...
+            </span>
           </div>
         </div>
       )}
 
       {/* ======================================================== */}
-      {/* --- STAGE 2: 3RD PRIZE WINNER REVEAL (BRONZE CHAMPION) - */}
+      {/* --- STAGE 2: 3RD PRIZE WINNER REVEAL (BRONZE SHEET) ---- */}
       {/* ======================================================== */}
       {step === 'REVEAL_3RD' && third && (
-        <div className="relative z-10 my-auto flex w-full max-w-sm flex-col items-center rounded-[36px] p-8 text-center bg-slate-900/85 border border-orange-500/35 shadow-[0_25px_70px_rgba(0,0,0,0.8),0_0_50px_rgba(234,88,12,0.3)] backdrop-blur-2xl animate-in zoom-in-90 duration-500">
-          {/* Top Banner - Non-wrapping */}
-          <div className="absolute -top-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 whitespace-nowrap rounded-full bg-gradient-to-r from-orange-600 to-amber-600 px-6 py-2 text-xs font-black uppercase tracking-widest text-white shadow-[0_8px_25px_rgba(234,88,12,0.5)] ring-2 ring-white/30 animate-float">
-            <Medal className="h-4 w-4 text-orange-200" />
-            <span>3RD PRIZE • BRONZE MEDAL</span>
+        <div className="relative z-10 my-auto flex w-full max-w-sm flex-col items-center rounded-3xl border-2 border-[#111827] bg-white p-7 sm:p-8 text-center shadow-[10px_10px_0px_#111827] anim-sheet-unfold">
+          {/* Issue Header Bar */}
+          <div className="flex w-full items-center justify-between border-b border-[#E5E7EB] pb-3 mb-5">
+            <span className="font-mono text-[8.5px] uppercase tracking-[0.24em] text-[#6B7280]">
+              OFFICIAL DISPATCH // ENTRY 03
+            </span>
+            <span className="font-mono text-[9px] uppercase tracking-wider rounded-full bg-[#111827] text-white px-2 py-0.5 font-bold">
+              BRONZE
+            </span>
           </div>
 
-          <div className="relative mt-3 mb-4 flex flex-col items-center">
+          {/* Watermark Numeral */}
+          <div className="pointer-events-none absolute top-12 right-6 font-mono text-7xl font-black text-[#111827]/[0.04] select-none">
+            03
+          </div>
+
+          {/* Avatar Section */}
+          <div className="relative my-3 flex flex-col items-center">
             <div className="relative">
-              <div className="relative p-1.5 rounded-full bg-gradient-to-tr from-orange-500 via-amber-400 to-yellow-500 shadow-[0_0_35px_rgba(249,115,22,0.6)]">
+              <div className="h-24 w-24 sm:h-28 sm:w-28 rounded-full border-2 border-[#111827] bg-[#FDF8F3] p-1 shadow-md">
                 <img
                   src={third.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=3rd'}
                   alt={third.name}
-                  className="h-28 w-28 rounded-full bg-slate-950 object-cover"
+                  className="h-full w-full rounded-full object-cover"
                 />
               </div>
-              <span className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-amber-600 text-sm font-black text-white shadow-lg ring-2 ring-slate-900">
+              <span className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border border-[#111827] bg-[#D97706] text-white shadow-xs font-mono text-xs font-black anim-badge-sway">
                 3
               </span>
             </div>
           </div>
 
-          <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white drop-shadow-sm">{third.name}</h3>
+          <h3 className="mt-2 text-2xl sm:text-3xl font-normal tracking-[-0.03em] text-[#111827]">
+            {third.name}
+          </h3>
+          <p className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-[#6B7280] mt-0.5">
+            Bronze Medal Benchmark
+          </p>
 
+          {/* Performance Ledgers */}
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-500/20 border border-orange-400/40 px-4 py-1.5 text-xs font-black text-orange-300 shadow-xs backdrop-blur-md">
-              <Award className="h-3.5 w-3.5 text-orange-400" />
-              <span>{third.score} pts</span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] bg-[#FBFBF9] px-3.5 py-1 font-mono text-xs font-bold text-[#111827]">
+              <Award className="h-3.5 w-3.5 text-[#D97706]" />
+              <span>{third.score} PTS</span>
             </span>
-            <span className="flex items-center gap-1 rounded-full bg-white/10 border border-white/20 px-3.5 py-1.5 text-xs font-bold text-emerald-300 shadow-xs backdrop-blur-md">
-              <Clock className="h-3 w-3 text-emerald-400" />
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#BBF7D0] bg-[#F0FDF4] px-3.5 py-1 font-mono text-xs font-bold text-[#15803D]">
+              <Clock className="h-3.5 w-3.5 text-[#16A34A]" />
               <span>{formatDuration(third.durationMs)}</span>
             </span>
             {third.tieBrokenByTime && (
-              <span className="flex items-center gap-1 rounded-full bg-amber-500/20 border border-amber-400/40 px-3 py-1 text-[11px] font-black text-amber-300 shadow-xs backdrop-blur-md">
-                <Zap className="h-3 w-3 text-amber-400" />
-                <span>Tie-Break by Speed</span>
+              <span className="inline-flex items-center gap-1 rounded-full border border-[#FEF08A] bg-[#FEF9C3] px-2.5 py-0.5 font-mono text-[10px] font-bold text-[#854D0E]">
+                <Zap className="h-2.5 w-2.5" />
+                <span>Speed Tie-Break</span>
               </span>
             )}
           </div>
-          <p className="mt-6 text-xs font-medium text-slate-400 animate-pulse">
-            Next: 2nd Prize Silver Countdown...
-          </p>
+
+          <div className="mt-6 flex flex-col items-center gap-1.5 w-full pt-3 border-t border-[#F3F4F6]">
+            <span className="font-mono text-[8.5px] uppercase tracking-wider text-[#9CA3AF]">
+              Proceeding to 2nd Prize Silver countdown...
+            </span>
+          </div>
         </div>
       )}
 
@@ -314,193 +344,213 @@ function WinnerAnnouncementStage({ ceremony }: { ceremony: CeremonyData }) {
       {/* ======================================================== */}
       {step === 'COUNTDOWN_2ND' && (
         <div className="relative z-10 my-auto flex flex-col items-center text-center animate-in fade-in duration-300">
-          <span className="mb-4 inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-sky-400/40 bg-gradient-to-r from-sky-600/30 to-indigo-600/30 px-5 py-2 text-xs font-black uppercase tracking-widest text-sky-300 shadow-[0_0_25px_rgba(14,165,233,0.35)] backdrop-blur-xl animate-float">
-            <Medal className="h-4 w-4 text-sky-400" />
-            <span>Silver Medal • 2nd Place Reveal</span>
-          </span>
-          <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-white drop-shadow-[0_4px_25px_rgba(255,255,255,0.2)]">
-            Announcing 2nd Place In
-          </h2>
-
-          {/* Animated Concentric Radar Wave Container */}
-          <div className="relative my-9 flex h-52 w-52 sm:h-60 sm:w-60 items-center justify-center">
-            <div className="absolute inset-0 rounded-full border-2 border-sky-500/50 shadow-[0_0_25px_rgba(14,165,233,0.5)] animate-ripple-1 pointer-events-none" />
-            <div className="absolute inset-0 rounded-full border-2 border-indigo-500/40 shadow-[0_0_30px_rgba(99,102,241,0.4)] animate-ripple-2 pointer-events-none" />
-            <div className="absolute inset-0 rounded-full border-2 border-cyan-400/30 shadow-[0_0_35px_rgba(6,182,212,0.3)] animate-ripple-3 pointer-events-none" />
-
-            <div className="relative flex h-40 w-40 sm:h-44 sm:w-44 items-center justify-center rounded-full border-2 border-sky-500/40 bg-gradient-to-b from-slate-900/90 to-slate-950/95 shadow-[0_0_50px_rgba(14,165,233,0.45)] ring-10 ring-sky-500/15 backdrop-blur-2xl">
-              <span
-                key={countdown}
-                className="text-8xl sm:text-9xl font-black select-none animate-count-pop bg-gradient-to-b from-white via-sky-200 to-sky-500 bg-clip-text text-transparent drop-shadow-[0_0_35px_rgba(14,165,233,0.8)]"
-              >
-                {countdown}
-              </span>
+          <div className="relative mb-5 flex h-20 w-20 items-center justify-center">
+            <div className="absolute inset-0 rounded-full border border-dashed border-[#6B7280]/50 anim-stamp-orbit" />
+            <div className="flex h-13 w-13 items-center justify-center rounded-full border border-[#E5E7EB] bg-white shadow-xs">
+              <Medal className="h-6 w-6 text-[#6B7280]" />
             </div>
           </div>
-          <div className="flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-4.5 py-1.5 text-xs font-semibold text-slate-300 backdrop-blur-xl animate-pulse">
-            <Sparkles className="h-3.5 w-3.5 text-sky-400" />
-            <span>Stepping up to the silver podium spot...</span>
+
+          <span className="font-mono text-[9.5px] font-bold uppercase tracking-[0.26em] text-[#4B5563]">
+            OFFICIAL PODIUM // SILVER REVEAL
+          </span>
+          <h2 className="mt-1.5 text-3xl sm:text-4xl font-normal tracking-[-0.035em] text-[#111827]">
+            Announcing 2nd Place
+          </h2>
+
+          <div className="relative my-7 flex h-44 w-44 sm:h-52 sm:w-52 items-center justify-center rounded-2xl border-2 border-[#111827] bg-white shadow-[8px_8px_0px_#111827]">
+            <span className="absolute top-2 left-2.5 font-mono text-[8px] text-[#9CA3AF] uppercase">RANK.02</span>
+            <span className="absolute top-2 right-2.5 font-mono text-[8px] text-[#9CA3AF] uppercase">CHRONO</span>
+            <span className="absolute bottom-2 left-2.5 font-mono text-[8px] text-[#9CA3AF] uppercase">AUTO</span>
+            <span className="absolute bottom-2 right-2.5 font-mono text-[8px] text-[#9CA3AF] uppercase">LOCK</span>
+
+            <span
+              key={countdown}
+              className="font-mono text-7xl sm:text-8xl font-black text-[#111827] select-none anim-ticker-pop tracking-tighter"
+            >
+              0{countdown}
+            </span>
+          </div>
+
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#E5E7EB] bg-white px-4 py-1.5 shadow-2xs">
+            <Sparkles className="h-3 w-3 text-[#6B7280]" />
+            <span className="font-mono text-[10px] uppercase tracking-wider text-[#4B5563]">
+              Stepping up to the silver runner spot...
+            </span>
           </div>
         </div>
       )}
 
       {/* ======================================================== */}
-      {/* --- STAGE 4: 2ND PRIZE WINNER REVEAL (SILVER RUNNER-UP)  */}
+      {/* --- STAGE 4: 2ND PRIZE WINNER REVEAL (SILVER SHEET) ---- */}
       {/* ======================================================== */}
       {step === 'REVEAL_2ND' && second && (
-        <div className="relative z-10 my-auto flex w-full max-w-sm flex-col items-center rounded-[36px] p-8 text-center bg-slate-900/85 border border-sky-500/35 shadow-[0_25px_70px_rgba(0,0,0,0.8),0_0_50px_rgba(14,165,233,0.3)] backdrop-blur-2xl animate-in zoom-in-90 duration-500">
-          {/* Top Banner - Non-wrapping */}
-          <div className="absolute -top-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 whitespace-nowrap rounded-full bg-gradient-to-r from-sky-600 via-indigo-600 to-cyan-500 px-6 py-2 text-xs font-black uppercase tracking-widest text-white shadow-[0_8px_25px_rgba(14,165,233,0.5)] ring-2 ring-white/30 animate-float">
-            <Medal className="h-4 w-4 text-sky-200" />
-            <span>2ND PRIZE • SILVER RUNNER-UP</span>
+        <div className="relative z-10 my-auto flex w-full max-w-sm flex-col items-center rounded-3xl border-2 border-[#111827] bg-white p-7 sm:p-8 text-center shadow-[10px_10px_0px_#111827] anim-sheet-unfold">
+          <div className="flex w-full items-center justify-between border-b border-[#E5E7EB] pb-3 mb-5">
+            <span className="font-mono text-[8.5px] uppercase tracking-[0.24em] text-[#6B7280]">
+              OFFICIAL DISPATCH // ENTRY 02
+            </span>
+            <span className="font-mono text-[9px] uppercase tracking-wider rounded-full bg-[#111827] text-white px-2 py-0.5 font-bold">
+              SILVER
+            </span>
           </div>
 
-          <div className="relative mt-3 mb-4 flex flex-col items-center">
+          <div className="pointer-events-none absolute top-12 right-6 font-mono text-7xl font-black text-[#111827]/[0.04] select-none">
+            02
+          </div>
+
+          <div className="relative my-3 flex flex-col items-center">
             <div className="relative">
-              <div className="relative p-1.5 rounded-full bg-gradient-to-tr from-sky-400 via-indigo-400 to-cyan-400 shadow-[0_0_35px_rgba(14,165,233,0.6)]">
+              <div className="h-24 w-24 sm:h-28 sm:w-28 rounded-full border-2 border-[#111827] bg-[#F5F5F0] p-1 shadow-md">
                 <img
                   src={second.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=2nd'}
                   alt={second.name}
-                  className="h-28 w-28 rounded-full bg-slate-950 object-cover"
+                  className="h-full w-full rounded-full object-cover"
                 />
               </div>
-              <span className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-indigo-600 text-sm font-black text-white shadow-lg ring-2 ring-slate-900">
+              <span className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border border-[#111827] bg-[#6B7280] text-white shadow-xs font-mono text-xs font-black anim-badge-sway">
                 2
               </span>
             </div>
           </div>
 
-          <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white drop-shadow-sm">{second.name}</h3>
+          <h3 className="mt-2 text-2xl sm:text-3xl font-normal tracking-[-0.03em] text-[#111827]">
+            {second.name}
+          </h3>
+          <p className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-[#6B7280] mt-0.5">
+            Silver Runner-Up Benchmark
+          </p>
 
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/20 border border-sky-400/40 px-4 py-1.5 text-xs font-black text-sky-300 shadow-xs backdrop-blur-md">
-              <Award className="h-3.5 w-3.5 text-sky-400" />
-              <span>{second.score} pts</span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] bg-[#FBFBF9] px-3.5 py-1 font-mono text-xs font-bold text-[#111827]">
+              <Award className="h-3.5 w-3.5 text-[#6B7280]" />
+              <span>{second.score} PTS</span>
             </span>
-            <span className="flex items-center gap-1 rounded-full bg-white/10 border border-white/20 px-3.5 py-1.5 text-xs font-bold text-emerald-300 shadow-xs backdrop-blur-md">
-              <Clock className="h-3 w-3 text-emerald-400" />
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#BBF7D0] bg-[#F0FDF4] px-3.5 py-1 font-mono text-xs font-bold text-[#15803D]">
+              <Clock className="h-3.5 w-3.5 text-[#16A34A]" />
               <span>{formatDuration(second.durationMs)}</span>
             </span>
             {second.tieBrokenByTime && (
-              <span className="flex items-center gap-1 rounded-full bg-amber-500/20 border border-amber-400/40 px-3 py-1 text-[11px] font-black text-amber-300 shadow-xs backdrop-blur-md">
-                <Zap className="h-3 w-3 text-amber-400" />
-                <span>Tie-Break by Speed</span>
+              <span className="inline-flex items-center gap-1 rounded-full border border-[#FEF08A] bg-[#FEF9C3] px-2.5 py-0.5 font-mono text-[10px] font-bold text-[#854D0E]">
+                <Zap className="h-2.5 w-2.5" />
+                <span>Speed Tie-Break</span>
               </span>
             )}
           </div>
-          <p className="mt-6 text-xs font-medium text-slate-400 animate-pulse">
-            Brace yourself for the 1st Place Grand Champion...
-          </p>
+
+          <div className="mt-6 flex flex-col items-center gap-1.5 w-full pt-3 border-t border-[#F3F4F6]">
+            <span className="font-mono text-[8.5px] uppercase tracking-wider text-[#9CA3AF]">
+              Stand by for the 1st Place Grand Victor...
+            </span>
+          </div>
         </div>
       )}
 
       {/* ======================================================== */}
-      {/* --- STAGE 5: COUNTDOWN FOR 1ST PRIZE (NO YELLOW! SEXY) - */}
+      {/* --- STAGE 5: COUNTDOWN FOR 1ST PRIZE (GRAND VICTOR) ---- */}
       {/* ======================================================== */}
       {step === 'COUNTDOWN_1ST' && (
         <div className="relative z-10 my-auto flex flex-col items-center text-center animate-in fade-in duration-300">
-          {/* Cyber Holographic Pill Badge */}
-          <div className="mb-5 inline-flex items-center gap-2.5 whitespace-nowrap rounded-full border border-fuchsia-500/40 bg-gradient-to-r from-indigo-600/30 via-fuchsia-600/30 to-pink-600/30 px-6 py-2.5 text-xs font-black uppercase tracking-widest text-fuchsia-300 shadow-[0_0_30px_rgba(217,70,239,0.35)] backdrop-blur-2xl ring-1 ring-white/20 animate-float">
-            <Crown className="h-4 w-4 text-amber-300 fill-amber-300" />
-            <span>GRAND CHAMPION • REVEAL COUNTDOWN</span>
-            <Sparkles className="h-4 w-4 text-fuchsia-300 animate-spin" />
-          </div>
-
-          <h2 className="text-4xl sm:text-6xl font-black tracking-tight text-white drop-shadow-[0_4px_35px_rgba(255,255,255,0.25)]">
-            Who Takes First Place?
-          </h2>
-
-          {/* Futuristic Concentric Radar Reactor with Cyber Pulses (Zero Flat Yellow!) */}
-          <div className="relative my-9 flex h-60 w-60 sm:h-72 sm:w-72 items-center justify-center">
-            {/* Outer dynamic ripples in electric neon tones */}
-            <div className="absolute inset-0 rounded-full border-2 border-indigo-500/50 shadow-[0_0_30px_rgba(99,102,241,0.5)] animate-ripple-1 pointer-events-none" />
-            <div className="absolute inset-0 rounded-full border-2 border-fuchsia-500/40 shadow-[0_0_35px_rgba(217,70,239,0.4)] animate-ripple-2 pointer-events-none" />
-            <div className="absolute inset-0 rounded-full border-2 border-pink-500/35 shadow-[0_0_40px_rgba(236,72,153,0.35)] animate-ripple-3 pointer-events-none" />
-
-            {/* Rotating dashed holographic ring */}
-            <div className="absolute inset-3 rounded-full border border-dashed border-cyan-400/30 animate-halo-spin pointer-events-none" />
-
-            {/* Deep Glassmorphic Core */}
-            <div className="relative flex h-44 w-44 sm:h-52 sm:w-52 items-center justify-center rounded-full border-2 border-fuchsia-500/40 bg-gradient-to-b from-slate-900/95 to-slate-950 shadow-[0_0_60px_rgba(168,85,247,0.45),inset_0_0_30px_rgba(236,72,153,0.25)] ring-12 ring-fuchsia-500/15 backdrop-blur-3xl">
-              <span
-                key={countdown}
-                className="text-8xl sm:text-9xl font-black tracking-tighter select-none animate-count-pop bg-gradient-to-b from-white via-fuchsia-200 to-pink-500 bg-clip-text text-transparent drop-shadow-[0_0_40px_rgba(236,72,153,0.85)]"
-              >
-                {countdown}
-              </span>
+          <div className="relative mb-5 flex h-24 w-24 items-center justify-center">
+            <div className="absolute inset-0 rounded-full border-2 border-dashed border-[#111827]/40 anim-stamp-orbit" />
+            <div className="flex h-15 w-15 items-center justify-center rounded-full border-2 border-[#111827] bg-[#FEF9C3] shadow-sm anim-badge-sway">
+              <Crown className="h-7 w-7 text-[#B45309] fill-[#FBBC04]" />
             </div>
           </div>
 
-          <div className="flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-5 py-2 text-xs font-bold text-slate-300 backdrop-blur-xl animate-pulse">
-            <Zap className="h-4 w-4 text-amber-400 fill-amber-400" />
-            <span>Hold your breath... crowning the ultimate victor!</span>
+          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.28em] text-[#B45309]">
+            OFFICIAL PODIUM // GRAND VICTOR
+          </span>
+          <h2 className="mt-1.5 text-3xl sm:text-5xl font-normal tracking-[-0.04em] text-[#111827]">
+            Who Takes First Place?
+          </h2>
+
+          <div className="relative my-7 flex h-48 w-48 sm:h-56 sm:w-56 items-center justify-center rounded-3xl border-2 border-[#111827] bg-white shadow-[10px_10px_0px_#111827]">
+            <span className="absolute top-2.5 left-3 font-mono text-[8.5px] text-[#9CA3AF] uppercase">RANK.01</span>
+            <span className="absolute top-2.5 right-3 font-mono text-[8.5px] text-[#9CA3AF] uppercase">CHAMPION</span>
+            <span className="absolute bottom-2.5 left-3 font-mono text-[8.5px] text-[#9CA3AF] uppercase">GOLD</span>
+            <span className="absolute bottom-2.5 right-3 font-mono text-[8.5px] text-[#9CA3AF] uppercase">LOCK</span>
+
+            <span
+              key={countdown}
+              className="font-mono text-8xl sm:text-9xl font-black text-[#111827] select-none anim-ticker-pop tracking-tighter"
+            >
+              0{countdown}
+            </span>
+          </div>
+
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#E5E7EB] bg-white px-4.5 py-1.5 shadow-2xs">
+            <Sparkles className="h-3.5 w-3.5 text-[#B45309]" />
+            <span className="font-mono text-[10px] uppercase tracking-wider text-[#4B5563]">
+              Calibrating official tournament benchmark victor...
+            </span>
           </div>
         </div>
       )}
 
       {/* ======================================================== */}
-      {/* --- STAGE 6: 1ST PRIZE GRAND CHAMPION REVEAL (AESTHETIC) */}
+      {/* --- STAGE 6: 1ST PRIZE GRAND VICTOR REVEAL (GOLD SHEET)  */}
       {/* ======================================================== */}
       {step === 'REVEAL_1ST' && first && (
-        <div className="relative z-10 my-auto flex w-full max-w-md flex-col items-center rounded-[40px] p-8 sm:p-10 text-center bg-slate-900/90 border border-amber-400/35 shadow-[0_30px_90px_rgba(0,0,0,0.9),0_0_70px_rgba(245,158,11,0.35)] backdrop-blur-3xl animate-in zoom-in-90 duration-700">
-          {/* Rotating Radiant Halo in Background */}
-          <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 h-[420px] w-[420px] rounded-full bg-gradient-to-tr from-amber-500/30 via-rose-500/30 to-violet-600/30 blur-[100px] animate-halo-spin" />
-
-          {/* Radiant Crown Banner - Centered, Non-wrapping, Glowing */}
-          <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 whitespace-nowrap rounded-full bg-gradient-to-r from-amber-500 via-rose-500 to-violet-600 px-7 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-[0_10px_35px_rgba(244,63,94,0.55)] ring-2 ring-white/40 animate-float">
-            <Crown className="h-4 w-4 text-amber-200 fill-amber-200" />
-            <span>1ST PLACE • GRAND CHAMPION</span>
-            <Sparkles className="h-4 w-4 text-pink-200 animate-spin" />
+        <div className="relative z-10 my-auto flex w-full max-w-md flex-col items-center rounded-3xl border-2 border-[#111827] bg-white p-8 sm:p-10 text-center shadow-[14px_14px_0px_#111827] anim-sheet-unfold">
+          <div className="flex w-full items-center justify-between border-b border-[#E5E7EB] pb-3 mb-5">
+            <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-[#6B7280]">
+              OFFICIAL DISPATCH // ENTRY 01
+            </span>
+            <span className="font-mono text-[9px] uppercase tracking-wider rounded-full border border-[#111827] bg-[#FBBC04] text-[#111827] px-2.5 py-0.5 font-bold shadow-2xs">
+              GRAND VICTOR
+            </span>
           </div>
 
-          <div className="relative mt-4 mb-5 flex flex-col items-center">
-            <div className="relative">
-              {/* Ambient pulsating glow aura behind avatar */}
-              <div className="absolute -inset-3 rounded-full bg-gradient-to-tr from-amber-400 via-rose-500 to-indigo-500 opacity-80 blur-xl animate-pulse" />
+          <div className="pointer-events-none absolute top-12 right-6 font-mono text-8xl font-black text-[#111827]/[0.05] select-none">
+            01
+          </div>
 
-              {/* Luxury Multi-Color Iridescent Avatar Frame */}
-              <div className="relative p-2 rounded-full bg-gradient-to-tr from-amber-400 via-rose-500 to-violet-600 shadow-[0_0_40px_rgba(245,158,11,0.6)]">
+          <div className="relative my-3 flex flex-col items-center">
+            <div className="relative">
+              <div className="h-28 w-28 sm:h-32 sm:w-32 rounded-full border-2 border-[#111827] bg-[#FEFDF0] p-1.5 shadow-lg">
                 <img
                   src={first.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=1st'}
                   alt={first.name}
-                  className="h-32 w-32 sm:h-36 sm:w-36 rounded-full bg-slate-950 object-cover shadow-inner"
+                  className="h-full w-full rounded-full object-cover"
                 />
               </div>
-
-              {/* Floating 3D Gold Crown Badge */}
-              <span className="absolute -bottom-1 -right-1 flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-amber-300 via-amber-500 to-yellow-600 text-white shadow-[0_6px_20px_rgba(217,119,6,0.7)] ring-3 ring-slate-900 animate-bounce">
-                <Crown className="h-6 w-6 text-white fill-white drop-shadow-md" />
+              <span className="absolute -bottom-2 -right-2 flex h-10 w-10 items-center justify-center rounded-full border border-[#111827] bg-[#FBBC04] text-[#111827] shadow-sm anim-badge-sway">
+                <Crown className="h-5 w-5 fill-[#111827]" />
               </span>
             </div>
           </div>
 
-          <h3 className="text-3xl sm:text-5xl font-black tracking-tight text-white drop-shadow-[0_2px_25px_rgba(255,255,255,0.3)]">
+          <h3 className="mt-2 text-3xl sm:text-4xl font-normal tracking-[-0.035em] text-[#111827]">
             {first.name}
           </h3>
+          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#B45309] font-bold mt-0.5">
+            Tournament Champion &benchmark Leader
+          </p>
 
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-2.5">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 border border-amber-400/40 px-4.5 py-1.5 text-xs font-black text-amber-300 shadow-xs backdrop-blur-md">
-              <Crown className="h-4 w-4 text-amber-400 fill-amber-400" />
-              <span>{first.score} pts</span>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] bg-[#FBFBF9] px-4 py-1.5 font-mono text-xs font-bold text-[#111827]">
+              <Crown className="h-3.5 w-3.5 text-[#B45309] fill-[#FBBC04]" />
+              <span>{first.score} PTS</span>
             </span>
-            <span className="flex items-center gap-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 px-4.5 py-1.5 text-xs font-bold text-emerald-300 shadow-xs backdrop-blur-md">
-              <Clock className="h-3.5 w-3.5 text-emerald-400" />
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#BBF7D0] bg-[#F0FDF4] px-4 py-1.5 font-mono text-xs font-bold text-[#15803D]">
+              <Clock className="h-3.5 w-3.5 text-[#16A34A]" />
               <span>{formatDuration(first.durationMs)}</span>
             </span>
             {first.tieBrokenByTime && (
-              <span className="flex items-center gap-1 rounded-full bg-violet-500/20 border border-violet-400/40 px-3.5 py-1 text-[11px] font-black text-violet-300 shadow-xs backdrop-blur-md">
-                <Zap className="h-3.5 w-3.5 text-violet-400 fill-violet-400" />
+              <span className="inline-flex items-center gap-1 rounded-full border border-[#FEF08A] bg-[#FEF9C3] px-3 py-1 font-mono text-[10px] font-bold text-[#854D0E]">
+                <Zap className="h-3 w-3" />
                 <span>Won 1st Place by Faster Time!</span>
               </span>
             )}
           </div>
 
-          <div className="mt-8 flex flex-col items-center gap-2.5">
-            <p className="text-xs font-semibold text-slate-300 animate-pulse">
-              Unfolding the official victory podium & standings...
-            </p>
-            <div className="h-1.5 w-48 overflow-hidden rounded-full bg-white/10 shadow-inner">
-              <div className="h-full w-full rounded-full bg-gradient-to-r from-amber-400 via-rose-500 to-violet-600 animate-shimmer" />
+          <div className="mt-7 flex flex-col items-center gap-2 w-full pt-4 border-t border-[#F3F4F6]">
+            <span className="font-mono text-[9px] uppercase tracking-wider text-[#9CA3AF]">
+              Unfolding Full Tournament Podium & Standings...
+            </span>
+            <div className="h-1 w-36 overflow-hidden rounded-full bg-[#F3F4F6]">
+              <div className="h-full w-full bg-[#111827] animate-pulse" />
             </div>
           </div>
         </div>
@@ -510,118 +560,127 @@ function WinnerAnnouncementStage({ ceremony }: { ceremony: CeremonyData }) {
       {/* --- STAGE 7: ALL WINNERS PODIUM & COMPLETE STANDINGS --- */}
       {/* ======================================================== */}
       {step === 'SHOWCASE_ALL' && (
-        <div className="relative z-10 flex w-full max-w-lg flex-1 flex-col pt-4 pb-8 animate-in fade-in duration-500">
+        <div className="relative z-10 flex w-full max-w-lg flex-1 flex-col pt-3 pb-8 animate-in fade-in duration-500">
           {/* Header */}
-          <div className="text-center mb-6">
-            <div className="mx-auto inline-flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold text-sky-300 border border-white/15 shadow-xs backdrop-blur-md mb-2">
-              <Trophy className="h-3.5 w-3.5 text-amber-400" />
-              <span>Official Contest Champions</span>
+          <div className="text-center mb-5">
+            <div className="mx-auto inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] bg-white px-3.5 py-1 text-xs font-medium text-[#111827] shadow-2xs mb-1.5">
+              <Trophy className="h-3.5 w-3.5 text-[#B45309]" />
+              <span className="font-mono text-[10px] uppercase tracking-wider">OFFICIAL CONTEST RECORD</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white drop-shadow-sm">
-              Victory Podium & Standings
+            <h2 className="text-2xl sm:text-3xl font-normal tracking-[-0.035em] text-[#111827]">
+              Victory Plinths & Standings
             </h2>
           </div>
 
-          {/* Top 3 Visual Steps with 3D Pedestals */}
-          <div className="flex items-end justify-center gap-3 px-2 mb-8">
-            {/* 2nd Place */}
+          {/* Stepped Fluted Architectural Plinths */}
+          <div className="flex items-end justify-center gap-2 sm:gap-4 px-1 mb-7">
+            {/* 2nd Place Plinth */}
             {second && (
-              <div className="flex flex-1 flex-col items-center animate-in slide-in-from-bottom-8 duration-500">
+              <div className="flex flex-1 flex-col items-center anim-plinth-rise">
                 <div className="relative mb-2">
-                  <img
-                    src={second.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=2nd'}
-                    alt={second.name}
-                    className="h-14 w-14 rounded-full border-2 border-sky-400 object-cover shadow-[0_0_15px_rgba(56,189,248,0.5)]"
-                  />
-                  <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-sky-500 text-[10px] font-bold text-white shadow-2xs">
+                  <div className="h-13 w-13 rounded-full border border-[#D1D5DB] bg-white p-0.5 shadow-xs">
+                    <img
+                      src={second.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=2nd'}
+                      alt={second.name}
+                      className="h-full w-full rounded-full object-cover"
+                    />
+                  </div>
+                  <span className="absolute -bottom-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-[#6B7280] font-mono text-[9px] font-bold text-white shadow-2xs">
                     2
                   </span>
                 </div>
-                <span className="text-xs font-bold text-slate-200 truncate max-w-[80px]">
+                <span className="text-xs font-semibold text-[#111827] truncate max-w-[80px]">
                   {second.name}
                 </span>
-                <span className="text-[11px] font-semibold text-sky-300">{formatDuration(second.durationMs)}</span>
-                {/* 3D Pedestal Step */}
-                <div className="mt-2 h-20 w-full rounded-t-2xl bg-gradient-to-t from-slate-900 via-slate-800 to-sky-950/80 border-t-2 border-sky-400 shadow-[0_0_20px_rgba(56,189,248,0.25)] flex items-center justify-center font-black text-sm text-sky-200 animate-pedestal gap-1">
-                  <span>2nd</span>
-                  <Medal className="h-3.5 w-3.5 text-sky-400" />
+                <span className="font-mono text-[10px] text-[#6B7280]">{formatDuration(second.durationMs)}</span>
+
+                <div className="relative mt-2 h-24 w-full rounded-t-xl border border-[#E5E7EB] border-t-2 border-t-[#6B7280] bg-gradient-to-b from-white to-[#F5F5F0] shadow-xs flex flex-col items-center justify-center overflow-hidden">
+                  <div className="absolute inset-0 bg-[repeating-linear-gradient(90deg,transparent,transparent_9px,#00000005_10px)] pointer-events-none" />
+                  <span className="font-mono text-xs font-bold text-[#6B7280]">02</span>
+                  <span className="font-mono text-[7.5px] uppercase tracking-widest text-[#9CA3AF] mt-0.5">SILVER</span>
                 </div>
               </div>
             )}
 
-            {/* 1st Place (Center, Tallest) */}
+            {/* 1st Place Tallest Champion Plinth */}
             {first && (
-              <div className="flex flex-1 flex-col items-center animate-in slide-in-from-bottom-12 duration-700">
-                <Crown className="h-5 w-5 text-amber-400 mb-1 animate-float" />
+              <div className="flex flex-1 flex-col items-center anim-plinth-rise z-10">
+                <Crown className="h-4 w-4 text-[#B45309] fill-[#FBBC04] mb-1 anim-badge-sway" />
                 <div className="relative mb-2">
-                  <img
-                    src={first.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=1st'}
-                    alt={first.name}
-                    className="h-18 w-18 rounded-full border-[3px] border-amber-400 object-cover shadow-[0_0_25px_rgba(245,158,11,0.6)] ring-4 ring-amber-400/30"
-                  />
-                  <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-xs font-black text-white shadow-2xs">
+                  <div className="h-16 w-16 rounded-full border-2 border-[#111827] bg-white p-1 shadow-sm">
+                    <img
+                      src={first.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=1st'}
+                      alt={first.name}
+                      className="h-full w-full rounded-full object-cover"
+                    />
+                  </div>
+                  <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#FBBC04] border border-[#111827] font-mono text-[10px] font-black text-[#111827] shadow-2xs">
                     1
                   </span>
                 </div>
-                <span className="text-xs font-bold text-white truncate max-w-[90px]">
+                <span className="text-xs font-bold text-[#111827] truncate max-w-[90px]">
                   {first.name}
                 </span>
-                <span className="text-xs font-bold text-emerald-400">{formatDuration(first.durationMs)}</span>
-                {/* 3D Pedestal Step */}
-                <div className="mt-2 h-28 w-full rounded-t-2xl bg-gradient-to-t from-slate-900 via-amber-950/70 to-amber-900/50 border-t-2 border-amber-400 shadow-[0_0_30px_rgba(245,158,11,0.4)] flex items-center justify-center font-black text-base text-amber-200 animate-pedestal gap-1">
-                  <span>1st</span>
-                  <Crown className="h-4 w-4 text-amber-400" />
+                <span className="font-mono text-[10px] font-semibold text-[#15803D]">{formatDuration(first.durationMs)}</span>
+
+                <div className="relative mt-2 h-34 w-full rounded-t-xl border border-[#E5E7EB] border-t-[3px] border-t-[#111827] bg-gradient-to-b from-white via-[#FEFDF0] to-[#F5F5F0] shadow-sm flex flex-col items-center justify-center overflow-hidden">
+                  <div className="absolute inset-0 bg-[repeating-linear-gradient(90deg,transparent,transparent_9px,#00000007_10px)] pointer-events-none" />
+                  <span className="font-mono text-sm font-black text-[#111827]">01</span>
+                  <span className="font-mono text-[8px] uppercase tracking-widest text-[#B45309] font-bold mt-0.5">VICTOR</span>
                 </div>
               </div>
             )}
 
-            {/* 3rd Place */}
+            {/* 3rd Place Plinth */}
             {third && (
-              <div className="flex flex-1 flex-col items-center animate-in slide-in-from-bottom-6 duration-500">
+              <div className="flex flex-1 flex-col items-center anim-plinth-rise">
                 <div className="relative mb-2">
-                  <img
-                    src={third.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=3rd'}
-                    alt={third.name}
-                    className="h-14 w-14 rounded-full border-2 border-orange-400 object-cover shadow-[0_0_15px_rgba(249,115,22,0.5)]"
-                  />
-                  <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white shadow-2xs">
+                  <div className="h-13 w-13 rounded-full border border-[#D1D5DB] bg-white p-0.5 shadow-xs">
+                    <img
+                      src={third.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=3rd'}
+                      alt={third.name}
+                      className="h-full w-full rounded-full object-cover"
+                    />
+                  </div>
+                  <span className="absolute -bottom-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-[#D97706] font-mono text-[9px] font-bold text-white shadow-2xs">
                     3
                   </span>
                 </div>
-                <span className="text-xs font-bold text-slate-200 truncate max-w-[80px]">
+                <span className="text-xs font-semibold text-[#111827] truncate max-w-[80px]">
                   {third.name}
                 </span>
-                <span className="text-[11px] font-semibold text-orange-300">{formatDuration(third.durationMs)}</span>
-                {/* 3D Pedestal Step */}
-                <div className="mt-2 h-16 w-full rounded-t-2xl bg-gradient-to-t from-slate-900 via-slate-800 to-orange-950/80 border-t-2 border-orange-400 shadow-[0_0_20px_rgba(249,115,22,0.25)] flex items-center justify-center font-black text-sm text-orange-200 animate-pedestal gap-1">
-                  <span>3rd</span>
-                  <Medal className="h-3.5 w-3.5 text-orange-400" />
+                <span className="font-mono text-[10px] text-[#6B7280]">{formatDuration(third.durationMs)}</span>
+
+                <div className="relative mt-2 h-20 w-full rounded-t-xl border border-[#E5E7EB] border-t-2 border-t-[#D97706] bg-gradient-to-b from-white to-[#F5F5F0] shadow-xs flex flex-col items-center justify-center overflow-hidden">
+                  <div className="absolute inset-0 bg-[repeating-linear-gradient(90deg,transparent,transparent_9px,#00000005_10px)] pointer-events-none" />
+                  <span className="font-mono text-xs font-bold text-[#D97706]">03</span>
+                  <span className="font-mono text-[7.5px] uppercase tracking-widest text-[#B45309] mt-0.5">BRONZE</span>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Cascading Full Rank List */}
+          {/* Staggered Full Rank List */}
           <div className="flex flex-col gap-2">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">
-              Complete Standings ({fullLeaderboard.length} Participants)
+            <h3 className="font-mono text-[9.5px] font-bold uppercase tracking-[0.2em] text-[#6B7280] mb-0.5 px-1">
+              FULL RECORD SHEET ({fullLeaderboard.length} PARTICIPANTS)
             </h3>
 
             {fullLeaderboard.slice(0, revealedItemsCount).map((entry, idx) => (
               <div
                 key={entry._id || idx}
-                className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 shadow-sm backdrop-blur-md transition-all hover:bg-white/10 hover:translate-y-[-2px] animate-in slide-in-from-bottom-2 duration-300"
+                className="flex items-center justify-between rounded-xl border border-[#E5E7EB] bg-white px-3.5 py-2.5 shadow-2xs hover:border-[#111827] transition-all duration-200 anim-sheet-unfold"
               >
                 <div className="flex items-center gap-3">
                   <span
-                    className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                    className={`flex h-5.5 w-5.5 items-center justify-center rounded-full font-mono text-[10px] font-bold ${
                       idx === 0
-                        ? 'bg-amber-500 text-white shadow-[0_0_12px_rgba(245,158,11,0.6)]'
+                        ? 'bg-[#FBBC04] text-[#111827] border border-[#111827]'
                         : idx === 1
-                        ? 'bg-sky-500 text-white shadow-[0_0_12px_rgba(14,165,233,0.6)]'
+                        ? 'bg-[#E5E7EB] text-[#111827]'
                         : idx === 2
-                        ? 'bg-orange-500 text-white shadow-[0_0_12px_rgba(234,88,12,0.6)]'
-                        : 'bg-white/10 text-slate-300'
+                        ? 'bg-[#FED7AA] text-[#7C2D12]'
+                        : 'bg-[#F3F4F6] text-[#6B7280]'
                     }`}
                   >
                     #{idx + 1}
@@ -629,31 +688,28 @@ function WinnerAnnouncementStage({ ceremony }: { ceremony: CeremonyData }) {
                   <img
                     src={entry.user?.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${entry.user?.name}`}
                     alt={entry.user?.name}
-                    className="h-9 w-9 rounded-full border border-white/20 object-cover"
+                    className="h-8 w-8 rounded-full border border-[#E5E7EB] object-cover"
                   />
                   <div className="flex flex-col">
-                    <span className="text-xs font-bold text-white truncate max-w-[140px]">
+                    <span className="text-xs font-semibold text-[#111827] truncate max-w-[140px]">
                       {entry.user?.name}
                     </span>
-                    <span className="flex items-center gap-1 text-[10px] text-slate-400">
-                      <Clock className="h-2.5 w-2.5 text-emerald-400" />
+                    <span className="flex items-center gap-1 font-mono text-[9px] text-[#6B7280]">
+                      <Clock className="h-2.5 w-2.5 text-[#16A34A]" />
                       <span>{formatDuration(entry.durationMs)}</span>
                     </span>
                   </div>
                 </div>
                 <div className="text-right flex flex-col items-end gap-0.5">
-                  <span className="inline-flex items-center rounded-full bg-sky-500/20 border border-sky-400/40 px-2.5 py-0.5 text-xs font-black text-sky-300">
+                  <span className="inline-flex items-center rounded-md border border-[#E5E7EB] bg-[#FBFBF9] px-2 py-0.5 font-mono text-[10.5px] font-bold text-[#111827]">
                     {entry.totalScore} pts
-                  </span>
-                  <span className="text-[10px] font-semibold text-emerald-400">
-                    {formatDuration(entry.durationMs)}
                   </span>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Bottom Actions: Admin gets Replay Announcement, Participants get Redirect Home */}
+          {/* Action Buttons */}
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             {user?.role === 'ADMIN' && (
               <button
@@ -668,10 +724,10 @@ function WinnerAnnouncementStage({ ceremony }: { ceremony: CeremonyData }) {
                     timestamp: Date.now(),
                   })
                 }}
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-amber-400/50 bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-yellow-500/20 px-6 py-3.5 text-sm font-bold text-amber-300 shadow-[0_0_25px_rgba(245,158,11,0.3)] hover:shadow-[0_0_35px_rgba(245,158,11,0.5)] hover:scale-105 active:scale-95 transition-all cursor-pointer backdrop-blur-xl"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-[#111827] bg-white px-5 py-2.5 font-mono text-xs uppercase tracking-wider text-[#111827] shadow-xs hover:bg-[#F9FAFB] active:scale-95 transition-all cursor-pointer"
               >
-                <Sparkles className="h-4 w-4 text-amber-400" />
-                <span>Replay Announcement</span>
+                <Sparkles className="h-3.5 w-3.5 text-[#B45309]" />
+                <span>Replay Broadcast</span>
               </button>
             )}
 
@@ -680,11 +736,11 @@ function WinnerAnnouncementStage({ ceremony }: { ceremony: CeremonyData }) {
                 closeCeremony()
                 router.push('/')
               }}
-              className="inline-flex items-center justify-center gap-2.5 rounded-full bg-gradient-to-r from-[#1A73E8] via-[#4285F4] to-[#60A5FA] px-8 py-3.5 text-sm font-bold text-white shadow-[0_10px_35px_rgba(26,115,232,0.5)] hover:shadow-[0_15px_45px_rgba(26,115,232,0.7)] hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-[#111827] bg-[#111827] px-7 py-2.5 font-mono text-xs uppercase tracking-wider text-white shadow-[4px_4px_0px_#9CA3AF] hover:bg-black active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer"
             >
-              <Home className="h-4 w-4" />
-              <span>Redirect Home</span>
-              <ArrowRight className="h-4 w-4" />
+              <Home className="h-3.5 w-3.5" />
+              <span>Return to Hub</span>
+              <ArrowRight className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>

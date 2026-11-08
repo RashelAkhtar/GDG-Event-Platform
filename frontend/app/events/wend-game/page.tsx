@@ -515,12 +515,28 @@ export default function WendGamePage() {
       setTimeout(() => {
         setHintCell(null)
         setHintClue(null)
-      }, 3500)
+      }, 4000)
     } else {
       setHintClue(`Word is "${target.word}" (${target.word.length} letters)`)
-      setTimeout(() => setHintClue(null), 3000)
+      setTimeout(() => setHintClue(null), 3500)
     }
   }
+
+  // Individual target word hint request handler
+  const handleWordHintRequest = useCallback((target: { id: string; word: string; hint?: string }) => {
+    const path = findWordPathInGrid(target.word, board.grid)
+    if (path && path.length > 0) {
+      setHintCell(path[0])
+      setHintClue(target.hint || `Starts with "${target.word[0]}" (${target.word.length} letters)`)
+      setTimeout(() => {
+        setHintCell(null)
+        setHintClue(null)
+      }, 4000)
+    } else {
+      setHintClue(target.hint || `Word is "${target.word}" (${target.word.length} letters)`)
+      setTimeout(() => setHintClue(null), 3500)
+    }
+  }, [board.grid])
 
   // Reset / Play Again
 
@@ -556,7 +572,7 @@ export default function WendGamePage() {
         />
       )}
 
-      <main className="relative flex-1 flex flex-col items-center justify-between p-3 sm:p-5 max-w-lg mx-auto w-full select-none no-copy" onCopy={(e) => { e.preventDefault(); showCopyProhibitedAlert(); }} onCut={(e) => e.preventDefault()} onContextMenu={(e) => e.preventDefault()}>
+      <main className="relative flex-1 flex flex-col items-center justify-between p-2 sm:p-4 max-w-lg mx-auto w-full select-none no-copy" onCopy={(e) => { e.preventDefault(); showCopyProhibitedAlert(); }} onCut={(e) => e.preventDefault()} onContextMenu={(e) => e.preventDefault()}>
         {/* Navigation & Live Header with Admin Time Limit */}
         <div className="w-full flex items-center justify-between mb-2 gap-2">
           <Link
@@ -608,7 +624,7 @@ export default function WendGamePage() {
 
         {/* Live Countdown Progress Bar (Reflecting admin-configured time) */}
         {!completedSession && !isLocked && (board?.targetWords?.length ?? 0) > 0 && (
-          <div className="w-full h-1 bg-[#E8EAED] overflow-hidden mb-3">
+          <div className="w-full h-1 bg-[#E8EAED] overflow-hidden mb-2">
             <div
               className={`h-full transition-all duration-1000 ${
                 timeLeft <= 15
@@ -634,13 +650,6 @@ export default function WendGamePage() {
             }`}
           >
             {toastMessage.text}
-          </div>
-        )}
-
-        {/* Hint Clue Banner */}
-        {hintClue && (
-          <div className="mb-2 w-full text-center py-2 px-4 rounded-2xl text-xs font-bold bg-[#FEF7E0] text-[#B06000] border border-[#FBBC04]/50 shadow-xs animate-in zoom-in-95">
-            💡 Hint: {hintClue}
           </div>
         )}
 
@@ -777,7 +786,7 @@ export default function WendGamePage() {
           </div>
         ) : (
           /* --- ACTIVE SNAKE WORD PATH PUZZLE ARENA --- */
-          <div className="flex flex-col items-center gap-4 w-full my-auto">
+          <div className="flex flex-col items-center gap-2.5 sm:gap-3.5 w-full my-auto">
             {/* 1. 8x8 Letter Grid with Obstacle Blocks & SVG Ribbon */}
             <WendSnakeGrid
               grid={board.grid}
@@ -796,12 +805,14 @@ export default function WendGamePage() {
               shakeInvalid={shakeInvalid}
             />
 
-            {/* 3. Word Slots Matrix (Rows of blank letter boxes filling pastel upon discovery) */}
-            <div className="w-full pt-1 pb-3">
+            {/* 3. Word Slots Matrix & Clues Matrix */}
+            <div className="w-full pt-0.5 pb-2">
               <WendWordBank
                 targetWords={board.targetWords}
                 foundWordIds={foundWordIds}
                 wordColorMap={wordColorMap}
+                activeHintClue={hintClue}
+                onWordHintRequest={handleWordHintRequest}
               />
             </div>
           </div>

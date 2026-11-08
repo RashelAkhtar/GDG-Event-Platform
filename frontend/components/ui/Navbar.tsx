@@ -42,9 +42,6 @@ export function Navbar() {
               <span className="hidden sm:inline-block font-mono text-[9px] tracking-[0.24em] uppercase text-[#9CA3AF] pl-2 border-l border-[#E5E7EB]">
                 Arena
               </span>
-              <span className="hidden md:inline-block font-mono text-[8.5px] tracking-[0.18em] uppercase text-[#6B7280]">
-                // VOL. 26
-              </span>
             </div>
           </div>
         </Link>

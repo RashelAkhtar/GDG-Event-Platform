@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Navbar } from '@/components/ui/Navbar'
 import { CircleBucket } from '@/components/bucket/CircleBucket'
+import { VoxelWorldBackdrop } from '@/components/bucket/VoxelWorldBackdrop'
 import { DualQuizSection } from '@/components/quiz/DualQuizSection'
 import { api, DEFAULT_WEB_EVENT, DEFAULT_MENTIS_EVENT, DEFAULT_WEND_EVENT, GdgEvent } from '@/lib/api'
 import Link from 'next/link'
@@ -44,7 +45,7 @@ export default function HomePage() {
           <div className="inline-flex items-center gap-2 mb-3 rounded-full border border-[#E5E7EB] bg-white px-3 py-1 shadow-2xs">
             <span className="h-1.5 w-1.5 rounded-full bg-[#1A73E8] animate-pulse" />
             <span className="font-mono text-[9.5px] tracking-[0.24em] uppercase text-[#6B7280]">
-              GDG LIVE SESSIONS // VOL. 26
+              GDG LIVE ARENA SESSIONS
             </span>
           </div>
 
@@ -53,7 +54,8 @@ export default function HomePage() {
           </h1>
 
           <p className="mt-3.5 text-xs sm:text-sm text-[#4B5563] font-normal leading-relaxed max-w-md mx-auto">
-            Live technical challenge arenas and interactive puzzle environments. Engineered for speed and precision.
+            Quick-fire dev quizzes, sneaky word mazes, and live showdowns.
+            <br className="hidden sm:inline" /> Bring your sharpest keystrokes—the podium waits for no one.
           </p>
 
           {/* Micro Metrics Ribbon */}
@@ -72,8 +74,9 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* 2. Interactive Kinetic Circle Vessel */}
-        <section className="mt-2 mb-8 select-none touch-none">
+        {/* 2. Interactive Kinetic Circle Vessel with Miniature Voxel World Behind */}
+        <section className="relative mt-2 mb-8 select-none touch-none">
+          <VoxelWorldBackdrop />
           <CircleBucket />
         </section>
 

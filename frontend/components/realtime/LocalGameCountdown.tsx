@@ -3,9 +3,11 @@
 import React, { useEffect, useState } from 'react'
 import { soundManager } from '@/lib/sound'
 import confetti from 'canvas-confetti'
+import { Sparkles, Zap, Volume2 } from 'lucide-react'
 
-const CELEBRATION_COLORS = ['#4285F4', '#EA4335', '#FBBC04', '#34A853', '#8B5CF6', '#EC4899']
-const VIBRANT_COUNTDOWN_COLORS = ['#2563EB', '#EC4899', '#8B5CF6', '#10B981', '#F59E0B']
+// Curated Google 4-color palette + archival gold and carbon (Zero purple)
+const CELEBRATION_COLORS = ['#1A73E8', '#EA4335', '#FBBC04', '#34A853', '#D4AF37', '#111827', '#FFFFFF']
+const GOOGLE_STAGE_COLORS = ['#1A73E8', '#EA4335', '#FBBC04', '#34A853']
 
 export function LocalGameCountdown({
   gameTitle,
@@ -42,9 +44,9 @@ export function LocalGameCountdown({
           try {
             soundManager.playWinner()
             confetti({
-              particleCount: 80,
-              spread: 80,
-              origin: { y: 0.5 },
+              particleCount: 90,
+              spread: 85,
+              origin: { y: 0.52 },
               colors: CELEBRATION_COLORS,
             })
           } catch {}
@@ -64,80 +66,94 @@ export function LocalGameCountdown({
     return () => clearInterval(interval)
   }, [onComplete])
 
-  const colorIndex = Math.max(0, count) % VIBRANT_COUNTDOWN_COLORS.length
-  const currentColor = VIBRANT_COUNTDOWN_COLORS[colorIndex]
+  const stageColor = GOOGLE_STAGE_COLORS[Math.max(0, count - 1) % GOOGLE_STAGE_COLORS.length]
 
   return (
     <div
       onClick={handleInteractiveUnlock}
       onTouchStart={handleInteractiveUnlock}
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/95 backdrop-blur-xl transition-all animate-in fade-in duration-300 cursor-pointer"
+      className="fixed inset-0 z-50 flex flex-col items-center justify-between p-6 sm:p-8 bg-[#FBFBF9]/96 backdrop-blur-3xl text-[#111827] select-none transition-all cursor-pointer"
     >
-      {/* Background Multi-color Aurora Mesh */}
+      {/* Pristine Light Canvas Atmosphere & Architectural Hairline Grid */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[520px] w-[520px] rounded-full opacity-25 blur-3xl transition-colors duration-700 animate-aurora"
-          style={{ backgroundColor: currentColor }}
-        />
+        {/* Soft Pearlescent Google 4-Color Ambient Refractions (Zero purple) */}
+        <div className="absolute -top-32 -left-32 h-[450px] w-[450px] rounded-full bg-[#1A73E8]/10 blur-[130px]" />
+        <div className="absolute top-1/3 -right-32 h-[480px] w-[480px] rounded-full bg-[#FBBC04]/14 blur-[130px]" />
+        <div className="absolute -bottom-32 left-1/3 h-[460px] w-[460px] rounded-full bg-[#34A853]/12 blur-[130px]" />
+
+        {/* Minimal Architectural Grid Structure */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#0000000a_1px,transparent_1px),linear-gradient(to_bottom,#0000000a_1px,transparent_1px)] bg-[size:3.5rem_3.5rem] [mask-image:radial-gradient(ellipse_70%_60%_at_50%_50%,#000_70%,transparent_100%)] opacity-70" />
       </div>
 
-      {/* GDG Event Title Badge */}
-      <div className="relative z-10 mb-8 flex items-center gap-2 border border-[#DADCE0] bg-white px-5 py-2 shadow-xs backdrop-blur-md">
-        <span className="flex items-center gap-1.5" aria-hidden="true">
-          <span className="h-2 w-2 bg-[#EA4335] animate-pulse" />
-          <span className="h-2 w-2 bg-[#FBBC04]" />
-          <span className="h-2 w-2 bg-[#34A853]" />
-          <span className="h-2 w-2 bg-[#4285F4]" />
-        </span>
-        <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#3C4043]">
-          STARTING ARENA • {gameTitle}
-        </span>
-      </div>
-
-      {/* Giant Animated Countdown Number with Concentric Square Radar Waves */}
-      <div className="relative z-10 flex h-64 w-64 items-center justify-center">
-        <div
-          className="absolute inset-0 border-2 animate-ripple-1 pointer-events-none"
-          style={{ borderColor: currentColor }}
-        />
-        <div
-          className="absolute inset-0 border-2 animate-ripple-2 pointer-events-none"
-          style={{ borderColor: currentColor }}
-        />
-        <div
-          className="absolute inset-0 border-2 animate-ripple-3 pointer-events-none"
-          style={{ borderColor: currentColor }}
-        />
-
-        <div
-          className="relative flex h-48 w-48 items-center justify-center border-4 bg-white shadow-2xl transition-all duration-300 ring-4 ring-black/5"
-          style={{ borderColor: currentColor, boxShadow: `0 16px 40px -10px ${currentColor}44` }}
-        >
-          {count > 0 ? (
-            <span
-              key={count}
-              className="font-mono text-8xl sm:text-9xl font-black tracking-tighter select-none animate-count-pop drop-shadow-sm"
-              style={{ color: currentColor }}
-            >
-              {count}
-            </span>
-          ) : (
-            <span className="font-mono text-6xl sm:text-7xl font-black tracking-tight text-[#1E8E3E] select-none animate-count-pop">
-              GO!
-            </span>
-          )}
+      {/* Top Technical Masthead */}
+      <div className="relative z-10 pt-2 flex items-center justify-center">
+        <div className="flex items-center gap-2.5 rounded-full border border-[#E5E7EB] bg-white px-5 py-2 shadow-xs">
+          <span className="flex items-center gap-1.5" aria-hidden="true">
+            <span className="h-2 w-2 rounded-full bg-[#1A73E8]" />
+            <span className="h-2 w-2 rounded-full bg-[#EA4335]" />
+            <span className="h-2 w-2 rounded-full bg-[#FBBC04]" />
+            <span className="h-2 w-2 rounded-full bg-[#34A853]" />
+          </span>
+          <span className="font-mono text-[10.5px] font-bold uppercase tracking-[0.22em] text-[#111827]">
+            COMMENCING ARENA // {gameTitle}
+          </span>
         </div>
       </div>
 
-      <div className="relative z-10 mt-8 text-center flex flex-col items-center">
-        <p className="font-mono text-base font-extrabold uppercase tracking-wider text-[#202124]">GET READY</p>
-        <p className="text-xs text-[#5F6368] mt-1 font-medium">
-          Challenge begins when the countdown reaches GO
-        </p>
+      {/* Centerpiece Monolithic Ticker Box with Spring Physics */}
+      <div className="relative z-10 my-auto flex flex-col items-center text-center">
+        {/* Orbiting Rotating Dashed Ring */}
+        <div className="relative flex items-center justify-center">
+          <div className="absolute -inset-8 rounded-full border border-dashed border-[#111827]/25 anim-stamp-orbit pointer-events-none" />
 
-        {/* Mobile Sound Assist Pill */}
-        <div className="mt-4 inline-flex items-center gap-1.5 border border-[#DADCE0] bg-white px-3 py-1 font-mono text-[11px] font-semibold text-[#5F6368] shadow-2xs">
-          <span>{audioUnlocked ? '🔊 GAME AUDIO ACTIVE' : '🔊 TAP SCREEN TO ENABLE AUDIO'}</span>
+          {/* High-Contrast Architectural Box */}
+          <div className="relative flex h-52 w-52 sm:h-64 sm:w-64 flex-col items-center justify-center rounded-3xl border-2 border-[#111827] bg-white shadow-[10px_10px_0px_#111827]">
+            {/* Corner Registration Tags */}
+            <span className="absolute top-2.5 left-3 font-mono text-[8.5px] text-[#9CA3AF] uppercase">SYS.01</span>
+            <span className="absolute top-2.5 right-3 font-mono text-[8.5px] text-[#9CA3AF] uppercase">CHRONO</span>
+            <span className="absolute bottom-2.5 left-3 font-mono text-[8.5px] text-[#9CA3AF] uppercase">LIVE</span>
+            <span className="absolute bottom-2.5 right-3 font-mono text-[8.5px] text-[#9CA3AF] uppercase">PRECISION</span>
+
+            {count > 0 ? (
+              <div className="flex flex-col items-center justify-center">
+                <span
+                  key={count}
+                  className="font-mono text-8xl sm:text-9xl font-black text-[#111827] select-none anim-ticker-pop tracking-tighter"
+                >
+                  0{count}
+                </span>
+                <span
+                  className="mt-1 h-2 w-2 rounded-full transition-colors duration-300"
+                  style={{ backgroundColor: stageColor }}
+                />
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center anim-sheet-unfold">
+                <span className="font-mono text-5xl sm:text-6xl font-black tracking-tight text-[#15803D] select-none">
+                  GO!
+                </span>
+                <span className="mt-1 font-mono text-[9px] uppercase tracking-widest text-[#15803D] font-bold">
+                  ARENA LIVE
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Playful Instruction Pill */}
+        <div className="mt-8 inline-flex items-center gap-2 rounded-full border border-[#E5E7EB] bg-white px-4 py-1.5 shadow-2xs">
+          <Zap className="h-3.5 w-3.5 text-[#FBBC04] fill-[#FBBC04]" />
+          <span className="font-mono text-[10.5px] uppercase tracking-wider text-[#4B5563]">
+            {count > 0 ? 'Calibrating precision benchmark...' : 'Arena engaged! Good luck!'}
+          </span>
+        </div>
+      </div>
+
+      {/* Footer Technical Stamp */}
+      <div className="relative z-10 pb-2 flex items-center justify-center">
+        <div className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-[#6B7280]">
+          <Volume2 className="h-3 w-3 text-[#9CA3AF]" />
+          <span>{audioUnlocked ? 'Multiplayer Audio Synced' : 'Tap Screen to Enable Sound FX'}</span>
         </div>
       </div>
     </div>
