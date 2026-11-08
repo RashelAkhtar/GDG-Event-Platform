@@ -106,32 +106,84 @@ class VoxelAudioSynth {
 
   // Celestial Day / Night toggle chime
   playDayNight(toNight: boolean) {
+    if (toNight) {
+      this.playNight()
+    } else {
+      this.playDay()
+    }
+  }
+
+  // Daytime Ascension Chime (Rising dawn harmony)
+  playDay() {
     if (soundManager.isMuted()) return
     const ctx = this.getContext()
     if (!ctx) return
     try {
       const now = ctx.currentTime
-      const freqs = toNight
-        ? [523.25, 440.0, 392.0, 329.63] // C5 -> A4 -> G4 -> E4 (Twilight descent)
-        : [329.63, 392.0, 440.0, 523.25, 659.25] // E4 -> G4 -> A4 -> C5 -> E5 (Dawn ascension)
-
+      const freqs = [329.63, 392.0, 440.0, 523.25, 659.25] // E4 -> G4 -> A4 -> C5 -> E5
       freqs.forEach((freq, idx) => {
         const toneStart = now + idx * 0.08
         const osc = ctx.createOscillator()
         const gain = ctx.createGain()
-
         osc.type = 'triangle'
         osc.frequency.setValueAtTime(freq, toneStart)
-
         gain.gain.setValueAtTime(0.001, toneStart)
         gain.gain.linearRampToValueAtTime(0.22, toneStart + 0.02)
         gain.gain.exponentialRampToValueAtTime(0.001, toneStart + 0.3)
-
         osc.connect(gain)
         gain.connect(ctx.destination)
-
         osc.start(toneStart)
         osc.stop(toneStart + 0.3)
+      })
+    } catch {}
+  }
+
+  // Evening Sunset Chime (Warm golden-hour dusk descent)
+  playSunset() {
+    if (soundManager.isMuted()) return
+    const ctx = this.getContext()
+    if (!ctx) return
+    try {
+      const now = ctx.currentTime
+      const freqs = [587.33, 523.25, 440.0, 349.23] // D5 -> C5 -> A4 -> F4
+      freqs.forEach((freq, idx) => {
+        const toneStart = now + idx * 0.09
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.type = 'sine'
+        osc.frequency.setValueAtTime(freq, toneStart)
+        gain.gain.setValueAtTime(0.001, toneStart)
+        gain.gain.linearRampToValueAtTime(0.24, toneStart + 0.03)
+        gain.gain.exponentialRampToValueAtTime(0.001, toneStart + 0.38)
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        osc.start(toneStart)
+        osc.stop(toneStart + 0.38)
+      })
+    } catch {}
+  }
+
+  // Starlight Midnight Chime (Deep nocturnal bells)
+  playNight() {
+    if (soundManager.isMuted()) return
+    const ctx = this.getContext()
+    if (!ctx) return
+    try {
+      const now = ctx.currentTime
+      const freqs = [523.25, 440.0, 392.0, 329.63, 261.63] // C5 -> A4 -> G4 -> E4 -> C4
+      freqs.forEach((freq, idx) => {
+        const toneStart = now + idx * 0.09
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.type = 'triangle'
+        osc.frequency.setValueAtTime(freq, toneStart)
+        gain.gain.setValueAtTime(0.001, toneStart)
+        gain.gain.linearRampToValueAtTime(0.2, toneStart + 0.02)
+        gain.gain.exponentialRampToValueAtTime(0.001, toneStart + 0.35)
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        osc.start(toneStart)
+        osc.stop(toneStart + 0.35)
       })
     } catch {}
   }
@@ -566,7 +618,140 @@ function RealisticBird({
 }
 
 // ============================================================================
-// DYNAMIC RANDOM BIRD DATA TYPES
+// REALISTIC CELESTIAL BODIES: SUN & MOON (DETAILED VECTOR ANATOMY & ATMOSPHERE)
+// ============================================================================
+
+function RealisticSun({ isEvening }: { isEvening: boolean }) {
+  return (
+    <div className={`relative flex items-center justify-center ${isEvening ? 'anim-celestial-sun-evening' : 'anim-celestial-sun-day'}`}>
+      {/* 8 Rotating Solar Corona Flare Rays */}
+      <svg
+        viewBox="0 0 64 64"
+        className="absolute -inset-2 w-14 h-14 anim-solar-rays-spin pointer-events-none opacity-80"
+        fill="none"
+      >
+        <g stroke={isEvening ? '#F97316' : '#FDE047'} strokeWidth="1.5" strokeLinecap="round" opacity="0.85">
+          <line x1="32" y1="4" x2="32" y2="10" />
+          <line x1="32" y1="54" x2="32" y2="60" />
+          <line x1="4" y1="32" x2="10" y2="32" />
+          <line x1="54" y1="32" x2="60" y2="32" />
+          <line x1="12" y1="12" x2="17" y2="17" />
+          <line x1="47" y1="47" x2="52" y2="52" />
+          <line x1="12" y1="52" x2="17" y2="47" />
+          <line x1="47" y1="17" x2="52" y2="12" />
+        </g>
+      </svg>
+
+      {/* Main Solar Sphere */}
+      <svg
+        viewBox="0 0 40 40"
+        className="w-9 h-9 sm:w-10 sm:h-10 overflow-visible select-none drop-shadow-md"
+      >
+        <defs>
+          <radialGradient id="sun-grad-day" cx="35%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#FFFFFF" />
+            <stop offset="35%" stopColor="#FFFBEB" />
+            <stop offset="65%" stopColor="#FDE047" />
+            <stop offset="90%" stopColor="#F59E0B" />
+            <stop offset="100%" stopColor="#D97706" />
+          </radialGradient>
+
+          <radialGradient id="sun-grad-evening" cx="35%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#FFF7ED" />
+            <stop offset="30%" stopColor="#FED7AA" />
+            <stop offset="60%" stopColor="#FB923C" />
+            <stop offset="85%" stopColor="#EA580C" />
+            <stop offset="100%" stopColor="#DC2626" />
+          </radialGradient>
+        </defs>
+
+        {/* Outer Glow Halo Ring */}
+        <circle
+          cx="20"
+          cy="20"
+          r="19"
+          fill={isEvening ? '#EA580C' : '#FDE047'}
+          opacity="0.25"
+        />
+
+        {/* Main Sun Core */}
+        <circle
+          cx="20"
+          cy="20"
+          r="16"
+          fill={isEvening ? 'url(#sun-grad-evening)' : 'url(#sun-grad-day)'}
+        />
+
+        {/* Specular Photosphere Core */}
+        <circle
+          cx="17"
+          cy="16"
+          r="6"
+          fill="#FFFFFF"
+          opacity={isEvening ? '0.6' : '0.85'}
+        />
+      </svg>
+    </div>
+  )
+}
+
+function RealisticMoon() {
+  return (
+    <div className="relative flex items-center justify-center anim-celestial-moon-night">
+      <svg
+        viewBox="0 0 40 40"
+        className="w-9 h-9 sm:w-10 sm:h-10 overflow-visible select-none drop-shadow-md"
+      >
+        <defs>
+          <radialGradient id="moon-grad" cx="35%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#FFFFFF" />
+            <stop offset="45%" stopColor="#F1F5F9" />
+            <stop offset="75%" stopColor="#E2E8F0" />
+            <stop offset="92%" stopColor="#CBD5E1" />
+            <stop offset="100%" stopColor="#94A3B8" />
+          </radialGradient>
+
+          <radialGradient id="moon-crater-dark" cx="40%" cy="40%" r="60%">
+            <stop offset="0%" stopColor="#64748B" stopOpacity="0.8" />
+            <stop offset="85%" stopColor="#475569" stopOpacity="0.65" />
+            <stop offset="100%" stopColor="#334155" stopOpacity="0.4" />
+          </radialGradient>
+        </defs>
+
+        {/* Outer Ethereal Lunar Halo */}
+        <circle cx="20" cy="20" r="19" fill="#BAE6FD" opacity="0.3" />
+
+        {/* Main Lunar Sphere */}
+        <circle cx="20" cy="20" r="16" fill="url(#moon-grad)" />
+
+        {/* Realistic Lunar Maria Basalt Plains (Craters & Seas) */}
+        {/* Sea of Tranquility (Mare Tranquillitatis) */}
+        <ellipse cx="23" cy="15" rx="5" ry="3.5" fill="url(#moon-crater-dark)" />
+        {/* Sea of Serenity */}
+        <circle cx="16" cy="14" r="3.2" fill="url(#moon-crater-dark)" />
+        {/* Ocean of Storms (Oceanus Procellarum) */}
+        <ellipse cx="14" cy="23" rx="4" ry="5.5" fill="url(#moon-crater-dark)" />
+        {/* Tycho Crater with Bright Rim */}
+        <g>
+          <circle cx="23" cy="26" r="2.2" fill="#475569" opacity="0.75" />
+          <circle cx="23" cy="26" r="2.6" stroke="#FFFFFF" strokeWidth="0.5" fill="none" opacity="0.6" />
+        </g>
+        {/* Copernicus Crater */}
+        <circle cx="20" cy="20" r="1.6" fill="#64748B" opacity="0.65" />
+
+        {/* Crescent Limb Highlight */}
+        <path
+          d="M 10 9 C 14 5, 23 5, 28 9 C 24 7, 14 7, 10 9 Z"
+          fill="#FFFFFF"
+          opacity="0.75"
+        />
+      </svg>
+    </div>
+  )
+}
+
+// ============================================================================
+// DYNAMIC RANDOM BIRD DATA TYPES & CELESTIAL TYPES
 // ============================================================================
 
 export type BirdStatus = 'flying' | 'hit' | 'dead'
@@ -583,7 +768,12 @@ interface ActiveBird {
   hitKey: number
 }
 
-export type SkyPhase = 'day' | 'sunset' | 'night' | 'sunrise'
+export type SkyPhase = 'day' | 'evening' | 'night'
+export type TransitionMode =
+  | null
+  | 'day-to-evening'
+  | 'evening-to-night'
+  | 'night-to-day'
 
 // Twinkling Minecraft night stars coordinate layout
 const NIGHT_STARS = [
@@ -605,6 +795,7 @@ const NIGHT_STARS = [
 
 export function VoxelWorldBackdrop() {
   const [skyPhase, setSkyPhase] = useState<SkyPhase>('day')
+  const [transitionMode, setTransitionMode] = useState<TransitionMode>(null)
   const [isTransitioning, setIsTransitioning] = useState<boolean>(false)
   const [activeBirds, setActiveBirds] = useState<ActiveBird[]>([])
   const [treeRustleLeft, setTreeRustleLeft] = useState<boolean>(false)
@@ -692,69 +883,83 @@ export function VoxelWorldBackdrop() {
   }
 
   // ============================================================================
-  // REALISTIC CELESTIAL CYCLE: SUNSET & SUNRISE WITH STAGED DELAY & SKY TRANSITION
+  // REALISTIC CELESTIAL CYCLE: DAY ⇄ EVENING ⇄ NIGHT TRANSITIONS
   // ============================================================================
 
-  // When Sun is clicked: Sun descends & sets, evening dusk settles, then Moon rises into starry night
-  const handleSunClick = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation()
-      if (isTransitioning || skyPhase !== 'day') return
+  const transitionToPhase = useCallback(
+    (target: SkyPhase) => {
+      if (isTransitioning || target === skyPhase) return
+
+      let mode: TransitionMode = null
+      if (skyPhase === 'day' && target === 'evening') mode = 'day-to-evening'
+      else if (skyPhase === 'evening' && target === 'night') mode = 'evening-to-night'
+      else if (skyPhase === 'night' && target === 'day') mode = 'night-to-day'
+      else if (skyPhase === 'day' && target === 'night') mode = 'evening-to-night'
+      else if (skyPhase === 'evening' && target === 'day') mode = 'night-to-day'
+      else if (skyPhase === 'night' && target === 'evening') mode = 'day-to-evening'
 
       setIsTransitioning(true)
-      setSkyPhase('sunset')
-      voxelAudio.playDayNight(true) // descending sunset chime
+      setTransitionMode(mode)
 
-      // Midpoint: at 1.2s, as Sun sinks below horizon, dark mode triggers and Moon starts rising
-      setTimeout(() => {
-        setSkyPhase('night')
+      // Audio cue based on target phase
+      if (target === 'evening') {
+        voxelAudio.playSunset()
+      } else if (target === 'night') {
+        voxelAudio.playNight()
         try {
           localStorage.setItem('minecraft_dark_mode', 'true')
           document.documentElement.classList.add('dark')
         } catch {}
-      }, 1200)
-
-      // Animation fully concludes at 2.6s
-      setTimeout(() => {
-        setIsTransitioning(false)
-      }, 2600)
-    },
-    [isTransitioning, skyPhase]
-  )
-
-  // When Moon is clicked: Moon descends & sets, dawn breaks, then Sun rises into bright day
-  const handleMoonClick = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation()
-      if (isTransitioning || skyPhase !== 'night') return
-
-      setIsTransitioning(true)
-      setSkyPhase('sunrise')
-      voxelAudio.playDayNight(false) // ascending dawn chime
-
-      // Midpoint: at 1.2s, as Moon sinks below horizon, daylight triggers and Sun starts rising
-      setTimeout(() => {
-        setSkyPhase('day')
+      } else if (target === 'day') {
+        voxelAudio.playDay()
         try {
           localStorage.setItem('minecraft_dark_mode', 'false')
           document.documentElement.classList.remove('dark')
         } catch {}
-      }, 1200)
+      }
 
-      // Animation fully concludes at 2.6s
+      // Smooth 1.4s celestial transition
       setTimeout(() => {
+        setSkyPhase(target)
+        setTransitionMode(null)
         setIsTransitioning(false)
-      }, 2600)
+      }, 1400)
     },
     [isTransitioning, skyPhase]
   )
 
-  // When Sky Background is clicked: smoothly toggle/cycle day & night with celestial ripple
+  // Cycle sequentially: Day ➔ Evening ➔ Night ➔ Day
+  const cycleNextPhase = useCallback(() => {
+    if (skyPhase === 'day') transitionToPhase('evening')
+    else if (skyPhase === 'evening') transitionToPhase('night')
+    else if (skyPhase === 'night') transitionToPhase('day')
+  }, [skyPhase, transitionToPhase])
+
+  // Sun click handler
+  const handleSunClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      if (skyPhase === 'day') transitionToPhase('evening')
+      else if (skyPhase === 'evening') transitionToPhase('night')
+    },
+    [skyPhase, transitionToPhase]
+  )
+
+  // Moon click handler
+  const handleMoonClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      if (skyPhase === 'night') transitionToPhase('day')
+    },
+    [skyPhase, transitionToPhase]
+  )
+
+  // When Sky Background is clicked: create ripple and advance to next phase
   const handleSkyClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       if (isTransitioning) return
 
-      // Spawn celestial pulse ripple at mouse coordinates
+      // Spawn celestial ripple at mouse coordinates
       const rect = e.currentTarget.getBoundingClientRect()
       const x = e.clientX - rect.left
       const y = e.clientY - rect.top
@@ -764,25 +969,9 @@ export function VoxelWorldBackdrop() {
         setSkyRipples((prev) => prev.filter((r) => r.id !== newRipple.id))
       }, 700)
 
-      if (skyPhase === 'day') {
-        handleSunClick(e as unknown as React.MouseEvent)
-      } else if (skyPhase === 'night') {
-        handleMoonClick(e as unknown as React.MouseEvent)
-      } else if (skyPhase === 'sunset') {
-        setSkyPhase('night')
-        try {
-          localStorage.setItem('minecraft_dark_mode', 'true')
-          document.documentElement.classList.add('dark')
-        } catch {}
-      } else if (skyPhase === 'sunrise') {
-        setSkyPhase('day')
-        try {
-          localStorage.setItem('minecraft_dark_mode', 'false')
-          document.documentElement.classList.remove('dark')
-        } catch {}
-      }
+      cycleNextPhase()
     },
-    [isTransitioning, skyPhase, handleSunClick, handleMoonClick]
+    [isTransitioning, cycleNextPhase]
   )
 
   // Handle clicking a bird (Red damage blink, tumble, death poof, drops)
@@ -836,8 +1025,45 @@ export function VoxelWorldBackdrop() {
   }, [])
 
   const isNight = skyPhase === 'night'
-  const isSunset = skyPhase === 'sunset'
-  const isSunrise = skyPhase === 'sunrise'
+  const isEvening = skyPhase === 'evening'
+  const isDay = skyPhase === 'day'
+  const isSunset = isEvening
+  const isSunrise = transitionMode === 'night-to-day'
+
+  // Sun & Moon visibility logic
+  const showSun =
+    skyPhase === 'day' ||
+    skyPhase === 'evening' ||
+    transitionMode === 'day-to-evening' ||
+    transitionMode === 'evening-to-night' ||
+    transitionMode === 'night-to-day'
+
+  const showMoon =
+    skyPhase === 'night' ||
+    transitionMode === 'evening-to-night' ||
+    transitionMode === 'night-to-day'
+
+  let sunAnimClass = ''
+  if (transitionMode === 'day-to-evening') {
+    sunAnimClass = 'anim-sun-descend-to-evening'
+  } else if (transitionMode === 'evening-to-night') {
+    sunAnimClass = 'anim-sun-sink-below-horizon'
+  } else if (transitionMode === 'night-to-day') {
+    sunAnimClass = 'anim-sun-rise-to-day'
+  } else if (skyPhase === 'evening') {
+    sunAnimClass = 'translate-x-[6px] translate-y-[32px] scale-110'
+  } else if (skyPhase === 'day') {
+    sunAnimClass = 'anim-celestial-sun-day'
+  }
+
+  let moonAnimClass = ''
+  if (transitionMode === 'evening-to-night') {
+    moonAnimClass = 'anim-moon-rise-from-horizon'
+  } else if (transitionMode === 'night-to-day') {
+    moonAnimClass = 'anim-moon-sink-below-horizon'
+  } else if (skyPhase === 'night') {
+    moonAnimClass = 'anim-celestial-moon-night'
+  }
 
   return (
     <div
@@ -849,48 +1075,37 @@ export function VoxelWorldBackdrop() {
       {/* ======================================================== */}
       <div
         onClick={handleSkyClick}
-        title={
-          skyPhase === 'day'
-            ? '☀️ Click sky to transition to Sunset & Night'
-            : '🌙 Click sky to transition to Sunrise & Day'
-        }
+        title={`Click sky to cycle time of day (currently ${skyPhase})`}
         className="absolute inset-0 z-0 cursor-pointer pointer-events-auto rounded-3xl group/sky"
       >
-        {/* 0A. DAY SKY LAYER */}
+        {/* 0A. DAYTIME SKY LAYER */}
         <div
           className={`absolute inset-0 rounded-3xl border transition-opacity duration-1000 ${
             skyPhase === 'day' ? 'opacity-100 z-0' : 'opacity-0 -z-10'
-          } bg-gradient-to-b from-[#7DD3FC]/50 via-[#BAE6FD]/30 to-[#F0FDF4]/20 border-[#7DD3FC]/40 shadow-[inset_0_0_60px_rgba(255,255,255,0.4)]`}
+          } bg-gradient-to-b from-[#7DD3FC]/55 via-[#BAE6FD]/35 to-[#F0FDF4]/30 border-[#7DD3FC]/40 shadow-[inset_0_0_60px_rgba(255,255,255,0.4)]`}
         />
 
-        {/* 0B. SUNSET / GOLDEN HOUR SKY LAYER */}
+        {/* 0B. EVENING / SUNSET / GOLDEN HOUR SKY LAYER */}
         <div
           className={`absolute inset-0 rounded-3xl border transition-opacity duration-1000 ${
-            skyPhase === 'sunset' ? 'opacity-100 z-0' : 'opacity-0 -z-10'
-          } bg-gradient-to-b from-[#2E1065]/95 via-[#C026D3]/75 via-[#EA580C]/85 to-[#FDE047]/80 border-[#F97316]/70 shadow-[inset_0_0_90px_rgba(234,88,12,0.45)]`}
+            skyPhase === 'evening' ? 'opacity-100 z-0' : 'opacity-0 -z-10'
+          } bg-gradient-to-b from-[#2E1065] via-[#701A75]/90 via-[#C2410C]/85 via-[#EA580C]/85 to-[#FBBF24]/80 border-[#EA580C]/70 shadow-[inset_0_0_90px_rgba(234,88,12,0.45)]`}
         />
 
-        {/* 0C. DEEP STARRY NIGHT SKY LAYER */}
+        {/* 0C. DEEP STARRY MIDNIGHT SKY LAYER */}
         <div
           className={`absolute inset-0 rounded-3xl border transition-opacity duration-1000 ${
             skyPhase === 'night' ? 'opacity-100 z-0' : 'opacity-0 -z-10'
-          } bg-gradient-to-b from-[#020617]/95 via-[#0F172A]/90 to-[#1E1B4B]/70 border-[#38BDF8]/20 shadow-[inset_0_0_80px_rgba(15,23,42,0.8)]`}
-        />
-
-        {/* 0D. SUNRISE / DAWN SKY LAYER */}
-        <div
-          className={`absolute inset-0 rounded-3xl border transition-opacity duration-1000 ${
-            skyPhase === 'sunrise' ? 'opacity-100 z-0' : 'opacity-0 -z-10'
-          } bg-gradient-to-b from-[#1E1B4B]/85 via-[#BE185D]/65 via-[#FB923C]/75 to-[#FEF08A]/75 border-[#F43F5E]/50 shadow-[inset_0_0_90px_rgba(251,146,60,0.4)]`}
+          } bg-gradient-to-b from-[#020617] via-[#0B0F19] via-[#0F172A] to-[#1E1B4B]/90 border-[#38BDF8]/25 shadow-[inset_0_0_80px_rgba(15,23,42,0.8)]`}
         />
 
         {/* HORIZON VOLUMETRIC ATMOSPHERIC GLOW STRIP */}
         <div
           className={`absolute bottom-0 inset-x-0 h-28 pointer-events-none transition-opacity duration-1000 rounded-b-3xl ${
-            isSunset
-              ? 'opacity-100 bg-gradient-to-t from-[#EA580C]/50 via-[#F97316]/25 to-transparent'
-              : isSunrise
-              ? 'opacity-100 bg-gradient-to-t from-[#FB923C]/40 via-[#F43F5E]/20 to-transparent'
+            isEvening
+              ? 'opacity-100 bg-gradient-to-t from-[#EA580C]/60 via-[#F97316]/30 to-transparent'
+              : isNight
+              ? 'opacity-100 bg-gradient-to-t from-[#1E1B4B]/40 via-[#0F172A]/20 to-transparent'
               : 'opacity-0'
           }`}
         />
@@ -907,31 +1122,68 @@ export function VoxelWorldBackdrop() {
               height: '48px',
               border: isNight
                 ? '2px solid rgba(186, 230, 253, 0.75)'
-                : isSunset
+                : isEvening
                 ? '2px solid rgba(251, 146, 60, 0.85)'
                 : '2px solid rgba(253, 224, 71, 0.85)',
               boxShadow: isNight
                 ? '0 0 16px rgba(186, 230, 253, 0.6)'
-                : isSunset
+                : isEvening
                 ? '0 0 18px rgba(251, 146, 60, 0.65)'
                 : '0 0 16px rgba(253, 224, 71, 0.75)',
             }}
           />
         ))}
 
-        {/* Subtle Sky Click Hint Badge on Hover (top-left) */}
-        <div className="absolute top-3 left-4 pointer-events-none opacity-0 group-hover/sky:opacity-85 transition-opacity duration-300 z-10">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white/70 backdrop-blur-xs px-2.5 py-0.5 font-mono text-[8px] uppercase tracking-wider text-[#475569] shadow-2xs">
-            <span>{isNight ? '🌙' : '☀️'}</span>
-            <span>Click sky to cycle Day/Night</span>
-          </span>
+        {/* TIME OF DAY SWITCHER PILL (Top Left) */}
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="absolute top-2.5 left-3 sm:left-4 pointer-events-auto z-20 flex items-center gap-1 rounded-full border border-black/10 bg-white/80 dark:bg-black/60 dark:border-white/10 backdrop-blur-md p-0.5 shadow-2xs select-none"
+        >
+          <button
+            type="button"
+            onClick={() => transitionToPhase('day')}
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[8.5px] uppercase tracking-wider transition-all cursor-pointer ${
+              skyPhase === 'day'
+                ? 'bg-[#FDE047] text-[#78350F] font-semibold shadow-xs'
+                : 'text-[#64748B] hover:text-[#0F172A] dark:hover:text-white'
+            }`}
+          >
+            <span>☀️</span>
+            <span>Day</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => transitionToPhase('evening')}
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[8.5px] uppercase tracking-wider transition-all cursor-pointer ${
+              skyPhase === 'evening'
+                ? 'bg-[#EA580C] text-white font-semibold shadow-xs'
+                : 'text-[#64748B] hover:text-[#0F172A] dark:hover:text-white'
+            }`}
+          >
+            <span>🌇</span>
+            <span>Evening</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => transitionToPhase('night')}
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[8.5px] uppercase tracking-wider transition-all cursor-pointer ${
+              skyPhase === 'night'
+                ? 'bg-[#1E293B] text-[#BAE6FD] font-semibold shadow-xs'
+                : 'text-[#64748B] hover:text-[#0F172A] dark:hover:text-white'
+            }`}
+          >
+            <span>🌙</span>
+            <span>Night</span>
+          </button>
         </div>
       </div>
 
       {/* Twinkling Minecraft Pixel Night Stars */}
       <div
         className={`absolute inset-0 pointer-events-none transition-opacity duration-1000 ${
-          isNight ? 'opacity-100' : 'opacity-0'
+          isNight ? 'opacity-100' : isEvening ? 'opacity-25' : 'opacity-0'
         }`}
       >
         {NIGHT_STARS.map((star, idx) => (
@@ -950,124 +1202,59 @@ export function VoxelWorldBackdrop() {
       </div>
 
       {/* ======================================================== */}
-      {/* 1. REALISTIC CELESTIAL ORBIT: SUN & MOON (ARC DESCENT & ASCENT) */}
+      {/* 1. CELESTIAL ANCHOR: SUN & MOON (PERFECTLY CENTERED, NEVER DISPLACED) */}
       {/* ======================================================== */}
-      <div className="absolute top-2.5 right-4 sm:right-8 z-30 pointer-events-auto flex items-center justify-center">
+      <div className="absolute top-2.5 right-4 sm:right-8 z-30 pointer-events-auto h-12 w-12 flex items-center justify-center">
         {/* THE SUN */}
-        {(skyPhase === 'day' || skyPhase === 'sunset' || (skyPhase === 'sunrise' && isTransitioning)) && (
-          <button
-            type="button"
-            disabled={isTransitioning}
-            onClick={handleSunClick}
-            aria-label="Sun"
-            className={`group relative flex items-center justify-center p-1.5 focus:outline-none transition-transform duration-300 ${
-              isTransitioning
-                ? 'cursor-wait pointer-events-none'
-                : 'cursor-pointer hover:scale-115 active:scale-95'
-            } ${
-              skyPhase === 'sunset'
-                ? 'anim-voxel-sun-set'
-                : skyPhase === 'sunrise'
-                ? 'anim-voxel-sun-rise'
-                : 'anim-voxel-sun'
-            }`}
-          >
-            <div className="relative flex items-center justify-center">
-              {/* Outer Golden/Sunset Corona */}
-              <div
-                className={`h-8 w-8 rounded-[1px] border-2 transition-colors duration-700 flex items-center justify-center ${
-                  skyPhase === 'sunset'
-                    ? 'border-[#EA580C] bg-[#F97316] shadow-[0_0_28px_rgba(234,88,12,0.85)]'
-                    : 'border-[#FDE047] bg-[#FEF08A] shadow-[0_0_22px_rgba(253,224,71,0.7)]'
-                }`}
-              >
-                {/* Mid Sun Slab */}
-                <div
-                  className={`h-5 w-5 rounded-[0.5px] flex items-center justify-center border transition-colors duration-700 ${
-                    skyPhase === 'sunset'
-                      ? 'bg-[#FFEDD5] border-[#EA580C]/70'
-                      : 'bg-[#FFFBEB] border-[#FDE047]/60'
-                  }`}
-                >
-                  {/* Radiant Pure White Core */}
-                  <div className="h-3 w-3 bg-white rounded-[0.2px] shadow-[0_0_6px_#FFFFFF]" />
-                </div>
-              </div>
+        {showSun && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <button
+              type="button"
+              disabled={isTransitioning}
+              onClick={handleSunClick}
+              aria-label={skyPhase === 'day' ? 'Sun (Day)' : 'Sunset (Evening)'}
+              className={`group pointer-events-auto relative flex items-center justify-center p-1 focus:outline-none transition-all duration-300 ${
+                isTransitioning
+                  ? 'cursor-wait pointer-events-none'
+                  : 'cursor-pointer hover:scale-115 active:scale-95'
+              } ${sunAnimClass}`}
+            >
+              <RealisticSun isEvening={skyPhase === 'evening' || transitionMode === 'day-to-evening'} />
 
-              {/* Pulsing Sun Rays */}
-              <span
-                className={`absolute -top-1 h-0.5 w-1.5 rounded-[0.2px] transition-colors duration-700 ${
-                  skyPhase === 'sunset' ? 'bg-[#F97316]' : 'bg-[#FEF08A]'
-                }`}
-              />
-              <span
-                className={`absolute -bottom-1 h-0.5 w-1.5 rounded-[0.2px] transition-colors duration-700 ${
-                  skyPhase === 'sunset' ? 'bg-[#F97316]' : 'bg-[#FEF08A]'
-                }`}
-              />
-              <span
-                className={`absolute -left-1 h-1.5 w-0.5 rounded-[0.2px] transition-colors duration-700 ${
-                  skyPhase === 'sunset' ? 'bg-[#F97316]' : 'bg-[#FEF08A]'
-                }`}
-              />
-              <span
-                className={`absolute -right-1 h-1.5 w-0.5 rounded-[0.2px] transition-colors duration-700 ${
-                  skyPhase === 'sunset' ? 'bg-[#F97316]' : 'bg-[#FEF08A]'
-                }`}
-              />
-            </div>
-
-            {/* Interactive Sun Tooltip Indicator */}
-            {!isTransitioning && skyPhase === 'day' && (
-              <span className="pointer-events-none absolute -bottom-6 right-0 whitespace-nowrap rounded-[2px] border border-[#1E293B] bg-black/85 px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-wider text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 shadow-md">
-                ☀️ Click Sun to Set
-              </span>
-            )}
-          </button>
+              {/* Tooltip */}
+              {!isTransitioning && (
+                <span className="pointer-events-none absolute -bottom-6.5 right-0 whitespace-nowrap rounded-full border border-[#1E293B] bg-black/85 px-2 py-0.5 font-mono text-[8.5px] uppercase tracking-wider text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 shadow-md">
+                  {skyPhase === 'day' ? '☀️ Click Sun to set into Evening' : '🌇 Click Sunset to enter Night'}
+                </span>
+              )}
+            </button>
+          </div>
         )}
 
         {/* THE MOON */}
-        {(skyPhase === 'night' || (skyPhase === 'sunrise' && isTransitioning) || (skyPhase === 'sunset' && isTransitioning)) && (
-          <button
-            type="button"
-            disabled={isTransitioning}
-            onClick={handleMoonClick}
-            aria-label="Moon"
-            className={`group relative flex items-center justify-center p-1.5 focus:outline-none transition-transform duration-300 ${
-              isTransitioning
-                ? 'cursor-wait pointer-events-none'
-                : 'cursor-pointer hover:scale-115 active:scale-95'
-            } ${
-              skyPhase === 'sunrise'
-                ? 'anim-voxel-moon-set'
-                : skyPhase === 'sunset'
-                ? 'anim-voxel-moon-rise'
-                : 'anim-voxel-moon'
-            }`}
-          >
-            <div className="relative flex items-center justify-center">
-              <div className="h-8 w-8 rounded-[1px] border-2 border-[#CBD5E1] bg-[#F1F5F9] shadow-[0_0_20px_rgba(186,230,253,0.6)] relative overflow-hidden flex flex-col justify-between p-0.5">
-                {/* Lunar Mare / Crater Spots */}
-                <div className="flex justify-between">
-                  <span className="h-1.5 w-2 bg-[#94A3B8]/80 rounded-[0.2px]" />
-                  <span className="h-2 w-1.5 bg-[#64748B]/70 rounded-[0.2px]" />
-                </div>
-                <div className="flex justify-center">
-                  <span className="h-2 w-2.5 bg-[#94A3B8]/90 rounded-[0.2px]" />
-                </div>
-                <div className="flex justify-end pr-1">
-                  <span className="h-1.5 w-1.5 bg-[#64748B]/80 rounded-[0.2px]" />
-                </div>
-              </div>
-            </div>
+        {showMoon && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <button
+              type="button"
+              disabled={isTransitioning}
+              onClick={handleMoonClick}
+              aria-label="Moon (Night)"
+              className={`group pointer-events-auto relative flex items-center justify-center p-1 focus:outline-none transition-all duration-300 ${
+                isTransitioning
+                  ? 'cursor-wait pointer-events-none'
+                  : 'cursor-pointer hover:scale-115 active:scale-95'
+              } ${moonAnimClass}`}
+            >
+              <RealisticMoon />
 
-            {/* Interactive Moon Tooltip Indicator */}
-            {!isTransitioning && skyPhase === 'night' && (
-              <span className="pointer-events-none absolute -bottom-6 right-0 whitespace-nowrap rounded-[2px] border border-[#1E293B] bg-black/85 px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-wider text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 shadow-md">
-                🌙 Click Moon to Rise Sun
-              </span>
-            )}
-          </button>
+              {/* Tooltip */}
+              {!isTransitioning && (
+                <span className="pointer-events-none absolute -bottom-6.5 right-0 whitespace-nowrap rounded-full border border-[#1E293B] bg-black/85 px-2 py-0.5 font-mono text-[8.5px] uppercase tracking-wider text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 shadow-md">
+                  🌙 Click Moon to rise into Day
+                </span>
+              )}
+            </button>
+          </div>
         )}
       </div>
 

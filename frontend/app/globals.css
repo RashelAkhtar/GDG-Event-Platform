@@ -1106,105 +1106,174 @@ html.dark .hairline-divider {
 }
 
 /* =========================================================================
-   REALISTIC MINECRAFT CELESTIAL ORBIT (SUNSET & SUNRISE CYCLES)
+   REALISTIC CELESTIAL ORBIT & TRANSITIONS (DAY, EVENING, NIGHT)
    ========================================================================= */
 
-.anim-voxel-sun-set {
-  animation: voxel-sun-set 2.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+/* Idle Celestial Body Glows */
+.anim-celestial-sun-day {
+  animation: celestial-sun-pulse 3.6s ease-in-out infinite;
 }
 
-.anim-voxel-sun-rise {
-  animation: voxel-sun-rise 2.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.anim-celestial-sun-evening {
+  animation: celestial-sun-sunset-pulse 2.8s ease-in-out infinite;
 }
 
-.anim-voxel-moon-set {
-  animation: voxel-moon-set 2.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+.anim-celestial-moon-night {
+  animation: celestial-moon-glow 4s ease-in-out infinite;
 }
 
-.anim-voxel-moon-rise {
-  animation: voxel-moon-rise 2.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.anim-solar-rays-spin {
+  animation: solar-rays-rotation 24s linear infinite;
 }
 
-@keyframes voxel-sun-set {
+@keyframes celestial-sun-pulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 16px rgba(253, 224, 71, 0.75));
+  }
+  50% {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 26px rgba(253, 224, 71, 0.95)) drop-shadow(0 0 45px rgba(251, 191, 36, 0.5));
+  }
+}
+
+@keyframes celestial-sun-sunset-pulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 20px rgba(234, 88, 12, 0.85));
+  }
+  50% {
+    transform: scale(1.06);
+    filter: drop-shadow(0 0 32px rgba(234, 88, 12, 1)) drop-shadow(0 0 50px rgba(220, 38, 38, 0.6));
+  }
+}
+
+@keyframes celestial-moon-glow {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 14px rgba(186, 230, 253, 0.65));
+  }
+  50% {
+    transform: scale(1.04);
+    filter: drop-shadow(0 0 24px rgba(186, 230, 253, 0.9)) drop-shadow(0 0 40px rgba(125, 211, 252, 0.45));
+  }
+}
+
+@keyframes solar-rays-rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Realistic Sunset Descent: From High in Sky -> Sinking to Horizon */
+.anim-sun-descend-to-evening {
+  animation: sun-descend-evening 1.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes sun-descend-evening {
   0% {
     transform: translate3d(0, 0, 0) scale(1);
-    filter: drop-shadow(0 0 20px #FDE047);
+    filter: drop-shadow(0 0 18px rgba(253, 224, 71, 0.8));
     opacity: 1;
-  }
-  30% {
-    transform: translate3d(8px, 32px, 0) scale(1.1);
-    filter: drop-shadow(0 0 28px #F97316) saturate(1.8);
-    opacity: 1;
-  }
-  65% {
-    transform: translate3d(18px, 80px, 0) scale(0.96);
-    filter: drop-shadow(0 0 24px #EA580C) saturate(2.4);
-    opacity: 0.95;
   }
   100% {
-    transform: translate3d(30px, 140px, 0) scale(0.72);
-    filter: drop-shadow(0 0 10px #DC2626);
+    transform: translate3d(6px, 32px, 0) scale(1.1);
+    filter: drop-shadow(0 0 30px rgba(234, 88, 12, 0.9));
+    opacity: 1;
+  }
+}
+
+/* Sunset Sinking Below Horizon: From Evening Horizon -> Below Horizon */
+.anim-sun-sink-below-horizon {
+  animation: sun-sink-below 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes sun-sink-below {
+  0% {
+    transform: translate3d(6px, 32px, 0) scale(1.1);
+    filter: drop-shadow(0 0 30px rgba(234, 88, 12, 0.9));
+    opacity: 1;
+  }
+  60% {
+    transform: translate3d(12px, 65px, 0) scale(0.95);
+    filter: drop-shadow(0 0 20px rgba(220, 38, 38, 0.7));
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate3d(18px, 110px, 0) scale(0.75);
+    filter: drop-shadow(0 0 8px rgba(220, 38, 38, 0));
     opacity: 0;
   }
 }
 
-@keyframes voxel-sun-rise {
+/* Moon Rising from Horizon into Night Sky */
+.anim-moon-rise-from-horizon {
+  animation: moon-rise-night 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes moon-rise-night {
   0% {
-    transform: translate3d(26px, 140px, 0) scale(0.72);
-    filter: drop-shadow(0 0 12px #EA580C);
+    transform: translate3d(18px, 110px, 0) scale(0.75);
+    filter: drop-shadow(0 0 4px rgba(186, 230, 253, 0));
     opacity: 0;
   }
-  35% {
-    transform: translate3d(16px, 75px, 0) scale(0.94);
-    filter: drop-shadow(0 0 25px #FB923C) saturate(1.6);
+  40% {
+    transform: translate3d(10px, 55px, 0) scale(0.9);
+    filter: drop-shadow(0 0 16px rgba(186, 230, 253, 0.6));
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: drop-shadow(0 0 20px rgba(186, 230, 253, 0.8));
+    opacity: 1;
+  }
+}
+
+/* Moon Setting Below Horizon */
+.anim-moon-sink-below-horizon {
+  animation: moon-sink-below 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes moon-sink-below {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: drop-shadow(0 0 20px rgba(186, 230, 253, 0.8));
+    opacity: 1;
+  }
+  60% {
+    transform: translate3d(10px, 60px, 0) scale(0.9);
+    filter: drop-shadow(0 0 10px rgba(186, 230, 253, 0.5));
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate3d(18px, 110px, 0) scale(0.75);
+    filter: drop-shadow(0 0 4px rgba(186, 230, 253, 0));
+    opacity: 0;
+  }
+}
+
+/* Sun Rising from Below Horizon into Day Sky */
+.anim-sun-rise-to-day {
+  animation: sun-rise-day 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes sun-rise-day {
+  0% {
+    transform: translate3d(18px, 110px, 0) scale(0.75);
+    filter: drop-shadow(0 0 6px rgba(253, 224, 71, 0));
+    opacity: 0;
+  }
+  40% {
+    transform: translate3d(10px, 50px, 0) scale(0.95);
+    filter: drop-shadow(0 0 20px rgba(251, 146, 60, 0.8));
     opacity: 0.85;
   }
-  75% {
-    transform: translate3d(6px, 20px, 0) scale(1.06);
-    filter: drop-shadow(0 0 30px #FDE047);
-    opacity: 1;
-  }
   100% {
     transform: translate3d(0, 0, 0) scale(1);
-    filter: drop-shadow(0 0 20px #FDE047);
-    opacity: 1;
-  }
-}
-
-@keyframes voxel-moon-set {
-  0% {
-    transform: translate3d(0, 0, 0) scale(1);
-    opacity: 1;
-  }
-  35% {
-    transform: translate3d(10px, 40px, 0) scale(0.96);
-    opacity: 0.9;
-  }
-  70% {
-    transform: translate3d(20px, 90px, 0) scale(0.85);
-    opacity: 0.65;
-  }
-  100% {
-    transform: translate3d(30px, 140px, 0) scale(0.68);
-    opacity: 0;
-  }
-}
-
-@keyframes voxel-moon-rise {
-  0% {
-    transform: translate3d(26px, 140px, 0) scale(0.68);
-    opacity: 0;
-  }
-  35% {
-    transform: translate3d(16px, 75px, 0) scale(0.88);
-    opacity: 0.75;
-  }
-  75% {
-    transform: translate3d(5px, 20px, 0) scale(1.05);
-    opacity: 1;
-  }
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
+    filter: drop-shadow(0 0 20px rgba(253, 224, 71, 0.85));
     opacity: 1;
   }
 }
