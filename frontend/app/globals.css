@@ -1065,74 +1065,44 @@ html.dark .hairline-divider {
    ========================================================================= */
 
 .anim-realistic-bird-fall-ltr {
-  animation: bird-fall-ltr 1.15s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  animation: bird-fall-smooth-ltr 0.95s cubic-bezier(0.38, 0, 0.85, 1) forwards;
 }
 
 .anim-realistic-bird-fall-rtl {
-  animation: bird-fall-rtl 1.15s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  animation: bird-fall-smooth-rtl 0.95s cubic-bezier(0.38, 0, 0.85, 1) forwards;
 }
 
-@keyframes bird-fall-ltr {
+@keyframes bird-fall-smooth-ltr {
   0% {
     transform: translate3d(0, 0, 0) rotate(0deg);
     opacity: 1;
   }
-  12% {
-    /* Impact recoil: flinches upward slightly and pitches back */
-    transform: translate3d(6px, -12px, 0) rotate(-16deg);
+  15% {
+    /* Aerodynamic pitch down under gravity with forward momentum */
+    transform: translate3d(12px, calc(var(--fall-distance-px, 220px) * 0.08), 0) rotate(18deg);
     opacity: 1;
-  }
-  30% {
-    /* Stall: aerodynamic lift collapses, nose drops */
-    transform: translate3d(20px, 16px, 0) rotate(24deg);
-    opacity: 1;
-  }
-  58% {
-    /* Parabolic dive accelerating downwards with forward momentum */
-    transform: translate3d(36px, 100px, 0) rotate(58deg);
-    opacity: 0.95;
-  }
-  84% {
-    /* Steep descent toward terrain */
-    transform: translate3d(46px, 215px, 0) rotate(82deg);
-    opacity: 0.9;
   }
   100% {
-    /* Ground impact level */
-    transform: translate3d(52px, 295px, 0) rotate(94deg) scale(0.92);
-    opacity: 0;
+    /* Touchdown on meadow with natural roll angle */
+    transform: translate3d(55px, var(--fall-distance-px, 220px), 0) rotate(76deg) scale(0.92);
+    opacity: 0.95;
   }
 }
 
-@keyframes bird-fall-rtl {
+@keyframes bird-fall-smooth-rtl {
   0% {
     transform: translate3d(0, 0, 0) rotate(0deg);
     opacity: 1;
   }
-  12% {
-    /* Impact recoil: flinches upward slightly and pitches back */
-    transform: translate3d(-6px, -12px, 0) rotate(16deg);
+  15% {
+    /* Aerodynamic pitch down under gravity with forward momentum */
+    transform: translate3d(-12px, calc(var(--fall-distance-px, 220px) * 0.08), 0) rotate(-18deg);
     opacity: 1;
-  }
-  30% {
-    /* Stall: aerodynamic lift collapses, nose drops */
-    transform: translate3d(-20px, 16px, 0) rotate(-24deg);
-    opacity: 1;
-  }
-  58% {
-    /* Parabolic dive accelerating downwards with forward momentum */
-    transform: translate3d(-36px, 100px, 0) rotate(-58deg);
-    opacity: 0.95;
-  }
-  84% {
-    /* Steep descent toward terrain */
-    transform: translate3d(-46px, 215px, 0) rotate(-82deg);
-    opacity: 0.9;
   }
   100% {
-    /* Ground impact level */
-    transform: translate3d(-52px, 295px, 0) rotate(-94deg) scale(0.92);
-    opacity: 0;
+    /* Touchdown on meadow with natural roll angle */
+    transform: translate3d(-55px, var(--fall-distance-px, 220px), 0) rotate(-76deg) scale(0.92);
+    opacity: 0.95;
   }
 }
 

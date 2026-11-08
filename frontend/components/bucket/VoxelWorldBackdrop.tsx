@@ -1699,6 +1699,8 @@ interface ActiveBird {
   hitKey: number
   hitLeftPercent?: number
   hitTopPercent?: number
+  fallDistancePx?: number
+  landingLeftPercent?: number
 }
 
 export type SkyPhase = 'day' | 'evening' | 'night'
@@ -1920,6 +1922,8 @@ export function VoxelWorldBackdrop() {
       // Calculate exact coordinates relative to the backdrop container
       let hitLeftPercent = 50
       let hitTopPercent = 20
+      let fallDistancePx = 220
+
       if (backdropRef.current) {
         const backdropRect = backdropRef.current.getBoundingClientRect()
         const buttonRect = e.currentTarget.getBoundingClientRect()
@@ -1927,25 +1931,33 @@ export function VoxelWorldBackdrop() {
         const centerYPx = buttonRect.top + buttonRect.height / 2 - backdropRect.top
         hitLeftPercent = Math.max(3, Math.min(94, (centerXPx / backdropRect.width) * 100))
         hitTopPercent = Math.max(3, Math.min(75, (centerYPx / backdropRect.height) * 100))
+
+        // Ground meadow baseline sits at 86% height of the container
+        const groundYPx = backdropRect.height * 0.86
+        fallDistancePx = Math.max(60, groundYPx - centerYPx)
       }
 
       // 1. Play hit sound immediately
       voxelAudio.playHurt()
 
-      // 2. Transition bird to 'hit' status locked at exact clicked coordinates
+      // 2. Transition bird to 'hit' status locked at exact clicked coordinates with calculated fall distance
       setActiveBirds((prev) =>
         prev.map((b) => {
           if (b.id !== id || b.status !== 'flying') return b
+          const forwardShiftPercent = b.direction === 'ltr' ? 4.5 : -4.5
+          const landingLeftPercent = Math.max(4, Math.min(96, hitLeftPercent + forwardShiftPercent))
           return {
             ...b,
             status: 'hit',
             hitLeftPercent,
             hitTopPercent,
+            fallDistancePx,
+            landingLeftPercent,
           }
         })
       )
 
-      // 3. Fall lasts 1.15s - play poof and xp chime upon ground impact
+      // 3. Fall lasts 0.95s with pure continuous cubic-bezier acceleration - trigger landing poof at ground touchdown
       setTimeout(() => {
         voxelAudio.playPoof()
         voxelAudio.playXp()
@@ -1958,7 +1970,7 @@ export function VoxelWorldBackdrop() {
         setTimeout(() => {
           setActiveBirds((inner) => inner.filter((item) => item.id !== id))
         }, 1200)
-      }, 1150)
+      }, 950)
     },
     []
   )
@@ -2158,9 +2170,9 @@ export function VoxelWorldBackdrop() {
       {/* ======================================================== */}
       {activeBirds.map((bird) => {
         if (bird.status === 'dead') {
-          // Render Smoke Poof Burst & Dropped Feather / XP Orb at impact landing spot
-          const landingTop = Math.min(88, (bird.hitTopPercent ?? bird.topPercent) + 38)
-          const landingLeft = bird.hitLeftPercent ?? (bird.direction === 'ltr' ? 55 : 45)
+          // Render Smoke Poof Burst & Dropped Feather / XP Orb at exact ground touchdown location
+          const landingTop = 86
+          const landingLeft = bird.landingLeftPercent ?? (bird.hitLeftPercent ?? (bird.direction === 'ltr' ? 55 : 45))
 
           return (
             <div
@@ -2218,7 +2230,7 @@ export function VoxelWorldBackdrop() {
         }
 
         if (bird.status === 'hit') {
-          // Bird hit: locked at clicked coordinates, redded up, tumbling down under gravity
+          // Bird hit: locked at clicked coordinates, redded up, tumbling down under continuous gravity
           const fallAnimClass =
             bird.direction === 'ltr'
               ? 'anim-realistic-bird-fall-ltr'
@@ -2234,7 +2246,12 @@ export function VoxelWorldBackdrop() {
                 transform: 'translate(-50%, -50%)',
               }}
             >
-              <div className={fallAnimClass}>
+              <div
+                className={fallAnimClass}
+                style={{
+                  ['--fall-distance-px' as any]: `${bird.fallDistancePx ?? 220}px`,
+                }}
+              >
                 {/* Facing wrapper */}
                 <div
                   style={{
