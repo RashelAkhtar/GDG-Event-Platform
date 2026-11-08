@@ -1811,3 +1811,68 @@ html.dark .hairline-divider {
     opacity: 1;
   }
 }
+
+
+/* =========================================================================
+   SECRET EASTER EGG & PENANCE MODAL KEYFRAMES
+   ========================================================================= */
+
+.anim-middle-finger-sway {
+  animation: finger-gentle-sway 3s ease-in-out infinite;
+  transform-origin: 50% 90%;
+}
+
+@keyframes finger-gentle-sway {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-4deg) translateY(-2px);
+  }
+  75% {
+    transform: rotate(4deg) translateY(-2px);
+  }
+}
+
+.anim-middle-finger-pulse {
+  animation: finger-bob-pulse 2s ease-in-out infinite;
+  transform-origin: 50% 50%;
+}
+
+@keyframes finger-bob-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05) translateY(-3px);
+  }
+}
+
+.anim-feather-fall-1 {
+  animation: feather-drift 7s ease-in-out infinite;
+}
+
+.anim-feather-fall-2 {
+  animation: feather-drift 9s ease-in-out 2s infinite;
+}
+
+.anim-feather-fall-3 {
+  animation: feather-drift 8s ease-in-out 4s infinite;
+}
+
+@keyframes feather-drift {
+  0% {
+    transform: translate3d(0, -20px, 0) rotate(-15deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.7;
+  }
+  80% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate3d(20px, 180px, 0) rotate(35deg);
+    opacity: 0;
+  }
+}
