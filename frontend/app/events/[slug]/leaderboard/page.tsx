@@ -48,7 +48,7 @@ export function LeaderboardContent({ customSlug }: { customSlug?: string }) {
     : 'Web Dev Sprint'
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAFAFA] text-[#111827] relative selection:bg-[#111827] selection:text-white">
+    <div className="min-h-screen flex flex-col bg-[#FAFAFA] dark:bg-[#080D1A] dark:bg-[#080D1A] text-[#111827] dark:text-[#F9FAFB] relative selection:bg-[#111827] dark:selection:bg-[#38BDF8] selection:text-white dark:selection:text-[#080D1A] transition-colors duration-500">
       <Navbar />
 
       <main className="relative mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pt-5 pb-16 sm:px-6 select-none">
@@ -56,7 +56,7 @@ export function LeaderboardContent({ customSlug }: { customSlug?: string }) {
         <div className="flex items-center justify-between mb-4">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 font-mono text-[10px] tracking-[0.2em] uppercase text-[#6B7280] hover:text-[#111827] transition-colors"
+            className="inline-flex items-center gap-1.5 font-mono text-[10px] tracking-[0.2em] uppercase text-[#6B7280] dark:text-[#94A3B8] hover:text-[#111827] dark:hover:text-white transition-colors"
           >
             <ArrowLeft className="h-3 w-3" />
             <span>Back to Hub</span>
@@ -65,7 +65,7 @@ export function LeaderboardContent({ customSlug }: { customSlug?: string }) {
           <button
             onClick={handleRefresh}
             disabled={refreshing}
-            className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] bg-white px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-[#111827] hover:border-[#111827] transition-all active:scale-95 cursor-pointer shadow-2xs"
+            className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] dark:border-[#1E293B] bg-white dark:bg-[#0F172A] px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-[#111827] dark:text-[#F9FAFB] hover:border-[#111827] dark:hover:border-white transition-all active:scale-95 cursor-pointer shadow-2xs"
           >
             <RefreshCw className={`h-2.5 w-2.5 ${refreshing ? 'animate-spin' : ''}`} />
             <span>Refresh</span>
@@ -80,7 +80,7 @@ export function LeaderboardContent({ customSlug }: { customSlug?: string }) {
               OFFICIAL TOURNAMENT STANDINGS
             </span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-normal tracking-[-0.035em] text-[#111827]">
+          <h1 className="text-3xl sm:text-4xl font-normal tracking-[-0.035em] text-[#111827] dark:text-[#F9FAFB]">
             {trackTitle}
           </h1>
           <p className="mt-1 text-xs text-[#6B7280]">
@@ -94,10 +94,10 @@ export function LeaderboardContent({ customSlug }: { customSlug?: string }) {
             <p className="mt-3 font-mono text-[10px] uppercase tracking-wider text-[#6B7280]">Syncing standings...</p>
           </div>
         ) : leaderboard.length === 0 ? (
-          <div className="my-12 flex flex-col items-center rounded-2xl border border-[#E5E7EB] bg-white p-8 text-center shadow-[0_12px_40px_rgba(0,0,0,0.03)]">
+          <div className="my-12 flex flex-col items-center rounded-2xl border border-[#E5E7EB] dark:border-[#1E293B] bg-white dark:bg-[#0F172A] p-8 text-center shadow-[0_12px_40px_rgba(0,0,0,0.03)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.4)]">
             <Trophy className="h-7 w-7 text-[#9CA3AF] mb-3" />
             <h3 className="text-xl font-normal tracking-[-0.03em] text-[#111827]">No Entries Recorded</h3>
-            <p className="mt-1 text-xs text-[#6B7280] max-w-xs leading-relaxed">
+            <p className="mt-1 text-xs text-[#6B7280] dark:text-[#94A3B8] max-w-xs leading-relaxed">
               Be the first to complete this track and set the benchmark time on the podium.
             </p>
             <Link
@@ -110,7 +110,7 @@ export function LeaderboardContent({ customSlug }: { customSlug?: string }) {
         ) : (
           <div className="flex flex-col gap-6">
             {/* Top 3 Visual Podium Card */}
-            <div className="relative rounded-2xl border border-[#E5E7EB] bg-white p-4 sm:p-6 shadow-[0_12px_36px_rgba(0,0,0,0.04)] overflow-hidden">
+            <div className="relative rounded-2xl border border-[#E5E7EB] dark:border-[#1E293B] bg-white dark:bg-[#0F172A] p-4 sm:p-6 shadow-[0_12px_36px_rgba(0,0,0,0.04)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.4)] overflow-hidden">
               <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-[#1A73E8] via-[#FBBC04] to-[#34A853]" />
               <Podium entries={leaderboard.slice(0, 3)} />
             </div>
@@ -149,7 +149,7 @@ export default function LeaderboardPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA]">
+        <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA] dark:bg-[#080D1A]">
           <div className="h-7 w-7 animate-spin rounded-full border-2 border-[#111827] border-t-transparent" />
         </div>
       }

@@ -46,13 +46,13 @@ export function RankList({ entries, startIndex = 0 }: RankListProps) {
             key={entry._id || idx}
             className={`group flex items-center justify-between rounded-xl border px-4 py-3 transition-all duration-150 ${
               isCurrentUser
-                ? 'border-[#111827] bg-[#F4F4F5] shadow-xs ring-1 ring-[#111827]/10'
-                : 'border-[#E5E7EB] bg-white hover:border-[#111827] hover:shadow-xs'
+                ? 'border-[#111827] dark:border-[#38BDF8] bg-[#F4F4F5] dark:bg-[#1E293B] shadow-xs ring-1 ring-[#111827]/10 dark:ring-[#38BDF8]/20'
+                : 'border-[#E5E7EB] dark:border-[#1E293B] bg-white dark:bg-[#0F172A] hover:border-[#111827] dark:hover:border-[#38BDF8] hover:shadow-xs'
             }`}
           >
             {/* Left: Rank & Avatar & Name */}
             <div className="flex items-center gap-3">
-              <span className="font-mono text-xs font-semibold text-[#111827] w-6 text-center shrink-0">
+              <span className="font-mono text-xs font-semibold text-[#111827] dark:text-[#F9FAFB] w-6 text-center shrink-0">
                 {String(rank).padStart(2, '0')}
               </span>
 
@@ -64,11 +64,11 @@ export function RankList({ entries, startIndex = 0 }: RankListProps) {
 
               <div className="flex flex-col min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs sm:text-sm font-medium text-[#111827] max-w-[130px] sm:max-w-[190px] truncate">
+                  <span className="text-xs sm:text-sm font-medium text-[#111827] dark:text-[#F9FAFB] max-w-[130px] sm:max-w-[190px] truncate">
                     {entry.user?.name}
                   </span>
                   {isCurrentUser && (
-                    <span className="inline-block rounded bg-[#111827] px-1.5 py-0.2 font-mono text-[8.5px] uppercase tracking-wider text-white">
+                    <span className="inline-block rounded bg-[#111827] dark:bg-[#38BDF8] px-1.5 py-0.2 font-mono text-[8.5px] uppercase tracking-wider text-white dark:text-[#080D1A]">
                       You
                     </span>
                   )}
@@ -82,7 +82,7 @@ export function RankList({ entries, startIndex = 0 }: RankListProps) {
 
             {/* Right: Duration badge */}
             <div className="text-right shrink-0">
-              <span className="inline-flex items-center gap-1 rounded-full border border-[#E5E7EB] bg-[#FAFAFA] px-2.5 py-1 font-mono text-[10px] text-[#111827] group-hover:border-[#111827] transition-colors">
+              <span className="inline-flex items-center gap-1 rounded-full border border-[#E5E7EB] dark:border-[#1E293B] bg-[#FAFAFA] dark:bg-[#1E293B] px-2.5 py-1 font-mono text-[10px] text-[#111827] dark:text-[#F9FAFB] group-hover:border-[#111827] dark:group-hover:border-white transition-colors">
                 <Clock className="h-2.5 w-2.5 text-[#6B7280]" />
                 {formatDuration(entry.durationMs)}
               </span>

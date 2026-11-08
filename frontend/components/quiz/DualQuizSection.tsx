@@ -387,8 +387,8 @@ export function DualQuizSection({
         onClick={handleCardClick}
         className={`group relative flex flex-col justify-between rounded-2xl border transition-all duration-500 p-6 sm:p-7 cursor-pointer overflow-hidden ${
           isFocal
-            ? 'border-[#111827] shadow-[0_20px_48px_-12px_rgba(0,0,0,0.09)] scale-[1.015] sm:scale-100 ring-1 ring-[#111827]/10 bg-white z-10'
-            : 'border-[#E5E7EB] bg-white opacity-85 sm:opacity-100 hover:opacity-100 hover:border-[#9CA3AF] shadow-xs'
+            ? 'border-[#111827] dark:border-[#38BDF8] shadow-[0_20px_48px_-12px_rgba(0,0,0,0.09)] dark:shadow-[0_20px_48px_-12px_rgba(56,189,248,0.18)] scale-[1.015] sm:scale-100 ring-1 ring-[#111827]/10 dark:ring-[#38BDF8]/20 bg-white dark:bg-[#0F172A] z-10'
+            : 'border-[#E5E7EB] dark:border-[#1E293B] bg-white dark:bg-[#0F172A] opacity-85 sm:opacity-100 hover:opacity-100 hover:border-[#9CA3AF] dark:hover:border-[#38BDF8]/40 shadow-xs'
         } ${isAdmin ? 'hover:ring-1 hover:ring-[#1A73E8]' : ''}`}
         title={isAdmin ? 'Click to Manipulate Game' : isLive ? 'Click to enter track' : 'Challenge Locked'}
       >
@@ -418,13 +418,13 @@ export function DualQuizSection({
                 <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${accentDot}`} />
               </span>
               <span className={`font-mono text-[10px] tracking-[0.24em] uppercase font-medium transition-colors ${
-                isFocal ? 'text-[#111827] font-bold' : 'text-[#6B7280]'
+                isFocal ? 'text-[#111827] dark:text-[#F9FAFB] font-bold' : 'text-[#6B7280] dark:text-[#94A3B8]'
               }`}>
                 {`${trackIndex} // ${trackLabel}`}
               </span>
               {isFocal && (
-                <span className="inline-flex items-center gap-1 font-mono text-[8px] uppercase tracking-widest text-[#111827] bg-[#F3F4F6] border border-[#E5E7EB] px-2 py-0.5 rounded-full font-bold animate-in fade-in zoom-in-95 duration-200">
-                  <span className="h-1 w-1 rounded-full bg-[#111827]" />
+                <span className="inline-flex items-center gap-1 font-mono text-[8px] uppercase tracking-widest text-[#111827] dark:text-[#F9FAFB] bg-[#F3F4F6] dark:bg-[#1E293B] border border-[#E5E7EB] dark:border-[#334155] px-2 py-0.5 rounded-full font-bold animate-in fade-in zoom-in-95 duration-200">
+                  <span className="h-1 w-1 rounded-full bg-[#111827] dark:bg-[#38BDF8]" />
                   <span>IN FOCUS</span>
                 </span>
               )}
@@ -435,8 +435,8 @@ export function DualQuizSection({
               <div
                 className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-wider transition-all shadow-2xs ${
                   isLive
-                    ? 'border-[#BBF7D0] bg-[#F0FDF4] text-[#15803D]'
-                    : 'border-[#E5E7EB] bg-[#F9FAFB] text-[#6B7280]'
+                    ? 'border-[#BBF7D0] dark:border-[#059669]/60 bg-[#F0FDF4] dark:bg-[#064E3B]/60 text-[#15803D] dark:text-[#34D399]'
+                    : 'border-[#E5E7EB] dark:border-[#1E293B] bg-[#F9FAFB] dark:bg-[#1E293B] text-[#6B7280] dark:text-[#94A3B8]'
                 }`}
                 title={isLive ? `${livePlayingCount} players actively playing this game` : `${recordedCount} participants recorded`}
               >
@@ -447,7 +447,7 @@ export function DualQuizSection({
                   <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${isLive ? 'bg-[#16A34A]' : 'bg-[#9CA3AF]'}`} />
                 </span>
                 <Users className="h-2.5 w-2.5" />
-                <span className="font-bold text-[#111827]">{livePlayingCount}</span>
+                <span className="font-bold text-[#111827] dark:text-[#F9FAFB]">{livePlayingCount}</span>
                 <span className="hidden xs:inline">{isLive ? 'Playing' : 'Contenders'}</span>
               </div>
 
@@ -458,7 +458,7 @@ export function DualQuizSection({
                     e.stopPropagation()
                     handleOpenManipulator(event)
                   }}
-                  className="inline-flex items-center gap-1 rounded-full border border-[#E5E7EB] bg-white px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-[#111827] hover:border-[#111827] transition-all cursor-pointer shadow-2xs"
+                  className="inline-flex items-center gap-1 rounded-full border border-[#E5E7EB] dark:border-[#1E293B] bg-white dark:bg-[#1E293B] px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-[#111827] dark:text-[#F9FAFB] hover:border-[#111827] dark:hover:border-white transition-all cursor-pointer shadow-2xs"
                   title="Open Game Content Studio"
                 >
                   <Sliders className="h-2.5 w-2.5 text-[#1A73E8]" />
@@ -484,24 +484,24 @@ export function DualQuizSection({
 
           {/* Title & Description */}
           <div className="flex flex-col gap-1 text-left mt-1">
-            <h3 className="text-xl sm:text-2xl font-normal tracking-[-0.03em] text-[#111827] group-hover:text-black transition-colors leading-snug">
+            <h3 className="text-xl sm:text-2xl font-normal tracking-[-0.03em] text-[#111827] dark:text-[#F9FAFB] group-hover:text-black dark:group-hover:text-white transition-colors leading-snug">
               {event.title}
             </h3>
-            <p className="text-xs sm:text-[13px] text-[#4B5563] leading-relaxed line-clamp-2 mt-0.5">
+            <p className="text-xs sm:text-[13px] text-[#4B5563] dark:text-[#94A3B8] leading-relaxed line-clamp-2 mt-0.5">
               {event.description}
             </p>
           </div>
 
           {/* Live Specs & Contenders Counter */}
-          <div className="pt-2.5 mt-1 border-t border-[#F3F4F6] flex items-center justify-between">
-            <span className="font-mono text-[10px] tracking-wider uppercase text-[#9CA3AF] flex items-center gap-1.5" suppressHydrationWarning>
-              <Clock className="h-3 w-3 text-[#9CA3AF]" />
+          <div className="pt-2.5 mt-1 border-t border-[#F3F4F6] dark:border-[#1E293B] flex items-center justify-between">
+            <span className="font-mono text-[10px] tracking-wider uppercase text-[#9CA3AF] dark:text-[#64748B] flex items-center gap-1.5" suppressHydrationWarning>
+              <Clock className="h-3 w-3 text-[#9CA3AF] dark:text-[#64748B]" />
               <span suppressHydrationWarning>{specsBadge}</span>
             </span>
 
-            <span className="font-mono text-[9.5px] tracking-wider uppercase text-[#6B7280] flex items-center gap-1.5 shrink-0" suppressHydrationWarning>
+            <span className="font-mono text-[9.5px] tracking-wider uppercase text-[#6B7280] dark:text-[#94A3B8] flex items-center gap-1.5 shrink-0" suppressHydrationWarning>
               <Users className="h-3 w-3 text-[#1A73E8]" />
-              <span className="font-bold text-[#111827]">{livePlayingCount}</span>
+              <span className="font-bold text-[#111827] dark:text-[#F9FAFB]">{livePlayingCount}</span>
               <span>{isLive ? 'Active' : 'Contenders'}</span>
             </span>
           </div>
@@ -530,7 +530,7 @@ export function DualQuizSection({
                     sendGameEnter?.(event.slug)
                     void soundManager.unlock()
                   }}
-                  className="flex h-11 px-4 items-center justify-center gap-1.5 rounded-xl border border-[#E5E7EB] bg-white text-xs font-medium text-[#111827] hover:border-[#111827] hover:bg-[#F9FAFB] transition-all cursor-pointer"
+                  className="flex h-11 px-4 items-center justify-center gap-1.5 rounded-xl border border-[#E5E7EB] dark:border-[#1E293B] bg-white dark:bg-[#1E293B] text-xs font-medium text-[#111827] dark:text-[#F9FAFB] hover:border-[#111827] dark:hover:border-white hover:bg-[#F9FAFB] dark:hover:bg-[#334155] transition-all cursor-pointer"
                   title="Preview Arena"
                 >
                   <span>Play</span>
@@ -540,7 +540,7 @@ export function DualQuizSection({
                 {/* Standings Shortcut */}
                 <Link
                   href={leaderboardHref}
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:border-[#111827] transition-all"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] dark:border-[#1E293B] bg-white dark:bg-[#1E293B] text-[#6B7280] dark:text-[#94A3B8] hover:text-[#111827] dark:hover:text-white hover:border-[#111827] dark:hover:border-white transition-all"
                   title="View standings"
                 >
                   <Trophy className="h-3.5 w-3.5" />
@@ -548,7 +548,7 @@ export function DualQuizSection({
               </div>
 
               {/* Host Controls Strip */}
-              <div className="flex items-center gap-2 pt-1 border-t border-[#F3F4F6]">
+              <div className="flex items-center gap-2 pt-1 border-t border-[#F3F4F6] dark:border-[#1E293B]">
                 <button
                   type="button"
                   disabled={isUpdating}
@@ -592,7 +592,7 @@ export function DualQuizSection({
                     sendGameEnter?.(event.slug)
                     void soundManager.unlock()
                   }}
-                  className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl text-xs font-medium tracking-wide text-white bg-[#111827] hover:bg-black transition-all active:scale-[0.99] shadow-xs cursor-pointer"
+                  className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl text-xs font-medium tracking-wide text-white dark:text-[#080D1A] bg-[#111827] dark:bg-[#38BDF8] hover:bg-black dark:hover:bg-[#7DD3FC] transition-all active:scale-[0.99] shadow-xs cursor-pointer font-semibold"
                 >
                   <span suppressHydrationWarning>{isAuthed ? buttonText : `Sign in • ${buttonText}`}</span>
                   <ArrowRight className="h-3.5 w-3.5 text-white/80" />
@@ -601,7 +601,7 @@ export function DualQuizSection({
                 <button
                   type="button"
                   disabled
-                  className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] font-mono text-[11px] uppercase tracking-wider text-[#9CA3AF] cursor-not-allowed"
+                  className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-[#E5E7EB] dark:border-[#1E293B] bg-[#F9FAFB] dark:bg-[#0B132B] font-mono text-[11px] uppercase tracking-wider text-[#9CA3AF] dark:text-[#64748B] cursor-not-allowed"
                 >
                   <Lock className="h-3 w-3" />
                   <span>Arena Restricted</span>
@@ -611,7 +611,7 @@ export function DualQuizSection({
               {/* Minimalist Leaderboard Shortcut */}
               <Link
                 href={leaderboardHref}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:border-[#111827] transition-all"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] dark:border-[#1E293B] bg-white dark:bg-[#1E293B] text-[#6B7280] dark:text-[#94A3B8] hover:text-[#111827] dark:hover:text-white hover:border-[#111827] dark:hover:border-white transition-all"
                 title="View standings"
               >
                 <Trophy className="h-3.5 w-3.5" />
@@ -636,18 +636,18 @@ export function DualQuizSection({
       {/* Section Header */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
-          <h2 className="text-[17px] font-extrabold tracking-tight text-[#202124] uppercase font-mono">
+          <h2 className="text-[17px] font-extrabold tracking-tight text-[#202124] dark:text-[#F9FAFB] uppercase font-mono">
             LIVE CHALLENGE ARENAS
           </h2>
         </div>
-        <span className="inline-flex items-center gap-1.5 bg-white border border-[#34A853] px-2.5 py-1 font-mono text-[11px] font-bold text-[#137333] shadow-2xs">
+        <span className="inline-flex items-center gap-1.5 bg-white dark:bg-[#0F172A] border border-[#34A853] px-2.5 py-1 font-mono text-[11px] font-bold text-[#137333] dark:text-[#4ADE80] shadow-2xs">
           <span className="h-2 w-2 bg-[#34A853] animate-pulse" />
           <span>REALTIME SYNC</span>
         </span>
       </div>
 
       {/* Mobile Scroll-Linked Track Navigator Bar */}
-      <div className="flex sm:hidden items-center justify-between p-1 rounded-2xl border border-[#E5E7EB] bg-white/95 backdrop-blur-md shadow-xs sticky top-16 z-30 transition-all duration-300">
+      <div className="flex sm:hidden items-center justify-between p-1 rounded-2xl border border-[#E5E7EB] dark:border-[#1E293B] bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-md shadow-xs sticky top-16 z-30 transition-all duration-300">
         {[
           { type: 'web' as const, num: '01', label: 'WEB', dot: 'bg-[#1A73E8]' },
           { type: 'wend' as const, num: '02', label: 'WEND', dot: 'bg-[#34A853]' },
@@ -661,8 +661,8 @@ export function DualQuizSection({
               onClick={() => scrollToTrack(t.type)}
               className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl font-mono text-[10px] uppercase tracking-wider transition-all duration-300 cursor-pointer ${
                 active
-                  ? 'bg-[#111827] text-white shadow-xs font-bold'
-                  : 'text-[#6B7280] hover:text-[#111827]'
+                  ? 'bg-[#111827] dark:bg-[#38BDF8] text-white dark:text-[#080D1A] shadow-xs font-bold'
+                  : 'text-[#6B7280] dark:text-[#94A3B8] hover:text-[#111827] dark:hover:text-white'
               }`}
             >
               <span className={`h-1.5 w-1.5 rounded-full ${t.dot} ${active ? 'animate-pulse' : ''}`} />

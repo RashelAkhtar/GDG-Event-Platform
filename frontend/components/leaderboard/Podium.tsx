@@ -42,7 +42,7 @@ export function Podium({ entries }: PodiumProps) {
   return (
     <div className="relative pt-12 pb-3 select-none">
       {/* Background Architectural Typographic Watermark */}
-      <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 font-mono text-[60px] font-black tracking-tighter text-[#111827]/[0.03] whitespace-nowrap">
+      <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 font-mono text-[60px] font-black tracking-tighter text-[#111827]/[0.03] dark:text-white/[0.04] whitespace-nowrap">
         TOP TIERS
       </div>
 
@@ -52,7 +52,7 @@ export function Podium({ entries }: PodiumProps) {
           <div className="group/podium flex flex-1 flex-col items-center transition-all duration-300 hover:-translate-y-2">
             <div className="relative mb-3 flex flex-col items-center">
               <div className="relative">
-                <div className="relative h-14 w-14 sm:h-16 sm:w-16 rounded-full border border-[#D1D5DB] bg-white p-1 shadow-sm">
+                <div className="relative h-14 w-14 sm:h-16 sm:w-16 rounded-full border border-[#D1D5DB] dark:border-[#334155] bg-white dark:bg-[#0F172A] p-1 shadow-sm">
                   <img
                     src={second.user?.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=2nd'}
                     alt={second.user?.name || 'Player'}
@@ -65,20 +65,20 @@ export function Podium({ entries }: PodiumProps) {
                 </span>
               </div>
 
-              <span className="mt-3.5 text-center text-xs font-semibold text-[#111827] max-w-[85px] sm:max-w-[105px] truncate">
+              <span className="mt-3.5 text-center text-xs font-semibold text-[#111827] dark:text-[#F9FAFB] max-w-[85px] sm:max-w-[105px] truncate">
                 {second.user?.name}
               </span>
-              <span className="font-mono text-[8.5px] uppercase tracking-[0.2em] text-[#6B7280] mt-0.5">
+              <span className="font-mono text-[8.5px] uppercase tracking-[0.2em] text-[#6B7280] dark:text-[#94A3B8] mt-0.5">
                 Silver Runner
               </span>
-              <span className="mt-1 inline-flex items-center gap-1 font-mono text-[9.5px] text-[#111827] rounded-md border border-[#E5E7EB] bg-[#FBFBF9] px-2 py-0.5 shadow-2xs">
+              <span className="mt-1 inline-flex items-center gap-1 font-mono text-[9.5px] text-[#111827] rounded-md border border-[#E5E7EB] dark:border-[#334155] bg-[#FBFBF9] dark:bg-[#1E293B] px-2 py-0.5 shadow-2xs text-[#111827] dark:text-[#F9FAFB]">
                 <Clock className="h-2.5 w-2.5 text-[#9CA3AF]" />
                 {formatDuration(second.durationMs)}
               </span>
             </div>
 
             {/* Architectural Fluted Column */}
-            <div className="relative w-full h-32 sm:h-36 rounded-t-xl border border-[#E5E7EB] border-t-2 border-t-[#6B7280] bg-gradient-to-b from-white via-[#FBFBF9] to-[#F5F5F0] shadow-[0_10px_24px_rgba(0,0,0,0.03)] flex flex-col items-center justify-between py-3 overflow-hidden">
+            <div className="relative w-full h-32 sm:h-36 rounded-t-xl border border-[#E5E7EB] dark:border-[#1E293B] border-t-2 border-t-[#6B7280] dark:border-t-[#94A3B8] bg-gradient-to-b from-white dark:from-[#1E293B] via-[#FBFBF9] dark:via-[#0F172A] to-[#F5F5F0] dark:to-[#080D1A] shadow-[0_10px_24px_rgba(0,0,0,0.03)] flex flex-col items-center justify-between py-3 overflow-hidden">
               <div className="absolute inset-0 bg-[repeating-linear-gradient(90deg,transparent,transparent_11px,#00000006_12px)] pointer-events-none" />
               <span className="font-mono text-[8.5px] tracking-[0.24em] uppercase text-[#9CA3AF] font-bold">
                 RANK 02
@@ -147,7 +147,7 @@ export function Podium({ entries }: PodiumProps) {
           <div className="group/podium flex flex-1 flex-col items-center transition-all duration-300 hover:-translate-y-2">
             <div className="relative mb-3 flex flex-col items-center">
               <div className="relative">
-                <div className="relative h-14 w-14 sm:h-16 sm:w-16 rounded-full border border-[#D1D5DB] bg-white p-1 shadow-sm">
+                <div className="relative h-14 w-14 sm:h-16 sm:w-16 rounded-full border border-[#D1D5DB] dark:border-[#334155] bg-white dark:bg-[#0F172A] p-1 shadow-sm">
                   <img
                     src={third.user?.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=3rd'}
                     alt={third.user?.name || 'Player'}
@@ -159,13 +159,13 @@ export function Podium({ entries }: PodiumProps) {
                 </span>
               </div>
 
-              <span className="mt-3.5 text-center text-xs font-semibold text-[#111827] max-w-[85px] sm:max-w-[105px] truncate">
+              <span className="mt-3.5 text-center text-xs font-semibold text-[#111827] dark:text-[#F9FAFB] max-w-[85px] sm:max-w-[105px] truncate">
                 {third.user?.name}
               </span>
-              <span className="font-mono text-[8.5px] uppercase tracking-[0.2em] text-[#6B7280] mt-0.5">
+              <span className="font-mono text-[8.5px] uppercase tracking-[0.2em] text-[#6B7280] dark:text-[#94A3B8] mt-0.5">
                 Bronze Stand
               </span>
-              <span className="mt-1 inline-flex items-center gap-1 font-mono text-[9.5px] text-[#111827] rounded-md border border-[#E5E7EB] bg-[#FBFBF9] px-2 py-0.5 shadow-2xs">
+              <span className="mt-1 inline-flex items-center gap-1 font-mono text-[9.5px] text-[#111827] rounded-md border border-[#E5E7EB] dark:border-[#334155] bg-[#FBFBF9] dark:bg-[#1E293B] px-2 py-0.5 shadow-2xs text-[#111827] dark:text-[#F9FAFB]">
                 <Clock className="h-2.5 w-2.5 text-[#9CA3AF]" />
                 {formatDuration(third.durationMs)}
               </span>

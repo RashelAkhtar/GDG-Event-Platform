@@ -569,7 +569,7 @@ export default function WendGamePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAFAFA] text-[#111827] relative selection:bg-[#111827] selection:text-white">
+    <div className="min-h-screen flex flex-col bg-[#FAFAFA] dark:bg-[#080D1A] text-[#111827] dark:text-[#F9FAFB] relative selection:bg-[#111827] dark:selection:bg-[#38BDF8] selection:text-white dark:selection:text-[#080D1A] transition-colors duration-500">
       <Navbar />
 
       {/* 5-Second Local Countdown Animation Before Game Start */}
@@ -585,7 +585,7 @@ export default function WendGamePage() {
         <div className="w-full flex items-center justify-between mb-2 gap-2">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-[#6B7280] hover:text-[#111827] transition-colors"
+            className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-[#6B7280] dark:text-[#94A3B8] hover:text-[#111827] dark:hover:text-white transition-colors"
           >
             <ArrowLeft className="h-3 w-3" />
             <span>Hub</span>
@@ -611,7 +611,7 @@ export default function WendGamePage() {
                     ? 'bg-[#FEF2F2] border-[#FEE2E2] text-[#DC2626]'
                     : timeLeft <= allocatedTimeSeconds * 0.4
                     ? 'bg-[#FFFBEB] border-[#FDE68A] text-[#B45309]'
-                    : 'bg-white border-[#E5E7EB] text-[#111827]'
+                    : 'bg-white dark:bg-[#0F172A] border-[#E5E7EB] dark:border-[#1E293B] text-[#111827] dark:text-[#F9FAFB]'
                 }`}
                 title={`Round Time Limit set by Host: ${allocatedTimeSeconds}s`}
               >
@@ -622,7 +622,7 @@ export default function WendGamePage() {
             )}
 
             {(board?.targetWords?.length ?? 0) > 0 && (
-              <span className="inline-flex items-center gap-1.5 bg-white px-3 py-1 font-mono text-xs font-bold text-[#137333] border border-[#34A853] shadow-2xs">
+              <span className="inline-flex items-center gap-1.5 bg-white dark:bg-[#0F172A] px-3 py-1 font-mono text-xs font-bold text-[#137333] dark:text-[#4ADE80] border border-[#34A853] shadow-2xs">
                 <span className="h-2 w-2 bg-[#34A853] animate-pulse" />
                 <span>{foundWordIds.size} / {board.targetWords.length} WORDS</span>
               </span>
@@ -663,27 +663,27 @@ export default function WendGamePage() {
 
         {/* --- LOCKED OVERLAY WITH LIVE BROADCAST LISTENER --- */}
         {isLocked ? (
-          <div className="my-auto flex flex-col items-center rounded-3xl border border-[#E5E7EB] bg-white p-7 sm:p-10 text-center max-w-sm w-full mx-auto shadow-[0_12px_40px_rgba(0,0,0,0.03)] animate-in fade-in zoom-in-95 duration-200">
+          <div className="my-auto flex flex-col items-center rounded-3xl border border-[#E5E7EB] dark:border-[#1E293B] bg-white dark:bg-[#0F172A] p-7 sm:p-10 text-center max-w-sm w-full mx-auto shadow-[0_12px_40px_rgba(0,0,0,0.03)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.4)] animate-in fade-in zoom-in-95 duration-200">
             <div className="mb-5 flex items-center justify-center">
               <LockedIllustration size={88} />
             </div>
             <span className="font-mono text-[9px] uppercase tracking-[0.24em] text-[#9CA3AF] mb-1">
               STATUS // RESTRICTED ARENA
             </span>
-            <h2 className="text-2xl font-normal tracking-[-0.03em] text-[#111827]">
+            <h2 className="text-2xl font-normal tracking-[-0.03em] text-[#111827] dark:text-[#F9FAFB]">
               Wend Word Arena Locked
             </h2>
-            <p className="mt-2 text-xs text-[#6B7280] leading-relaxed">
+            <p className="mt-2 text-xs text-[#6B7280] dark:text-[#94A3B8] leading-relaxed">
               The organizer has restricted access to this arena. As soon as the host unlocks it, the puzzle matrix connects automatically.
             </p>
             <div className="mt-6 flex flex-col w-full gap-2">
-              <div className="inline-flex items-center justify-center gap-2 py-2 px-3 rounded-full bg-[#FAFAFA] border border-[#E5E7EB] font-mono text-[10px] text-[#6B7280]">
+              <div className="inline-flex items-center justify-center gap-2 py-2 px-3 rounded-full bg-[#FAFAFA] dark:bg-[#1E293B] border border-[#E5E7EB] dark:border-[#334155] font-mono text-[10px] text-[#6B7280] dark:text-[#94A3B8]">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#EA4335] animate-pulse" />
                 <span>Awaiting Live Host Broadcast</span>
               </div>
               <Link
                 href="/"
-                className="flex h-11 flex-1 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white text-xs font-medium text-[#111827] hover:border-[#111827] transition-all cursor-pointer"
+                className="flex h-11 flex-1 items-center justify-center rounded-xl border border-[#E5E7EB] dark:border-[#1E293B] bg-white dark:bg-[#1E293B] text-xs font-medium text-[#111827] dark:text-[#F9FAFB] dark:text-[#F9FAFB] hover:border-[#111827] dark:hover:border-white transition-all cursor-pointer"
               >
                 Return to Hub
               </Link>
@@ -691,14 +691,14 @@ export default function WendGamePage() {
           </div>
         ) : isMySession && completedSession ? (
           /* --- EDITORIAL COMPLETED SESSION RECEIPT SCREEN --- */
-          <div className="relative my-auto flex flex-col items-center rounded-2xl border border-[#E5E7EB] bg-white p-7 sm:p-9 text-center shadow-[0_12px_40px_rgba(0,0,0,0.03)] w-full max-w-md animate-in fade-in zoom-in-95 duration-200">
+          <div className="relative my-auto flex flex-col items-center rounded-2xl border border-[#E5E7EB] dark:border-[#1E293B] bg-white dark:bg-[#0F172A] p-7 sm:p-9 text-center shadow-[0_12px_40px_rgba(0,0,0,0.03)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.4)] w-full max-w-md animate-in fade-in zoom-in-95 duration-200">
             {/* Status Pill Badge */}
             <div className="inline-flex items-center gap-1.5 rounded-full border border-[#34A853]/40 bg-[#F0FDF4] px-3.5 py-1 font-mono text-[10px] tracking-wider uppercase text-[#15803D]">
               <span className="h-1.5 w-1.5 rounded-full bg-[#34A853]" />
               <span>Puzzle Completed</span>
             </div>
 
-            <h2 className="text-3xl font-normal tracking-[-0.035em] text-[#111827] mt-5">
+            <h2 className="text-3xl font-normal tracking-[-0.035em] text-[#111827] dark:text-[#F9FAFB] mt-5">
               Session Recorded
             </h2>
             <p className="mt-1.5 text-xs text-[#6B7280] max-w-xs leading-relaxed">
@@ -706,8 +706,8 @@ export default function WendGamePage() {
             </p>
 
             {/* Session Info Receipt Card */}
-            <div className="my-6 w-full rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] p-4 text-left">
-              <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-[#E5E7EB]">
+            <div className="my-6 w-full rounded-xl border border-[#E5E7EB] dark:border-[#1E293B] bg-[#FAFAFA] dark:bg-[#080D1A] p-4 text-left">
+              <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-[#E5E7EB] dark:border-[#1E293B]">
                 <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#6B7280]">
                   OFFICIAL RECEIPT
                 </span>
@@ -719,19 +719,19 @@ export default function WendGamePage() {
               <div className="space-y-2 text-xs">
                 <div className="flex justify-between items-center">
                   <span className="text-[#6B7280]">Track:</span>
-                  <span className="font-medium text-[#111827]">{completedSession.eventTitle}</span>
+                  <span className="font-medium text-[#111827] dark:text-[#F9FAFB]">{completedSession.eventTitle}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[#6B7280]">Participant:</span>
-                  <span className="font-medium text-[#111827]">{completedSession.userName}</span>
+                  <span className="font-medium text-[#111827] dark:text-[#F9FAFB]">{completedSession.userName}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[#6B7280]">Words Discovered:</span>
-                  <span className="font-medium text-[#111827]">{completedSession.totalItems} words</span>
+                  <span className="font-medium text-[#111827] dark:text-[#F9FAFB]">{completedSession.totalItems} words</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[#6B7280]">Duration:</span>
-                  <span className="font-mono font-medium text-[#111827]">
+                  <span className="font-mono font-medium text-[#111827] dark:text-[#F9FAFB] dark:text-[#F9FAFB]">
                     {formatDuration(completedSession.durationMs)}
                   </span>
                 </div>
@@ -750,14 +750,14 @@ export default function WendGamePage() {
               <button
                 type="button"
                 onClick={handleStartNewAttempt}
-                className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-[#111827] text-xs font-medium uppercase tracking-wider text-white hover:bg-black active:scale-[0.99] transition-all cursor-pointer"
+                className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-[#111827] dark:bg-[#38BDF8] text-xs font-semibold uppercase tracking-wider text-white dark:text-[#080D1A] hover:bg-black dark:hover:bg-[#7DD3FC] active:scale-[0.99] transition-all cursor-pointer"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 <span>Retake Puzzle</span>
               </button>
               <Link
                 href="/"
-                className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-[#E5E7EB] bg-white text-xs font-medium uppercase tracking-wider text-[#111827] hover:border-[#111827] hover:bg-[#FAFAFA] transition-all cursor-pointer"
+                className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-[#E5E7EB] dark:border-[#1E293B] bg-white dark:bg-[#1E293B] text-xs font-medium uppercase tracking-wider text-[#111827] dark:text-[#F9FAFB] hover:border-[#111827] dark:hover:border-white hover:bg-[#FAFAFA] dark:hover:bg-[#334155] transition-all cursor-pointer"
               >
                 <Home className="h-3.5 w-3.5" />
                 <span>Back to Hub</span>
@@ -771,7 +771,7 @@ export default function WendGamePage() {
             <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-[#9CA3AF] mb-1">
               STATUS // UNPUBLISHED
             </span>
-            <h2 className="text-2xl font-normal tracking-[-0.03em] text-[#111827]">
+            <h2 className="text-2xl font-normal tracking-[-0.03em] text-[#111827] dark:text-[#F9FAFB]">
               No Puzzle Words Published Yet
             </h2>
             <p className="mt-1.5 text-xs text-[#6B7280] max-w-xs leading-relaxed">
@@ -780,7 +780,7 @@ export default function WendGamePage() {
             <div className="mt-6 flex gap-2.5 w-full">
               <Link
                 href="/"
-                className="flex h-11 flex-1 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white text-xs font-medium text-[#111827] hover:border-[#111827] transition-all cursor-pointer"
+                className="flex h-11 flex-1 items-center justify-center rounded-xl border border-[#E5E7EB] dark:border-[#1E293B] bg-white dark:bg-[#1E293B] text-xs font-medium text-[#111827] dark:text-[#F9FAFB] dark:text-[#F9FAFB] hover:border-[#111827] dark:hover:border-white transition-all cursor-pointer"
               >
                 Back to Hub
               </Link>

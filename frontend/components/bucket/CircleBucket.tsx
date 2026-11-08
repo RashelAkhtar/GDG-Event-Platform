@@ -441,18 +441,32 @@ export function CircleBucket() {
       ctx.beginPath()
       ctx.arc(cx, cy, bucketRadius, 0, Math.PI * 2)
 
-      // Subdued ambient bucket background gradient
-      const bgGrad = ctx.createRadialGradient(cx, cy - 20, 10, cx, cy, bucketRadius)
-      bgGrad.addColorStop(0, 'rgba(255, 255, 255, 0.82)')
-      bgGrad.addColorStop(0.85, 'rgba(248, 249, 250, 0.72)')
-      bgGrad.addColorStop(1, 'rgba(232, 234, 237, 0.60)')
-      ctx.fillStyle = bgGrad
-      ctx.fill()
+      const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
 
-      // Glass rim border - razor-thin crisp editorial boundary
-      ctx.lineWidth = 1.5
-      ctx.strokeStyle = '#E5E7EB'
-      ctx.stroke()
+      // Dynamic ambient bucket background gradient
+      const bgGrad = ctx.createRadialGradient(cx, cy - 20, 10, cx, cy, bucketRadius)
+      if (isDark) {
+        // Ethereal Nocturnal Glass Basin
+        bgGrad.addColorStop(0, 'rgba(15, 23, 42, 0.78)')
+        bgGrad.addColorStop(0.7, 'rgba(8, 13, 26, 0.82)')
+        bgGrad.addColorStop(1, 'rgba(2, 6, 23, 0.90)')
+        ctx.fillStyle = bgGrad
+        ctx.fill()
+
+        ctx.lineWidth = 1.5
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.28)'
+        ctx.stroke()
+      } else {
+        bgGrad.addColorStop(0, 'rgba(255, 255, 255, 0.82)')
+        bgGrad.addColorStop(0.85, 'rgba(248, 249, 250, 0.72)')
+        bgGrad.addColorStop(1, 'rgba(232, 234, 237, 0.60)')
+        ctx.fillStyle = bgGrad
+        ctx.fill()
+
+        ctx.lineWidth = 1.5
+        ctx.strokeStyle = '#E5E7EB'
+        ctx.stroke()
+      }
       ctx.restore()
 
       const bubbles = physicsRef.current.bubbles
@@ -463,19 +477,19 @@ export function CircleBucket() {
         ctx.save()
         ctx.beginPath()
         ctx.arc(cx, cy, 38, 0, Math.PI * 2)
-        ctx.strokeStyle = 'rgba(66, 133, 244, 0.22)'
+        ctx.strokeStyle = isDark ? 'rgba(56, 189, 248, 0.35)' : 'rgba(66, 133, 244, 0.22)'
         ctx.lineWidth = 2
         ctx.setLineDash([6, 6])
         ctx.stroke()
 
         ctx.font = '500 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-        ctx.fillStyle = '#5F6368'
+        ctx.fillStyle = isDark ? '#94A3B8' : '#5F6368'
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
         ctx.fillText('Drop in to connect', cx, cy - 6)
 
         ctx.font = '400 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-        ctx.fillStyle = '#80868B'
+        ctx.fillStyle = isDark ? '#64748B' : '#80868B'
         ctx.fillText('Live profile arena', cx, cy + 12)
         ctx.restore()
       }
@@ -688,7 +702,7 @@ export function CircleBucket() {
       {/* Minimalist Editorial Status & Counter Row */}
       <div className="flex flex-wrap items-center justify-center gap-2 mb-3.5 max-w-full px-2 pointer-events-none">
         {/* Active Count Pill */}
-        <span className="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1 font-mono text-[10px] tracking-[0.2em] uppercase text-[#111827] border border-[#E5E7EB] select-none pointer-events-none shadow-2xs">
+        <span className="inline-flex items-center gap-2 rounded-full bg-white dark:bg-[#0F172A] px-3.5 py-1 font-mono text-[10px] tracking-[0.2em] uppercase text-[#111827] dark:text-[#F9FAFB] border border-[#E5E7EB] dark:border-[#1E293B] select-none pointer-events-none shadow-2xs transition-colors">
           <span
             className={`h-1.5 w-1.5 rounded-full ${
               totalCount > 0 ? 'bg-[#34A853]' : 'bg-[#9CA3AF]'
@@ -702,7 +716,7 @@ export function CircleBucket() {
           <button
             onClick={handleScatter}
             title="Disperse bubbles in arena"
-            className="group flex h-6 w-6 items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:border-[#111827] transition-all active:scale-90 cursor-pointer shadow-2xs pointer-events-auto"
+            className="group flex h-6 w-6 items-center justify-center rounded-full border border-[#E5E7EB] dark:border-[#1E293B] bg-white dark:bg-[#0F172A] text-[#6B7280] dark:text-[#94A3B8] hover:text-[#111827] dark:hover:text-white hover:border-[#111827] dark:hover:border-white transition-all active:scale-90 cursor-pointer shadow-2xs pointer-events-auto"
           >
             <RotateCcw className="h-2.5 w-2.5 transition-transform duration-300 group-hover:-rotate-90 group-active:-rotate-180" />
           </button>
@@ -713,8 +727,8 @@ export function CircleBucket() {
           type="button"
           onClick={reconnect}
           title={connected ? 'Realtime Connected' : 'Disconnected. Click to Reconnect'}
-          className={`inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] bg-white px-3 py-1 font-mono text-[10px] tracking-wider uppercase transition-all cursor-pointer shadow-2xs pointer-events-auto ${
-            connected ? 'text-[#34A853] hover:border-[#34A853]' : 'text-[#EA4335] hover:border-[#EA4335]'
+          className={`inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] dark:border-[#1E293B] bg-white dark:bg-[#0F172A] px-3 py-1 font-mono text-[10px] tracking-wider uppercase transition-all cursor-pointer shadow-2xs pointer-events-auto ${
+            connected ? 'text-[#34A853] hover:border-[#34A853] dark:text-[#4ADE80] dark:hover:border-[#4ADE80]' : 'text-[#EA4335] hover:border-[#EA4335] dark:text-[#F87171] dark:hover:border-[#F87171]'
           }`}
         >
           {connected ? (
@@ -741,10 +755,10 @@ export function CircleBucket() {
       {/* Pristine Circular Vessel with Concentric Hairline Rings */}
       <div
         ref={containerRef}
-        className="relative mx-auto aspect-square w-full max-w-[280px] xs:max-w-[305px] sm:max-w-[330px] select-none touch-none rounded-full border border-[#E5E7EB]/90 bg-white/75 backdrop-blur-[2px] p-2 shadow-[0_12px_36px_rgba(0,0,0,0.04)] ring-1 ring-[#F3F4F6]/80 ring-offset-4 ring-offset-[#FAFAFA] transition-all hover:shadow-[0_16px_48px_rgba(0,0,0,0.06)] pointer-events-auto"
+        className="relative mx-auto aspect-square w-full max-w-[280px] xs:max-w-[305px] sm:max-w-[330px] select-none touch-none rounded-full border border-[#E5E7EB]/90 dark:border-[#38BDF8]/25 bg-white/75 dark:bg-[#0B132B]/60 backdrop-blur-[2px] p-2 shadow-[0_12px_36px_rgba(0,0,0,0.04)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] ring-1 ring-[#F3F4F6]/80 dark:ring-[#1E293B]/70 ring-offset-4 ring-offset-[#FAFAFA] dark:ring-offset-[#080D1A] transition-all hover:shadow-[0_16px_48px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_16px_48px_rgba(56,189,248,0.15)] pointer-events-auto"
         onContextMenu={(e) => e.preventDefault()}
       >
-        <div className="relative h-full w-full rounded-full overflow-hidden bg-[#FAFAFA]/60 backdrop-blur-[1px]">
+        <div className="relative h-full w-full rounded-full overflow-hidden bg-[#FAFAFA]/60 dark:bg-[#080D1A]/60 backdrop-blur-[1px]">
           <canvas
             ref={canvasRef}
             width={340}

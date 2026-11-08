@@ -921,7 +921,7 @@ svg {
 }
 
 /* =========================================================================
-   DARK MODE ADAPTIVE HARMONIZATION
+   DARK MODE ADAPTIVE HARMONIZATION (SEMANTIC TOKEN ARCHITECTURE)
    ========================================================================= */
 
 html.dark {
@@ -937,42 +937,13 @@ html.dark body {
   color: #F9FAFB;
 }
 
-html.dark .bg-white {
-  background-color: #0F172A !important;
-}
-
-html.dark .bg-\[\#FAFAFA\] {
-  background-color: #080D1A !important;
-}
-
-html.dark .text-\[\#111827\] {
-  color: #F9FAFB !important;
-}
-
-html.dark .text-\[\#4B5563\] {
-  color: #94A3B8 !important;
-}
-
-html.dark .text-\[\#6B7280\] {
-  color: #94A3B8 !important;
-}
-
-html.dark .border-\[\#E5E7EB\] {
-  border-color: #1E293B !important;
-}
-
-html.dark header {
-  background-color: rgba(15, 23, 42, 0.92) !important;
-  border-color: #1E293B !important;
-}
-
 html.dark .editorial-card {
-  background: #0F172A !important;
-  border-color: #1E293B !important;
+  background: #0F172A;
+  border-color: #1E293B;
 }
 
 html.dark .hairline-divider {
-  background-color: #1E293B !important;
+  background-color: #1E293B;
 }
 
 .anim-voxel-fly-dynamic-ltr {

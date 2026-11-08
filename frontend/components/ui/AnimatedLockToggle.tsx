@@ -200,8 +200,8 @@ export function AnimatedLockToggle({
         <span
           className={`inline-flex items-center gap-1.5 rounded-full font-mono uppercase tracking-wider font-semibold border transition-all duration-200 ${currentSize.badge} ${
             live
-              ? 'bg-[#F0FDF4] border-[#86EFAC] text-[#15803D]'
-              : 'bg-[#FEF2F2] border-[#FECACA] text-[#DC2626]'
+              ? 'bg-[#F0FDF4] dark:bg-[#064E3B]/70 border-[#86EFAC] dark:border-[#059669] text-[#15803D] dark:text-[#34D399]'
+              : 'bg-[#FEF2F2] dark:bg-[#450A0A]/70 border-[#FECACA] dark:border-[#B91C1C] text-[#DC2626] dark:text-[#F87171]'
           }`}
         >
           <span

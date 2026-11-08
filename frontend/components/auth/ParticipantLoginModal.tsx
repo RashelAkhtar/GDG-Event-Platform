@@ -97,7 +97,7 @@ export function ParticipantLoginModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-y-auto bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-y-auto bg-black/60 dark:bg-black/80 backdrop-blur-xs animate-in fade-in duration-150"
       onClick={onClose}
     >
       {/* Modal Dialog Card */}
@@ -105,13 +105,13 @@ export function ParticipantLoginModal({
         role="dialog"
         aria-modal="true"
         onClick={(e) => e.stopPropagation()}
-        className="relative z-10 w-full max-w-sm rounded-2xl border border-[#E5E7EB] bg-white p-6 sm:p-8 shadow-[0_24px_64px_rgba(0,0,0,0.18)] text-[#111827] my-auto animate-in zoom-in-95 duration-150"
+        className="relative z-10 w-full max-w-sm rounded-2xl border border-[#E5E7EB] dark:border-[#1E293B] bg-white dark:bg-[#0F172A] p-6 sm:p-8 shadow-[0_24px_64px_rgba(0,0,0,0.18)] dark:shadow-[0_24px_64px_rgba(0,0,0,0.6)] text-[#111827] dark:text-[#F9FAFB] my-auto animate-in zoom-in-95 duration-150"
       >
         {/* Close Button */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-full text-[#9CA3AF] hover:text-[#111827] hover:bg-[#F3F4F6] transition-colors cursor-pointer"
+          className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-full text-[#9CA3AF] dark:text-[#64748B] hover:text-[#111827] dark:hover:text-white hover:bg-[#F3F4F6] dark:hover:bg-[#1E293B] transition-colors cursor-pointer"
           aria-label="Close modal"
         >
           <X className="h-4 w-4" />
@@ -123,10 +123,10 @@ export function ParticipantLoginModal({
           <span className="font-mono text-[9px] tracking-[0.26em] uppercase text-[#9CA3AF] mt-3">
             COMMUNITY PARTICIPANT ACCESS
           </span>
-          <h2 className="text-2xl font-normal tracking-[-0.035em] text-[#111827] mt-1">
+          <h2 className="text-2xl font-normal tracking-[-0.035em] text-[#111827] dark:text-[#F9FAFB] mt-1">
             Join Arena
           </h2>
-          <p className="mt-1 text-xs text-[#6B7280] leading-relaxed max-w-xs">
+          <p className="mt-1 text-xs text-[#6B7280] dark:text-[#94A3B8] leading-relaxed max-w-xs">
             Sign in to compete in live technical sprints, solve puzzles, and rank on tournament leaderboards.
           </p>
         </div>
@@ -153,7 +153,7 @@ export function ParticipantLoginModal({
             type="button"
             disabled={googleLoading}
             onClick={handleGoogleClick}
-            className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-[#E5E7EB] bg-white text-xs font-medium text-[#111827] hover:border-[#111827] hover:bg-[#FAFAFA] active:scale-[0.99] transition-all cursor-pointer disabled:opacity-60"
+            className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-[#E5E7EB] dark:border-[#1E293B] bg-white dark:bg-[#1E293B] text-xs font-medium text-[#111827] dark:text-[#F9FAFB] hover:border-[#111827] dark:hover:border-white hover:bg-[#FAFAFA] dark:hover:bg-[#334155] active:scale-[0.99] transition-all cursor-pointer disabled:opacity-60"
           >
             {googleLoading ? (
               <>
@@ -170,8 +170,8 @@ export function ParticipantLoginModal({
 
           {/* Divider */}
           <div className="relative my-0.5 flex items-center justify-center">
-            <div className="w-full border-t border-[#E5E7EB]" />
-            <span className="absolute bg-white px-2.5 font-mono text-[9px] uppercase tracking-[0.2em] text-[#9CA3AF]">
+            <div className="w-full border-t border-[#E5E7EB] dark:border-[#1E293B]" />
+            <span className="absolute bg-white dark:bg-[#0F172A] px-2.5 font-mono text-[9px] uppercase tracking-[0.2em] text-[#9CA3AF] dark:text-[#64748B]">
               or join with handle
             </span>
           </div>
@@ -179,7 +179,7 @@ export function ParticipantLoginModal({
           {/* 2. Participant Handle Form */}
           <form onSubmit={handleSubmit} autoComplete="off" className="flex flex-col gap-2.5">
             <div>
-              <label className="block font-mono text-[10px] uppercase tracking-wider text-[#6B7280] mb-1 flex items-center gap-1">
+              <label className="block font-mono text-[10px] uppercase tracking-wider text-[#6B7280] dark:text-[#94A3B8] mb-1 flex items-center gap-1">
                 <Users className="h-3 w-3 text-[#9CA3AF]" />
                 <span>Your Handle / Name</span>
               </label>
@@ -189,13 +189,13 @@ export function ParticipantLoginModal({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Alex Rivera"
-                className="w-full rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] px-3 py-2 text-xs text-[#111827] placeholder:text-[#9CA3AF] focus:bg-white focus:outline-none focus:border-[#111827] transition-all"
+                className="w-full rounded-xl border border-[#E5E7EB] dark:border-[#1E293B] bg-[#FAFAFA] dark:bg-[#080D1A] px-3 py-2 text-xs text-[#111827] dark:text-[#F9FAFB] placeholder:text-[#9CA3AF] dark:placeholder:text-[#64748B] focus:bg-white dark:focus:bg-[#0F172A] focus:outline-none focus:border-[#111827] dark:focus:border-[#38BDF8] transition-all"
                 required
               />
             </div>
 
             <div>
-              <label className="block font-mono text-[10px] uppercase tracking-wider text-[#6B7280] mb-1 flex items-center gap-1">
+              <label className="block font-mono text-[10px] uppercase tracking-wider text-[#6B7280] dark:text-[#94A3B8] mb-1 flex items-center gap-1">
                 <Mail className="h-3 w-3 text-[#9CA3AF]" />
                 <span>Email (optional)</span>
               </label>
@@ -204,14 +204,14 @@ export function ParticipantLoginModal({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="alex@example.com"
-                className="w-full rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] px-3 py-2 text-xs text-[#111827] placeholder:text-[#9CA3AF] focus:bg-white focus:outline-none focus:border-[#111827] transition-all"
+                className="w-full rounded-xl border border-[#E5E7EB] dark:border-[#1E293B] bg-[#FAFAFA] dark:bg-[#080D1A] px-3 py-2 text-xs text-[#111827] dark:text-[#F9FAFB] placeholder:text-[#9CA3AF] dark:placeholder:text-[#64748B] focus:bg-white dark:focus:bg-[#0F172A] focus:outline-none focus:border-[#111827] dark:focus:border-[#38BDF8] transition-all"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="mt-1.5 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#111827] text-xs font-medium tracking-wide uppercase text-white hover:bg-black active:scale-[0.99] transition-all cursor-pointer disabled:opacity-50"
+              className="mt-1.5 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#111827] dark:bg-[#38BDF8] text-xs font-semibold tracking-wide uppercase text-white dark:text-[#080D1A] hover:bg-black dark:hover:bg-[#7DD3FC] active:scale-[0.99] transition-all cursor-pointer disabled:opacity-50"
             >
               <UserCheck className="h-3.5 w-3.5" />
               <span>{loading ? 'Entering...' : 'Enter Arena'}</span>

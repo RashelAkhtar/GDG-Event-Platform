@@ -374,7 +374,7 @@ function QuizRunnerContent() {
   const currentQ = questions[currentIndex]
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAFAFA] text-[#111827] relative selection:bg-[#111827] selection:text-white">
+    <div className="min-h-screen flex flex-col bg-[#FAFAFA] dark:bg-[#080D1A] text-[#111827] dark:text-[#F9FAFB] relative selection:bg-[#111827] dark:selection:bg-[#38BDF8] selection:text-white dark:selection:text-[#080D1A] transition-colors duration-500">
       <Navbar />
 
       {/* 5-Second Local Countdown Animation Before Game Start */}
@@ -390,7 +390,7 @@ function QuizRunnerContent() {
         <div className="flex items-center justify-between mb-4">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 font-mono text-[10px] tracking-[0.2em] uppercase text-[#6B7280] hover:text-[#111827] transition-colors"
+            className="inline-flex items-center gap-1.5 font-mono text-[10px] tracking-[0.2em] uppercase text-[#6B7280] dark:text-[#94A3B8] hover:text-[#111827] dark:hover:text-white transition-colors"
           >
             <ArrowLeft className="h-3 w-3" />
             <span>Exit Track</span>
@@ -407,7 +407,7 @@ function QuizRunnerContent() {
               </Link>
             )}
             <SoundToggle />
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] bg-white px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-[#111827]">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] dark:border-[#1E293B] bg-white dark:bg-[#0F172A] px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-[#111827] dark:text-[#F9FAFB]">
               <span className="h-1.5 w-1.5 rounded-full bg-[#1A73E8]" />
               <span>{event?.title}</span>
             </span>
@@ -416,50 +416,50 @@ function QuizRunnerContent() {
 
         {/* --- EDITORIAL LOCKED SCREEN WITH LIVE UNLOCK LISTENER --- */}
         {isLocked ? (
-          <div className="relative my-auto flex flex-col items-center rounded-3xl border border-[#E5E7EB] bg-white p-7 sm:p-10 text-center shadow-[0_12px_40px_rgba(0,0,0,0.03)] animate-in fade-in zoom-in-95 duration-200">
+          <div className="relative my-auto flex flex-col items-center rounded-3xl border border-[#E5E7EB] dark:border-[#1E293B] bg-white dark:bg-[#0F172A] p-7 sm:p-10 text-center shadow-[0_12px_40px_rgba(0,0,0,0.03)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.4)] animate-in fade-in zoom-in-95 duration-200">
             <div className="mb-5 flex items-center justify-center">
               <LockedIllustration size={88} />
             </div>
             <span className="font-mono text-[9px] uppercase tracking-[0.24em] text-[#9CA3AF] mb-1">
               STATUS // RESTRICTED ARENA
             </span>
-            <h2 className="text-2xl font-normal tracking-[-0.03em] text-[#111827]">
+            <h2 className="text-2xl font-normal tracking-[-0.03em] text-[#111827] dark:text-[#F9FAFB]">
               {event?.title || 'Challenge Arena'} Locked
             </h2>
-            <p className="mt-2 text-xs text-[#6B7280] max-w-xs leading-relaxed">
+            <p className="mt-2 text-xs text-[#6B7280] dark:text-[#94A3B8] max-w-xs leading-relaxed">
               This challenge arena is currently locked by the host. As soon as the host unlocks it, your screen will automatically connect and launch the arena countdown.
             </p>
             <div className="mt-6 flex flex-col w-full max-w-xs gap-2">
-              <div className="inline-flex items-center justify-center gap-2 py-2 px-3 rounded-full bg-[#FAFAFA] border border-[#E5E7EB] font-mono text-[10px] text-[#6B7280]">
+              <div className="inline-flex items-center justify-center gap-2 py-2 px-3 rounded-full bg-[#FAFAFA] dark:bg-[#1E293B] border border-[#E5E7EB] dark:border-[#334155] font-mono text-[10px] text-[#6B7280] dark:text-[#94A3B8]">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#EA4335] animate-pulse" />
                 <span>Awaiting Live Host Broadcast</span>
               </div>
               <Link
                 href="/"
-                className="flex h-11 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white text-xs font-medium text-[#111827] hover:border-[#111827] transition-all cursor-pointer"
+                className="flex h-11 items-center justify-center rounded-xl border border-[#E5E7EB] dark:border-[#1E293B] bg-white dark:bg-[#1E293B] text-xs font-medium text-[#111827] dark:text-[#F9FAFB] dark:text-[#F9FAFB] hover:border-[#111827] dark:hover:border-white transition-all cursor-pointer"
               >
                 Return to Hub
               </Link>
             </div>
           </div>
         ) : isMySession && completedSession ? (
-          <div className="relative my-auto flex flex-col items-center rounded-2xl border border-[#E5E7EB] bg-white p-7 sm:p-9 text-center shadow-[0_12px_40px_rgba(0,0,0,0.03)] animate-in fade-in zoom-in-95 duration-200">
+          <div className="relative my-auto flex flex-col items-center rounded-2xl border border-[#E5E7EB] dark:border-[#1E293B] bg-white dark:bg-[#0F172A] p-7 sm:p-9 text-center shadow-[0_12px_40px_rgba(0,0,0,0.03)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.4)] animate-in fade-in zoom-in-95 duration-200">
             {/* Status Pill Badge */}
             <div className="inline-flex items-center gap-1.5 rounded-full border border-[#34A853]/40 bg-[#F0FDF4] px-3.5 py-1 font-mono text-[10px] tracking-wider uppercase text-[#15803D]">
               <span className="h-1.5 w-1.5 rounded-full bg-[#34A853]" />
               <span>Responses Recorded</span>
             </div>
 
-            <h2 className="text-3xl font-normal tracking-[-0.035em] text-[#111827] mt-5">
+            <h2 className="text-3xl font-normal tracking-[-0.035em] text-[#111827] dark:text-[#F9FAFB] mt-5">
               Session Complete
             </h2>
-            <p className="mt-1.5 text-xs text-[#6B7280] max-w-xs leading-relaxed">
+            <p className="mt-1.5 text-xs text-[#6B7280] dark:text-[#94A3B8] max-w-xs leading-relaxed">
               Your answers have been evaluated and locked into tournament standings.
             </p>
 
             {/* Session Info Receipt Card */}
-            <div className="my-6 w-full max-w-sm rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] p-4 text-left">
-              <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-[#E5E7EB]">
+            <div className="my-6 w-full max-w-sm rounded-xl border border-[#E5E7EB] dark:border-[#1E293B] bg-[#FAFAFA] dark:bg-[#080D1A] p-4 text-left">
+              <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-[#E5E7EB] dark:border-[#1E293B]">
                 <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#6B7280]">
                   OFFICIAL RECEIPT
                 </span>
@@ -470,25 +470,25 @@ function QuizRunnerContent() {
 
               <div className="space-y-2 text-xs">
                 <div className="flex justify-between items-center">
-                  <span className="text-[#6B7280]">Track:</span>
-                  <span className="font-medium text-[#111827]">{completedSession.eventTitle || event?.title}</span>
+                  <span className="text-[#6B7280] dark:text-[#94A3B8]">Track:</span>
+                  <span className="font-medium text-[#111827] dark:text-[#F9FAFB]">{completedSession.eventTitle || event?.title}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-[#6B7280]">Participant:</span>
-                  <span className="font-medium text-[#111827]">{completedSession.userName}</span>
+                  <span className="text-[#6B7280] dark:text-[#94A3B8]">Participant:</span>
+                  <span className="font-medium text-[#111827] dark:text-[#F9FAFB]">{completedSession.userName}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-[#6B7280]">Questions:</span>
-                  <span className="font-medium text-[#111827]">{completedSession.totalItems} Completed</span>
+                  <span className="text-[#6B7280] dark:text-[#94A3B8]">Questions:</span>
+                  <span className="font-medium text-[#111827] dark:text-[#F9FAFB]">{completedSession.totalItems} Completed</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-[#6B7280]">Duration:</span>
-                  <span className="font-mono font-medium text-[#111827]">
+                  <span className="text-[#6B7280] dark:text-[#94A3B8]">Duration:</span>
+                  <span className="font-mono font-medium text-[#111827] dark:text-[#F9FAFB] dark:text-[#F9FAFB]">
                     {formatDuration(completedSession.durationMs)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-[#6B7280]">Status:</span>
+                  <span className="text-[#6B7280] dark:text-[#94A3B8]">Status:</span>
                   <span className="inline-flex items-center gap-1 font-mono text-[10px] text-[#B45309] uppercase">
                     <span className="h-1.5 w-1.5 rounded-full bg-[#FBBC04]" />
                     Awaiting Ceremony
@@ -502,14 +502,14 @@ function QuizRunnerContent() {
               <button
                 type="button"
                 onClick={handleStartNewAttempt}
-                className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-[#111827] text-xs font-medium uppercase tracking-wider text-white hover:bg-black active:scale-[0.99] transition-all cursor-pointer"
+                className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-[#111827] dark:bg-[#38BDF8] text-xs font-semibold uppercase tracking-wider text-white dark:text-[#080D1A] hover:bg-black dark:hover:bg-[#7DD3FC] active:scale-[0.99] transition-all cursor-pointer"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 <span>Retake Track</span>
               </button>
               <Link
                 href="/"
-                className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-[#E5E7EB] bg-white text-xs font-medium uppercase tracking-wider text-[#111827] hover:border-[#111827] hover:bg-[#FAFAFA] transition-all cursor-pointer"
+                className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-[#E5E7EB] dark:border-[#1E293B] bg-white dark:bg-[#1E293B] text-xs font-medium uppercase tracking-wider text-[#111827] dark:text-[#F9FAFB] hover:border-[#111827] dark:hover:border-white hover:bg-[#FAFAFA] dark:hover:bg-[#334155] transition-all cursor-pointer"
               >
                 <Home className="h-3.5 w-3.5" />
                 <span>Return to Hub</span>
@@ -523,16 +523,16 @@ function QuizRunnerContent() {
             <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-[#9CA3AF] mb-1">
               STATUS // UNPUBLISHED
             </span>
-            <h2 className="text-2xl font-normal tracking-[-0.03em] text-[#111827]">
+            <h2 className="text-2xl font-normal tracking-[-0.03em] text-[#111827] dark:text-[#F9FAFB]">
               No Questions Published Yet
             </h2>
-            <p className="mt-1.5 text-xs text-[#6B7280] max-w-xs leading-relaxed">
+            <p className="mt-1.5 text-xs text-[#6B7280] dark:text-[#94A3B8] max-w-xs leading-relaxed">
               The organizer has not yet added questions to this arena track. Check back soon.
             </p>
             <div className="mt-6 flex gap-2.5 w-full max-w-xs">
               <Link
                 href="/"
-                className="flex h-11 flex-1 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white text-xs font-medium text-[#111827] hover:border-[#111827] transition-all"
+                className="flex h-11 flex-1 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white text-xs font-medium text-[#111827] dark:text-[#F9FAFB] hover:border-[#111827] transition-all"
               >
                 Back to Hub
               </Link>
@@ -561,7 +561,7 @@ function QuizRunnerContent() {
             </div>
 
             {/* Hairline Progress Line */}
-            <div className="h-1 w-full rounded-full bg-[#E5E7EB] overflow-hidden my-2">
+            <div className="h-1 w-full rounded-full bg-[#E5E7EB] dark:bg-[#1E293B] overflow-hidden my-2">
               <div
                 className="h-full bg-[#1A73E8] transition-all duration-300"
                 style={{
@@ -571,9 +571,9 @@ function QuizRunnerContent() {
             </div>
 
             {/* Question Card - Pristine Editorial Architecture */}
-            <div className="relative mt-3 flex-1 rounded-2xl border border-[#E5E7EB] bg-white p-6 sm:p-8 flex flex-col justify-between overflow-hidden select-none no-copy" onCopy={(e) => { e.preventDefault(); showCopyProhibitedAlert(); }} onCut={(e) => e.preventDefault()} onContextMenu={(e) => e.preventDefault()}>
+            <div className="relative mt-3 flex-1 rounded-2xl border border-[#E5E7EB] dark:border-[#1E293B] bg-white dark:bg-[#0F172A] p-6 sm:p-8 flex flex-col justify-between overflow-hidden select-none no-copy" onCopy={(e) => { e.preventDefault(); showCopyProhibitedAlert(); }} onCut={(e) => e.preventDefault()} onContextMenu={(e) => e.preventDefault()}>
               <div>
-                <h3 className="text-xl sm:text-2xl font-normal tracking-[-0.03em] leading-snug text-[#111827] select-none pointer-events-none">
+                <h3 className="text-xl sm:text-2xl font-normal tracking-[-0.03em] leading-snug text-[#111827] dark:text-[#F9FAFB] select-none pointer-events-none">
                   {currentQ?.questionText}
                 </h3>
 
@@ -590,16 +590,16 @@ function QuizRunnerContent() {
                         onClick={() => handleSelectOption(optIdx)}
                         className={`group relative flex min-h-[50px] w-full items-center justify-between gap-3.5 rounded-xl border px-4 py-3 text-left transition-all duration-150 cursor-pointer ${
                           isSelected
-                            ? 'border-[#111827] bg-[#F4F4F5] text-[#111827]'
-                            : 'border-[#E5E7EB] bg-white text-[#374151] hover:border-[#9CA3AF] hover:bg-[#FAFAFA]'
+                            ? 'border-[#111827] dark:border-[#38BDF8] bg-[#F4F4F5] dark:bg-[#0C4A6E]/30 text-[#111827] dark:text-[#F9FAFB]'
+                            : 'border-[#E5E7EB] dark:border-[#334155] bg-white dark:bg-[#1E293B] text-[#374151] dark:text-[#CBD5E1] hover:border-[#9CA3AF] dark:hover:border-[#38BDF8] hover:bg-[#FAFAFA] dark:hover:bg-[#334155]'
                         }`}
                       >
                         <div className="flex items-center gap-3">
                           <span
                             className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg font-mono text-[11px] font-medium transition-all ${
                               isSelected
-                                ? 'bg-[#111827] text-white'
-                                : 'bg-[#F4F4F5] text-[#6B7280]'
+                                ? 'bg-[#111827] dark:bg-[#38BDF8] text-white dark:text-[#080D1A]'
+                                : 'bg-[#F4F4F5] dark:bg-[#0F172A] text-[#6B7280] dark:text-[#94A3B8]'
                             }`}
                           >
                             {optionLetter}
@@ -621,12 +621,12 @@ function QuizRunnerContent() {
               </div>
 
               {/* Bottom Nav: Previous / Next / Submit */}
-              <div className="mt-8 flex items-center justify-between pt-4 border-t border-[#F3F4F6]">
+              <div className="mt-8 flex items-center justify-between pt-4 border-t border-[#F3F4F6] dark:border-[#1E293B]">
                 <button
                   type="button"
                   disabled={currentIndex === 0}
                   onClick={() => setCurrentIndex((idx) => idx - 1)}
-                  className="inline-flex h-10 items-center gap-1.5 rounded-xl px-4 font-mono text-[11px] uppercase tracking-wider text-[#6B7280] hover:text-[#111827] disabled:opacity-25 disabled:pointer-events-none transition-all cursor-pointer"
+                  className="inline-flex h-10 items-center gap-1.5 rounded-xl px-4 font-mono text-[11px] uppercase tracking-wider text-[#6B7280] dark:text-[#94A3B8] hover:text-[#111827] dark:hover:text-white disabled:opacity-25 disabled:pointer-events-none transition-all cursor-pointer"
                 >
                   <ArrowLeft className="h-3 w-3" />
                   <span>Previous</span>
@@ -636,7 +636,7 @@ function QuizRunnerContent() {
                   <button
                     type="button"
                     onClick={() => setCurrentIndex((idx) => idx + 1)}
-                    className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-[#111827] px-5 font-mono text-[11px] uppercase tracking-wider text-white hover:bg-black transition-all cursor-pointer"
+                    className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-[#111827] dark:bg-[#38BDF8] px-5 font-mono text-[11px] uppercase tracking-wider text-white dark:text-[#080D1A] font-semibold hover:bg-black dark:hover:bg-[#7DD3FC] transition-all cursor-pointer"
                   >
                     <span>Next</span>
                     <ArrowRight className="h-3 w-3" />

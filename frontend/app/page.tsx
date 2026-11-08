@@ -32,7 +32,7 @@ export default function HomePage() {
   }, [])
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAFAFA] text-[#111827] relative selection:bg-[#111827] selection:text-white">
+    <div className="min-h-screen flex flex-col bg-[#FAFAFA] dark:bg-[#080D1A] text-[#111827] dark:text-[#F9FAFB] relative selection:bg-[#111827] dark:selection:bg-[#38BDF8] selection:text-white dark:selection:text-[#080D1A] transition-colors duration-500">
       {/* 1. Publication Masthead Navigation */}
       <Navbar />
 
@@ -42,25 +42,25 @@ export default function HomePage() {
       >
         {/* Editorial Hero Header */}
         <section className="text-center select-none pt-2 pb-6">
-          <div className="inline-flex items-center gap-2 mb-3 rounded-full border border-[#E5E7EB] bg-white px-3 py-1 shadow-2xs">
+          <div className="inline-flex items-center gap-2 mb-3 rounded-full border border-[#E5E7EB] dark:border-[#1E293B] bg-white dark:bg-[#0F172A] px-3 py-1 shadow-2xs">
             <span className="h-1.5 w-1.5 rounded-full bg-[#1A73E8] animate-pulse" />
-            <span className="font-mono text-[9.5px] tracking-[0.24em] uppercase text-[#6B7280]">
+            <span className="font-mono text-[9.5px] tracking-[0.24em] uppercase text-[#6B7280] dark:text-[#94A3B8]">
               GDGOC ORIENTATION ARENA
             </span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl font-normal tracking-[-0.04em] text-[#111827] leading-[1.06]">
-            Compete. Build. <span className="font-serif italic font-normal text-[#111827]">Excel.</span>
+          <h1 className="text-4xl sm:text-5xl font-normal tracking-[-0.04em] text-[#111827] dark:text-[#F9FAFB] leading-[1.06]">
+            Compete. Build. <span className="font-serif italic font-normal text-[#111827] dark:text-[#F9FAFB]">Excel.</span>
           </h1>
 
-          <p className="mt-3.5 text-xs sm:text-sm text-[#4B5563] font-normal leading-relaxed max-w-md mx-auto">
+          <p className="mt-3.5 text-xs sm:text-sm text-[#4B5563] dark:text-[#94A3B8] font-normal leading-relaxed max-w-md mx-auto">
             Quick-fire dev quizzes, sneaky word mazes, and friendly campus games.
             <br className="hidden sm:inline" /> Jump in, test your wits, and claim your orientation bragging rights! 🚀
           </p>
 
           {/* Micro Metrics Ribbon */}
-          <div className="mt-4 inline-flex items-center justify-center gap-3 sm:gap-4 font-mono text-[9px] tracking-[0.16em] uppercase text-[#9CA3AF]">
-            <span className="flex items-center gap-1 text-[#111827]">
+          <div className="mt-4 inline-flex items-center justify-center gap-3 sm:gap-4 font-mono text-[9px] tracking-[0.16em] uppercase text-[#9CA3AF] dark:text-[#64748B]">
+            <span className="flex items-center gap-1 text-[#111827] dark:text-[#F9FAFB]">
               <span className="h-1 w-1 rounded-full bg-[#34A853]" />
               03 Arenas Active
             </span>
@@ -90,11 +90,11 @@ export default function HomePage() {
           <div className="flex items-center justify-between mb-4 px-1">
             <div className="flex items-center gap-1.5">
               <Sparkles className="h-3 w-3 text-[#1A73E8]" />
-              <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-[#9CA3AF]">
+              <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-[#9CA3AF] dark:text-[#64748B]">
                 FEATURED TRACKS
               </span>
             </div>
-            <span className="font-mono text-[10px] tracking-[0.16em] uppercase text-[#6B7280]">
+            <span className="font-mono text-[10px] tracking-[0.16em] uppercase text-[#6B7280] dark:text-[#94A3B8]">
               03 ARENAS READY
             </span>
           </div>
@@ -112,23 +112,23 @@ export default function HomePage() {
         </section>
 
         {/* 4. Official Tournament Standings Index */}
-        <section className="group relative overflow-hidden mt-8 rounded-2xl border border-[#E5E7EB] bg-white p-5 sm:p-6 transition-all duration-300 hover:border-[#111827] hover:shadow-[0_16px_40px_rgba(0,0,0,0.06)]">
+        <section className="group relative overflow-hidden mt-8 rounded-2xl border border-[#E5E7EB] dark:border-[#1E293B] bg-white dark:bg-[#0F172A] p-5 sm:p-6 transition-all duration-300 hover:border-[#111827] dark:hover:border-[#38BDF8]/40 hover:shadow-[0_16px_40px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_16px_40px_rgba(0,0,0,0.4)]">
           <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-[#1A73E8] via-[#FBBC04] to-[#34A853] opacity-60 group-hover:opacity-100 transition-opacity" />
           
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#111827] text-white">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#111827] dark:bg-[#1E293B] text-white">
                   <Trophy className="h-3 w-3 text-[#FBBC04]" />
                 </span>
-                <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[#9CA3AF]">
+                <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[#9CA3AF] dark:text-[#64748B]">
                   GDGOC HALL OF FAME
                 </span>
               </div>
-              <h4 className="text-base font-medium tracking-tight text-[#111827] mt-1.5">
+              <h4 className="text-base font-medium tracking-tight text-[#111827] dark:text-[#F9FAFB] mt-1.5">
                 Campus Bragging Rights 😎
               </h4>
-              <p className="text-xs text-[#6B7280] mt-0.5">
+              <p className="text-xs text-[#6B7280] dark:text-[#94A3B8] mt-0.5">
                 Zero stress, pure vibes! See who topped the games in today&apos;s orientation.
               </p>
             </div>
@@ -136,27 +136,27 @@ export default function HomePage() {
             <div className="flex items-center gap-1.5 self-start sm:self-auto shrink-0 flex-wrap">
               <Link
                 href={`/events/${webEvent.slug}/leaderboard`}
-                className="group/btn inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] bg-[#FAFAFA] px-3.5 py-1.5 text-xs font-medium text-[#111827] hover:border-[#111827] hover:bg-white transition-all active:scale-95"
+                className="group/btn inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] dark:border-[#1E293B] bg-[#FAFAFA] dark:bg-[#1E293B] px-3.5 py-1.5 text-xs font-medium text-[#111827] dark:text-[#F9FAFB] hover:border-[#111827] dark:hover:border-white hover:bg-white dark:hover:bg-[#334155] transition-all active:scale-95"
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-[#1A73E8]" />
                 <span>Web</span>
-                <ArrowUpRight className="h-3 w-3 text-[#9CA3AF] group-hover/btn:text-[#111827] transition-colors" />
+                <ArrowUpRight className="h-3 w-3 text-[#9CA3AF] group-hover/btn:text-[#111827] dark:group-hover/btn:text-white transition-colors" />
               </Link>
               <Link
                 href={`/events/${mentisEvent.slug}/leaderboard`}
-                className="group/btn inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] bg-[#FAFAFA] px-3.5 py-1.5 text-xs font-medium text-[#111827] hover:border-[#111827] hover:bg-white transition-all active:scale-95"
+                className="group/btn inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] dark:border-[#1E293B] bg-[#FAFAFA] dark:bg-[#1E293B] px-3.5 py-1.5 text-xs font-medium text-[#111827] dark:text-[#F9FAFB] hover:border-[#111827] dark:hover:border-white hover:bg-white dark:hover:bg-[#334155] transition-all active:scale-95"
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-[#FBBC04]" />
                 <span>Mentis</span>
-                <ArrowUpRight className="h-3 w-3 text-[#9CA3AF] group-hover/btn:text-[#111827] transition-colors" />
+                <ArrowUpRight className="h-3 w-3 text-[#9CA3AF] group-hover/btn:text-[#111827] dark:group-hover/btn:text-white transition-colors" />
               </Link>
               <Link
                 href="/events/wend-game/leaderboard"
-                className="group/btn inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] bg-[#FAFAFA] px-3.5 py-1.5 text-xs font-medium text-[#111827] hover:border-[#111827] hover:bg-white transition-all active:scale-95"
+                className="group/btn inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] dark:border-[#1E293B] bg-[#FAFAFA] dark:bg-[#1E293B] px-3.5 py-1.5 text-xs font-medium text-[#111827] dark:text-[#F9FAFB] hover:border-[#111827] dark:hover:border-white hover:bg-white dark:hover:bg-[#334155] transition-all active:scale-95"
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-[#34A853]" />
                 <span>Wend</span>
-                <ArrowUpRight className="h-3 w-3 text-[#9CA3AF] group-hover/btn:text-[#111827] transition-colors" />
+                <ArrowUpRight className="h-3 w-3 text-[#9CA3AF] group-hover/btn:text-[#111827] dark:group-hover/btn:text-white transition-colors" />
               </Link>
             </div>
           </div>
@@ -164,23 +164,23 @@ export default function HomePage() {
       </main>
 
       {/* Editorial Colophon / Footer */}
-      <footer className="border-t border-[#E5E7EB] bg-white py-6 mt-auto">
-        <div className="mx-auto flex max-w-xl flex-col items-center justify-between gap-3 px-4 text-center text-xs text-[#6B7280] sm:flex-row sm:text-left">
+      <footer className="border-t border-[#E5E7EB] dark:border-[#1E293B] bg-white dark:bg-[#0B132B] py-6 mt-auto transition-colors duration-500">
+        <div className="mx-auto flex max-w-xl flex-col items-center justify-between gap-3 px-4 text-center text-xs text-[#6B7280] dark:text-[#94A3B8] sm:flex-row sm:text-left">
           <div className="flex items-center gap-2">
             <span className="h-1.5 w-1.5 rounded-full bg-[#EA4335]" />
-            <span className="font-medium text-[#111827]">Google Developer Groups</span>
-            <span className="text-[#9CA3AF] font-mono text-[11px]">© 2026</span>
+            <span className="font-medium text-[#111827] dark:text-[#F9FAFB]">Google Developer Groups</span>
+            <span className="text-[#9CA3AF] dark:text-[#64748B] font-mono text-[11px]">© 2026</span>
           </div>
           <div className="flex items-center gap-4 text-[11px] font-mono tracking-wider uppercase">
             <a
               href="https://developers.google.com/community/gdg"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#6B7280] hover:text-[#111827] transition-colors"
+              className="text-[#6B7280] dark:text-[#94A3B8] hover:text-[#111827] dark:hover:text-white transition-colors"
             >
               Guidelines
             </a>
-            <span className="text-[#D1D5DB]">•</span>
+            <span className="text-[#D1D5DB] dark:text-[#334155]">•</span>
             <span className="inline-flex items-center gap-1 text-[#34A853]">
               <span className="h-1.5 w-1.5 rounded-full bg-[#34A853] animate-pulse" />
               Live Platform

@@ -210,7 +210,7 @@ export function WendSnakeGrid({
             const isHint = hintCell && hintCell.row === r && hintCell.col === c
 
             // Determine styling with tactile clarity
-            let cellStyle = 'bg-white hover:bg-[#F4F4F5] text-[#111827] border border-[#E5E7EB] shadow-[0_1.5px_0px_#E5E7EB] hover:border-[#111827] cursor-pointer'
+            let cellStyle = 'bg-white dark:bg-[#0F172A] hover:bg-[#F4F4F5] dark:hover:bg-[#1E293B] text-[#111827] dark:text-[#F9FAFB] border border-[#E5E7EB] dark:border-[#1E293B] shadow-[0_1.5px_0px_#E5E7EB] dark:shadow-[0_1.5px_0px_#1E293B] hover:border-[#111827] dark:hover:border-[#38BDF8] cursor-pointer'
 
             if (isObstacle) {
               cellStyle = 'bg-gradient-to-br from-[#1E293B] to-[#0F172A] border border-[#0F172A] shadow-inner cursor-not-allowed'
@@ -239,7 +239,7 @@ export function WendSnakeGrid({
                         ? 'text-[#1B5E20]'
                         : discovered
                         ? discovered.color.text
-                        : 'text-[#111827]'
+                        : 'text-[#111827] dark:text-[#F9FAFB]'
                     }`}
                   >
                     {cell.letter}
