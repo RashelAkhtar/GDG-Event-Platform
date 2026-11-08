@@ -202,263 +202,365 @@ const voxelAudio = new VoxelAudioSynth()
 // and tucked talons.
 // ============================================================================
 
+// ============================================================================
+// HIGH-FIDELITY REALISTIC BIRD COMPONENT (ANATOMICAL ACCURACY & REALISTIC FLIGHT)
+// Features: Sleek aerodynamic avian profile, layered wing primaries & secondaries,
+// contoured breast & mantle gradients, distinct upper/lower hooked & cone beaks with
+// nares, expressive eye with colored iris & dual specular highlights, fan rectrix tail,
+// and aerodynamic tucked claws.
+// ============================================================================
+
 export type BirdSpecies = 'scarlet' | 'cyan' | 'emerald' | 'cockatiel'
 
-function DetailedMinecraftBird({
+interface BirdPalette {
+  name: string
+  bodyPrimary: string
+  bodySecondary: string
+  bodyHighlight: string
+  breastTop: string
+  breastBottom: string
+  wingNearCovert: string
+  wingNearMid: string
+  wingNearTips: string
+  wingBar: string
+  wingFar: string
+  wingFarTips: string
+  tailBase: string
+  tailTips: string
+  tailStripe?: string
+  crestColor: string
+  crestTip?: string
+  beakBase: string
+  beakTip: string
+  beakRidge: string
+  eyeIris: string
+  facePatch?: string
+  cheekBlush?: string
+  bibCollar?: string
+}
+
+const BIRD_PALETTES: Record<BirdSpecies, BirdPalette> = {
+  // 1. CYAN: Cerulean Blue Jay / Indigo Kingfisher
+  cyan: {
+    name: 'Blue Jay',
+    bodyPrimary: '#2563EB',
+    bodySecondary: '#1E3A8A',
+    bodyHighlight: '#60A5FA',
+    breastTop: '#FFFFFF',
+    breastBottom: '#E0F2FE',
+    wingNearCovert: '#3B82F6',
+    wingNearMid: '#1D4ED8',
+    wingNearTips: '#0F172A',
+    wingBar: '#FFFFFF',
+    wingFar: '#1E40AF',
+    wingFarTips: '#0B1329',
+    tailBase: '#2563EB',
+    tailTips: '#FFFFFF',
+    tailStripe: '#0F172A',
+    crestColor: '#3B82F6',
+    crestTip: '#1D4ED8',
+    beakBase: '#334155',
+    beakTip: '#0F172A',
+    beakRidge: '#94A3B8',
+    eyeIris: '#854D0E',
+    bibCollar: '#0F172A',
+  },
+  // 2. SCARLET: Northern Cardinal / Scarlet Tanager
+  scarlet: {
+    name: 'Scarlet Cardinal',
+    bodyPrimary: '#DC2626',
+    bodySecondary: '#991B1B',
+    bodyHighlight: '#F87171',
+    breastTop: '#EF4444',
+    breastBottom: '#B91C1C',
+    wingNearCovert: '#DC2626',
+    wingNearMid: '#991B1B',
+    wingNearTips: '#450A0A',
+    wingBar: '#B91C1C',
+    wingFar: '#991B1B',
+    wingFarTips: '#2E0606',
+    tailBase: '#DC2626',
+    tailTips: '#7F1D1D',
+    crestColor: '#EF4444',
+    crestTip: '#B91C1C',
+    beakBase: '#F59E0B',
+    beakTip: '#D97706',
+    beakRidge: '#FDE68A',
+    eyeIris: '#78350F',
+    facePatch: '#18181B',
+  },
+  // 3. EMERALD: Emerald Budgie / Green Hummingbird
+  emerald: {
+    name: 'Emerald Budgie',
+    bodyPrimary: '#10B981',
+    bodySecondary: '#047857',
+    bodyHighlight: '#6EE7B7',
+    breastTop: '#FDE047',
+    breastBottom: '#34D399',
+    wingNearCovert: '#059669',
+    wingNearMid: '#047857',
+    wingNearTips: '#022C22',
+    wingBar: '#FACC15',
+    wingFar: '#047857',
+    wingFarTips: '#021F17',
+    tailBase: '#059669',
+    tailTips: '#0284C7',
+    crestColor: '#34D399',
+    crestTip: '#059669',
+    beakBase: '#FDE68A',
+    beakTip: '#F59E0B',
+    beakRidge: '#FEF08A',
+    eyeIris: '#334155',
+  },
+  // 4. COCKATIEL: Yellow Warbler / Golden Cockatiel
+  cockatiel: {
+    name: 'Golden Warbler',
+    bodyPrimary: '#FACC15',
+    bodySecondary: '#CA8A04',
+    bodyHighlight: '#FEF08A',
+    breastTop: '#FEF08A',
+    breastBottom: '#EAB308',
+    wingNearCovert: '#64748B',
+    wingNearMid: '#334155',
+    wingNearTips: '#0F172A',
+    wingBar: '#FFFFFF',
+    wingFar: '#475569',
+    wingFarTips: '#0F172A',
+    tailBase: '#EAB308',
+    tailTips: '#334155',
+    crestColor: '#FACC15',
+    crestTip: '#FEF08A',
+    beakBase: '#FED7AA',
+    beakTip: '#FDBA74',
+    beakRidge: '#FFF7ED',
+    eyeIris: '#78350F',
+    cheekBlush: '#EA580C',
+  },
+}
+
+function RealisticBird({
   species,
   isHit,
 }: {
   species: BirdSpecies
   isHit: boolean
 }) {
-  if (species === 'scarlet') {
-    // 1. SCARLET MACAW (Classic Red Minecraft Parrot)
-    return (
-      <div className={`relative flex items-center drop-shadow-md select-none ${isHit ? 'filter-red-flash' : ''}`}>
-        {/* Left Wing (Beating in 3D perspective) */}
-        <div className={`flex flex-col anim-voxel-wing-l origin-right ${isHit ? '!bg-red-600' : ''}`}>
-          <div className="h-1.5 w-4 rounded-t-[0.5px] border border-[#B45309] bg-[#FACC15]" />
-          <div className="h-1 w-4 border-x border-[#0369A1] bg-[#0284C7]" />
-          <div className="h-1.5 w-4.5 rounded-b-[0.5px] border-b border-x border-[#1E3A8A] bg-[#1D4ED8]" />
-        </div>
+  const p = BIRD_PALETTES[species] || BIRD_PALETTES.cyan
+  const prefix = `bird-${species}`
 
-        {/* Central Bird Body: Tail + Torso + Head & Crest + Hooked Beak */}
-        <div className="relative flex items-center">
-          {/* Graduated Rectrix Tail */}
-          <div className="flex flex-col items-end -mr-0.5">
-            <div className="h-1 w-3 rounded-l-[0.5px] bg-[#DC2626] border-y border-[#991B1B]" />
-            <div className="h-1.5 w-4.5 rounded-l-[0.5px] bg-[#1D4ED8] border-y border-l border-[#1E3A8A] -mt-0.5" />
-            <div className="h-1 w-2.5 rounded-l-[0.5px] bg-[#DC2626] border-y border-[#991B1B] -mt-0.5" />
-          </div>
-
-          {/* Main Torso & Breast */}
-          <div className="relative flex flex-col items-center">
-            {/* Upper Chest Highlight */}
-            <div className="h-1 w-5 rounded-t-[0.5px] bg-[#EF4444]" />
-            {/* Mid Torso with Wing Covert Saddle */}
-            <div className="h-3 w-5 bg-[#DC2626] border-x border-[#991B1B] relative flex items-center justify-center">
-              <span className="h-2 w-2 rounded-[0.2px] bg-[#FACC15] border border-[#B45309]/80 shadow-2xs" />
-            </div>
-            {/* Lower Abdomen & Tucked Talons */}
-            <div className="h-1 w-5 rounded-b-[0.5px] bg-[#991B1B] flex justify-center gap-1">
-              <span className="h-0.5 w-1 bg-[#475569] rounded-b-[0.2px]" />
-              <span className="h-0.5 w-1 bg-[#475569] rounded-b-[0.2px]" />
-            </div>
-          </div>
-
-          {/* Head, Crest, White Facial Patch, Eye & Hooked Beak */}
-          <div className="relative flex flex-col items-start -ml-0.5">
-            {/* Raised Feather Crest */}
-            <div className="h-1.5 w-2.5 rounded-t-[0.5px] border-t border-x border-[#991B1B] bg-[#EF4444] ml-0.5 flex">
-              <span className="h-1 w-1 bg-[#FACC15] rounded-[0.2px]" />
-            </div>
-            {/* Main Head Cube */}
-            <div className="relative h-3.5 w-3.5 rounded-[0.5px] border border-[#991B1B] bg-[#DC2626] flex items-center justify-center">
-              {/* Authentic White Facial Skin Patch */}
-              <div className="absolute top-0.5 right-0.5 h-2 w-2 rounded-[0.2px] bg-[#F8FAFC] border border-[#CBD5E1]/60 flex items-center justify-center">
-                {/* Black Pupil with Specular Gleam */}
-                <span className="relative h-1 w-1 rounded-[0.2px] bg-[#0F172A] flex items-start justify-end">
-                  <span className="h-0.5 w-0.5 bg-white rounded-[0.1px]" />
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Two-piece Hooked Minecraft Beak */}
-          <div className="flex flex-col items-start -ml-0.5">
-            {/* Upper Hooked Maxilla with Nostril */}
-            <div className="relative h-2 w-2 rounded-tr-[0.5px] border-t border-r border-[#0F172A] bg-[#1E293B]">
-              <span className="absolute top-0.5 left-0.5 h-0.5 w-0.5 bg-[#475569] rounded-[0.1px]" />
-            </div>
-            {/* Lower Mandible */}
-            <div className="h-1 w-1.5 rounded-br-[0.5px] border-b border-r border-[#64748B] bg-[#E2E8F0]" />
-          </div>
-        </div>
-
-        {/* Right Wing (Beating in 3D perspective) */}
-        <div className={`flex flex-col anim-voxel-wing-r origin-left ${isHit ? '!bg-red-600' : ''}`}>
-          <div className="h-1.5 w-4 rounded-t-[0.5px] border border-[#B45309] bg-[#FACC15]" />
-          <div className="h-1 w-4 border-x border-[#0369A1] bg-[#0284C7]" />
-          <div className="h-1.5 w-4.5 rounded-b-[0.5px] border-b border-x border-[#1E3A8A] bg-[#1D4ED8]" />
-        </div>
-      </div>
-    )
-  }
-
-  if (species === 'cyan') {
-    // 2. CYAN / HYACINTH PARROT
-    return (
-      <div className={`relative flex items-center drop-shadow-md select-none ${isHit ? 'filter-red-flash' : ''}`}>
-        {/* Left Wing */}
-        <div className="flex flex-col anim-voxel-wing-l origin-right">
-          <div className="h-1.5 w-4 rounded-t-[0.5px] border border-[#0284C7] bg-[#38BDF8]" />
-          <div className="h-1 w-4 border-x border-[#0369A1] bg-[#0284C7]" />
-          <div className="h-1.5 w-4.5 rounded-b-[0.5px] border-b border-x border-[#1E3A8A] bg-[#1D4ED8]" />
-        </div>
-
-        {/* Tail + Body + Head + Beak */}
-        <div className="relative flex items-center">
-          <div className="flex flex-col items-end -mr-0.5">
-            <div className="h-1 w-2.5 rounded-l-[0.5px] bg-[#0284C7]" />
-            <div className="h-1.5 w-4 rounded-l-[0.5px] bg-[#38BDF8] border-y border-l border-[#0284C7] -mt-0.5" />
-            <div className="h-1 w-2 rounded-l-[0.5px] bg-[#1E3A8A] -mt-0.5" />
-          </div>
-
-          <div className="relative flex flex-col items-center">
-            <div className="h-1 w-5 rounded-t-[0.5px] bg-[#38BDF8]" />
-            <div className="h-3 w-5 bg-[#0284C7] border-x border-[#0369A1] relative flex items-center justify-center">
-              <span className="h-2 w-2 rounded-[0.2px] bg-[#0EA5E9] border border-[#0284C7]" />
-            </div>
-            <div className="h-1 w-5 rounded-b-[0.5px] bg-[#075985] flex justify-center gap-1">
-              <span className="h-0.5 w-1 bg-[#475569] rounded-b-[0.2px]" />
-              <span className="h-0.5 w-1 bg-[#475569] rounded-b-[0.2px]" />
-            </div>
-          </div>
-
-          <div className="relative flex flex-col items-start -ml-0.5">
-            <div className="h-1.5 w-2.5 rounded-t-[0.5px] border-t border-x border-[#0369A1] bg-[#38BDF8] ml-0.5" />
-            <div className="relative h-3.5 w-3.5 rounded-[0.5px] border border-[#0369A1] bg-[#0284C7] flex items-center justify-center">
-              {/* Golden Eye Ring */}
-              <div className="absolute top-0.5 right-0.5 h-2 w-2 rounded-[0.2px] bg-[#FEF08A] border border-[#FACC15] flex items-center justify-center">
-                <span className="relative h-1 w-1 rounded-[0.2px] bg-[#0F172A] flex items-start justify-end">
-                  <span className="h-0.5 w-0.5 bg-white rounded-[0.1px]" />
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col items-start -ml-0.5">
-            <div className="relative h-2 w-2 rounded-tr-[0.5px] border-t border-r border-black bg-[#1E293B]">
-              <span className="absolute -top-0.5 left-0 h-0.5 w-1 bg-[#FACC15] rounded-[0.1px]" />
-            </div>
-            <div className="h-1 w-1.5 rounded-br-[0.5px] border-b border-r border-[#475569] bg-[#64748B]" />
-          </div>
-        </div>
-
-        {/* Right Wing */}
-        <div className="flex flex-col anim-voxel-wing-r origin-left">
-          <div className="h-1.5 w-4 rounded-t-[0.5px] border border-[#0284C7] bg-[#38BDF8]" />
-          <div className="h-1 w-4 border-x border-[#0369A1] bg-[#0284C7]" />
-          <div className="h-1.5 w-4.5 rounded-b-[0.5px] border-b border-x border-[#1E3A8A] bg-[#1D4ED8]" />
-        </div>
-      </div>
-    )
-  }
-
-  if (species === 'emerald') {
-    // 3. EMERALD BUDGIE / GREEN PARROT
-    return (
-      <div className={`relative flex items-center drop-shadow-md select-none ${isHit ? 'filter-red-flash' : ''}`}>
-        {/* Left Wing */}
-        <div className="flex flex-col anim-voxel-wing-l origin-right">
-          <div className="h-1.5 w-4 rounded-t-[0.5px] border border-[#CA8A04] bg-[#FACC15]" />
-          <div className="h-1 w-4 border-x border-[#15803D] bg-[#22C55E]" />
-          <div className="h-1.5 w-4.5 rounded-b-[0.5px] border-b border-x border-[#14532D] bg-[#166534]" />
-        </div>
-
-        {/* Tail + Body + Head + Beak */}
-        <div className="relative flex items-center">
-          <div className="flex flex-col items-end -mr-0.5">
-            <div className="h-1 w-2.5 rounded-l-[0.5px] bg-[#15803D]" />
-            <div className="h-1.5 w-4 rounded-l-[0.5px] bg-[#FACC15] border-y border-l border-[#CA8A04] -mt-0.5" />
-            <div className="h-1 w-2 rounded-l-[0.5px] bg-[#16A34A] -mt-0.5" />
-          </div>
-
-          <div className="relative flex flex-col items-center">
-            <div className="h-1 w-5 rounded-t-[0.5px] bg-[#4ADE80]" />
-            <div className="h-3 w-5 bg-[#22C55E] border-x border-[#15803D] relative flex items-center justify-center">
-              <span className="h-2 w-2 rounded-[0.2px] bg-[#86EFAC] border border-[#16A34A]" />
-            </div>
-            <div className="h-1 w-5 rounded-b-[0.5px] bg-[#15803D] flex justify-center gap-1">
-              <span className="h-0.5 w-1 bg-[#475569] rounded-b-[0.2px]" />
-              <span className="h-0.5 w-1 bg-[#475569] rounded-b-[0.2px]" />
-            </div>
-          </div>
-
-          <div className="relative flex flex-col items-start -ml-0.5">
-            <div className="h-1.5 w-2.5 rounded-t-[0.5px] border-t border-x border-[#15803D] bg-[#4ADE80] ml-0.5 flex">
-              <span className="h-1 w-1 bg-[#FACC15] rounded-[0.2px]" />
-            </div>
-            <div className="relative h-3.5 w-3.5 rounded-[0.5px] border border-[#15803D] bg-[#16A34A] flex items-center justify-center">
-              <div className="absolute top-0.5 right-0.5 h-2 w-2 rounded-[0.2px] bg-[#F8FAFC] border border-[#CBD5E1] flex items-center justify-center">
-                <span className="relative h-1 w-1 rounded-[0.2px] bg-[#0F172A] flex items-start justify-end">
-                  <span className="h-0.5 w-0.5 bg-white rounded-[0.1px]" />
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col items-start -ml-0.5">
-            <div className="relative h-2 w-2 rounded-tr-[0.5px] border-t border-r border-[#991B1B] bg-[#EA4335]" />
-            <div className="h-1 w-1.5 rounded-br-[0.5px] border-b border-r border-[#B45309] bg-[#FBBC04]" />
-          </div>
-        </div>
-
-        {/* Right Wing */}
-        <div className="flex flex-col anim-voxel-wing-r origin-left">
-          <div className="h-1.5 w-4 rounded-t-[0.5px] border border-[#CA8A04] bg-[#FACC15]" />
-          <div className="h-1 w-4 border-x border-[#15803D] bg-[#22C55E]" />
-          <div className="h-1.5 w-4.5 rounded-b-[0.5px] border-b border-x border-[#14532D] bg-[#166534]" />
-        </div>
-      </div>
-    )
-  }
-
-  // 4. COCKATIEL / GREY PARROT (Iconic yellow crest & orange blush)
   return (
-    <div className={`relative flex items-center drop-shadow-md select-none ${isHit ? 'filter-red-flash' : ''}`}>
-      {/* Left Wing with White Flash Bar */}
-      <div className="flex flex-col anim-voxel-wing-l origin-right">
-        <div className="h-1.5 w-4 rounded-t-[0.5px] border border-[#334155] bg-[#64748B]" />
-        <div className="h-1 w-4 border-x border-[#CBD5E1] bg-[#F8FAFC]" />
-        <div className="h-1.5 w-4.5 rounded-b-[0.5px] border-b border-x border-[#0F172A] bg-[#1E293B]" />
-      </div>
+    <div
+      className={`relative select-none transition-all duration-200 ${
+        isHit ? 'filter-red-flash scale-90' : ''
+      }`}
+    >
+      <svg
+        viewBox="0 0 68 46"
+        className="w-13 h-9 sm:w-14 sm:h-10 overflow-visible drop-shadow-[0_4px_8px_rgba(0,0,0,0.18)]"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <linearGradient id={`${prefix}-body`} x1="38" y1="9" x2="32" y2="38" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor={p.bodyHighlight} />
+            <stop offset="40%" stopColor={p.bodyPrimary} />
+            <stop offset="100%" stopColor={p.bodySecondary} />
+          </linearGradient>
 
-      {/* Tail + Body + Head + Beak */}
-      <div className="relative flex items-center">
-        <div className="flex flex-col items-end -mr-0.5">
-          <div className="h-1 w-2.5 rounded-l-[0.5px] bg-[#475569]" />
-          <div className="h-1.5 w-4 rounded-l-[0.5px] bg-[#FEF08A] border-y border-l border-[#CA8A04] -mt-0.5" />
-          <div className="h-1 w-2 rounded-l-[0.5px] bg-[#334155] -mt-0.5" />
-        </div>
+          <linearGradient id={`${prefix}-breast`} x1="48" y1="18" x2="40" y2="36" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor={p.breastTop} />
+            <stop offset="100%" stopColor={p.breastBottom} />
+          </linearGradient>
 
-        <div className="relative flex flex-col items-center">
-          <div className="h-1 w-5 rounded-t-[0.5px] bg-[#64748B]" />
-          <div className="h-3 w-5 bg-[#475569] border-x border-[#334155] relative flex items-center justify-center">
-            <span className="h-2 w-2 rounded-[0.2px] bg-[#64748B] border border-[#475569]" />
-          </div>
-          <div className="h-1 w-5 rounded-b-[0.5px] bg-[#334155] flex justify-center gap-1">
-            <span className="h-0.5 w-1 bg-[#1E293B] rounded-b-[0.2px]" />
-            <span className="h-0.5 w-1 bg-[#1E293B] rounded-b-[0.2px]" />
-          </div>
-        </div>
+          <linearGradient id={`${prefix}-wing-near`} x1="32" y1="6" x2="16" y2="28" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor={p.wingNearCovert} />
+            <stop offset="60%" stopColor={p.wingNearMid} />
+            <stop offset="100%" stopColor={p.wingNearTips} />
+          </linearGradient>
 
-        {/* Head with Tall Yellow Crest & Orange Cheek Blush */}
-        <div className="relative flex flex-col items-start -ml-0.5">
-          <div className="h-2 w-2.5 rounded-t-[0.5px] border-t border-x border-[#CA8A04] bg-[#FACC15] ml-0.5 flex">
-            <span className="h-1.5 w-1 bg-[#FEF08A] rounded-[0.2px]" />
-          </div>
-          <div className="relative h-3.5 w-3.5 rounded-[0.5px] border border-[#CA8A04] bg-[#FEF08A] flex items-center justify-center">
-            {/* Adorable Orange Cheek Blush */}
-            <span className="absolute bottom-0.5 left-0.5 h-1.5 w-1.5 rounded-[0.5px] bg-[#EA580C] shadow-2xs" />
-            <div className="absolute top-0.5 right-0.5 h-1.5 w-1.5 rounded-[0.2px] bg-[#0F172A] flex items-start justify-end">
-              <span className="h-0.5 w-0.5 bg-white rounded-[0.1px]" />
-            </div>
-          </div>
-        </div>
+          <linearGradient id={`${prefix}-wing-far`} x1="28" y1="4" x2="12" y2="26" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor={p.wingFar} />
+            <stop offset="100%" stopColor={p.wingFarTips} />
+          </linearGradient>
 
-        <div className="flex flex-col items-start -ml-0.5">
-          <div className="relative h-2 w-2 rounded-tr-[0.5px] border-t border-r border-[#475569] bg-[#94A3B8]" />
-          <div className="h-1 w-1.5 rounded-br-[0.5px] border-b border-r border-[#334155] bg-[#64748B]" />
-        </div>
-      </div>
+          <linearGradient id={`${prefix}-beak`} x1="55" y1="14" x2="66" y2="20" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor={p.beakBase} />
+            <stop offset="100%" stopColor={p.beakTip} />
+          </linearGradient>
 
-      {/* Right Wing */}
-      <div className="flex flex-col anim-voxel-wing-r origin-left">
-        <div className="h-1.5 w-4 rounded-t-[0.5px] border border-[#334155] bg-[#64748B]" />
-        <div className="h-1 w-4 border-x border-[#CBD5E1] bg-[#F8FAFC]" />
-        <div className="h-1.5 w-4.5 rounded-b-[0.5px] border-b border-x border-[#0F172A] bg-[#1E293B]" />
-      </div>
+          <linearGradient id={`${prefix}-tail`} x1="20" y1="26" x2="0" y2="33" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor={p.tailBase} />
+            <stop offset="100%" stopColor={p.tailTips} />
+          </linearGradient>
+        </defs>
+
+        {/* 1. FAR WING (Background - Flaps in perspective behind body) */}
+        <g className="anim-bird-wing-far">
+          <path
+            d="M 28 19 C 24 10, 16 3, 9 1 C 11 6, 13 13, 16 18 C 19 21, 23 22, 28 20 Z"
+            fill={`url(#${prefix}-wing-far)`}
+          />
+          <path
+            d="M 24 15 C 20 8, 14 3, 9 1 C 12 7, 15 13, 18 17 Z"
+            fill={p.wingFarTips}
+            opacity="0.8"
+          />
+        </g>
+
+        {/* 2. TAIL FEATHERS (Layered Rectrices with wind flex) */}
+        <g className="anim-bird-tail-flex">
+          <path
+            d="M 19 26 C 13 27, 7 30, 0 33 C 4 34, 11 33, 18 29 Z"
+            fill={`url(#${prefix}-tail)`}
+          />
+          <path
+            d="M 19 25 C 13 25, 8 26, 2 28 C 6 29, 12 29, 18 27 Z"
+            fill={p.tailBase}
+            opacity="0.9"
+          />
+          <path
+            d="M 18 28 C 13 30, 8 33, 3 36 C 7 36, 12 34, 17 30 Z"
+            fill={p.tailTips}
+            opacity="0.85"
+          />
+          {p.tailStripe && (
+            <path
+              d="M 8 29 L 5 33 L 7 33 L 10 29 Z"
+              fill={p.tailStripe}
+              opacity="0.65"
+            />
+          )}
+        </g>
+
+        {/* 3. TUCKED LEGS & CLAWS (Aerodynamic in flight) */}
+        <g opacity="0.85">
+          <path
+            d="M 26 33 C 25 34, 23 37, 24 38 C 24.5 38.2, 25.5 37.5, 26 35 Z"
+            fill="#334155"
+          />
+          <path
+            d="M 28 33 C 27 34, 25 37, 26 38 C 26.5 38.2, 27.5 37.5, 28 35 Z"
+            fill="#1E293B"
+          />
+        </g>
+
+        {/* 4. MAIN BIRD BODY (Mantle, Nape, Breast, Belly, Eye, Beak) */}
+        <g className="anim-bird-body-bob">
+          <path
+            d="M 40 10 C 47 9, 53 12, 55 17 C 54 21, 52 26, 47 31 C 41 36, 30 36, 24 34 C 19 32, 17 28, 19 25 C 24 20, 32 16, 40 10 Z"
+            fill={`url(#${prefix}-body)`}
+          />
+
+          <path
+            d="M 54 18 C 53 22, 51 26, 47 30 C 42 34, 33 35, 27 34 C 33 36, 43 35, 48 29 C 52 24, 54 20, 54 18 Z"
+            fill={`url(#${prefix}-breast)`}
+          />
+
+          {/* Crown Crest */}
+          <path
+            d="M 42 9 C 45 4, 49 5, 52 11 C 48 10, 44 9.5, 42 9 Z"
+            fill={p.crestColor}
+          />
+          {p.crestTip && (
+            <path
+              d="M 44 6 C 46 3.5, 49 4.5, 50 8 C 48 7, 46 6.5, 44 6 Z"
+              fill={p.crestTip}
+            />
+          )}
+
+          {/* Facial Mask / Collar Details */}
+          {p.facePatch && (
+            <path
+              d="M 55 16 C 52 13.5, 47 15, 48 18.5 C 50 21, 53 21, 55 18 Z"
+              fill={p.facePatch}
+            />
+          )}
+
+          {p.bibCollar && (
+            <path
+              d="M 50 18 C 47 21, 46 25, 48 27 C 49 26, 50 22, 51 19 Z"
+              fill={p.bibCollar}
+              opacity="0.85"
+            />
+          )}
+
+          {p.cheekBlush && (
+            <circle cx="48" cy="20" r="3.2" fill={p.cheekBlush} opacity="0.88" />
+          )}
+
+          {/* REALISTIC EYE */}
+          <g>
+            <circle cx="50" cy="15.2" r="3.2" fill="#09090B" opacity="0.25" />
+            <circle cx="50" cy="15.2" r="2.5" fill={p.eyeIris} />
+            <circle cx="50" cy="15.2" r="1.6" fill="#09090B" />
+            <circle cx="50.8" cy="14.4" r="0.8" fill="#FFFFFF" />
+            <circle cx="49.3" cy="15.9" r="0.4" fill="#FFFFFF" opacity="0.8" />
+          </g>
+
+          {/* TWO-PIECE BEAK */}
+          <g>
+            <path
+              d="M 54 14.5 C 58 15, 62 16.5, 66 18.5 C 62 18.8, 58 18.6, 54 17.5 Z"
+              fill={`url(#${prefix}-beak)`}
+            />
+            <path
+              d="M 55 15.2 C 58 15.6, 61 16.8, 64 18.2"
+              stroke={p.beakRidge}
+              strokeWidth="0.6"
+              strokeLinecap="round"
+              opacity="0.8"
+            />
+            <circle cx="55.8" cy="16" r="0.4" fill="#0F172A" opacity="0.75" />
+            <path
+              d="M 65.5 18.8 C 61 19.5, 57 19.4, 54 18 C 55 18.8, 57 19.8, 60 19.5 Z"
+              fill={p.beakTip}
+            />
+            <path
+              d="M 54 17.6 L 65.6 18.6"
+              stroke="#09090B"
+              strokeWidth="0.5"
+              strokeLinecap="round"
+              opacity="0.85"
+            />
+          </g>
+        </g>
+
+        {/* 5. NEAR FOREGROUND WING (Coverts + Primaries + Secondaries) */}
+        <g className="anim-bird-wing-near">
+          <path
+            d="M 34 21 C 28 11, 20 4, 12 1.5 C 14 7, 16 13, 20 18 C 24 23, 29 24, 35 22 Z"
+            fill={`url(#${prefix}-wing-near)`}
+          />
+          <path
+            d="M 30 17 C 25 9, 18 4, 12 1.5 C 15 8, 18 14, 22 19 Z"
+            fill={p.wingNearTips}
+            opacity="0.8"
+          />
+          <path
+            d="M 27 20 C 23 13, 17 8, 14 5 C 16 11, 19 16, 23 20 Z"
+            fill={p.wingNearTips}
+            opacity="0.65"
+          />
+
+          <path
+            d="M 34 19 C 30 14, 25 10, 20 8 C 22 12, 25 16, 29 20 Z"
+            fill={p.wingBar}
+            opacity="0.9"
+          />
+
+          <path
+            d="M 36 21 C 34 16, 28 14, 24 16 C 26 21, 30 24, 36 22 Z"
+            fill={p.wingNearCovert}
+          />
+          <path
+            d="M 35 19 C 32 16, 28 15, 25 17"
+            stroke={p.bodyHighlight}
+            strokeWidth="0.8"
+            strokeLinecap="round"
+            opacity="0.7"
+          />
+        </g>
+      </svg>
     </div>
   )
 }
@@ -508,6 +610,7 @@ export function VoxelWorldBackdrop() {
   const [treeRustleLeft, setTreeRustleLeft] = useState<boolean>(false)
   const [treeRustleRight, setTreeRustleRight] = useState<boolean>(false)
   const [flowerBounce, setFlowerBounce] = useState<Record<string, boolean>>({})
+  const [skyRipples, setSkyRipples] = useState<{ id: number; x: number; y: number }[]>([])
   const birdTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // Initialize day/night mode from localStorage and sync with HTML dark class
@@ -529,16 +632,16 @@ export function VoxelWorldBackdrop() {
       if (flyingCount >= 2) return prev
 
       const speciesPool: { species: BirdSpecies; name: string }[] = [
-        { species: 'scarlet', name: 'Scarlet Macaw' },
-        { species: 'cyan', name: 'Cyan Parrot' },
+        { species: 'cyan', name: 'Blue Jay' },
+        { species: 'scarlet', name: 'Scarlet Cardinal' },
         { species: 'emerald', name: 'Emerald Budgie' },
-        { species: 'cockatiel', name: 'Grey Cockatiel' },
+        { species: 'cockatiel', name: 'Golden Warbler' },
       ]
       const chosen = speciesPool[Math.floor(Math.random() * speciesPool.length)]
-      const direction: 'ltr' | 'rtl' = Math.random() > 0.35 ? 'ltr' : 'rtl'
-      const topPercent = Math.floor(5 + Math.random() * 26) // Altitude: 5% to 31%
-      const durationSec = Math.floor(12 + Math.random() * 6) // Speed: 12s to 18s flight duration
-      const scale = 0.88 + Math.random() * 0.22 // Depth variance
+      const direction: 'ltr' | 'rtl' = Math.random() > 0.5 ? 'ltr' : 'rtl'
+      const topPercent = Math.floor(4 + Math.random() * 24) // Altitude: 4% to 28%
+      const durationSec = Math.floor(11 + Math.random() * 6) // Speed: 11s to 17s flight duration
+      const scale = 0.92 + Math.random() * 0.22 // Depth variance
 
       const newBird: ActiveBird = {
         id: `bird_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
@@ -646,6 +749,42 @@ export function VoxelWorldBackdrop() {
     [isTransitioning, skyPhase]
   )
 
+  // When Sky Background is clicked: smoothly toggle/cycle day & night with celestial ripple
+  const handleSkyClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (isTransitioning) return
+
+      // Spawn celestial pulse ripple at mouse coordinates
+      const rect = e.currentTarget.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const y = e.clientY - rect.top
+      const newRipple = { id: Date.now() + Math.random(), x, y }
+      setSkyRipples((prev) => [...prev.slice(-3), newRipple])
+      setTimeout(() => {
+        setSkyRipples((prev) => prev.filter((r) => r.id !== newRipple.id))
+      }, 700)
+
+      if (skyPhase === 'day') {
+        handleSunClick(e as unknown as React.MouseEvent)
+      } else if (skyPhase === 'night') {
+        handleMoonClick(e as unknown as React.MouseEvent)
+      } else if (skyPhase === 'sunset') {
+        setSkyPhase('night')
+        try {
+          localStorage.setItem('minecraft_dark_mode', 'true')
+          document.documentElement.classList.add('dark')
+        } catch {}
+      } else if (skyPhase === 'sunrise') {
+        setSkyPhase('day')
+        try {
+          localStorage.setItem('minecraft_dark_mode', 'false')
+          document.documentElement.classList.remove('dark')
+        } catch {}
+      }
+    },
+    [isTransitioning, skyPhase, handleSunClick, handleMoonClick]
+  )
+
   // Handle clicking a bird (Red damage blink, tumble, death poof, drops)
   const handleBirdClick = useCallback((id: string, name: string) => {
     setActiveBirds((prev) =>
@@ -706,46 +845,88 @@ export function VoxelWorldBackdrop() {
       className="pointer-events-none absolute -inset-x-2 sm:-inset-x-5 -inset-y-3 sm:-inset-y-5 z-0 select-none overflow-hidden rounded-3xl transition-all duration-700"
     >
       {/* ======================================================== */}
-      {/* 0. DYNAMIC SKY GRADIENT & ATMOSPHERE (DAY -> SUNSET -> NIGHT -> SUNRISE) */}
+      {/* 0. INTERACTIVE SKY PLANE (CLICKABLE BACKGROUND) */}
       {/* ======================================================== */}
-      {/* 0A. DAY SKY LAYER */}
       <div
-        className={`absolute inset-0 rounded-3xl border transition-opacity duration-1000 ${
-          skyPhase === 'day' ? 'opacity-100 z-0' : 'opacity-0 -z-10'
-        } bg-gradient-to-b from-[#7DD3FC]/50 via-[#BAE6FD]/30 to-[#F0FDF4]/20 border-[#7DD3FC]/40 shadow-[inset_0_0_60px_rgba(255,255,255,0.4)]`}
-      />
+        onClick={handleSkyClick}
+        title={
+          skyPhase === 'day'
+            ? '☀️ Click sky to transition to Sunset & Night'
+            : '🌙 Click sky to transition to Sunrise & Day'
+        }
+        className="absolute inset-0 z-0 cursor-pointer pointer-events-auto rounded-3xl group/sky"
+      >
+        {/* 0A. DAY SKY LAYER */}
+        <div
+          className={`absolute inset-0 rounded-3xl border transition-opacity duration-1000 ${
+            skyPhase === 'day' ? 'opacity-100 z-0' : 'opacity-0 -z-10'
+          } bg-gradient-to-b from-[#7DD3FC]/50 via-[#BAE6FD]/30 to-[#F0FDF4]/20 border-[#7DD3FC]/40 shadow-[inset_0_0_60px_rgba(255,255,255,0.4)]`}
+        />
 
-      {/* 0B. SUNSET / GOLDEN HOUR SKY LAYER */}
-      <div
-        className={`absolute inset-0 rounded-3xl border transition-opacity duration-1000 ${
-          skyPhase === 'sunset' ? 'opacity-100 z-0' : 'opacity-0 -z-10'
-        } bg-gradient-to-b from-[#2E1065]/95 via-[#C026D3]/75 via-[#EA580C]/85 to-[#FDE047]/80 border-[#F97316]/70 shadow-[inset_0_0_90px_rgba(234,88,12,0.45)]`}
-      />
+        {/* 0B. SUNSET / GOLDEN HOUR SKY LAYER */}
+        <div
+          className={`absolute inset-0 rounded-3xl border transition-opacity duration-1000 ${
+            skyPhase === 'sunset' ? 'opacity-100 z-0' : 'opacity-0 -z-10'
+          } bg-gradient-to-b from-[#2E1065]/95 via-[#C026D3]/75 via-[#EA580C]/85 to-[#FDE047]/80 border-[#F97316]/70 shadow-[inset_0_0_90px_rgba(234,88,12,0.45)]`}
+        />
 
-      {/* 0C. DEEP STARRY NIGHT SKY LAYER */}
-      <div
-        className={`absolute inset-0 rounded-3xl border transition-opacity duration-1000 ${
-          skyPhase === 'night' ? 'opacity-100 z-0' : 'opacity-0 -z-10'
-        } bg-gradient-to-b from-[#020617]/95 via-[#0F172A]/90 to-[#1E1B4B]/70 border-[#38BDF8]/20 shadow-[inset_0_0_80px_rgba(15,23,42,0.8)]`}
-      />
+        {/* 0C. DEEP STARRY NIGHT SKY LAYER */}
+        <div
+          className={`absolute inset-0 rounded-3xl border transition-opacity duration-1000 ${
+            skyPhase === 'night' ? 'opacity-100 z-0' : 'opacity-0 -z-10'
+          } bg-gradient-to-b from-[#020617]/95 via-[#0F172A]/90 to-[#1E1B4B]/70 border-[#38BDF8]/20 shadow-[inset_0_0_80px_rgba(15,23,42,0.8)]`}
+        />
 
-      {/* 0D. SUNRISE / DAWN SKY LAYER */}
-      <div
-        className={`absolute inset-0 rounded-3xl border transition-opacity duration-1000 ${
-          skyPhase === 'sunrise' ? 'opacity-100 z-0' : 'opacity-0 -z-10'
-        } bg-gradient-to-b from-[#1E1B4B]/85 via-[#BE185D]/65 via-[#FB923C]/75 to-[#FEF08A]/75 border-[#F43F5E]/50 shadow-[inset_0_0_90px_rgba(251,146,60,0.4)]`}
-      />
+        {/* 0D. SUNRISE / DAWN SKY LAYER */}
+        <div
+          className={`absolute inset-0 rounded-3xl border transition-opacity duration-1000 ${
+            skyPhase === 'sunrise' ? 'opacity-100 z-0' : 'opacity-0 -z-10'
+          } bg-gradient-to-b from-[#1E1B4B]/85 via-[#BE185D]/65 via-[#FB923C]/75 to-[#FEF08A]/75 border-[#F43F5E]/50 shadow-[inset_0_0_90px_rgba(251,146,60,0.4)]`}
+        />
 
-      {/* HORIZON VOLUMETRIC ATMOSPHERIC GLOW STRIP */}
-      <div
-        className={`absolute bottom-0 inset-x-0 h-28 pointer-events-none transition-opacity duration-1000 rounded-b-3xl ${
-          isSunset
-            ? 'opacity-100 bg-gradient-to-t from-[#EA580C]/50 via-[#F97316]/25 to-transparent'
-            : isSunrise
-            ? 'opacity-100 bg-gradient-to-t from-[#FB923C]/40 via-[#F43F5E]/20 to-transparent'
-            : 'opacity-0'
-        }`}
-      />
+        {/* HORIZON VOLUMETRIC ATMOSPHERIC GLOW STRIP */}
+        <div
+          className={`absolute bottom-0 inset-x-0 h-28 pointer-events-none transition-opacity duration-1000 rounded-b-3xl ${
+            isSunset
+              ? 'opacity-100 bg-gradient-to-t from-[#EA580C]/50 via-[#F97316]/25 to-transparent'
+              : isSunrise
+              ? 'opacity-100 bg-gradient-to-t from-[#FB923C]/40 via-[#F43F5E]/20 to-transparent'
+              : 'opacity-0'
+          }`}
+        />
+
+        {/* CELESTIAL CLICK RIPPLES */}
+        {skyRipples.map((r) => (
+          <span
+            key={r.id}
+            className="absolute pointer-events-none rounded-full anim-sky-ripple z-10"
+            style={{
+              left: `${r.x - 24}px`,
+              top: `${r.y - 24}px`,
+              width: '48px',
+              height: '48px',
+              border: isNight
+                ? '2px solid rgba(186, 230, 253, 0.75)'
+                : isSunset
+                ? '2px solid rgba(251, 146, 60, 0.85)'
+                : '2px solid rgba(253, 224, 71, 0.85)',
+              boxShadow: isNight
+                ? '0 0 16px rgba(186, 230, 253, 0.6)'
+                : isSunset
+                ? '0 0 18px rgba(251, 146, 60, 0.65)'
+                : '0 0 16px rgba(253, 224, 71, 0.75)',
+            }}
+          />
+        ))}
+
+        {/* Subtle Sky Click Hint Badge on Hover (top-left) */}
+        <div className="absolute top-3 left-4 pointer-events-none opacity-0 group-hover/sky:opacity-85 transition-opacity duration-300 z-10">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white/70 backdrop-blur-xs px-2.5 py-0.5 font-mono text-[8px] uppercase tracking-wider text-[#475569] shadow-2xs">
+            <span>{isNight ? '🌙' : '☀️'}</span>
+            <span>Click sky to cycle Day/Night</span>
+          </span>
+        </div>
+      </div>
 
       {/* Twinkling Minecraft Pixel Night Stars */}
       <div
@@ -1066,32 +1247,43 @@ export function VoxelWorldBackdrop() {
           <div
             key={bird.id}
             onAnimationEnd={() => handleBirdAnimationEnd(bird.id)}
-            className={`absolute ${animClass} z-20 pointer-events-auto`}
+            className={`absolute ${animClass} z-30 pointer-events-auto`}
             style={{
               top: `${bird.topPercent}%`,
               animationDuration: `${bird.durationSec}s`,
-              transform: `scale(${bird.scale})`,
             }}
           >
             <button
               type="button"
               onClick={() => handleBirdClick(bird.id, bird.name)}
               aria-label={bird.name}
-              className={`group relative flex items-center p-2 focus:outline-none cursor-crosshair transition-transform select-none ${
+              className={`group relative flex items-center p-2 focus:outline-none cursor-pointer transition-transform select-none ${
                 isHit
                   ? 'anim-voxel-damage anim-voxel-tumble pointer-events-none'
-                  : 'hover:scale-125'
+                  : 'hover:scale-115'
               }`}
             >
               {/* Hit Red Damage Overlay Tint */}
               {isHit && (
-                <div className="absolute inset-0 bg-red-600/40 rounded-[2px] animate-ping pointer-events-none" />
+                <div className="absolute inset-0 bg-red-600/40 rounded-full animate-ping pointer-events-none" />
               )}
 
-              {/* High-Fidelity Minecraft Bird with Anatomical Details */}
-              <DetailedMinecraftBird species={bird.species} isHit={isHit} />
+              {/* Facing & Scaling wrapper: faces RIGHT when ltr, faces LEFT when rtl */}
+              <div
+                style={{
+                  transform: `scale(${bird.scale}) scaleX(${bird.direction === 'rtl' ? -1 : 1})`,
+                  transformOrigin: 'center center',
+                }}
+              >
+                <RealisticBird species={bird.species} isHit={isHit} />
+              </div>
 
-              
+              {/* Hover Badge Tooltip */}
+              {!isHit && (
+                <span className="pointer-events-none absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-[#1E293B] bg-black/85 px-2 py-0.5 font-mono text-[8px] uppercase tracking-wider text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 shadow-md z-40">
+                  {bird.name} • Click to catch! 🎯
+                </span>
+              )}
             </button>
           </div>
         )

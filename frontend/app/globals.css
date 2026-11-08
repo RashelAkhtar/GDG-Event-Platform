@@ -985,48 +985,124 @@ html.dark .hairline-divider {
 
 @keyframes voxel-fly-dynamic-ltr {
   0% {
-    left: -75px;
+    left: -85px;
     transform: translateY(0);
   }
   20% {
-    transform: translateY(-9px);
+    transform: translateY(-8px);
   }
   45% {
-    transform: translateY(7px);
+    transform: translateY(6px);
   }
   70% {
-    transform: translateY(-8px);
+    transform: translateY(-7px);
   }
   90% {
     transform: translateY(4px);
   }
   100% {
-    left: calc(100% + 75px);
+    left: calc(100% + 85px);
     transform: translateY(0);
   }
 }
 
 @keyframes voxel-fly-dynamic-rtl {
   0% {
-    left: calc(100% + 75px);
-    transform: scaleX(-1) translateY(0);
+    left: calc(100% + 85px);
+    transform: translateY(0);
   }
   20% {
-    transform: scaleX(-1) translateY(9px);
+    transform: translateY(8px);
   }
   45% {
-    transform: scaleX(-1) translateY(-7px);
+    transform: translateY(-6px);
   }
   70% {
-    transform: scaleX(-1) translateY(8px);
+    transform: translateY(7px);
   }
   90% {
-    transform: scaleX(-1) translateY(-4px);
+    transform: translateY(-4px);
   }
   100% {
-    left: -75px;
-    transform: scaleX(-1) translateY(0);
+    left: -85px;
+    transform: translateY(0);
   }
+}
+
+/* =========================================================================
+   REALISTIC BIRD ANATOMICAL FLIGHT & WING ANIMATIONS
+   ========================================================================= */
+
+.anim-bird-wing-near {
+  animation: bird-wing-near-stroke 0.28s ease-in-out infinite;
+  transform-origin: 32px 22px;
+}
+
+.anim-bird-wing-far {
+  animation: bird-wing-far-stroke 0.28s ease-in-out infinite;
+  transform-origin: 28px 20px;
+}
+
+.anim-bird-body-bob {
+  animation: bird-body-flight-bob 0.28s ease-in-out infinite;
+  transform-origin: 34px 24px;
+}
+
+.anim-bird-tail-flex {
+  animation: bird-tail-flight-flex 0.56s ease-in-out infinite;
+  transform-origin: 20px 28px;
+}
+
+@keyframes bird-wing-near-stroke {
+  0%, 100% {
+    transform: rotate(-34deg) translateY(-2px);
+  }
+  50% {
+    transform: rotate(26deg) translateY(4px);
+  }
+}
+
+@keyframes bird-wing-far-stroke {
+  0%, 100% {
+    transform: rotate(-28deg) translateY(-2px);
+  }
+  50% {
+    transform: rotate(22deg) translateY(3px);
+  }
+}
+
+@keyframes bird-body-flight-bob {
+  0%, 100% {
+    transform: translateY(1.2px) rotate(-1.5deg);
+  }
+  50% {
+    transform: translateY(-1.5px) rotate(1.5deg);
+  }
+}
+
+@keyframes bird-tail-flight-flex {
+  0%, 100% {
+    transform: rotate(-2.5deg);
+  }
+  50% {
+    transform: rotate(3.5deg);
+  }
+}
+
+/* Celestial Sky Ripple on Background Click */
+@keyframes celestial-sky-ripple {
+  0% {
+    transform: scale(0.15);
+    opacity: 0.95;
+  }
+  100% {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+
+.anim-sky-ripple {
+  animation: celestial-sky-ripple 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* =========================================================================

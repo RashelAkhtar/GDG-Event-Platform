@@ -684,9 +684,9 @@ export function CircleBucket() {
   }, [])
 
   return (
-    <div className="relative flex flex-col items-center select-none touch-none" onContextMenu={(e) => e.preventDefault()}>
+    <div className="relative flex flex-col items-center select-none pointer-events-none" onContextMenu={(e) => e.preventDefault()}>
       {/* Minimalist Editorial Status & Counter Row */}
-      <div className="flex flex-wrap items-center justify-center gap-2 mb-3.5 max-w-full px-2">
+      <div className="flex flex-wrap items-center justify-center gap-2 mb-3.5 max-w-full px-2 pointer-events-none">
         {/* Active Count Pill */}
         <span className="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1 font-mono text-[10px] tracking-[0.2em] uppercase text-[#111827] border border-[#E5E7EB] select-none pointer-events-none shadow-2xs">
           <span
@@ -702,7 +702,7 @@ export function CircleBucket() {
           <button
             onClick={handleScatter}
             title="Disperse bubbles in arena"
-            className="group flex h-6 w-6 items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:border-[#111827] transition-all active:scale-90 cursor-pointer shadow-2xs"
+            className="group flex h-6 w-6 items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:border-[#111827] transition-all active:scale-90 cursor-pointer shadow-2xs pointer-events-auto"
           >
             <RotateCcw className="h-2.5 w-2.5 transition-transform duration-300 group-hover:-rotate-90 group-active:-rotate-180" />
           </button>
@@ -713,7 +713,7 @@ export function CircleBucket() {
           type="button"
           onClick={reconnect}
           title={connected ? 'Realtime Connected' : 'Disconnected. Click to Reconnect'}
-          className={`inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] bg-white px-3 py-1 font-mono text-[10px] tracking-wider uppercase transition-all cursor-pointer shadow-2xs ${
+          className={`inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] bg-white px-3 py-1 font-mono text-[10px] tracking-wider uppercase transition-all cursor-pointer shadow-2xs pointer-events-auto ${
             connected ? 'text-[#34A853] hover:border-[#34A853]' : 'text-[#EA4335] hover:border-[#EA4335]'
           }`}
         >
@@ -733,7 +733,7 @@ export function CircleBucket() {
 
       {/* Live Arrival Notification Toast */}
       {liveArrivalToast && (
-        <div className="mb-2.5 animate-in fade-in slide-in-from-top-1 duration-200 rounded-full bg-[#111827] px-3.5 py-1 font-mono text-[9.5px] tracking-wider uppercase text-white shadow-md border border-neutral-700">
+        <div className="mb-2.5 animate-in fade-in slide-in-from-top-1 duration-200 rounded-full bg-[#111827] px-3.5 py-1 font-mono text-[9.5px] tracking-wider uppercase text-white shadow-md border border-neutral-700 pointer-events-none">
           {liveArrivalToast} joined
         </div>
       )}
@@ -741,7 +741,7 @@ export function CircleBucket() {
       {/* Pristine Circular Vessel with Concentric Hairline Rings */}
       <div
         ref={containerRef}
-        className="relative mx-auto aspect-square w-full max-w-[280px] xs:max-w-[305px] sm:max-w-[330px] select-none touch-none rounded-full border border-[#E5E7EB]/90 bg-white/75 backdrop-blur-[2px] p-2 shadow-[0_12px_36px_rgba(0,0,0,0.04)] ring-1 ring-[#F3F4F6]/80 ring-offset-4 ring-offset-[#FAFAFA] transition-all hover:shadow-[0_16px_48px_rgba(0,0,0,0.06)]"
+        className="relative mx-auto aspect-square w-full max-w-[280px] xs:max-w-[305px] sm:max-w-[330px] select-none touch-none rounded-full border border-[#E5E7EB]/90 bg-white/75 backdrop-blur-[2px] p-2 shadow-[0_12px_36px_rgba(0,0,0,0.04)] ring-1 ring-[#F3F4F6]/80 ring-offset-4 ring-offset-[#FAFAFA] transition-all hover:shadow-[0_16px_48px_rgba(0,0,0,0.06)] pointer-events-auto"
         onContextMenu={(e) => e.preventDefault()}
       >
         <div className="relative h-full w-full rounded-full overflow-hidden bg-[#FAFAFA]/60 backdrop-blur-[1px]">

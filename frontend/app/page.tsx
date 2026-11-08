@@ -78,9 +78,7 @@ export default function HomePage() {
         <section className="relative isolate mt-2 mb-8 select-none">
           <VoxelWorldBackdrop />
           <div className="relative z-10 pointer-events-none">
-            <div className="pointer-events-auto">
-              <CircleBucket />
-            </div>
+            <CircleBucket />
           </div>
         </section>
 
