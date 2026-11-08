@@ -1196,24 +1196,29 @@ html.dark .hairline-divider {
    ========================================================================= */
 
 .anim-grass-wind-sway {
-  animation: grass-wind-sway 3.4s ease-in-out infinite alternate;
+  animation: grass-wind-sway 3.6s ease-in-out infinite alternate;
   transform-origin: bottom center;
 }
 
 .anim-grass-wind-sway-delayed {
-  animation: grass-wind-sway 3.8s ease-in-out -1.2s infinite alternate;
+  animation: grass-wind-sway 4.1s ease-in-out -1.4s infinite alternate;
+  transform-origin: bottom center;
+}
+
+.anim-grass-wind-sway-calm {
+  animation: grass-wind-sway 4.8s ease-in-out -2.7s infinite alternate;
   transform-origin: bottom center;
 }
 
 @keyframes grass-wind-sway {
   0% {
-    transform: skewX(-2.5deg) rotate(-1.5deg);
+    transform: skewX(-3deg) rotate(-2deg) scaleY(0.98);
   }
   50% {
-    transform: skewX(1deg) rotate(0.5deg);
+    transform: skewX(0.8deg) rotate(0.6deg) scaleY(1.01);
   }
   100% {
-    transform: skewX(3.5deg) rotate(2.5deg);
+    transform: skewX(3.6deg) rotate(2.4deg) scaleY(0.98);
   }
 }
 
@@ -1241,47 +1246,49 @@ html.dark .hairline-divider {
     transform: rotate(0deg) scale(1);
   }
   20% {
-    transform: rotate(-3.5deg) scale(1.03);
+    transform: rotate(-2.4deg) scale(1.02);
   }
   45% {
-    transform: rotate(3deg) scale(1.02);
+    transform: rotate(2deg) scale(1.015);
   }
   70% {
-    transform: rotate(-1.5deg) scale(1.01);
+    transform: rotate(-1deg) scale(1.008);
   }
   88% {
-    transform: rotate(0.8deg);
+    transform: rotate(0.5deg);
   }
 }
 
 .anim-oak-canopy-breeze {
   animation: oak-canopy-breeze 5.6s ease-in-out infinite alternate;
-  transform-origin: bottom center;
 }
 
 @keyframes oak-canopy-breeze {
   0% {
-    transform: rotate(-0.8deg) scaleY(0.99);
-  }
-  100% {
-    transform: rotate(1.1deg) scaleY(1.01);
-  }
-}
-
-.anim-birch-weep-breeze {
-  animation: birch-weep-breeze 4.2s ease-in-out infinite alternate;
-  transform-origin: top center;
-}
-
-@keyframes birch-weep-breeze {
-  0% {
-    transform: rotate(-1.5deg) skewX(-1.2deg);
+    transform: rotate(-1.2deg) skewX(-0.8deg);
   }
   50% {
-    transform: rotate(0.6deg) skewX(0.5deg);
+    transform: rotate(0.3deg) skewX(0.2deg);
   }
   100% {
-    transform: rotate(2deg) skewX(1.6deg);
+    transform: rotate(1.4deg) skewX(0.9deg);
+  }
+}
+
+.anim-birch-foliage-sway,
+.anim-birch-weep-breeze {
+  animation: birch-foliage-sway 4.6s ease-in-out infinite alternate;
+}
+
+@keyframes birch-foliage-sway {
+  0% {
+    transform: rotate(-1.8deg) skewX(-1.2deg) scale(0.99, 1.01);
+  }
+  50% {
+    transform: rotate(0.4deg) skewX(0.3deg);
+  }
+  100% {
+    transform: rotate(1.9deg) skewX(1.3deg) scale(1.01, 0.99);
   }
 }
 
