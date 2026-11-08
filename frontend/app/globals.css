@@ -1705,3 +1705,67 @@ html.dark .hairline-divider {
     opacity: 0;
   }
 }
+
+
+/* =========================================================================
+   SALMAN DRIVING SCHOOL & GOLDEN APPLE EASTER EGG KEYFRAMES
+   ========================================================================= */
+
+@keyframes screen-rumble {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  20% { transform: translate(-6px, 8px) rotate(-1deg); }
+  40% { transform: translate(7px, -6px) rotate(1.2deg); }
+  60% { transform: translate(-5px, 4px) rotate(-0.8deg); }
+  80% { transform: translate(4px, -3px) rotate(0.5deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+.anim-screen-rumble {
+  animation: screen-rumble 0.35s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes apple-drop-bounce {
+  0% {
+    transform: translate3d(0, -200px, 0) scale(0.5) rotate(0deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  58% {
+    transform: translate3d(0, 0px, 0) scale(1.2, 0.8) rotate(180deg);
+  }
+  74% {
+    transform: translate3d(0, -32px, 0) scale(0.92, 1.08) rotate(250deg);
+  }
+  86% {
+    transform: translate3d(0, 0px, 0) scale(1.08, 0.92) rotate(320deg);
+  }
+  94% {
+    transform: translate3d(0, -9px, 0) scale(0.98, 1.02) rotate(350deg);
+  }
+  100% {
+    transform: translate3d(0, 0px, 0) scale(1, 1) rotate(360deg);
+    opacity: 1;
+  }
+}
+
+.anim-apple-drop-bounce {
+  animation: apple-drop-bounce 1.15s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes tree-epic-shake {
+  0% { transform: rotate(0deg); }
+  15% { transform: rotate(-7deg) scale(1.04); }
+  30% { transform: rotate(8deg) scale(0.98); }
+  45% { transform: rotate(-6deg) scale(1.03); }
+  60% { transform: rotate(5deg) scale(0.99); }
+  75% { transform: rotate(-3deg); }
+  90% { transform: rotate(2deg); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+.anim-tree-epic-shake {
+  animation: tree-epic-shake 0.8s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  transform-origin: bottom center;
+}

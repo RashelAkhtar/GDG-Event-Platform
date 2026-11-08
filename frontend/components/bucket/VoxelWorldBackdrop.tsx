@@ -3,6 +3,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { soundManager } from '@/lib/sound'
 import { BirdGuiltEasterEggModal, playSorrowRequiemAudio } from './BirdGuiltEasterEggModal'
+import { GoldenAppleModal } from '@/components/easter-egg/GoldenAppleModal'
+import { SalmanDrivingGame } from '@/components/game/SalmanDrivingGame'
+import { salmanAudio } from '@/lib/salmanAudio'
 
 // ============================================================================
 // SELF-CONTAINED PROCEDURAL MINECRAFT WEB AUDIO SYNTHESIZER
@@ -1796,6 +1799,12 @@ export function VoxelWorldBackdrop() {
   const [flowerBounce, setFlowerBounce] = useState<Record<string, boolean>>({})
   const [birdCatchCount, setBirdCatchCount] = useState<number>(0)
   const [showBirdGuiltModal, setShowBirdGuiltModal] = useState<boolean>(false)
+  const [oakShakeCount, setOakShakeCount] = useState<number>(0)
+  const [isEpicTreeShake, setIsEpicTreeShake] = useState<boolean>(false)
+  const [hasGoldenAppleFallen, setHasGoldenAppleFallen] = useState<boolean>(false)
+  const [showGoldenAppleModal, setShowGoldenAppleModal] = useState<boolean>(false)
+  const [showSalmanGame, setShowSalmanGame] = useState<boolean>(false)
+  const oakShakeTimerRef = useRef<NodeJS.Timeout | null>(null)
   const birdTimerRef = useRef<NodeJS.Timeout | null>(null)
   const backdropRef = useRef<HTMLDivElement>(null)
 
@@ -2053,12 +2062,29 @@ export function VoxelWorldBackdrop() {
     []
   )
 
-  // Handle tree click interaction
+  // Handle tree click interaction: 5 shakes of the Oak tree drops the Golden Apple
   const handleTreeClick = useCallback((side: 'left' | 'right') => {
     voxelAudio.playLeafRustle()
     if (side === 'left') {
       setTreeRustleLeft(true)
       setTimeout(() => setTreeRustleLeft(false), 800)
+
+      setOakShakeCount((prev) => {
+        const next = prev + 1
+        if (oakShakeTimerRef.current) clearTimeout(oakShakeTimerRef.current)
+        oakShakeTimerRef.current = setTimeout(() => {
+          setOakShakeCount(0)
+        }, 5000)
+
+        if (next >= 5) {
+          setIsEpicTreeShake(true)
+          setTimeout(() => setIsEpicTreeShake(false), 850)
+          salmanAudio.playGoldenAppleChime()
+          setHasGoldenAppleFallen(true)
+          return 0
+        }
+        return next
+      })
     } else {
       setTreeRustleRight(true)
       setTimeout(() => setTreeRustleRight(false), 800)
@@ -2405,11 +2431,14 @@ export function VoxelWorldBackdrop() {
           flowerBounce={flowerBounce}
         />
 
-        {/* Oak Tree: Rooted securely into the continuous left turf */}
+        {/* Oak Tree: Rooted securely into the continuous left turf (Shake 5 times for Easter Egg) */}
         <div
           onClick={() => handleTreeClick('left')}
           aria-label="Oak Tree"
-          className="absolute left-1 sm:left-4 md:left-6 bottom-0.5 sm:bottom-1 z-26 pointer-events-auto select-none"
+          title="Shake the Oak tree!"
+          className={`absolute left-1 sm:left-4 md:left-6 bottom-0.5 sm:bottom-1 z-26 pointer-events-auto select-none cursor-pointer ${
+            isEpicTreeShake ? 'anim-tree-epic-shake' : ''
+          }`}
         >
           <RealisticOakTree
             isEvening={isEvening}
@@ -2417,6 +2446,38 @@ export function VoxelWorldBackdrop() {
             rustling={treeRustleLeft}
           />
         </div>
+
+        {/* Small Fallen Golden Apple on Meadow Grass */}
+        {hasGoldenAppleFallen && (
+          <div
+            onClick={() => setShowGoldenAppleModal(true)}
+            aria-label="Golden Apple"
+            title="You found the Golden Apple! Click to enter."
+            className="absolute left-[13%] sm:left-[15%] md:left-[17%] bottom-2 sm:bottom-3 z-30 pointer-events-auto cursor-pointer anim-apple-drop-bounce group"
+          >
+            <div className="relative flex items-center justify-center">
+              <div className="absolute h-9 w-9 rounded-full bg-amber-400/40 blur-md animate-pulse" />
+              <svg
+                viewBox="0 0 100 100"
+                className="w-5 h-5 sm:w-6 sm:h-6 drop-shadow-[0_4px_12px_rgba(245,158,11,0.6)] group-hover:scale-125 transition-transform duration-200"
+                fill="none"
+              >
+                <defs>
+                  <linearGradient id="mini-apple-gold" x1="20" y1="20" x2="80" y2="90" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#FFFBEB" />
+                    <stop offset="35%" stopColor="#FDE68A" />
+                    <stop offset="70%" stopColor="#F59E0B" />
+                    <stop offset="100%" stopColor="#B45309" />
+                  </linearGradient>
+                </defs>
+                <path d="M 50 24 C 50 14, 56 10, 60 7" stroke="#78350F" strokeWidth="4" strokeLinecap="round" />
+                <path d="M 52 16 C 58 10, 70 12, 68 20 C 60 23, 54 20, 52 16 Z" fill="#84CC16" />
+                <path d="M 50 28 C 36 28, 16 38, 18 64 C 20 86, 38 94, 50 88 C 62 94, 80 86, 82 64 C 84 38, 64 28, 50 28 Z" fill="url(#mini-apple-gold)" stroke="#D97706" strokeWidth="2" />
+                <circle cx="34" cy="45" r="4" fill="#FFFFFF" opacity="0.75" />
+              </svg>
+            </div>
+          </div>
+        )}
 
         {/* Birch Tree: Rooted securely into the continuous right turf */}
         <div
@@ -2445,6 +2506,22 @@ export function VoxelWorldBackdrop() {
         onResetCount={() => {
           setBirdCatchCount(0)
         }}
+      />
+
+      {/* Secret Golden Apple Discovery Modal */}
+      <GoldenAppleModal
+        isOpen={showGoldenAppleModal}
+        onClose={() => setShowGoldenAppleModal(false)}
+        onEnterGame={() => {
+          setShowGoldenAppleModal(false)
+          setShowSalmanGame(true)
+        }}
+      />
+
+      {/* Salman Driving School 1st-Person POV Driving Simulator */}
+      <SalmanDrivingGame
+        isOpen={showSalmanGame}
+        onClose={() => setShowSalmanGame(false)}
       />
 
       {/* 6. AMBIENT PARTICLES: DAYTIME MOTES / NIGHT FIREFLIES     */}
