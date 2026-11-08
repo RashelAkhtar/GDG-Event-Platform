@@ -1639,9 +1639,10 @@ interface ActiveBird {
 export type SkyPhase = 'day' | 'evening' | 'night'
 export type TransitionMode =
   | null
+  | 'day-to-night'
+  | 'night-to-day'
   | 'day-to-evening'
   | 'evening-to-night'
-  | 'night-to-day'
 
 // Twinkling Minecraft night stars coordinate layout
 const NIGHT_STARS = [
@@ -1767,95 +1768,84 @@ export function VoxelWorldBackdrop() {
       if (isTransitioning || target === skyPhase) return
 
       let mode: TransitionMode = null
-      if (skyPhase === 'day' && target === 'evening') mode = 'day-to-evening'
-      else if (skyPhase === 'evening' && target === 'night') mode = 'evening-to-night'
+      if (skyPhase === 'day' && target === 'night') mode = 'day-to-night'
       else if (skyPhase === 'night' && target === 'day') mode = 'night-to-day'
-      else if (skyPhase === 'day' && target === 'night') mode = 'evening-to-night'
+      else if (skyPhase === 'evening' && target === 'night') mode = 'evening-to-night'
+      else if (skyPhase === 'day' && target === 'evening') mode = 'day-to-night'
       else if (skyPhase === 'evening' && target === 'day') mode = 'night-to-day'
-      else if (skyPhase === 'night' && target === 'evening') mode = 'day-to-evening'
+      else if (skyPhase === 'night' && target === 'evening') mode = 'night-to-day'
 
       setIsTransitioning(true)
       setTransitionMode(mode)
 
       // 1. Audio cues
-      if (target === 'evening') {
+      if (target === 'night' || mode === 'day-to-night') {
         voxelAudio.playSunset()
-      } else if (target === 'night') {
-        voxelAudio.playNight()
-      } else if (target === 'day') {
+      } else if (target === 'day' || mode === 'night-to-day') {
         voxelAudio.playDay()
       }
 
-      // 2. Synchronized Sky Crossfade & Horizon Crossover Theme Timing
-      if (mode === 'day-to-evening') {
-        // Immediate smooth sky crossfade from daytime to golden hour (remains in warm light mode)
-        setTargetSkyPhase('evening')
-        try {
-          localStorage.setItem('minecraft_dark_mode', 'false')
-          document.documentElement.classList.remove('dark')
-        } catch {}
+      // 2. Synchronized Continuous Celestial Transitions (Zero breaks, smooth 60fps single curves)
+      if (mode === 'day-to-night' || mode === 'evening-to-night') {
+        // Immediate smooth sky crossfade into deep night sky
+        setTargetSkyPhase('night')
+
+        // Exact twilight crossover at 850ms as Sun submerges behind earth line
         setTimeout(() => {
-          setSkyPhase('evening')
-          setTargetSkyPhase(null)
-          setTransitionMode(null)
-          setIsTransitioning(false)
-        }, 1250)
-      } else if (mode === 'evening-to-night') {
-        // Horizon Crossover at 950ms: as Sun submerges behind earth line, switch sky to night & toggle dark mode
-        setTimeout(() => {
-          setTargetSkyPhase('night')
           try {
             localStorage.setItem('minecraft_dark_mode', 'true')
             document.documentElement.classList.add('dark')
+            voxelAudio.playNight()
           } catch {}
-        }, 950)
+        }, 850)
 
-        // Complete transition at 2100ms when Moon locks into Night Zenith
+        // Fluid lock at 1850ms when Moon arrives smoothly at Night Zenith
         setTimeout(() => {
           setSkyPhase('night')
           setTargetSkyPhase(null)
           setTransitionMode(null)
           setIsTransitioning(false)
-        }, 2100)
+        }, 1850)
       } else if (mode === 'night-to-day') {
-        // Horizon Crossover at 950ms: as Moon submerges behind earth line, dawn breaks & toggle light mode
+        // Immediate smooth sky crossfade into daytime azure sky
+        setTargetSkyPhase('day')
+
+        // Exact dawn crossover at 850ms as Moon submerges behind earth line
         setTimeout(() => {
-          setTargetSkyPhase('day')
           try {
             localStorage.setItem('minecraft_dark_mode', 'false')
             document.documentElement.classList.remove('dark')
           } catch {}
-        }, 950)
+        }, 850)
 
-        // Complete transition at 2100ms when Sun locks into Day Zenith
+        // Fluid lock at 1850ms when Sun arrives smoothly at Day Zenith
         setTimeout(() => {
           setSkyPhase('day')
           setTargetSkyPhase(null)
           setTransitionMode(null)
           setIsTransitioning(false)
-        }, 2100)
+        }, 1850)
       }
     },
     [isTransitioning, skyPhase]
   )
 
-  // Sun click handler: Day ➔ Evening ➔ Night
+  // Sun click handler: Single unbroken celestial plunge from Zenith all the way below horizon!
   const handleSunClick = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation()
-      if (skyPhase === 'day') transitionToPhase('evening')
-      else if (skyPhase === 'evening') transitionToPhase('night')
+      transitionToPhase('night')
     },
-    [skyPhase, transitionToPhase]
+    [transitionToPhase]
   )
 
-  // Moon click handler: Night ➔ Day
+  // Moon click handler: Single unbroken celestial plunge from Zenith all the way below horizon!
   const handleMoonClick = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation()
-      if (skyPhase === 'night') transitionToPhase('day')
+      transitionToPhase('day')
     },
-    [skyPhase, transitionToPhase]
+    [transitionToPhase]
   )
 
   // Handle clicking a bird (Red damage flash, realistic gravity fall, landing poof & drops)
@@ -1961,26 +1951,27 @@ export function VoxelWorldBackdrop() {
   const isSunset = isEvening
   const isSunrise = transitionMode === 'night-to-day'
 
-  // Sun & Moon visibility logic
+  // Sun & Moon visibility logic (both present during continuous handover)
   const showSun =
     skyPhase === 'day' ||
     skyPhase === 'evening' ||
-    transitionMode === 'day-to-evening' ||
+    transitionMode === 'day-to-night' ||
     transitionMode === 'evening-to-night' ||
     transitionMode === 'night-to-day'
 
   const showMoon =
     skyPhase === 'night' ||
+    transitionMode === 'day-to-night' ||
     transitionMode === 'evening-to-night' ||
     transitionMode === 'night-to-day'
 
   let sunAnimClass = ''
-  if (transitionMode === 'day-to-evening') {
-    sunAnimClass = 'anim-sun-descend-to-dusk'
+  if (transitionMode === 'day-to-night') {
+    sunAnimClass = 'anim-sun-sink-smooth'
   } else if (transitionMode === 'evening-to-night') {
-    sunAnimClass = 'anim-sun-sink-all-the-way'
+    sunAnimClass = 'anim-sun-sink-from-evening'
   } else if (transitionMode === 'night-to-day') {
-    sunAnimClass = 'anim-sun-rise-all-the-way'
+    sunAnimClass = 'anim-sun-rise-smooth'
   } else if (skyPhase === 'evening') {
     sunAnimClass = 'anim-celestial-sun-evening'
   } else if (skyPhase === 'day') {
@@ -1988,10 +1979,10 @@ export function VoxelWorldBackdrop() {
   }
 
   let moonAnimClass = ''
-  if (transitionMode === 'evening-to-night') {
-    moonAnimClass = 'anim-moon-rise-all-the-way'
+  if (transitionMode === 'day-to-night' || transitionMode === 'evening-to-night') {
+    moonAnimClass = 'anim-moon-rise-smooth'
   } else if (transitionMode === 'night-to-day') {
-    moonAnimClass = 'anim-moon-sink-all-the-way'
+    moonAnimClass = 'anim-moon-sink-smooth'
   } else if (skyPhase === 'night') {
     moonAnimClass = 'anim-celestial-moon-night'
   }
