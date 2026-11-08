@@ -1,14 +1,52 @@
 'use client'
 
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { HeartCrack, Home, X, Volume2, VolumeX } from 'lucide-react'
 import { soundManager } from '@/lib/sound'
 
 // ============================================================================
+// GLOBAL SORROW REQUIEM AUDIO ENGINE (HTML5 AUDIO + WEB AUDIO HYBRID)
+// 100% reliable autoplay on 10th bird click with dual-layer fallback
+// ============================================================================
+
+let globalSorrowAudio: HTMLAudioElement | null = null
+
+export function playSorrowRequiemAudio() {
+  if (typeof window === 'undefined') return
+  try {
+    if (!globalSorrowAudio) {
+      globalSorrowAudio = new Audio('/sound/sorrow-requiem.wav')
+      globalSorrowAudio.loop = true
+      globalSorrowAudio.volume = 0.65
+    }
+    globalSorrowAudio.currentTime = 0
+    const playPromise = globalSorrowAudio.play()
+    if (playPromise) {
+      playPromise.catch(() => {
+        // Fallback to Web Audio procedural synth if HTML5 audio fails
+        void sorrowSynth.playSorrow()
+      })
+    }
+  } catch {
+    void sorrowSynth.playSorrow()
+  }
+}
+
+export function stopSorrowRequiemAudio() {
+  if (globalSorrowAudio) {
+    try {
+      globalSorrowAudio.pause()
+      globalSorrowAudio.currentTime = 0
+    } catch {}
+  }
+  sorrowSynth.stopSorrow()
+}
+
+// ============================================================================
 // PROCEDURAL WEB AUDIO SYNTHESIZER: RICH SORROWFUL REQUIEM / CHORD PROGRESSION
-// 100% reliable, zero external files, warm orchestral cello pad + weeping melody
+// Dual-layer fallback: warm orchestral cello pad + weeping high string lead
 // ============================================================================
 
 export class SorrowAudioSynth {
@@ -24,9 +62,6 @@ export class SorrowAudioSynth {
     return soundManager.getAudioContext()
   }
 
-  /**
-   * Pre-warm AudioContext inside a synchronous user interaction event
-   */
   public preWarm() {
     const ctx = this.getContext()
     if (ctx && ctx.state === 'suspended') {
@@ -49,12 +84,10 @@ export class SorrowAudioSynth {
 
       const master = ctx.createGain()
       master.gain.setValueAtTime(0.001, ctx.currentTime)
-      // Clearly audible, immersive volume
-      master.gain.linearRampToValueAtTime(0.38, ctx.currentTime + 1.0)
+      master.gain.linearRampToValueAtTime(0.42, ctx.currentTime + 1.0)
       master.connect(ctx.destination)
       this.masterGain = master
 
-      // Emotional minor progression: Dm9 -> Bbmaj7 -> Gm6 -> A7sus4 -> Dm
       const chordProgressions = [
         {
           bass: 146.83, // D3
@@ -86,7 +119,6 @@ export class SorrowAudioSynth {
         const chord = chordProgressions[chordIdx % chordProgressions.length]
         chordIdx++
 
-        // Fade out previous active oscillators
         const oldNodes = [...this.activeNodes]
         this.activeNodes = []
         oldNodes.forEach((node) => {
@@ -109,13 +141,13 @@ export class SorrowAudioSynth {
 
         const currentNodes: AudioNode[] = []
 
-        // 1. Deep Sub Bass Note (Sine wave with warm lowpass)
+        // Sub bass
         const bassOsc = ctx.createOscillator()
         const bassGain = ctx.createGain()
         bassOsc.type = 'sine'
         bassOsc.frequency.setValueAtTime(chord.bass, now)
         bassGain.gain.setValueAtTime(0.001, now)
-        bassGain.gain.linearRampToValueAtTime(0.24, now + 1.0)
+        bassGain.gain.linearRampToValueAtTime(0.26, now + 1.0)
         bassGain.gain.exponentialRampToValueAtTime(0.08, now + 3.8)
         bassOsc.connect(bassGain)
         bassGain.connect(master)
@@ -123,7 +155,7 @@ export class SorrowAudioSynth {
         bassOsc.stop(now + 4.2)
         currentNodes.push(bassOsc, bassGain)
 
-        // 2. Warm Orchestral Pad Chords (Triangle & Sine with tape lowpass filter)
+        // Warm pad chords
         chord.pad.forEach((freq, idx) => {
           const osc = ctx.createOscillator()
           const padGain = ctx.createGain()
@@ -131,15 +163,13 @@ export class SorrowAudioSynth {
 
           osc.type = idx % 2 === 0 ? 'triangle' : 'sine'
           osc.frequency.setValueAtTime(freq, now)
-
-          // Soft chorus detune (+/- 2.5 cents)
           osc.detune.setValueAtTime((idx - 1.5) * 2.5, now)
 
           filter.type = 'lowpass'
           filter.frequency.setValueAtTime(750 + idx * 70, now)
 
           padGain.gain.setValueAtTime(0.001, now)
-          padGain.gain.linearRampToValueAtTime(0.09, now + 1.2)
+          padGain.gain.linearRampToValueAtTime(0.1, now + 1.2)
           padGain.gain.exponentialRampToValueAtTime(0.015, now + 3.9)
 
           osc.connect(filter)
@@ -151,7 +181,7 @@ export class SorrowAudioSynth {
           currentNodes.push(osc, padGain)
         })
 
-        // 3. Weeping High String Solo Voice (Soulful slow vibrato)
+        // Weeping melody
         const leadOsc = ctx.createOscillator()
         const leadGain = ctx.createGain()
         const leadFilter = ctx.createBiquadFilter()
@@ -161,7 +191,6 @@ export class SorrowAudioSynth {
         leadOsc.type = 'sine'
         leadOsc.frequency.setValueAtTime(chord.melody, now)
 
-        // Human weeping vibrato (4.5 Hz, depth 2.8 Hz)
         vibrato.frequency.setValueAtTime(4.5, now)
         vibratoGain.gain.setValueAtTime(2.8, now)
         vibrato.connect(leadOsc.frequency)
@@ -173,7 +202,7 @@ export class SorrowAudioSynth {
         leadFilter.Q.setValueAtTime(1.8, now)
 
         leadGain.gain.setValueAtTime(0.001, now + 0.3)
-        leadGain.gain.linearRampToValueAtTime(0.14, now + 1.4)
+        leadGain.gain.linearRampToValueAtTime(0.16, now + 1.4)
         leadGain.gain.exponentialRampToValueAtTime(0.005, now + 4.0)
 
         leadOsc.connect(leadFilter)
@@ -192,9 +221,7 @@ export class SorrowAudioSynth {
       }
 
       playNextChord()
-    } catch (err) {
-      console.warn('Sorrow audio error:', err)
-    }
+    } catch {}
   }
 
   public stopSorrow() {
@@ -239,16 +266,12 @@ export class SorrowAudioSynth {
   public isMuted(): boolean {
     return this.isMutedByUser
   }
-
-  public isAudioPlaying(): boolean {
-    return this.isPlaying
-  }
 }
 
 export const sorrowSynth = new SorrowAudioSynth()
 
 // ============================================================================
-// REALISTIC ANATOMICAL HAND & PLAYFUL SALUTE ILLUSTRATION
+// REALISTIC ANATOMICAL HAND & MIDDLE FINGER ILLUSTRATION (DORSAL FIST VIEW)
 // ============================================================================
 
 function RealisticHandSalute({ onBounce }: { onBounce?: () => void }) {
@@ -263,7 +286,7 @@ function RealisticHandSalute({ onBounce }: { onBounce?: () => void }) {
   return (
     <div
       onClick={handleClick}
-      aria-label="Playful hand illustration"
+      aria-label="Playful realistic hand gesture"
       className={`relative select-none cursor-pointer transition-transform duration-300 ${
         bouncing ? 'scale-115 -rotate-6' : 'hover:scale-108 hover:-rotate-3 active:scale-95'
       }`}
@@ -271,201 +294,228 @@ function RealisticHandSalute({ onBounce }: { onBounce?: () => void }) {
       <div className="anim-hand-spring-pop">
         <div className="anim-hand-cheeky-sway">
           <svg
-            viewBox="0 0 160 210"
-            className="w-28 h-36 sm:w-34 sm:h-44 overflow-visible drop-shadow-[0_12px_28px_rgba(0,0,0,0.18)]"
+            viewBox="0 0 180 220"
+            className="w-32 h-40 sm:w-38 sm:h-48 overflow-visible drop-shadow-[0_14px_32px_rgba(0,0,0,0.2)]"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
           >
             <defs>
-              {/* Natural Skin Tone Base Gradients */}
-              <linearGradient id="skin-base-grad" x1="80" y1="20" x2="80" y2="200" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#FFF2EB" />
-                <stop offset="30%" stopColor="#F8C8B0" />
-                <stop offset="70%" stopColor="#EAA386" />
-                <stop offset="100%" stopColor="#C97453" />
+              {/* Natural Skin Forearm Gradient */}
+              <linearGradient id="real-skin-forearm" x1="90" y1="160" x2="90" y2="218" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#F8C7B2" />
+                <stop offset="50%" stopColor="#EFA487" />
+                <stop offset="100%" stopColor="#D98565" />
               </linearGradient>
 
-              {/* Cylindrical 3D Middle Finger Shaft Gradient */}
-              <linearGradient id="skin-shaft-grad" x1="68" y1="50" x2="92" y2="50" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#FFBAA6" />
-                <stop offset="25%" stopColor="#FFF4EE" />
+              {/* Natural Dorsal Hand & Knuckles Gradient */}
+              <linearGradient id="real-skin-dorsal" x1="45" y1="110" x2="135" y2="165" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#FFF5EF" />
+                <stop offset="25%" stopColor="#F8C7B2" />
+                <stop offset="65%" stopColor="#EFA487" />
+                <stop offset="100%" stopColor="#CF7554" />
+              </linearGradient>
+
+              {/* Cylindrical Extended Middle Finger Gradient */}
+              <linearGradient id="real-skin-shaft" x1="77" y1="50" x2="99" y2="50" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#FFAA94" />
+                <stop offset="25%" stopColor="#FFF6F0" />
                 <stop offset="55%" stopColor="#F8C4AE" />
-                <stop offset="85%" stopColor="#DC8364" />
-                <stop offset="100%" stopColor="#B85E3E" />
+                <stop offset="85%" stopColor="#DC8264" />
+                <stop offset="100%" stopColor="#B3583A" />
               </linearGradient>
 
-              {/* Palm Volume Radial Gradient */}
-              <radialGradient id="skin-palm-grad" cx="50%" cy="65%" r="55%">
-                <stop offset="0%" stopColor="#FFF5F0" />
-                <stop offset="50%" stopColor="#F8C5AF" />
-                <stop offset="85%" stopColor="#DC8466" />
-                <stop offset="100%" stopColor="#BA6242" />
-              </radialGradient>
-
-              {/* Translucent Fingernail Bed Gradient */}
-              <linearGradient id="nail-bed-grad" x1="80" y1="22" x2="80" y2="38" gradientUnits="userSpaceOnUse">
+              {/* Translucent Fingernail Gradient */}
+              <linearGradient id="real-nail-grad" x1="88" y1="18" x2="88" y2="35" gradientUnits="userSpaceOnUse">
                 <stop offset="0%" stopColor="#FFFFFF" />
-                <stop offset="35%" stopColor="#FBE3D8" />
-                <stop offset="100%" stopColor="#F1B6A4" />
+                <stop offset="35%" stopColor="#FCE5DC" />
+                <stop offset="80%" stopColor="#F2B7A6" />
+                <stop offset="100%" stopColor="#E4907C" />
               </linearGradient>
 
-              {/* Golden Signet Ring Gradient */}
-              <linearGradient id="gold-ring-grad" x1="70" y1="79" x2="90" y2="86" gradientUnits="userSpaceOnUse">
+              {/* Signet Gold Ring Gradient */}
+              <linearGradient id="real-gold-ring" x1="76" y1="79" x2="100" y2="86" gradientUnits="userSpaceOnUse">
                 <stop offset="0%" stopColor="#FEF08A" />
-                <stop offset="40%" stopColor="#F59E0B" />
-                <stop offset="75%" stopColor="#D97706" />
+                <stop offset="35%" stopColor="#F59E0B" />
+                <stop offset="70%" stopColor="#D97706" />
                 <stop offset="100%" stopColor="#92400E" />
               </linearGradient>
 
-              {/* Soft Ambient Contact Shadow */}
-              <radialGradient id="hand-contact-shadow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#000000" stopOpacity="0.14" />
-                <stop offset="65%" stopColor="#000000" stopOpacity="0.06" />
+              {/* Soft Ambient Ground Shadow */}
+              <radialGradient id="real-ambient-shadow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#000000" stopOpacity="0.16" />
+                <stop offset="60%" stopColor="#000000" stopOpacity="0.06" />
                 <stop offset="100%" stopColor="#000000" stopOpacity="0" />
               </radialGradient>
             </defs>
 
             {/* 0. Ambient Ground Contact Shadow */}
-            <ellipse cx="80" cy="202" rx="46" ry="7" fill="url(#hand-contact-shadow)" />
+            <ellipse cx="90" cy="216" rx="52" ry="8" fill="url(#real-ambient-shadow)" />
 
-            {/* 1. Forearm & Wrist Section */}
+            {/* 1. Forearm & Wrist (Proportionate, smooth taper into wrist) */}
             <g>
               <path
-                d="M 64 200 C 65 178, 66 160, 68 148 L 92 148 C 94 160, 95 178, 96 200 Z"
-                fill="url(#skin-base-grad)"
+                d="M 58 215 C 60 195, 62 178, 66 166 L 114 166 C 118 178, 120 195, 122 215 Z"
+                fill="url(#real-skin-forearm)"
               />
-              {/* Carpal Tendon Specular Highlight */}
+              {/* Ulnar Styloid Bone Highlight on right wrist */}
               <path
-                d="M 76 192 C 77 172, 78 158, 78 148"
+                d="M 114 166 C 119 164, 122 168, 120 174 C 118 178, 115 178, 114 176 Z"
+                fill="#E29477"
+              />
+              {/* Tendon Highlights */}
+              <path
+                d="M 78 206 C 79 188, 81 174, 82 166"
                 stroke="#FFF7F2"
                 strokeWidth="1.6"
                 strokeLinecap="round"
-                opacity="0.6"
+                opacity="0.5"
               />
               <path
-                d="M 84 190 C 84.5 175, 84 160, 83 148"
-                stroke="#C97453"
-                strokeWidth="1.2"
+                d="M 100 206 C 99 188, 97 174, 96 166"
+                stroke="#FFF7F2"
+                strokeWidth="1.3"
                 strokeLinecap="round"
-                opacity="0.4"
+                opacity="0.45"
               />
             </g>
 
-            {/* 2. Main Palm Mass & Muscular Thenar Contour */}
+            {/* 2. Back of Hand (Dorsal Metacarpus) */}
             <path
-              d="M 50 148 C 38 140, 36 120, 42 106 C 46 96, 56 94, 64 98 L 72 100 L 88 100 L 96 98 C 104 94, 114 98, 118 108 C 124 122, 120 140, 110 148 Z"
-              fill="url(#skin-palm-grad)"
+              d="M 66 166 C 54 158, 44 140, 48 122 C 50 114, 58 112, 66 114 L 88 110 L 114 114 C 122 112, 132 116, 134 124 C 136 138, 128 156, 114 166 Z"
+              fill="url(#real-skin-dorsal)"
             />
 
-            {/* 3. Curled Pinky Finger (Right flank) */}
+            {/* Metacarpal Bone Anatomical Ridges */}
+            <path
+              d="M 72 162 C 68 148, 64 134, 62 118"
+              stroke="#FFF7F2"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              opacity="0.38"
+            />
+            <path
+              d="M 88 160 C 88 145, 88 130, 88 112"
+              stroke="#FFF7F2"
+              strokeWidth="3.2"
+              strokeLinecap="round"
+              opacity="0.5"
+            />
+            <path
+              d="M 104 162 C 106 148, 110 134, 112 118"
+              stroke="#FFF7F2"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              opacity="0.38"
+            />
+
+            {/* 3. Curled Index Finger (Folded on left of middle finger) */}
             <g>
               <path
-                d="M 104 104 C 114 98, 122 106, 120 118 C 118 128, 108 132, 102 128 C 98 125, 98 116, 102 110 Z"
-                fill="url(#skin-base-grad)"
-                stroke="#C97453"
+                d="M 50 116 C 46 118, 44 126, 46 135 C 48 144, 56 148, 64 146 C 72 144, 75 136, 73 126 C 72 118, 64 114, 58 114 Z"
+                fill="url(#real-skin-dorsal)"
+                stroke="#C87050"
                 strokeWidth="0.8"
               />
-              <path d="M 106 114 Q 112 116 117 113" stroke="#A85235" strokeWidth="1.2" strokeLinecap="round" />
+              <path d="M 48 130 Q 56 134 65 131" stroke="#A85235" strokeWidth="1.3" strokeLinecap="round" />
+              <path d="M 52 140 Q 58 143 65 141" stroke="#A85235" strokeWidth="1.0" strokeLinecap="round" opacity="0.85" />
             </g>
 
-            {/* 4. Curled Ring Finger (Right of middle) */}
+            {/* 4. Curled Ring Finger (Folded on right of middle finger) */}
             <g>
               <path
-                d="M 88 100 C 98 94, 108 100, 108 112 C 108 124, 98 130, 90 126 C 84 123, 84 112, 88 104 Z"
-                fill="url(#skin-base-grad)"
-                stroke="#C97453"
+                d="M 102 114 C 98 118, 98 126, 100 135 C 102 144, 110 148, 118 146 C 126 144, 128 136, 126 126 C 124 118, 116 114, 108 114 Z"
+                fill="url(#real-skin-dorsal)"
+                stroke="#C87050"
                 strokeWidth="0.8"
               />
-              <path d="M 91 108 Q 98 111 105 107" stroke="#A85235" strokeWidth="1.3" strokeLinecap="round" />
-              <path d="M 92 118 Q 97 120 102 118" stroke="#A85235" strokeWidth="1.0" strokeLinecap="round" opacity="0.8" />
+              <path d="M 102 130 Q 110 134 119 131" stroke="#A85235" strokeWidth="1.3" strokeLinecap="round" />
+              <path d="M 106 140 Q 112 143 118 141" stroke="#A85235" strokeWidth="1.0" strokeLinecap="round" opacity="0.85" />
             </g>
 
-            {/* 5. Curled Index Finger (Left of middle) */}
+            {/* 5. Curled Pinky Finger (Folded on far right) */}
             <g>
               <path
-                d="M 52 100 C 62 94, 72 100, 72 112 C 72 124, 62 130, 54 126 C 48 123, 48 112, 52 104 Z"
-                fill="url(#skin-base-grad)"
-                stroke="#C97453"
+                d="M 124 122 C 122 126, 122 133, 124 139 C 126 145, 132 148, 137 146 C 142 144, 144 138, 143 130 C 142 124, 136 120, 128 120 Z"
+                fill="url(#real-skin-dorsal)"
+                stroke="#C87050"
                 strokeWidth="0.8"
               />
-              <path d="M 55 108 Q 62 111 69 107" stroke="#A85235" strokeWidth="1.3" strokeLinecap="round" />
-              <path d="M 56 118 Q 61 120 66 118" stroke="#A85235" strokeWidth="1.0" strokeLinecap="round" opacity="0.8" />
+              <path d="M 125 133 Q 132 136 138 134" stroke="#A85235" strokeWidth="1.1" strokeLinecap="round" />
             </g>
 
-            {/* 6. Cross-Folded Thumb Clamped Firmly Across Front */}
+            {/* 6. Natural Thumb (Wrapped firmly across the clenched fingers) */}
             <g>
               <path
-                d="M 40 134 C 36 122, 38 110, 48 106 C 56 102, 68 106, 74 114 C 77 120, 74 126, 66 128 C 56 130, 46 142, 40 134 Z"
-                fill="url(#skin-base-grad)"
-                stroke="#C97453"
+                d="M 38 152 C 34 142, 36 132, 44 126 C 52 120, 64 124, 72 132 C 76 137, 74 144, 67 146 C 58 148, 48 160, 38 152 Z"
+                fill="url(#real-skin-dorsal)"
+                stroke="#C87050"
                 strokeWidth="0.8"
               />
               {/* Natural Thumbnail */}
               <ellipse
-                cx="67"
-                cy="119"
+                cx="66"
+                cy="137"
                 rx="4.5"
-                ry="3"
-                fill="url(#nail-bed-grad)"
-                transform="rotate(-15 67 119)"
+                ry="3.2"
+                fill="url(#real-nail-grad)"
+                transform="rotate(-15 66 137)"
                 stroke="#E5A186"
                 strokeWidth="0.5"
               />
-              {/* Interphalangeal Thumb Crease */}
-              <path d="M 52 110 Q 56 116 62 112" stroke="#A85235" strokeWidth="1.3" strokeLinecap="round" />
+              <path d="M 48 128 Q 54 135 60 131" stroke="#A85235" strokeWidth="1.3" strokeLinecap="round" />
             </g>
 
             {/* 7. THE STATUESQUE EXTENDED MIDDLE FINGER */}
             <g className="anim-middle-finger-salute">
-              {/* Main Finger Shaft */}
+              {/* Finger Shaft */}
               <path
-                d="M 70 102 L 70 34 C 70 18, 90 18, 90 34 L 90 102 Z"
-                fill="url(#skin-shaft-grad)"
-                stroke="#C97453"
+                d="M 77 110 L 77 34 C 77 16, 99 16, 99 34 L 99 110 Z"
+                fill="url(#real-skin-shaft)"
+                stroke="#C87050"
                 strokeWidth="0.8"
               />
 
-              {/* Subsurface Rosy Knuckle & Fingertip Pad Blush */}
-              <ellipse cx="80" cy="24" rx="7.5" ry="5.5" fill="#E88274" opacity="0.32" />
-              <ellipse cx="80" cy="73" rx="8" ry="4" fill="#E88274" opacity="0.28" />
+              {/* Subsurface Rosy Capillary Blush on Knuckles & Fingertip */}
+              <ellipse cx="88" cy="22" rx="8" ry="5.5" fill="#E27464" opacity="0.35" />
+              <ellipse cx="88" cy="68" rx="8.5" ry="4.5" fill="#E27464" opacity="0.28" />
 
-              {/* Proximal Interphalangeal Knuckle Creases (y = 72) */}
-              <path d="M 72 72 Q 80 75 88 72" stroke="#A85235" strokeWidth="1.4" strokeLinecap="round" />
-              <path d="M 74 75.5 Q 80 78 86 75.5" stroke="#A85235" strokeWidth="1.0" strokeLinecap="round" opacity="0.85" />
+              {/* Proximal Interphalangeal Knuckle Creases (y = 67) */}
+              <path d="M 79 67 Q 88 70.5 97 67" stroke="#A85235" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M 81 70.5 Q 88 73.5 95 70.5" stroke="#A85235" strokeWidth="1.0" strokeLinecap="round" opacity="0.85" />
 
-              {/* Distal Interphalangeal Knuckle Creases (y = 46) */}
-              <path d="M 73 46 Q 80 49 87 46" stroke="#A85235" strokeWidth="1.4" strokeLinecap="round" />
-              <path d="M 75 49 Q 80 51.5 85 49" stroke="#A85235" strokeWidth="0.9" strokeLinecap="round" opacity="0.85" />
+              {/* Distal Interphalangeal Knuckle Creases (y = 42) */}
+              <path d="M 80 42 Q 88 45 96 42" stroke="#A85235" strokeWidth="1.4" strokeLinecap="round" />
+              <path d="M 82 45 Q 88 47.5 94 45" stroke="#A85235" strokeWidth="0.9" strokeLinecap="round" opacity="0.85" />
 
-              {/* Realistic Manicured Fingernail */}
-              {/* Cuticle Rim */}
-              <path d="M 73.5 38 C 73.5 34, 86.5 34, 86.5 38" stroke="#DC8364" strokeWidth="0.8" fill="none" />
-              {/* Nail Body */}
-              <path d="M 74 38 L 74 27 C 74 22, 86 22, 86 27 L 86 38 Z" fill="url(#nail-bed-grad)" />
+              {/* Realistic Manicured Fingernail (Dorsal View) */}
+              {/* Cuticle Arch */}
+              <path d="M 80.5 36 C 80.5 32.5, 95.5 32.5, 95.5 36" stroke="#CF7554" strokeWidth="0.8" fill="none" />
+              {/* Nail Plate */}
+              <path d="M 81 36 L 81 25 C 81 20, 95 20, 95 25 L 95 36 Z" fill="url(#real-nail-grad)" />
               {/* Lunula Half-Moon */}
-              <path d="M 76.5 38 C 76.5 34.5, 83.5 34.5, 83.5 38 Z" fill="#FFFFFF" opacity="0.75" />
-              {/* Specular White Gloss Arc */}
+              <path d="M 83.5 36 C 83.5 33, 92.5 33, 92.5 36 Z" fill="#FFFFFF" opacity="0.8" />
+              {/* Specular White Gloss Reflection */}
               <path
-                d="M 75 27 C 75 24, 85 24, 85 27"
+                d="M 82 25 C 82 22, 94 22, 94 25"
                 stroke="#FFFFFF"
-                strokeWidth="1.1"
+                strokeWidth="1.2"
                 strokeLinecap="round"
                 opacity="0.9"
               />
-              <path d="M 75.5 28 L 75.5 36" stroke="#FFFFFF" strokeWidth="0.7" strokeLinecap="round" opacity="0.6" />
+              <path d="M 82.5 26 L 82.5 34" stroke="#FFFFFF" strokeWidth="0.8" strokeLinecap="round" opacity="0.65" />
 
               {/* Chic Signet Golden Band on Finger */}
               <rect
-                x="69.5"
+                x="76.5"
                 y="80"
-                width="21"
-                height="5.5"
+                width="23"
+                height="6"
                 rx="2"
-                fill="url(#gold-ring-grad)"
-                stroke="#B45309"
-                strokeWidth="0.6"
+                fill="url(#real-gold-ring)"
+                stroke="#92400E"
+                strokeWidth="0.7"
               />
-              <rect x="78" y="81" width="4" height="3.5" rx="0.5" fill="#FFFFFF" opacity="0.9" />
+              <rect x="85.5" y="81" width="5" height="4" rx="0.5" fill="#FFFFFF" opacity="0.95" />
             </g>
           </svg>
         </div>
@@ -499,19 +549,19 @@ export function BirdGuiltEasterEggModal({
   // Audio lifecycle: play sorrow music when open, stop on dismiss
   useEffect(() => {
     if (isOpen) {
-      void sorrowSynth.playSorrow()
+      playSorrowRequiemAudio()
       if (typeof document !== 'undefined') {
         document.body.style.overflow = 'hidden'
       }
     } else {
-      sorrowSynth.stopSorrow()
+      stopSorrowRequiemAudio()
       if (typeof document !== 'undefined') {
         document.body.style.overflow = ''
       }
     }
 
     return () => {
-      sorrowSynth.stopSorrow()
+      stopSorrowRequiemAudio()
       if (typeof document !== 'undefined') {
         document.body.style.overflow = ''
       }
@@ -522,21 +572,26 @@ export function BirdGuiltEasterEggModal({
     try {
       localStorage.setItem('gdg_bird_catch_count', '0')
     } catch {}
-    sorrowSynth.stopSorrow()
+    stopSorrowRequiemAudio()
     onClose()
     router.push('/')
   }, [onClose, router])
 
   const handleClose = useCallback(() => {
-    sorrowSynth.stopSorrow()
+    stopSorrowRequiemAudio()
     onClose()
   }, [onClose])
 
   const handleToggleAudio = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
-    const muted = sorrowSynth.toggleMute()
-    setIsAudioMuted(muted)
-  }, [])
+    if (isAudioMuted) {
+      setIsAudioMuted(false)
+      playSorrowRequiemAudio()
+    } else {
+      setIsAudioMuted(true)
+      stopSorrowRequiemAudio()
+    }
+  }, [isAudioMuted])
 
   if (!isOpen || !mounted) return null
 
@@ -544,7 +599,9 @@ export function BirdGuiltEasterEggModal({
     <div
       role="dialog"
       aria-modal="true"
-      onClick={() => void sorrowSynth.playSorrow()}
+      onClick={() => {
+        if (!isAudioMuted) playSorrowRequiemAudio()
+      }}
       className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-slate-900/65 backdrop-blur-md animate-in fade-in duration-300 select-none"
     >
       {/* Floating Sorrow Feathers in Background */}
@@ -597,7 +654,7 @@ export function BirdGuiltEasterEggModal({
 
         {/* Realistic Anatomical Hand & Playful Salute Illustration */}
         <div className="mx-auto my-1 flex justify-center">
-          <RealisticHandSalute onBounce={() => void sorrowSynth.playSorrow()} />
+          <RealisticHandSalute onBounce={() => playSorrowRequiemAudio()} />
         </div>
 
         {/* Narrative Title */}
