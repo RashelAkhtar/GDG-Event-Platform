@@ -75,9 +75,11 @@ export default function HomePage() {
         </section>
 
         {/* 2. Interactive Kinetic Circle Vessel with Miniature Voxel World Behind */}
-        <section className="relative mt-2 mb-8 select-none touch-none">
+        <section className="relative isolate mt-2 mb-8 select-none touch-none">
           <VoxelWorldBackdrop />
-          <CircleBucket />
+          <div className="relative z-10">
+            <CircleBucket />
+          </div>
         </section>
 
         {/* Hairline Divider Rule */}

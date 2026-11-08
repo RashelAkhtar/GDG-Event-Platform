@@ -443,9 +443,9 @@ export function CircleBucket() {
 
       // Subdued ambient bucket background gradient
       const bgGrad = ctx.createRadialGradient(cx, cy - 20, 10, cx, cy, bucketRadius)
-      bgGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)')
-      bgGrad.addColorStop(0.85, 'rgba(248, 249, 250, 0.90)')
-      bgGrad.addColorStop(1, 'rgba(232, 234, 237, 0.85)')
+      bgGrad.addColorStop(0, 'rgba(255, 255, 255, 0.82)')
+      bgGrad.addColorStop(0.85, 'rgba(248, 249, 250, 0.72)')
+      bgGrad.addColorStop(1, 'rgba(232, 234, 237, 0.60)')
       ctx.fillStyle = bgGrad
       ctx.fill()
 
@@ -741,10 +741,10 @@ export function CircleBucket() {
       {/* Pristine Circular Vessel with Concentric Hairline Rings */}
       <div
         ref={containerRef}
-        className="relative mx-auto aspect-square w-full max-w-[280px] xs:max-w-[305px] sm:max-w-[330px] select-none touch-none rounded-full border border-[#E5E7EB] bg-white p-2 shadow-[0_12px_36px_rgba(0,0,0,0.04)] ring-1 ring-[#F3F4F6] ring-offset-4 ring-offset-[#FAFAFA] transition-all hover:shadow-[0_16px_48px_rgba(0,0,0,0.06)]"
+        className="relative mx-auto aspect-square w-full max-w-[280px] xs:max-w-[305px] sm:max-w-[330px] select-none touch-none rounded-full border border-[#E5E7EB]/90 bg-white/75 backdrop-blur-[2px] p-2 shadow-[0_12px_36px_rgba(0,0,0,0.04)] ring-1 ring-[#F3F4F6]/80 ring-offset-4 ring-offset-[#FAFAFA] transition-all hover:shadow-[0_16px_48px_rgba(0,0,0,0.06)]"
         onContextMenu={(e) => e.preventDefault()}
       >
-        <div className="relative h-full w-full rounded-full overflow-hidden bg-[#FAFAFA]">
+        <div className="relative h-full w-full rounded-full overflow-hidden bg-[#FAFAFA]/60 backdrop-blur-[1px]">
           <canvas
             ref={canvasRef}
             width={340}
