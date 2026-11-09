@@ -47,6 +47,39 @@ function formatDuration(ms: number): string {
   return `${minutes}m ${remainingSecs}s`
 }
 
+function renderQuestionText(questionText?: string) {
+  if (!questionText) return null
+
+  const codePattern = /\b(?:let|const|var|function|if|for|while|return|console\.log|=>)\b/i
+  const codeMatch = questionText.match(/^([\s\S]*?)(\b(?:let|const|var|function|if|for|while|return|console\.log|=>)\b[\s\S]*)$/i)
+
+  if (codeMatch && codePattern.test(codeMatch[2])) {
+    const prose = codeMatch[1].trim()
+    const codeSnippet = codeMatch[2].trim()
+
+    if (prose && codeSnippet) {
+      return (
+        <div className="space-y-4">
+          <h3 className="text-xl sm:text-2xl font-normal tracking-[-0.03em] leading-snug text-[#111827] dark:text-[#F9FAFB] select-none pointer-events-none">
+            {prose}
+          </h3>
+          <pre className="overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-[#1E293B] bg-[#F8FAFC] dark:bg-[#020817] p-4 text-left shadow-inner">
+            <code className="block whitespace-pre-wrap font-mono text-[12px] sm:text-[13px] leading-relaxed text-[#111827] dark:text-[#E2E8F0]">
+              {codeSnippet}
+            </code>
+          </pre>
+        </div>
+      )
+    }
+  }
+
+  return (
+    <h3 className="text-xl sm:text-2xl font-normal tracking-[-0.03em] leading-snug text-[#111827] dark:text-[#F9FAFB] select-none pointer-events-none">
+      {questionText}
+    </h3>
+  )
+}
+
 function QuizRunnerContent() {
   const router = useRouter()
   const params = useParams()
@@ -778,9 +811,7 @@ function QuizRunnerContent() {
             {/* Question Card - Pristine Editorial Architecture */}
             <div className="relative mt-3 flex-1 rounded-2xl border border-[#E5E7EB] dark:border-[#1E293B] bg-white dark:bg-[#0F172A] p-6 sm:p-8 flex flex-col justify-between overflow-hidden select-none no-copy" onCopy={(e) => { e.preventDefault(); showCopyProhibitedAlert(); }} onCut={(e) => e.preventDefault()} onContextMenu={(e) => e.preventDefault()}>
               <div>
-                <h3 className="text-xl sm:text-2xl font-normal tracking-[-0.03em] leading-snug text-[#111827] dark:text-[#F9FAFB] select-none pointer-events-none">
-                  {currentQ?.questionText}
-                </h3>
+                {renderQuestionText(currentQ?.questionText)}
 
                 {/* 4 Options with Structured Styling */}
                 <div className="mt-6 flex flex-col gap-2.5">
