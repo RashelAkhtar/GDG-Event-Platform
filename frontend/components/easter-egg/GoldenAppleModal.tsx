@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { salmanAudio } from '@/lib/salmanAudio'
-import { Sparkles, X, Compass, ChevronRight } from 'lucide-react'
+import { X, Compass, ArrowRight, Sparkles } from 'lucide-react'
 
 interface GoldenAppleModalProps {
   isOpen: boolean
@@ -47,113 +47,173 @@ export function GoldenAppleModal({
       role="dialog"
       aria-modal="true"
       onClick={onClose}
-      className="fixed inset-0 z-[99998] flex items-center justify-center p-3 xs:p-4 sm:p-6 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-300 select-none overflow-y-auto"
+      className="fixed inset-0 z-[99998] flex items-center justify-center p-4 sm:p-6 bg-black/70 dark:bg-black/85 backdrop-blur-md animate-in fade-in duration-300 select-none overflow-y-auto"
     >
-      {/* Background Golden Sparkles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <span className="absolute top-[15%] left-[15%] text-amber-300/40 text-xl animate-pulse">✨</span>
-        <span className="absolute top-[25%] right-[20%] text-amber-400/40 text-2xl animate-pulse" style={{ animationDelay: '0.6s' }}>✨</span>
-        <span className="absolute bottom-[20%] left-[25%] text-amber-300/40 text-lg animate-pulse" style={{ animationDelay: '1.2s' }}>✨</span>
-        <span className="absolute bottom-[30%] right-[15%] text-amber-400/30 text-2xl animate-pulse" style={{ animationDelay: '1.8s' }}>✨</span>
-      </div>
-
-      {/* Discovery Modal Card */}
+      {/* Editorial Discovery Card */}
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-md rounded-3xl border border-amber-300/60 dark:border-amber-500/40 bg-gradient-to-b from-amber-50/90 via-white to-amber-50/80 dark:from-[#13192B] dark:via-[#0D1322] dark:to-[#080D1A] p-5 sm:p-8 shadow-[0_24px_70px_rgba(245,158,11,0.25)] text-center animate-in zoom-in-95 duration-300 flex flex-col my-auto"
+        className="relative w-full max-w-md rounded-[28px] border border-[#E7E2DA] dark:border-[#22242A] bg-[#FCFAF7] dark:bg-[#0E0F12] p-7 sm:p-9 shadow-[0_30px_90px_rgba(0,0,0,0.18)] dark:shadow-[0_30px_90px_rgba(0,0,0,0.85)] text-center animate-in zoom-in-95 duration-300 flex flex-col my-auto overflow-hidden"
       >
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          aria-label="Close discovery"
-          className="absolute top-3.5 right-3.5 h-7 w-7 sm:h-8 sm:w-8 rounded-full border border-neutral-200 dark:border-neutral-700 bg-white/80 dark:bg-neutral-800/80 text-neutral-500 hover:text-black dark:hover:text-white transition-colors flex items-center justify-center cursor-pointer shadow-2xs"
-        >
-          <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-        </button>
+        {/* Subtle Ambient Golden Halo */}
+        <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-72 h-72 rounded-full bg-[#F3E5AB]/25 dark:bg-[#D4AF37]/10 blur-3xl pointer-events-none" />
 
-        {/* Discovery Eyebrow Badge */}
-        <div className="inline-flex items-center gap-1.5 self-center rounded-full border border-amber-400/60 bg-amber-100/80 dark:bg-amber-950/60 px-3 py-1 text-[10px] sm:text-[11px] font-mono tracking-[0.2em] uppercase text-amber-700 dark:text-amber-300 mb-3 shadow-2xs">
-          <Sparkles className="h-3.5 w-3.5 text-amber-500 animate-spin" style={{ animationDuration: '4s' }} />
+        {/* Minimalist Corner Registration Crosshairs */}
+        <span className="absolute top-3.5 left-4 font-mono text-[9px] text-[#A8A29E]/60 dark:text-[#57534E]/60 select-none">+</span>
+        <span className="absolute top-3.5 right-4 font-mono text-[9px] text-[#A8A29E]/60 dark:text-[#57534E]/60 select-none">+</span>
+        <span className="absolute bottom-3.5 left-4 font-mono text-[9px] text-[#A8A29E]/60 dark:text-[#57534E]/60 select-none">+</span>
+        <span className="absolute bottom-3.5 right-4 font-mono text-[9px] text-[#A8A29E]/60 dark:text-[#57534E]/60 select-none">+</span>
+
+        {/* Header Bar */}
+        <div className="flex items-center justify-between pb-3 mb-1 border-b border-[#E7E2DA]/80 dark:border-[#22242A]">
+          <span className="font-mono text-[9px] tracking-[0.28em] uppercase text-[#78716C] dark:text-[#A8A29E]">
+            ARCHIVE // N° 01
+          </span>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="h-7 w-7 rounded-full border border-[#E7E2DA] dark:border-[#262626] bg-transparent text-[#78716C] dark:text-[#A8A29E] hover:text-[#111827] dark:hover:text-white hover:border-[#111827] dark:hover:border-white transition-all flex items-center justify-center cursor-pointer"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+
+        {/* Classification Pill */}
+        <div className="mt-4 mb-2 inline-flex items-center gap-1.5 self-center rounded-full border border-[#D4AF37]/40 bg-[#FAF5E6] dark:bg-[#78350F]/20 px-3.5 py-1 text-[9.5px] font-mono tracking-[0.24em] uppercase text-[#8C6D37] dark:text-[#F3E5AB]">
+          <Sparkles className="h-3 w-3 text-[#B38F4D]" />
           <span>SECRET EASTER EGG UNLOCKED</span>
         </div>
 
-        {/* Golden Apple Emblem with Radiant Aura */}
-        <div className="relative mx-auto my-2 flex items-center justify-center">
-          <div className="absolute h-24 w-24 rounded-full bg-amber-400/25 blur-xl animate-pulse" />
+        {/* Sculptural Gilded Apple Emblem */}
+        <div className="relative mx-auto my-4 flex items-center justify-center">
+          <div className="absolute h-28 w-28 rounded-full bg-[#D4AF37]/15 blur-2xl pointer-events-none" />
           <svg
-            viewBox="0 0 100 100"
-            className="w-20 h-20 sm:w-24 sm:h-24 drop-shadow-[0_10px_25px_rgba(245,158,11,0.5)] animate-bounce"
-            style={{ animationDuration: '2.5s' }}
+            viewBox="0 0 120 120"
+            className="w-24 h-24 sm:w-28 sm:h-28 drop-shadow-[0_12px_28px_rgba(180,83,9,0.22)] transition-transform duration-700 ease-out hover:scale-105"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
           >
             <defs>
-              <linearGradient id="gold-apple-skin" x1="20" y1="20" x2="80" y2="90" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#FFFBEB" />
-                <stop offset="25%" stopColor="#FDE68A" />
-                <stop offset="60%" stopColor="#F59E0B" />
-                <stop offset="100%" stopColor="#B45309" />
+              {/* Rich 24K Brushed Gold Gradient */}
+              <radialGradient id="gold-satin-core" cx="42%" cy="38%" r="62%">
+                <stop offset="0%" stopColor="#FFFDF7" />
+                <stop offset="18%" stopColor="#F9EDB8" />
+                <stop offset="45%" stopColor="#E5C158" />
+                <stop offset="72%" stopColor="#B8860B" />
+                <stop offset="92%" stopColor="#8A5A00" />
+                <stop offset="100%" stopColor="#5E3A00" />
+              </radialGradient>
+
+              {/* Sculpted Leaf Gradient */}
+              <linearGradient id="gold-leaf-lux" x1="58" y1="12" x2="88" y2="34" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#FFF9E6" />
+                <stop offset="35%" stopColor="#E5C158" />
+                <stop offset="75%" stopColor="#997010" />
+                <stop offset="100%" stopColor="#543A05" />
               </linearGradient>
-              <linearGradient id="gold-leaf-grad" x1="50" y1="10" x2="70" y2="25" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#FDE047" />
-                <stop offset="100%" stopColor="#84CC16" />
+
+              {/* Elegant Stem Gradient */}
+              <linearGradient id="gold-stem-lux" x1="58" y1="30" x2="72" y2="8" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#694605" />
+                <stop offset="50%" stopColor="#B38F4D" />
+                <stop offset="100%" stopColor="#402800" />
+              </linearGradient>
+
+              {/* Specular Rim Light */}
+              <linearGradient id="gold-rim-light" x1="24" y1="36" x2="96" y2="100" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.8" />
+                <stop offset="50%" stopColor="#FFEAA7" stopOpacity="0.2" />
+                <stop offset="100%" stopColor="#8A5A00" stopOpacity="0.6" />
               </linearGradient>
             </defs>
 
+            {/* Ambient Base Shadow */}
+            <ellipse cx="60" cy="110" rx="34" ry="6" fill="#000000" fillOpacity="0.08" />
+
             {/* Apple Stem */}
             <path
-              d="M 50 24 C 50 14, 56 10, 60 7"
-              stroke="#78350F"
-              strokeWidth="3.2"
+              d="M 60 30 C 60 17, 68 11, 74 7"
+              stroke="url(#gold-stem-lux)"
+              strokeWidth="3.6"
               strokeLinecap="round"
             />
-            {/* Emerald/Golden Leaf */}
+
+            {/* Sculpted Emerald-Infused Gold Leaf */}
             <path
-              d="M 52 16 C 58 10, 72 12, 70 20 C 62 24, 54 20, 52 16 Z"
-              fill="url(#gold-leaf-grad)"
-              stroke="#65A30D"
-              strokeWidth="0.8"
+              d="M 63 20 C 72 12, 90 14, 87 25 C 77 30, 66 26, 63 20 Z"
+              fill="url(#gold-leaf-lux)"
+              stroke="#D4AF37"
+              strokeWidth="0.75"
             />
-            {/* Apple Body */}
+            {/* Delicate Leaf Central Vein */}
             <path
-              d="M 50 28 C 36 28, 16 38, 18 64 C 20 86, 38 94, 50 88 C 62 94, 80 86, 82 64 C 84 38, 64 28, 50 28 Z"
-              fill="url(#gold-apple-skin)"
-              stroke="#D97706"
-              strokeWidth="1.4"
+              d="M 64 21 C 73 18, 82 19, 86 24"
+              stroke="#543A05"
+              strokeWidth="0.6"
+              strokeLinecap="round"
+              opacity="0.5"
             />
-            {/* Specular Light Reflection */}
-            <ellipse cx="34" cy="45" rx="8" ry="14" fill="#FFFFFF" opacity="0.65" transform="rotate(-25 34 45)" />
-            <circle cx="30" cy="65" r="3" fill="#FFFFFF" opacity="0.5" />
+
+            {/* Sculptural Apple Body */}
+            <path
+              d="M 60 34 C 42 34, 18 46, 21 78 C 23 104, 45 113, 60 106 C 75 113, 97 104, 99 78 C 102 46, 78 34, 60 34 Z"
+              fill="url(#gold-satin-core)"
+              stroke="url(#gold-rim-light)"
+              strokeWidth="1.2"
+            />
+
+            {/* Refined Specular Reflection Curves */}
+            <path
+              d="M 38 48 C 34 56, 33 69, 36 78"
+              stroke="#FFFFFF"
+              strokeWidth="3"
+              strokeLinecap="round"
+              opacity="0.45"
+            />
+            <ellipse cx="40" cy="52" rx="4.5" ry="9" fill="#FFFFFF" opacity="0.35" transform="rotate(-28 40 52)" />
+            <circle cx="37" cy="80" r="2.2" fill="#FFFFFF" opacity="0.4" />
           </svg>
         </div>
 
         {/* Narrative Title */}
-        <h2 className="text-xl sm:text-2xl font-serif font-bold text-[#111827] dark:text-[#F9FAFB] tracking-tight mt-1 mb-2">
-          You Found the Hidden Golden Apple!
+        <h2 className="font-serif text-2xl sm:text-3xl font-normal tracking-[-0.025em] text-[#111827] dark:text-[#FAFAFA] mt-1 mb-1 leading-snug">
+          The Golden Apple
+          <span className="block font-serif italic font-light text-[#78716C] dark:text-[#A8A29E] text-base sm:text-lg mt-0.5">
+            has been unearthed.
+          </span>
         </h2>
 
-        {/* Description */}
-        <p className="text-xs sm:text-[13px] text-[#4B5563] dark:text-[#94A3B8] leading-relaxed mb-6 px-1">
-          You shook the sacred oak tree and unearthed the golden fruit. The gateway to{' '}
-          <strong className="text-amber-600 dark:text-amber-400 font-semibold">SALMAN DRIVING SCHOOL</strong> is now open. Take the wheel, accelerate down the nocturnal highway, and clear the road!
+        {/* Delicate Hairline Accent */}
+        <div className="flex items-center justify-center gap-2.5 my-3">
+          <span className="h-px w-8 bg-[#E7E2DA] dark:bg-[#262626]" />
+          <span className="h-1 w-1 rounded-full bg-[#B38F4D]" />
+          <span className="h-px w-8 bg-[#E7E2DA] dark:bg-[#262626]" />
+        </div>
+
+        {/* Description Body */}
+        <p className="text-xs sm:text-[13px] text-[#57534E] dark:text-[#A8A29E] leading-relaxed mb-6 px-2 font-normal">
+          Through the shaken branches of the sacred oak, the fabled fruit reveals its secret. The corridor to{' '}
+          <strong className="font-semibold text-[#111827] dark:text-white uppercase tracking-wider text-[11px]">
+            SALMAN DRIVING SCHOOL
+          </strong>{' '}
+          is now unsealed. Take the wheel and command the nocturnal highway.
         </p>
 
         {/* Action Buttons */}
-        <div className="flex flex-col gap-2.5 sm:gap-3">
+        <div className="flex flex-col gap-2.5">
           <button
             onClick={() => {
               onClose()
               onEnterGame()
             }}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white px-6 py-3.5 text-xs sm:text-sm font-bold tracking-wide transition-all shadow-[0_8px_24px_rgba(245,158,11,0.35)] active:scale-98 cursor-pointer"
+            className="group w-full flex items-center justify-between rounded-full bg-[#111827] hover:bg-black dark:bg-[#FAFAFA] dark:hover:bg-white text-white dark:text-[#111827] px-6 py-3.5 text-xs font-mono uppercase tracking-[0.18em] font-semibold transition-all duration-300 shadow-sm active:scale-[0.99] cursor-pointer"
           >
             <span>Enter Salman Driving School</span>
-            <ChevronRight className="h-4 w-4" />
+            <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
           </button>
 
           <button
             onClick={onClose}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-full border border-neutral-300 dark:border-neutral-700 bg-white/70 dark:bg-neutral-800/70 hover:bg-neutral-100 dark:hover:bg-neutral-700 text-[#4B5563] dark:text-[#CBD5E1] px-5 py-2.5 text-xs font-medium transition-all cursor-pointer shadow-2xs"
+            className="w-full flex items-center justify-center gap-2 rounded-full border border-[#E7E2DA] dark:border-[#262626] bg-transparent text-[#78716C] dark:text-[#A8A29E] hover:text-[#111827] dark:hover:text-white hover:border-[#111827] dark:hover:border-white px-5 py-2.5 text-[11px] font-mono uppercase tracking-[0.14em] transition-all duration-300 cursor-pointer"
           >
             <Compass className="h-3.5 w-3.5" />
             <span>Keep Exploring Meadow</span>

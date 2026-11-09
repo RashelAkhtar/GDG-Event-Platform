@@ -73,7 +73,7 @@ function AdminPageContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
-  const { gameLockStates, sendLockToggle, sendWinnerCeremonyStart, sendLeaderboardReset, sendDeleteLeaderboardEntry, sendQuestionsUpdate, sendWendConfigUpdate, liveLeaderboards, subscribeToLeaderboardUpdate, connected } = useWebSocket()
+  const { gameLockStates, sendLockToggle, sendWinnerCeremonyStart, sendLeaderboardReset, sendDeleteLeaderboardEntry, sendQuestionsUpdate, sendTimeLimitUpdate, sendWendConfigUpdate, liveLeaderboards, subscribeToLeaderboardUpdate, connected } = useWebSocket()
 
   // Deep linking params (?tab=locks|quiz|wend|winners&track=web-dev-quiz|mentis-quiz)
   const tabParam = searchParams.get('tab') as 'locks' | 'quiz' | 'wend' | 'winners' | null
@@ -539,6 +539,19 @@ function AdminPageContent() {
     showToast(`Updated Wend round time limit to ${seconds}s (${formatDuration(seconds * 1000)})! Broadcast live to all participant screens.`)
   }
 
+  const handleSetQuizTimeLimit = async (seconds: number) => {
+    const safeSecs = Math.max(10, seconds)
+    const isMentis = selectedSlug.includes('mentis')
+    const target = isMentis ? mentisEvent : webEvent
+    const setEvent = isMentis ? setMentisEvent : setWebEvent
+
+    const updated = { ...target, timeLimitSeconds: safeSecs }
+    setEvent(updated)
+    await api.setQuizTimeLimit(selectedSlug, safeSecs)
+    sendTimeLimitUpdate(selectedSlug, safeSecs)
+    showToast(`Updated ${isMentis ? 'Mentis Challenge' : 'Web Dev Sprint'} cumulative time limit to ${safeSecs}s (${formatDuration(safeSecs * 1000)})! Broadcast live to all participant screens.`)
+  }
+
   // --- 4. WINNER CEREMONY BROADCAST (AUTOMATED PODIUM 3rd, 2nd, 1st) ---
   const handleSelectWinnersTrack = (slug: 'web-dev-quiz' | 'mentis-quiz' | 'wend-game') => {
     setSelectedSlug(slug)
@@ -979,6 +992,92 @@ function AdminPageContent() {
                   <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#E6F4EA] text-[#137333]">
                     <Trophy className="h-5 w-5" />
                   </div>
+                </div>
+              </div>
+
+              <div className="relative overflow-hidden rounded-3xl border border-[#E5E7EB]/80 bg-white/90 backdrop-blur-md p-4 sm:p-5 shadow-xs hover:shadow-md transition-all">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-[#FBBC04]" />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="block text-2xl sm:text-3xl font-black text-[#B06000] tracking-tight">
+                      {((selectedSlug === 'mentis-quiz' ? mentisEvent.timeLimitSeconds : webEvent.timeLimitSeconds) || (selectedSlug === 'mentis-quiz' ? 180 : 120))}s
+                    </span>
+                    <span className="mt-1 block text-xs font-semibold text-[#5F6368]">Cumulative Time Limit</span>
+                  </div>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FEF7E0] text-[#B06000]">
+                    <Clock className="h-5 w-5" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Quiz Cumulative Round Time Limit Configurator Card */}
+            <div className="rounded-3xl border border-[#E5E7EB]/90 bg-white/95 backdrop-blur-md p-5 sm:p-6 shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 pb-3 border-b border-[#F1F3F4]">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E8F0FE] text-[#1967D2]">
+                    <Clock className="h-4.5 w-4.5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm sm:text-base font-bold text-[#202124]">
+                      Cumulative Round Time Limit Configuration ({selectedSlug === 'mentis-quiz' ? 'Mentis Challenge' : 'Web Dev Sprint'})
+                    </h3>
+                    <p className="text-[11px] text-[#5F6368]">
+                      Dictates the round length for all questions combined in this quiz track, enforcing an overall countdown timer instead of per-question limits.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E8F0FE] border border-[#1A73E8]/30 px-3.5 py-1.5 text-xs font-bold text-[#1967D2] shadow-2xs">
+                    <Clock className="h-3.5 w-3.5" />
+                    <span>
+                      Active Limit: {((selectedSlug === 'mentis-quiz' ? mentisEvent.timeLimitSeconds : webEvent.timeLimitSeconds) || (selectedSlug === 'mentis-quiz' ? 180 : 120))}s ({formatDuration((((selectedSlug === 'mentis-quiz' ? mentisEvent.timeLimitSeconds : webEvent.timeLimitSeconds) || (selectedSlug === 'mentis-quiz' ? 180 : 120))) * 1000)}) for all {questionsList.length} questions
+                    </span>
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                <div className="md:col-span-7 flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-bold text-[#5F6368] mr-1">Quick Presets:</span>
+                  {[
+                    { label: '60s (1m)', val: 60 },
+                    { label: '90s (1.5m)', val: 90 },
+                    { label: '120s (2m • Standard)', val: 120 },
+                    { label: '180s (3m)', val: 180 },
+                    { label: '300s (5m)', val: 300 },
+                    { label: '600s (10m)', val: 600 },
+                  ].map((preset) => {
+                    const currentLimit = (selectedSlug === 'mentis-quiz' ? mentisEvent.timeLimitSeconds : webEvent.timeLimitSeconds) || (selectedSlug === 'mentis-quiz' ? 180 : 120)
+                    return (
+                      <button
+                        key={preset.val}
+                        type="button"
+                        onClick={() => handleSetQuizTimeLimit(preset.val)}
+                        className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition-all active:scale-95 cursor-pointer ${
+                          currentLimit === preset.val
+                            ? 'bg-[#1967D2] text-white shadow-xs'
+                            : 'border border-[#E5E7EB] bg-[#F8F9FA] text-[#3C4043] hover:bg-white hover:border-[#1A73E8]'
+                        }`}
+                      >
+                        {preset.label}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                <div className="md:col-span-5 flex items-center gap-2">
+                  <label className="text-xs font-bold text-[#5F6368] shrink-0">Custom Seconds:</label>
+                  <input
+                    type="number"
+                    min={15}
+                    max={1800}
+                    step={15}
+                    value={(selectedSlug === 'mentis-quiz' ? mentisEvent.timeLimitSeconds : webEvent.timeLimitSeconds) || (selectedSlug === 'mentis-quiz' ? 180 : 120)}
+                    onChange={(e) => handleSetQuizTimeLimit(Number(e.target.value))}
+                    className="w-24 rounded-xl border border-[#E5E7EB] bg-[#F8F9FA] px-3 py-1.5 text-xs font-bold text-[#202124] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:bg-white"
+                  />
+                  <span className="text-xs font-semibold text-[#5F6368]">seconds total</span>
                 </div>
               </div>
             </div>

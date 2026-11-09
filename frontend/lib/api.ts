@@ -42,6 +42,7 @@ export interface GdgEvent {
   description: string
   type: EventType
   status: EventStatus
+  timeLimitSeconds?: number
   bannerImage?: string
   startTime: string
   endTime: string
@@ -124,6 +125,7 @@ export const DEFAULT_WEB_EVENT: GdgEvent = {
   description: 'Test your frontend & fullstack skills in this live Google Developer Groups quiz.',
   type: 'QUIZ',
   status: 'LIVE',
+  timeLimitSeconds: 120,
   startTime: '2026-01-01T00:00:00.000Z',
   endTime: '2026-12-31T23:59:59.000Z',
 }
@@ -135,6 +137,7 @@ export const DEFAULT_MENTIS_EVENT: GdgEvent = {
   description: 'Logic, AI algorithms, and developer aptitude test. Unlocked by chapter mentors.',
   type: 'QUIZ',
   status: 'UPCOMING',
+  timeLimitSeconds: 180,
   startTime: '2026-01-01T00:00:00.000Z',
   endTime: '2026-12-31T23:59:59.000Z',
 }
@@ -146,6 +149,7 @@ export const DEFAULT_WEND_EVENT: GdgEvent = {
   description: 'Fast-paced word puzzle challenge. Decode technical keywords from real-time clues.',
   type: 'QUIZ',
   status: 'LIVE',
+  timeLimitSeconds: 120,
   startTime: '2026-01-01T00:00:00.000Z',
   endTime: '2026-12-31T23:59:59.000Z',
 }
@@ -1048,6 +1052,48 @@ export const api = {
     const updated: WendBoardConfig = { ...board, timeLimitSeconds: Math.max(10, seconds) }
     api.saveWendBoard(updated)
     return updated
+  },
+
+  getQuizTimeLimit(slug: string): number {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(`gdg_time_limit_${slug}`)
+      if (stored) {
+        const val = Number(stored)
+        if (!isNaN(val) && val > 0) return val
+      }
+      const targetId = slug.includes('mentis') ? DEFAULT_MENTIS_EVENT._id : DEFAULT_WEB_EVENT._id
+      const evStored = localStorage.getItem(`gdg_event_custom_${targetId}`)
+      if (evStored) {
+        try {
+          const parsed = JSON.parse(evStored)
+          if (parsed && parsed.timeLimitSeconds) return Number(parsed.timeLimitSeconds)
+        } catch {}
+      }
+    }
+    if (slug.includes('mentis')) return DEFAULT_MENTIS_EVENT.timeLimitSeconds || 180
+    return DEFAULT_WEB_EVENT.timeLimitSeconds || 120
+  },
+
+  async setQuizTimeLimit(slug: string, seconds: number): Promise<number> {
+    const safeSecs = Math.max(10, seconds)
+    const targetSlug = slug.includes('mentis') ? 'mentis-quiz' : 'web-dev-quiz'
+    const targetId = slug.includes('mentis') ? DEFAULT_MENTIS_EVENT._id : DEFAULT_WEB_EVENT._id
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`gdg_time_limit_${targetSlug}`, String(safeSecs))
+      const stored = localStorage.getItem(`gdg_event_custom_${targetId}`)
+      const current = stored ? JSON.parse(stored) : {}
+      localStorage.setItem(`gdg_event_custom_${targetId}`, JSON.stringify({ ...current, timeLimitSeconds: safeSecs }))
+      window.dispatchEvent(new CustomEvent('gdg_time_limit_sync', { detail: { slug: targetSlug, timeLimitSeconds: safeSecs } }))
+    }
+    try {
+      await fetch(`${API_BASE}/events/${targetId}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ timeLimitSeconds: safeSecs }),
+      })
+    } catch {}
+    return safeSecs
   },
 }
 

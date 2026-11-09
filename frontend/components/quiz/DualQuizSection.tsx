@@ -335,11 +335,12 @@ export function DualQuizSection({
         : (questionCounts[event.slug] ?? (mounted ? api.getQuestionsForSlug(event.slug).length : 0))
 
     const wendLimit = api.getWendBoard().timeLimitSeconds || 120
+    const quizLimit = event.timeLimitSeconds || (isMentis ? 180 : 120)
     const specsBadge =
       type === 'wend'
         ? (activeQuestionsCount > 0 ? `${activeQuestionsCount} Target Words • ${wendLimit}s Timer` : 'Setup in Admin')
         : activeQuestionsCount > 0
-        ? `${activeQuestionsCount} Questions • 30s Each • ${activeQuestionsCount * 100} Pts`
+        ? `${activeQuestionsCount} Questions • ${quizLimit}s Round Limit • ${activeQuestionsCount * 100} Pts`
         : 'No Questions Published Yet'
 
     // Live Player count computation for THIS specific game

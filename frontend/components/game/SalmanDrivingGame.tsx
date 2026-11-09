@@ -4,11 +4,14 @@ import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 // Module-level preloads for instantaneous texture rendering
 let cachedDeerImg: HTMLImageElement | null = null
+let cachedDeerStripImg: HTMLImageElement | null = null
 let cachedWheelImg: HTMLImageElement | null = null
 let cachedAsphaltImg: HTMLImageElement | null = null
 if (typeof window !== 'undefined') {
   cachedDeerImg = new Image()
   cachedDeerImg.src = '/game/deer_stag.png'
+  cachedDeerStripImg = new Image()
+  cachedDeerStripImg.src = '/game/deer_stag_gallop_strip.png'
   cachedWheelImg = new Image()
   cachedWheelImg.src = '/game/steering_wheel_hands.png'
   cachedAsphaltImg = new Image()
@@ -23,6 +26,18 @@ import {
   Compass,
   Trophy,
   RotateCcw,
+  Radio,
+  Disc,
+  Play,
+  Pause,
+  SkipForward,
+  Navigation,
+  Flame,
+  Power,
+  AlertTriangle,
+  Wind,
+  Sparkles,
+  Gauge,
 } from 'lucide-react'
 
 interface SalmanDrivingGameProps {
@@ -41,6 +56,13 @@ interface Deer {
   tumbleAngle: number
   tumbleVelocityX: number
   tumbleVelocityY: number
+  tumbleAltitude?: number
+  stridePhase: number // 0 to 2*PI stride progress
+  strideFrequency: number // strides per frame
+  leapHeightRatio: number // max height of jump relative to body height
+  scaleFactor: number // anatomical scale variation (stag vs buck vs doe)
+  isStartled: boolean // triggered when headlights sweep over deer
+  hesitationFrames: number // hesitation before panic burst
 }
 
 interface RoadsideTree {
@@ -73,10 +95,52 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
   const [gyroActive, setGyroActive] = useState(false)
   const [gyroSupported, setGyroSupported] = useState(false)
   const [showMobileTouchPrompt, setShowMobileTouchPrompt] = useState(true)
+  const [hazardActive, setHazardActive] = useState(false)
+  const [hazardBlink, setHazardBlink] = useState(false)
+  const [keychainSwingBonus, setKeychainSwingBonus] = useState(0)
+  const [driveMode, setDriveMode] = useState<'SPORT+' | 'BEAST' | 'CRUISE'>('SPORT+')
+  const [engineReving, setEngineReving] = useState(false)
+  const [climateTemp, setClimateTemp] = useState(21.5)
+
+  // Hazard warning flasher rhythm
+  useEffect(() => {
+    if (!hazardActive) {
+      setHazardBlink(false)
+      return
+    }
+    const interval = setInterval(() => {
+      setHazardBlink((prev) => !prev)
+    }, 450)
+    return () => clearInterval(interval)
+  }, [hazardActive])
+
+  // Interactive Push-To-Start Engine Rev
+  const handleEngineRev = useCallback(() => {
+    setEngineReving(true)
+    salmanAudio.playStarterRev()
+    setTimeout(() => setEngineReving(false), 900)
+  }, [])
+
+  // Hazard Flasher Switch
+  const handleToggleHazard = useCallback(() => {
+    setHazardActive((prev) => {
+      const next = !prev
+      salmanAudio.playHazardClick()
+      return next
+    })
+  }, [])
+
+  // Salman Khan Signature Turquoise Keychain Interaction
+  const handleKeychainClick = useCallback(() => {
+    salmanAudio.playKeychainChime()
+    setKeychainSwingBonus((prev) => (prev > 0 ? -20 : 20))
+    setTimeout(() => setKeychainSwingBonus(0), 450)
+  }, [])
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const animFrameRef = useRef<number | null>(null)
   const deerImageRef = useRef<HTMLImageElement | null>(null)
+  const deerStripRef = useRef<HTMLImageElement | null>(null)
   const asphaltImageRef = useRef<HTMLImageElement | null>(null)
 
   // Mutable Game Physics State
@@ -110,6 +174,10 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
       img.src = '/game/deer_stag.png'
       deerImageRef.current = img
 
+      const sImg = new Image()
+      sImg.src = '/game/deer_stag_gallop_strip.png'
+      deerStripRef.current = sImg
+
       const aImg = new Image()
       aImg.src = '/game/asphalt_texture.jpg'
       asphaltImageRef.current = aImg
@@ -135,7 +203,7 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
     }
   }, [])
 
-  // Audio lifecycle: start engine sound on open, stop on dismiss
+  // Audio lifecycle: start engine sound & background music on open, stop on dismiss
   useEffect(() => {
     if (isOpen) {
       salmanAudio.startEngine()
@@ -155,6 +223,15 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
       }
     }
   }, [isOpen])
+
+  // Dynamic BGM volume ducking during exit scorecard review
+  useEffect(() => {
+    if (showExitScorecard) {
+      salmanAudio.setBgmVolume(0.2)
+    } else {
+      salmanAudio.setBgmVolume(0.55)
+    }
+  }, [showExitScorecard])
 
   // Gyroscope tilt listener: handles BOTH Portrait and Landscape orientations!
   useEffect(() => {
@@ -232,6 +309,13 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
       }
       if (e.key === 'h' || e.key === 'H') {
         salmanAudio.playHorn()
+        gameState.current.deers.forEach((d) => {
+          if (!d.isHit && !d.isStartled) {
+            d.isStartled = true
+            d.hesitationFrames = 0
+            d.crossingSpeedX *= 1.35
+          }
+        })
       }
       if (e.key === 'm' || e.key === 'M') {
         const muted = salmanAudio.toggleMute()
@@ -742,51 +826,104 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
       }
 
       // -------------------------------------------------------------
-      // 3. High-Visibility Deer Spawning, Crossing AI & Eye-Shine
+      // 3. Biomechanically Realistic Deer Spawning, Crossing AI & Stride
       // -------------------------------------------------------------
       g.spawnTimer++
       if (g.spawnTimer > 65) {
         g.spawnTimer = 0
         const fromLeft = Math.random() > 0.5
         const randSpecies = Math.random()
-        const species: Deer['species'] = randSpecies < 0.2 ? 'stag' : randSpecies < 0.6 ? 'buck' : 'doe'
+        const species: Deer['species'] = randSpecies < 0.25 ? 'stag' : randSpecies < 0.65 ? 'buck' : 'doe'
+        const scaleFactor = species === 'stag' ? 1.15 : species === 'doe' ? 0.88 : 1.0
+        const strideFrequency = species === 'stag' ? 0.11 : species === 'doe' ? 0.16 : 0.13
+        const leapHeightRatio = species === 'stag' ? 0.35 : species === 'doe' ? 0.26 : 0.30
 
         g.deers.push({
           id: g.nextDeerId++,
-          x: fromLeft ? -0.86 : 0.86, // Spawns right at the guardrail edge!
+          x: fromLeft ? -0.92 : 0.92, // Spawns right outside the guardrail
           z: 0.04,
           speedZ: 0.0058 * g.playerSpeed,
-          crossingSpeedX: (fromLeft ? 1 : -1) * (0.0055 + Math.random() * 0.0025), // Slower lateral crossing: 3+ seconds in view!
+          crossingSpeedX: (fromLeft ? 1 : -1) * (0.0050 + Math.random() * 0.0025),
           species,
           isHit: false,
           tumbleAngle: 0,
           tumbleVelocityX: (Math.random() - 0.5) * 8,
           tumbleVelocityY: -10 - Math.random() * 6,
+          tumbleAltitude: 0,
+          stridePhase: Math.random() * Math.PI * 2,
+          strideFrequency,
+          leapHeightRatio,
+          scaleFactor,
+          isStartled: false,
+          hesitationFrames: Math.random() < 0.35 ? 12 : 0,
         })
       }
 
-      // Update & Draw Deers with Photorealistic Stag Sprite & Luminous Eye-Shine
+      // Update & Draw Deers with Biomechanical Leaping, Road Shadows & Headlight Illumination
       for (let i = g.deers.length - 1; i >= 0; i--) {
         const d = g.deers[i]
 
+        // Advance quadruped gallop stride cycle with speed-synchronized cadence
+        const dynamicStrideFreq = 0.15 + Math.abs(d.crossingSpeedX) * 2.4
+        d.stridePhase = (d.stridePhase + dynamicStrideFreq) % (Math.PI * 2)
+        const phaseNorm = d.stridePhase / (Math.PI * 2) // 0 to 1
+        const frameIndex = Math.floor(phaseNorm * 8) % 8
+
+        // Biological gait dynamics
+        const isAirborne = phaseNorm >= 0.15 && phaseNorm < 0.75
+        let jumpArc = 0
+        let pitchAngle = 0
+        let squashStretchX = 1.0
+        let squashStretchY = 1.0
+        let lateralSpeedMultiplier = 0.72 // Ground traction
+
+        if (isAirborne) {
+          const flightProgress = (phaseNorm - 0.15) / 0.60
+          jumpArc = Math.sin(flightProgress * Math.PI)
+          pitchAngle = Math.cos(flightProgress * Math.PI) * 0.08
+          squashStretchX = 1.0 + 0.04 * jumpArc
+          squashStretchY = 1.0 - 0.03 * jumpArc
+          lateralSpeedMultiplier = 1.25 // Gliding leap
+        } else {
+          // Hooves on asphalt road: compression push-off
+          squashStretchX = 0.98
+          squashStretchY = 1.02
+        }
+
         if (!d.isHit) {
           d.z += d.speedZ
-          d.x += d.crossingSpeedX
 
-          // Collision detection: right in front of bumper (z >= 0.74 && z <= 0.90)
+          // Startled reaction as car high beams hit deer
+          if (d.z >= 0.34 && !d.isStartled) {
+            d.isStartled = true
+            d.crossingSpeedX *= 1.32
+          }
+
+          if (d.hesitationFrames > 0) {
+            d.hesitationFrames--
+          } else {
+            d.x += d.crossingSpeedX * lateralSpeedMultiplier
+          }
+
+          // Collision detection: right in front of bumper (z between 0.74 and 0.92)
           const playerRelativeX = g.playerX
           const xDist = Math.abs(d.x - playerRelativeX)
 
-          if (d.z >= 0.74 && d.z <= 0.90 && xDist < 0.32) {
+          if (d.z >= 0.74 && d.z <= 0.92 && xDist < 0.32) {
             d.isHit = true
+            const deflectLeft = d.x < playerRelativeX
+            d.tumbleVelocityX = deflectLeft ? (-7 - Math.random() * 4) : (7 + Math.random() * 4)
+            d.tumbleVelocityY = -12 - Math.random() * 5
+            d.tumbleAltitude = 0
             triggerHitFeedback(d)
           }
         } else {
-          // Tumble physics after hit (3D cartwheel across hood)
-          d.x += d.tumbleVelocityX * 0.018
-          d.z += 0.022
-          d.tumbleAngle += 0.32
-          d.tumbleVelocityY += 0.6
+          // 3D Ragdoll Projectile Physics across windshield
+          d.x += d.tumbleVelocityX * 0.016
+          d.z += 0.024
+          d.tumbleAltitude = (d.tumbleAltitude || 0) + d.tumbleVelocityY
+          d.tumbleVelocityY += 0.82 // Realistic gravity
+          d.tumbleAngle += 0.28
         }
 
         // Remove deers that passed or flew off
@@ -795,69 +932,147 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
           continue
         }
 
-        // Perspective Screen Position
+        // 3D Perspective Road Coordinates
         const deerZScale = Math.pow(d.z, 1.45)
-        const deerY = horizonY + deerZScale * (roadCowlY - horizonY)
+        const roadSurfaceY = horizonY + deerZScale * (roadCowlY - horizonY)
         const roadCenterXAtZ = centerTopX + (centerBottomX - centerTopX) * deerZScale
         const roadWidthAtZ = roadTopWidth + (roadBottomWidth - roadTopWidth) * deerZScale
-        const deerX = roadCenterXAtZ + (d.x * roadWidthAtZ * 0.48)
+        const deerRoadX = roadCenterXAtZ + (d.x * roadWidthAtZ * 0.48)
 
-        // True-to-life majestic stag proportions: 65px at horizon to 285px at car bumper
-        const scale = 0.35 + d.z * 1.55
+        // Anatomical scale: 65px at horizon to 290px at bumper
+        const scale = (0.35 + d.z * 1.55) * (d.scaleFactor || 1.0)
         const deerW = 165 * scale
-        const deerH = deerW * (697 / 954) // Exact 1:1 aspect ratio of cropped high-res stag sprite
+        const deerH = deerW * 1.0 // 1:1 frame aspect ratio (360x360 frame)
 
+        // Subtle natural vertical suspension (no bouncing image; grounded hooves track pavement)
+        const airborneAltitude = !d.isHit ? jumpArc * (deerH * 0.08) : -(d.tumbleAltitude || 0)
+        const renderDeerY = roadSurfaceY - airborneAltitude
+
+        // -----------------------------------------------------------
+        // 1. Physically Grounded Cast Shadow on Road Surface
+        // -----------------------------------------------------------
+        const shadowRadiusX = deerW * 0.45 * (1 - jumpArc * 0.15)
+        const shadowRadiusY = deerW * 0.13 * (1 - jumpArc * 0.15)
+        const shadowAlpha = (0.55 - jumpArc * 0.15) * Math.min(1, d.z * 2.2)
+
+        if (shadowAlpha > 0.04) {
+          ctx.save()
+          ctx.beginPath()
+          ctx.ellipse(deerRoadX, roadSurfaceY, Math.max(2, shadowRadiusX), Math.max(1, shadowRadiusY), 0, 0, Math.PI * 2)
+          ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha.toFixed(2)})`
+          ctx.fill()
+          ctx.restore()
+        }
+
+        // -----------------------------------------------------------
+        // 2. Realistic Galloping Stag Sprite with Moving Legs
+        // -----------------------------------------------------------
         ctx.save()
-        // Subtle realistic gallop stride bobbing
-        const gallopBob = !d.isHit ? Math.sin(Date.now() * 0.015 + d.id * 3) * (4 * scale) : 0
-        ctx.translate(deerX, deerY + gallopBob)
+        ctx.translate(deerRoadX, renderDeerY)
+
+        const headDir = d.crossingSpeedX > 0 ? 1 : -1
 
         if (d.isHit) {
           ctx.rotate(d.tumbleAngle)
+          ctx.scale(headDir, 1)
+        } else {
+          ctx.scale(headDir, 1)
+          ctx.rotate(pitchAngle)
+          ctx.scale(squashStretchX, squashStretchY)
         }
 
-        // Direction flip: if crossing from right to left, flip horizontally (sprite naturally faces right)
-        const headDir = d.crossingSpeedX > 0 ? 1 : -1
-        ctx.scale(headDir, 1)
-
+        const activeStripImg = deerStripRef.current || cachedDeerStripImg
         const activeDeerImg = deerImageRef.current || cachedDeerImg
 
-        // Draw photorealistic stag sprite image with high-beam illumination
-        if (activeDeerImg && activeDeerImg.complete && activeDeerImg.naturalWidth > 0) {
+        // Distance-based nocturnal headlight illumination (inverse-square transition)
+        const headlightFactor = Math.max(0, Math.min(1, (d.z - 0.08) / 0.62))
+        const nocturnalBrightness = 0.32 + headlightFactor * 0.78
+        const nocturnalContrast = 1.05 + headlightFactor * 0.1
+
+        if (ctx.filter !== undefined) {
+          ctx.filter = `brightness(${nocturnalBrightness.toFixed(2)}) contrast(${nocturnalContrast.toFixed(2)})`
+        }
+
+        if (activeStripImg && activeStripImg.complete && activeStripImg.naturalWidth > 0) {
+          // 8-Frame Multi-Limb Galloping Animation Spritesheet (2880x360, 360x360 per frame)
+          const frameW = 360
+          const frameH = 360
           ctx.drawImage(
-            activeDeerImg,
+            activeStripImg,
+            frameIndex * frameW,
+            0,
+            frameW,
+            frameH,
             -deerW * 0.5,
             -deerH,
             deerW,
             deerH
           )
-
-
+        } else if (activeDeerImg && activeDeerImg.complete && activeDeerImg.naturalWidth > 0) {
+          ctx.drawImage(
+            activeDeerImg,
+            -deerW * 0.5,
+            -deerH,
+            deerW,
+            deerH * (697 / 954)
+          )
         } else {
-          // Anatomical wild deer silhouette fallback with antlers (zero cartoon shapes)
-          ctx.fillStyle = '#D97706'
+          // Anatomical wild deer silhouette fallback with antlers
+          ctx.fillStyle = '#C27835'
           ctx.beginPath()
           ctx.ellipse(0, -deerH * 0.45, deerW * 0.42, deerH * 0.28, 0, 0, Math.PI * 2)
           ctx.fill()
-          // Antlers
-          ctx.strokeStyle = '#FDE047'
-          ctx.lineWidth = Math.max(1.5, 3 * scale)
-          ctx.beginPath()
-          ctx.moveTo(deerW * 0.24, -deerH * 0.8)
-          ctx.lineTo(deerW * 0.35, -deerH * 1.05)
-          ctx.stroke()
+          if (d.species === 'stag' || d.species === 'buck') {
+            ctx.strokeStyle = '#FDE047'
+            ctx.lineWidth = Math.max(1.5, 3 * scale)
+            ctx.beginPath()
+            ctx.moveTo(deerW * 0.24, -deerH * 0.8)
+            ctx.lineTo(deerW * 0.35, -deerH * 1.05)
+            ctx.stroke()
+          }
         }
 
-        // Luminous Headlight Eye-Shine (Chartreuse glint precisely on the anatomical eye position: x=82.8%, y=34.6%)
-        ctx.fillStyle = '#CCFF00'
-        ctx.shadowColor = '#CCFF00'
-        ctx.shadowBlur = Math.max(3, 10 * scale)
-        ctx.beginPath()
-        const eyeX = deerW * 0.328
-        const eyeY = -deerH * 0.654
-        ctx.arc(eyeX, eyeY, Math.max(1.8, 3.2 * scale), 0, Math.PI * 2)
-        ctx.fill()
-        ctx.shadowBlur = 0
+        if (ctx.filter !== undefined) {
+          ctx.filter = 'none'
+        }
+
+        // -----------------------------------------------------------
+        // 3. Photorealistic Tapetum Lucidum Eyeshine
+        // -----------------------------------------------------------
+        if (!d.isHit) {
+          const eyeX = deerW * 0.24
+          const eyeY = -deerH * 0.57
+
+          // Eyeshine blooms through distance atmosphere or when startled
+          const distBloom = d.z < 0.4 ? 1.4 : 1.0
+          const startleFlare = d.isStartled ? 1.3 : 1.0
+          const baseEyeRadius = Math.max(2.0, 3.8 * scale) * distBloom * startleFlare
+
+          // Outer phosphorescent radial glare
+          const glowRadius = baseEyeRadius * 3.8
+          const eyeGlow = ctx.createRadialGradient(eyeX, eyeY, 0, eyeX, eyeY, glowRadius)
+          eyeGlow.addColorStop(0, 'rgba(255, 255, 230, 0.95)')
+          eyeGlow.addColorStop(0.35, 'rgba(204, 255, 0, 0.75)')
+          eyeGlow.addColorStop(0.7, 'rgba(163, 230, 53, 0.25)')
+          eyeGlow.addColorStop(1, 'rgba(163, 230, 53, 0)')
+
+          ctx.fillStyle = eyeGlow
+          ctx.beginPath()
+          ctx.arc(eyeX, eyeY, glowRadius, 0, Math.PI * 2)
+          ctx.fill()
+
+          // Horizontal anamorphic specular glint streak
+          ctx.fillStyle = 'rgba(240, 255, 150, 0.5)'
+          ctx.beginPath()
+          ctx.ellipse(eyeX, eyeY, baseEyeRadius * 2.8, baseEyeRadius * 0.65, 0, 0, Math.PI * 2)
+          ctx.fill()
+
+          // High-intensity white-hot specular pupil pinpoint
+          ctx.fillStyle = '#FFFFFF'
+          ctx.beginPath()
+          ctx.arc(eyeX, eyeY, Math.max(1.2, baseEyeRadius * 0.45), 0, Math.PI * 2)
+          ctx.fill()
+        }
 
         ctx.restore()
       }
@@ -982,82 +1197,210 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
               </div>
             </div>
           </div>
+
+          {/* ================================================================ */}
+          {/* SALMAN KHAN SIGNATURE TURQUOISE TALISMAN HANGING CHARM           */}
+          {/* Authentic firoza cabochon in heavy sterling silver bezel setting */}
+          {/* Real-time centrifugal steering sway physics & interactive chime  */}
+          {/* ================================================================ */}
+          <div
+            className="relative flex flex-col items-center cursor-pointer select-none transition-transform duration-100 origin-top mt-[-2px]"
+            style={{
+              transform: `rotate(${-steerAngle * 0.85 + keychainSwingBonus}deg)`,
+              transformOrigin: 'top center',
+            }}
+            onClick={handleKeychainClick}
+            title="Salman Khan's Iconic Turquoise Stone Talisman (Click to Jingle)"
+          >
+            {/* Hanging Sterling Silver Curb Chain */}
+            <div className="w-0.5 h-14 sm:h-18 bg-gradient-to-b from-slate-400 via-slate-200 to-slate-400 shadow-[0_0_4px_rgba(255,255,255,0.4)] flex flex-col items-center justify-between">
+              <div className="w-1.5 h-1.5 rounded-full bg-slate-300 border border-slate-500 shadow-sm" />
+              <div className="w-1.5 h-1.5 rounded-full bg-slate-100 border border-slate-400 shadow-sm" />
+              <div className="w-1.5 h-1.5 rounded-full bg-slate-300 border border-slate-500 shadow-sm" />
+            </div>
+
+            {/* Heavy Sterling Silver Bezel Casing holding Turquoise Gemstone */}
+            <div className="relative mt-0.5 p-1 rounded-lg bg-gradient-to-b from-slate-300 via-slate-100 to-slate-400 border border-white shadow-[0_8px_20px_rgba(0,0,0,0.8),inset_0_1px_2px_rgba(255,255,255,0.9)] flex items-center justify-center">
+              {/* Corner claws/prongs */}
+              <div className="absolute -top-0.5 -left-0.5 w-1 h-1 bg-white rounded-full border border-slate-400" />
+              <div className="absolute -top-0.5 -right-0.5 w-1 h-1 bg-white rounded-full border border-slate-400" />
+              <div className="absolute -bottom-0.5 -left-0.5 w-1 h-1 bg-white rounded-full border border-slate-400" />
+              <div className="absolute -bottom-0.5 -right-0.5 w-1 h-1 bg-white rounded-full border border-slate-400" />
+
+              {/* Genuine Firoza Turquoise Gemstone */}
+              <div className="relative w-7 sm:w-8 h-9 sm:h-10 rounded-md bg-gradient-to-br from-[#06B6D4] via-[#0891B2] to-[#0E7490] overflow-hidden shadow-inner flex items-center justify-center border border-cyan-300/40">
+                {/* Natural Organic Veins */}
+                <svg className="absolute inset-0 w-full h-full opacity-65" viewBox="0 0 32 40">
+                  <path d="M 4 2 Q 12 10 10 18 Q 8 28 18 34" stroke="#042F2E" strokeWidth="1.2" fill="none" />
+                  <path d="M 10 18 Q 20 14 26 22" stroke="#083344" strokeWidth="0.9" fill="none" />
+                  <path d="M 18 34 Q 24 36 28 32" stroke="#042F2E" strokeWidth="0.8" fill="none" />
+                  <path d="M 2 30 Q 8 26 6 38" stroke="#0F172A" strokeWidth="0.7" fill="none" />
+                </svg>
+                {/* Lustrous Specular Resin Highlight */}
+                <div className="absolute top-1 left-1 w-2.5 h-3.5 bg-white/50 rounded-full blur-[0.6px] -rotate-45" />
+                <span className="relative text-[8px] font-mono font-black text-white/30 tracking-widest select-none">
+                  ★
+                </span>
+              </div>
+            </div>
+
+            {/* Silver 'BHAI' Monogram Fob */}
+            <div className="absolute -bottom-3 right-[-4px] px-1 py-0.2 rounded-full bg-gradient-to-br from-slate-200 to-slate-400 border border-slate-500 shadow-sm flex items-center justify-center text-[6px] font-mono font-bold text-slate-800">
+              BHAI
+            </div>
+          </div>
+        </div>
+
+        {/* Right Wing Mirror (Passenger Side - Matching Left Mirror) */}
+        <div className="absolute right-2 sm:right-6 top-[30%] sm:top-[28%] pointer-events-auto z-23">
+          <div className="relative w-24 sm:w-32 h-16 sm:h-22 rounded-2xl border-4 border-[#18202F] bg-[#0A0E17] shadow-[0_12px_36px_rgba(0,0,0,0.8)] overflow-hidden rotate-3">
+            <div className="relative w-full h-full bg-gradient-to-l from-[#0C1424] via-[#182234] to-[#0A0E17] flex items-center justify-center overflow-hidden">
+              <div className="absolute w-[140%] h-1 bg-amber-400/90 rotate-12 shadow-[0_0_6px_#F59E0B]" />
+              <div className="absolute w-[140%] h-0.5 bg-white/70 rotate-12 translate-y-3" />
+              <div className="absolute top-2 inset-x-0 h-1 bg-slate-400/40" />
+              <span className="absolute bottom-1 right-2 text-[7px] font-mono tracking-wider text-neutral-400">
+                SIDE MIRROR
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* ==================================================================== */}
-      {/* LAYER 3: SOLID WALL-TO-WALL DASHBOARD & PHOTOREALISTIC WHEEL/HANDS   */}
-      {/* Zero rounded corners at screen edges: completely eliminates cutouts  */}
+      {/* LAYER 3: LUXURY AUTOMOTIVE COCKPIT, DIGITAL CLUSTER & DASHBOARD      */}
+      {/* Precision-aligned mechanical column, Infotainment, Key Chain, Controls*/}
       {/* ==================================================================== */}
       <div className="absolute inset-x-0 bottom-0 pointer-events-none flex flex-col justify-end z-25">
         {/* Solid Automotive Deck: Full Width, Edge to Edge */}
-        <div className="relative w-full h-[25vh] sm:h-[27vh] bg-gradient-to-t from-[#080B12] via-[#0E1420] to-[#172030] border-t-4 border-[#2E3B50] shadow-[0_-20px_60px_rgba(0,0,0,0.95)] flex items-center justify-center">
+        <div className="relative w-full h-[28vh] sm:h-[30vh] min-h-[220px] bg-gradient-to-t from-[#04060A] via-[#090C14] to-[#121722] border-t border-slate-700/60 shadow-[0_-25px_70px_rgba(0,0,0,0.98)] flex items-center justify-center">
 
-          {/* Double Leather Stitching Highlight Line */}
-          <div className="absolute top-2 inset-x-0 border-t border-dashed border-sky-400/25 h-0.5" />
+          {/* Ambient Electroluminescent Cowl Edge Lighting (Cyan-Ice LED Piping) */}
+          <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent shadow-[0_0_14px_rgba(34,211,238,0.6)]" />
 
-          {/* Left Turbine AC Vent (Matching Reference Photo) */}
-          <div className="hidden sm:flex absolute left-32 top-4 w-12 h-12 rounded-full border-2 border-[#334155] bg-gradient-to-b from-[#1E293B] to-[#0A0F1D] shadow-inner items-center justify-center">
-            <div className="w-8 h-8 rounded-full border border-neutral-700 bg-[#0F172A] flex items-center justify-center">
-              <div className="w-full h-0.5 bg-neutral-600 rotate-45" />
-              <div className="w-full h-0.5 bg-neutral-600 -rotate-45" />
-            </div>
-          </div>
+          {/* Saddle Double-Stitching Leather Accent */}
+          <div className="absolute top-2 inset-x-0 border-t border-dashed border-cyan-400/20 h-0.5" />
 
-          {/* Center-Right Turbine AC Vents (Matching Reference Photo) */}
-          <div className="hidden sm:flex absolute right-24 top-4 gap-3 items-center">
-            <div className="w-12 h-12 rounded-full border-2 border-[#334155] bg-gradient-to-b from-[#1E293B] to-[#0A0F1D] shadow-inner flex items-center justify-center">
-              <div className="w-8 h-8 rounded-full border border-neutral-700 bg-[#0F172A] flex items-center justify-center">
-                <div className="w-full h-0.5 bg-neutral-600 rotate-45" />
-                <div className="w-full h-0.5 bg-neutral-600 -rotate-45" />
+          {/* Horizontal Brushed Titanium & Carbon Fiber Trim Accent Strip */}
+          <div className="absolute top-3.5 inset-x-0 h-1 bg-gradient-to-r from-[#1E293B] via-[#334155] to-[#1E293B] opacity-60 shadow-[0_1px_3px_rgba(0,0,0,0.8)]" />
+
+          {/* ============================================================== */}
+          {/* DRIVER SWITCHGEAR CONSOLE (LEFT DASHBOARD DECK)                 */}
+          {/* Turbine AC Vent, Rotary Headlights, Defroster & Dimmer Cluster */}
+          {/* ============================================================== */}
+          <div className="hidden sm:flex absolute left-6 sm:left-12 md:left-18 top-4 sm:top-5 items-center gap-3.5 pointer-events-auto z-26">
+            {/* Left Aluminum Turbine AC Vent with Chrome Sliders */}
+            <div className="w-11 sm:w-12 h-11 sm:h-12 rounded-full border-2 border-slate-600/80 bg-gradient-to-b from-[#1A2333] via-[#0E1522] to-[#05080E] shadow-[inset_0_2px_6px_rgba(0,0,0,0.8),0_4px_12px_rgba(0,0,0,0.9)] flex items-center justify-center">
+              <div className="relative w-7 sm:w-8 h-7 sm:h-8 rounded-full border border-slate-700 bg-[#0B1019] flex items-center justify-center shadow-inner">
+                <div className="absolute inset-0 rounded-full bg-cyan-400/10 blur-[2px]" />
+                <div className="w-full h-0.5 bg-slate-500 rotate-45" />
+                <div className="w-full h-0.5 bg-slate-500 -rotate-45" />
+                <div className="h-2 w-2 rounded-full bg-slate-300 border border-slate-500 shadow-sm" />
               </div>
             </div>
-            <div className="w-12 h-12 rounded-full border-2 border-[#334155] bg-gradient-to-b from-[#1E293B] to-[#0A0F1D] shadow-inner flex items-center justify-center">
-              <div className="w-8 h-8 rounded-full border border-neutral-700 bg-[#0F172A] flex items-center justify-center">
-                <div className="w-full h-0.5 bg-neutral-600 rotate-45" />
-                <div className="w-full h-0.5 bg-neutral-600 -rotate-45" />
-              </div>
-            </div>
-          </div>
 
-          {/* Driver Instrument Binnacle Hood Arcing over Steering Wheel */}
-          <div className="absolute top-[-18px] sm:top-[-24px] left-1/2 -translate-x-1/2 w-80 sm:w-96 h-12 rounded-t-3xl bg-gradient-to-b from-[#1E293B] to-[#0E1420] border-t-2 border-x-2 border-[#3B4961] shadow-lg" />
-
-          {/* Illuminated Digital Instrument Cluster */}
-          <div className="absolute top-2 left-1/2 -translate-x-1/2 w-72 sm:w-88 h-14 sm:h-16 rounded-2xl bg-[#06090F]/95 border border-neutral-800 p-2 shadow-[inset_0_2px_8px_rgba(0,0,0,0.85)] flex items-center justify-around z-26">
-            {/* RPM Tachometer Dial */}
+            {/* German Luxury Rotary Headlight Switch */}
             <div className="flex flex-col items-center">
-              <div className="relative w-10 sm:w-12 h-10 sm:h-12 rounded-full border border-neutral-700/80 bg-neutral-950 flex items-center justify-center shadow-inner">
-                <span className="text-[7px] font-mono text-cyan-400">RPM</span>
+              <div className="relative w-10 sm:w-11 h-10 sm:h-11 rounded-full border-2 border-slate-600/90 bg-gradient-to-br from-[#1E293B] to-[#080B12] shadow-[0_4px_10px_rgba(0,0,0,0.9),inset_0_1px_3px_rgba(255,255,255,0.2)] flex items-center justify-center cursor-pointer">
+                <div className="w-6 h-6 rounded-full bg-[#0F172A] border border-slate-500 flex items-center justify-center shadow-inner">
+                  <div className="w-1 h-3 bg-cyan-300 rounded-sm -translate-y-1 shadow-[0_0_6px_#22D3EE]" />
+                </div>
+                {/* Active AUTO Indicator Dot */}
+                <div className="absolute -top-1 w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_#34D399]" title="AUTO Headlights Active" />
+              </div>
+              <span className="text-[6px] font-mono tracking-widest text-slate-400 uppercase mt-0.5">LIGHTS</span>
+            </div>
+
+            {/* Defroster & Fog Lamp Keypad */}
+            <div className="hidden md:flex flex-col gap-1">
+              <div className="flex gap-1">
+                <button
+                  type="button"
+                  className="px-1.5 py-0.5 rounded bg-slate-800/80 border border-slate-600 text-[6.5px] font-mono text-cyan-300 hover:bg-slate-700 transition"
+                  title="Front Windshield Defroster"
+                >
+                  MAX ⛆
+                </button>
+                <button
+                  type="button"
+                  className="px-1.5 py-0.5 rounded bg-slate-800/80 border border-slate-600 text-[6.5px] font-mono text-neutral-400 hover:bg-slate-700 transition"
+                  title="Rear Defroster"
+                >
+                  REAR ♨
+                </button>
+              </div>
+              <span className="text-[5.5px] font-mono text-neutral-500 text-center tracking-wider">DEFROST</span>
+            </div>
+          </div>
+
+          {/* Sculpted Instrument Binnacle Hood with Deep Shadow */}
+          <div className="absolute -top-7 sm:-top-9 left-1/2 -translate-x-1/2 w-[390px] sm:w-[490px] md:w-[550px] h-16 sm:h-20 rounded-t-[36px] bg-gradient-to-b from-[#1B2332] via-[#0E1420] to-[#06080E] border-t-2 border-x-2 border-[#2E3C52] shadow-[0_16px_36px_rgba(0,0,0,0.98)]" />
+
+          {/* High-Definition Dual Virtual Cockpit Display */}
+          <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-[370px] sm:w-[460px] md:w-[520px] h-16 sm:h-18 rounded-2xl bg-gradient-to-b from-[#0A0E18] to-[#020407] border border-slate-700/80 px-3 sm:px-5 py-2 shadow-[inset_0_3px_12px_rgba(0,0,0,0.95),0_0_24px_rgba(0,0,0,0.9)] flex items-center justify-between z-26">
+
+            {/* Left Instrument: RPM Tachometer Dial */}
+            <div className="flex items-center gap-2">
+              <div className="relative w-11 sm:w-13 h-11 sm:h-13 rounded-full border border-slate-700 bg-[#03060B] flex items-center justify-center shadow-inner">
+                {/* Dial Ticks & Redline */}
+                <div className="absolute inset-0.5 rounded-full border border-cyan-400/30" />
+                <div className="absolute top-1 right-2 w-1.5 h-1.5 rounded-full bg-rose-500/80 shadow-[0_0_6px_#F43F5E]" title="Redline 7500 RPM" />
+                <span className="text-[7.5px] font-mono font-bold text-cyan-300">RPM</span>
+                {/* Dynamic Tachometer Needle (Sweeps on engine rev) */}
                 <div
-                  className="absolute w-0.5 h-4 sm:h-5 bg-cyan-400 origin-bottom shadow-[0_0_6px_#22D3EE]"
+                  className="absolute w-0.5 h-4 sm:h-5 bg-cyan-400 origin-bottom shadow-[0_0_8px_#22D3EE] transition-transform duration-100"
                   style={{
-                    transform: `rotate(${Math.min(135, (speedKmH / 180) * 140 - 70)}deg)`,
+                    transform: `rotate(${engineReving ? 130 : Math.min(135, (speedKmH / 180) * 140 - 70)}deg)`,
                     bottom: '50%',
                   }}
                 />
               </div>
+              <div className="hidden sm:flex flex-col text-left">
+                <span className="text-[8px] font-mono font-bold text-cyan-300 tracking-wider">GEAR D7</span>
+                <span className="text-[7px] font-mono text-neutral-400 uppercase">{driveMode}</span>
+              </div>
             </div>
 
-            {/* Digital Speedometer Center Display */}
+            {/* Center Digital Cockpit: Large High-Contrast Speedometer & Indicators */}
             <div className="flex flex-col items-center justify-center px-2">
-              <span className="text-xl sm:text-2xl font-mono font-black text-amber-400 tracking-wider drop-shadow-[0_0_10px_#F59E0B]">
-                {speedKmH}
-              </span>
-              <span className="text-[8px] font-mono uppercase tracking-[0.2em] text-neutral-400">
-                KM / H
-              </span>
-              <span className="text-[7px] font-mono text-neutral-500">
-                {distanceM} M
-              </span>
+              <div className="flex items-baseline gap-1">
+                <span className="text-2xl sm:text-3xl font-mono font-black text-[#FDF8E1] tracking-tight drop-shadow-[0_0_12px_rgba(253,248,225,0.4)]">
+                  {speedKmH}
+                </span>
+                <span className="text-[8.5px] font-mono uppercase tracking-[0.24em] text-neutral-400">
+                  KM/H
+                </span>
+              </div>
+              <div className="flex items-center gap-2 mt-0.5">
+                {hazardActive && hazardBlink ? (
+                  <span className="text-[7.5px] font-mono font-bold text-amber-400 flex items-center gap-1 animate-pulse">
+                    <span>◀</span> HAZARDS ON <span>▶</span>
+                  </span>
+                ) : (
+                  <span className="text-[7.5px] font-mono text-cyan-300 flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_#22D3EE]" />
+                    HIGH BEAMS
+                  </span>
+                )}
+                <span className="text-[7px] font-mono text-neutral-500">|</span>
+                <span className="text-[7.5px] font-mono text-neutral-400">
+                  {distanceM} M TRIP
+                </span>
+              </div>
             </div>
 
-            {/* Speed Gauge Dial */}
-            <div className="flex flex-col items-center">
-              <div className="relative w-10 sm:w-12 h-10 sm:h-12 rounded-full border border-neutral-700/80 bg-neutral-950 flex items-center justify-center shadow-inner">
-                <span className="text-[7px] font-mono text-red-500">SPD</span>
+            {/* Right Instrument: Speed Sweep & Boost Dial */}
+            <div className="flex items-center gap-2">
+              <div className="hidden sm:flex flex-col text-right">
+                <span className="text-[8px] font-mono font-bold text-amber-300 tracking-wider">24°C</span>
+                <span className="text-[7px] font-mono text-neutral-400 uppercase">TURBO 1.2B</span>
+              </div>
+              <div className="relative w-11 sm:w-13 h-11 sm:h-13 rounded-full border border-slate-700 bg-[#03060B] flex items-center justify-center shadow-inner">
+                {/* Dial Ticks */}
+                <div className="absolute inset-0.5 rounded-full border border-rose-500/30" />
+                <span className="text-[7.5px] font-mono font-bold text-rose-400">SPD</span>
+                {/* Dynamic Speed Needle */}
                 <div
-                  className="absolute w-0.5 h-4 sm:h-5 bg-red-500 origin-bottom shadow-[0_0_6px_#EF4444]"
+                  className="absolute w-0.5 h-4 sm:h-5 bg-rose-500 origin-bottom shadow-[0_0_8px_#F43F5E]"
                   style={{
                     transform: `rotate(${Math.min(135, (speedKmH / 180) * 140 - 70)}deg)`,
                     bottom: '50%',
@@ -1068,68 +1411,350 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
           </div>
 
           {/* ============================================================== */}
+          {/* FLOATING CURVED INFOTAINMENT DISPLAY & RADHE MEDIA PLAYER       */}
+          {/* High-res MBUX/CarPlay touchscreen console                       */}
+          {/* ============================================================== */}
+          <div className="hidden sm:flex absolute left-[59%] md:left-[56%] top-1 sm:top-1.5 w-[280px] sm:w-[350px] md:w-[420px] h-[95px] sm:h-[105px] rounded-2xl bg-gradient-to-b from-[#0B0F19] via-[#06080F] to-[#020306] border border-slate-700/80 shadow-[0_12px_32px_rgba(0,0,0,0.95),inset_0_1px_3px_rgba(255,255,255,0.15)] overflow-hidden flex flex-col justify-between p-2 pointer-events-auto z-26 -rotate-1">
+            {/* Screen Top Status Ribbon */}
+            <div className="flex items-center justify-between border-b border-slate-800/80 pb-1 text-[7px] font-mono text-neutral-400">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[#FDF8E1] font-bold">23:45</span>
+                <span className="text-emerald-400 font-bold">5G LTE</span>
+                <span className="text-cyan-300">● GPS LIVE</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-amber-300 tracking-wider">RADHE SOUNDSYSTEM</span>
+                <span className="text-neutral-500">|</span>
+                <span className="text-cyan-400">100% ⚡</span>
+              </div>
+            </div>
+
+            {/* Split Screen: Left = Radhe Audio Player, Right = GPS Highway Radar */}
+            <div className="flex items-center justify-between gap-2 my-auto">
+              {/* Left Panel: Radhe Live Media Player */}
+              <div className="flex items-center gap-2 flex-1 min-w-0 bg-[#080B13]/90 rounded-xl p-1.5 border border-slate-800/60 shadow-inner">
+                {/* Album Cover Badge with Spinning Vinyl Disc */}
+                <div className="relative w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500/20 via-rose-500/20 to-black border border-amber-400/40 flex items-center justify-center shrink-0 shadow-md overflow-hidden">
+                  <Disc className={`w-6 h-6 text-amber-300/80 ${!isAudioMuted ? 'animate-spin' : ''}`} style={{ animationDuration: '4s' }} />
+                  <div className="absolute inset-0 flex items-center justify-center font-serif text-[8px] font-black text-amber-200">
+                    R
+                  </div>
+                </div>
+
+                {/* Track Info & Animated Equalizer */}
+                <div className="flex flex-col min-w-0 flex-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[8.5px] font-mono font-bold text-[#FAFAFA] truncate tracking-wide">
+                      RADHE TITLE TRACK
+                    </span>
+                    <button
+                      onClick={() => {
+                        const muted = salmanAudio.toggleMute()
+                        setIsAudioMuted(muted)
+                      }}
+                      className="cursor-pointer text-cyan-400 hover:text-cyan-200 transition"
+                      title={isAudioMuted ? 'Unmute Radhe BGM' : 'Mute Radhe BGM'}
+                    >
+                      {isAudioMuted ? <VolumeX className="w-3 h-3 text-neutral-500" /> : <Volume2 className="w-3 h-3 text-cyan-300" />}
+                    </button>
+                  </div>
+                  <span className="text-[7px] font-mono text-neutral-400 truncate">
+                    Salman Khan • Sajid-Wajid
+                  </span>
+
+                  {/* Dynamic Equalizer Visualizer Spectrum Bars */}
+                  <div className="flex items-end gap-0.5 h-3 mt-0.5">
+                    {[0.9, 0.4, 0.8, 0.6, 1.0, 0.5, 0.7, 0.3].map((height, i) => (
+                      <div
+                        key={i}
+                        className={`w-1 rounded-t-sm transition-all duration-150 ${
+                          isAudioMuted ? 'bg-slate-700 h-1' : 'bg-gradient-to-t from-cyan-500 to-amber-300'
+                        }`}
+                        style={{
+                          height: isAudioMuted ? '2px' : `${Math.max(3, Math.min(12, height * 12 + (speedKmH % (i + 2)) * 1.5))}px`,
+                        }}
+                      />
+                    ))}
+                    <span className="text-[6.5px] font-mono text-cyan-300 ml-1">02:18 / 03:45</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Panel: GPS Navigation Radar */}
+              <div className="hidden md:flex flex-col justify-between w-28 h-full bg-[#080B13]/90 rounded-xl p-1.5 border border-slate-800/60 shadow-inner">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    <Navigation className="w-2.5 h-2.5 text-cyan-400 rotate-45" />
+                    <span className="text-[7.5px] font-mono font-bold text-cyan-300">NH 48 EXP</span>
+                  </div>
+                  <div className="w-4 h-4 rounded-full border border-rose-500 bg-rose-950/80 flex items-center justify-center text-[6px] font-mono font-bold text-white shadow-[0_0_4px_#F43F5E]">
+                    120
+                  </div>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[6.5px] font-mono text-neutral-400">NEXT EXIT:</span>
+                  <span className="text-[7.5px] font-mono text-amber-300 truncate">Panvel Farmhouse (800m)</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Climate Bar */}
+            <div className="flex items-center justify-between border-t border-slate-800/80 pt-1 text-[7px] font-mono text-neutral-400">
+              <div className="flex items-center gap-2">
+                <span className="text-cyan-300 flex items-center gap-0.5">
+                  <Wind className="w-2.5 h-2.5" />
+                  <span>{climateTemp.toFixed(1)}°C ❄ A/C AUTO</span>
+                </span>
+                <button
+                  onClick={() => setClimateTemp((t) => Math.min(28, t + 0.5))}
+                  className="px-1 bg-slate-800 rounded hover:bg-slate-700 text-neutral-300 text-[7px]"
+                >
+                  +
+                </button>
+                <button
+                  onClick={() => setClimateTemp((t) => Math.max(16, t - 0.5))}
+                  className="px-1 bg-slate-800 rounded hover:bg-slate-700 text-neutral-300 text-[7px]"
+                >
+                  -
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-neutral-300">SEAT VENT [|||]</span>
+                <span className="text-emerald-400">DUAL SYNC</span>
+              </div>
+            </div>
+          </div>
+
+          {/* ============================================================== */}
+          {/* CENTER PHYSICAL SWITCHGEAR: ENGINE START, HAZARD & DRIVE MODE  */}
+          {/* ============================================================== */}
+          <div className="hidden sm:flex absolute right-16 md:right-24 bottom-3 sm:bottom-4 items-center gap-3.5 pointer-events-auto z-27">
+            {/* Hazard Flasher Emergency Button */}
+            <button
+              type="button"
+              onClick={handleToggleHazard}
+              className={`w-9 sm:w-10 h-9 sm:h-10 rounded-xl border-2 flex items-center justify-center cursor-pointer transition-all shadow-lg ${
+                hazardActive
+                  ? 'bg-rose-950 border-rose-500 shadow-[0_0_16px_#F43F5E] animate-pulse'
+                  : 'bg-gradient-to-b from-[#2D1515] to-[#120707] border-rose-900/60 hover:border-rose-500/80 text-rose-400'
+              }`}
+              title="Hazard Warning Flasher (Click to Toggle)"
+            >
+              <AlertTriangle className={`w-4 sm:w-5 h-4 sm:h-5 ${hazardActive ? 'text-amber-300' : 'text-rose-400'}`} />
+            </button>
+
+            {/* Push-to-Start 'ENGINE START / STOP' Billet Button */}
+            <button
+              type="button"
+              onClick={handleEngineRev}
+              className={`relative w-12 sm:w-13 h-12 sm:h-13 rounded-full border-2 border-slate-400 bg-gradient-to-b from-[#1C1F26] via-[#12151B] to-[#0A0C10] shadow-[0_6px_16px_rgba(0,0,0,0.9),inset_0_2px_4px_rgba(255,255,255,0.2)] flex flex-col items-center justify-center cursor-pointer active:scale-95 transition-transform ${
+                engineReving ? 'ring-4 ring-rose-500/70 shadow-[0_0_22px_#F43F5E]' : ''
+              }`}
+              title="Push-To-Start Engine Button (Click to Rev Engine!)"
+            >
+              {/* Glowing Crimson LED Halo Ring */}
+              <div className="absolute inset-1 rounded-full border border-rose-500/70 shadow-[0_0_8px_#F43F5E] animate-pulse" />
+              <Power className="w-3.5 h-3.5 text-rose-400 relative z-10" />
+              <span className="text-[6px] font-mono font-black text-white tracking-widest relative z-10 leading-none mt-0.5">
+                START
+              </span>
+              <span className="text-[5px] font-mono text-rose-300/80 tracking-tighter relative z-10 leading-none">
+                ENGINE
+              </span>
+            </button>
+
+            {/* Drive Mode Selector Buttons */}
+            <div className="flex flex-col gap-1">
+              <div className="flex gap-1 bg-black/60 p-0.5 rounded-lg border border-slate-700">
+                {(['SPORT+', 'BEAST', 'CRUISE'] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => {
+                      setDriveMode(mode)
+                      salmanAudio.playHazardClick()
+                    }}
+                    className={`px-1.5 py-0.5 rounded text-[6.5px] font-mono font-bold tracking-wider cursor-pointer transition ${
+                      driveMode === mode
+                        ? mode === 'BEAST'
+                          ? 'bg-amber-500/30 text-amber-300 border border-amber-500/50 shadow-[0_0_8px_#F59E0B]'
+                          : 'bg-rose-500/30 text-rose-300 border border-rose-500/50 shadow-[0_0_8px_#F43F5E]'
+                        : 'text-neutral-500 hover:text-neutral-300'
+                    }`}
+                  >
+                    {mode}
+                  </button>
+                ))}
+              </div>
+              <span className="text-[5.5px] font-mono text-neutral-400 text-center tracking-widest">DRIVE MODE</span>
+            </div>
+          </div>
+
+          {/* ============================================================== */}
+          {/* STEERING COLUMN IGNITION BARREL WITH SALMAN KHAN ACTOR KEYCHAIN*/}
+          {/* Solid silver curb links, signature firoza turquoise stone fob   */}
+          {/* ============================================================== */}
+          <div className="absolute left-[54%] sm:left-[53%] md:left-[52%] bottom-6 sm:bottom-8 pointer-events-auto z-29">
+            {/* Metal Ignition Key Barrel */}
+            <div className="relative w-7 sm:w-8 h-7 sm:h-8 rounded-full border-2 border-slate-500 bg-gradient-to-br from-[#1E293B] to-[#0A0D14] shadow-[0_4px_10px_rgba(0,0,0,0.85)] flex items-center justify-center">
+              <span className="absolute -top-2.5 text-[5px] font-mono text-slate-400">ON</span>
+              {/* Inserted Car Key Head */}
+              <div className="w-5 h-2 bg-gradient-to-r from-slate-400 to-slate-200 rounded-sm border border-slate-600 shadow-sm" />
+            </div>
+
+            {/* DANGLING SALMAN KHAN ACTOR KEYCHAIN */}
+            <div
+              className="relative flex flex-col items-center cursor-pointer select-none transition-transform duration-100 origin-top mt-[-2px] ml-1"
+              style={{
+                transform: `rotate(${-steerAngle * 0.75 + keychainSwingBonus}deg)`,
+                transformOrigin: 'top center',
+              }}
+              onClick={handleKeychainClick}
+              title="Salman Khan's Signature Turquoise Actor Keychain (Click to Jingle)"
+            >
+              {/* Heavy Silver Key Ring */}
+              <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-300 bg-transparent shadow-sm" />
+
+              {/* Chunky Sterling Silver Curb Links */}
+              <div className="w-1.5 h-7 bg-gradient-to-b from-slate-300 via-slate-100 to-slate-300 rounded-full border border-slate-400 shadow-sm flex flex-col items-center justify-around py-0.5">
+                <div className="w-1 h-1 rounded-full bg-slate-400" />
+                <div className="w-1 h-1 rounded-full bg-slate-400" />
+              </div>
+
+              {/* Salman Khan Signature Turquoise (Firoza) Gemstone Fob */}
+              <div className="relative p-0.5 rounded-md bg-gradient-to-b from-slate-200 via-white to-slate-300 border border-slate-400 shadow-[0_4px_12px_rgba(0,0,0,0.8)] flex items-center justify-center mt-[-2px]">
+                {/* Turquoise Cabochon Stone */}
+                <div className="relative w-5 sm:w-6 h-6 sm:h-7 rounded-sm bg-gradient-to-br from-[#06B6D4] via-[#0891B2] to-[#0E7490] overflow-hidden shadow-inner flex items-center justify-center border border-cyan-300/50">
+                  {/* Dark Stone Matrix Veining */}
+                  <svg className="absolute inset-0 w-full h-full opacity-70" viewBox="0 0 24 28">
+                    <path d="M 2 2 Q 8 8 7 14 Q 5 22 14 26" stroke="#042F2E" strokeWidth="1" fill="none" />
+                    <path d="M 7 14 Q 14 11 18 17" stroke="#083344" strokeWidth="0.8" fill="none" />
+                    <path d="M 14 26 Q 19 27 22 25" stroke="#042F2E" strokeWidth="0.7" fill="none" />
+                  </svg>
+                  {/* Gloss Specular Sheen */}
+                  <div className="absolute top-0.5 left-0.5 w-2 h-2.5 bg-white/60 rounded-full blur-[0.4px] -rotate-45" />
+                </div>
+              </div>
+
+              {/* Silver Tag: 'SALMAN' */}
+              <div className="mt-0.5 px-1 py-0.2 rounded-sm bg-gradient-to-r from-slate-200 to-slate-300 border border-slate-400 shadow-sm text-[5.5px] font-mono font-bold text-slate-800 tracking-wider">
+                SALMAN
+              </div>
+            </div>
+          </div>
+
+          {/* ============================================================== */}
+          {/* PASSENGER DASHBOARD DECK (FAR RIGHT)                           */}
+          {/* Soft-touch leather finish, Airbag emboss, glovebox latch       */}
+          {/* ============================================================== */}
+          <div className="hidden lg:flex absolute right-6 md:right-8 top-3 flex-col items-end pointer-events-none">
+            <div className="flex items-center gap-1.5 opacity-40">
+              <span className="text-[7.5px] font-mono tracking-[0.25em] text-neutral-400 uppercase">AIRBAG</span>
+              <div className="w-1.5 h-1.5 rounded-full bg-neutral-600" />
+            </div>
+            {/* Flush Brushed Aluminum Glovebox Handle */}
+            <div className="w-16 h-2 rounded bg-gradient-to-r from-slate-500 to-slate-400 border border-slate-600 shadow-inner mt-4 opacity-70" />
+          </div>
+
+          {/* ============================================================== */}
           {/* PHOTOREALISTIC STEERING WHEEL WITH REAL HUMAN HANDS AT 9 & 3   */}
-          {/* Smooth Real-time CSS Rotation (-28° to +28°) on Steering Input  */}
+          {/* Precision Center-Column Rotation (51.0% X, 54.6% Y)            */}
           {/* ============================================================== */}
           <div
             className="absolute bottom-[-14px] sm:bottom-[-20px] left-1/2 w-[340px] sm:w-[440px] md:w-[480px] aspect-square pointer-events-auto cursor-grab active:cursor-grabbing transition-transform duration-75 select-none z-28"
             style={{
               transform: `translateX(-50%) rotate(${steerAngle}deg)`,
-              transformOrigin: '50% 50%',
+              transformOrigin: '51.0% 54.6%',
             }}
-            onClick={() => salmanAudio.playHorn()}
-            title="Click or Tap to Honk Horn!"
+            onClick={() => {
+              salmanAudio.playHorn()
+              gameState.current.deers.forEach((d) => {
+                if (!d.isHit && !d.isStartled) {
+                  d.isStartled = true
+                  d.hesitationFrames = 0
+                  d.crossingSpeedX *= 1.35
+                }
+              })
+            }}
+            title="Click or Tap Steering Wheel to Honk Horn!"
           >
             <img
               src="/game/steering_wheel_hands.png"
               alt="Steering Wheel & Real Hands"
               className="w-full h-full object-contain pointer-events-none drop-shadow-[0_24px_50px_rgba(0,0,0,0.98)]"
             />
+
+            {/* Embossed Luxury Chrome Hub Monogram Medallion */}
+            <div
+              className="absolute pointer-events-none flex items-center justify-center -translate-x-1/2 -translate-y-1/2"
+              style={{ left: '51.0%', top: '54.6%', width: '13%', height: '14%' }}
+            >
+              <div className="relative w-full h-full rounded-2xl bg-gradient-to-br from-[#2D333B] via-[#161B22] to-[#0D1117] border border-slate-400/40 shadow-[inset_0_1px_4px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.85)] flex items-center justify-center">
+                <div className="flex flex-col items-center justify-center">
+                  <span className="font-serif text-[11px] sm:text-xs font-black tracking-[0.22em] text-[#FAFAFA] drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
+                    S
+                  </span>
+                  <span className="h-0.5 w-3 rounded-full bg-gradient-to-r from-amber-400 to-amber-200 opacity-80" />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       {/* ==================================================================== */}
-      {/* LAYER 4: TOP HUD, ARCADE STREAK BANNER & CONTROLS                    */}
+      {/* LAYER 4: TOP HUD, REFINED STREAK RIBBON & CONTROLS                   */}
       {/* Completely non-conflicting layout with 0 mirror overlap              */}
       {/* ==================================================================== */}
       <div className="absolute top-0 inset-x-0 p-3 sm:p-5 flex items-center justify-between z-30 pointer-events-auto">
         {/* Top-Left: Score & Deer Counter */}
         <div className="flex items-center gap-3">
-          <div className="bg-black/80 backdrop-blur-md border border-neutral-700/80 rounded-2xl px-3 sm:px-4 py-2 flex items-center gap-3 text-white shadow-xl">
+          <div className="bg-black/45 backdrop-blur-2xl border border-white/10 rounded-2xl px-4 py-2 flex items-center gap-3.5 text-white shadow-[0_12px_40px_rgba(0,0,0,0.5)] ring-1 ring-white/5">
             <div className="flex flex-col">
-              <span className="text-[9px] sm:text-[10px] font-mono uppercase tracking-wider text-neutral-400">DEERS HIT</span>
-              <span className="text-xl sm:text-2xl font-mono font-black text-red-500">{deersHit}</span>
+              <span className="text-[8.5px] font-mono uppercase tracking-[0.22em] text-neutral-400">DEERS HIT</span>
+              <span className="text-xl sm:text-2xl font-serif font-normal text-rose-400 leading-tight">{deersHit}</span>
             </div>
-            <div className="h-7 w-px bg-neutral-700" />
+            <div className="h-7 w-px bg-white/10" />
             <div className="flex flex-col">
-              <span className="text-[9px] sm:text-[10px] font-mono uppercase tracking-wider text-neutral-400">SCORE</span>
-              <span className="text-xl sm:text-2xl font-mono font-black text-amber-400">{score}</span>
+              <span className="text-[8.5px] font-mono uppercase tracking-[0.22em] text-neutral-400">SCORE</span>
+              <span className="text-xl sm:text-2xl font-serif font-normal text-[#F3E5AB] leading-tight">{score}</span>
             </div>
             {combo > 1 && (
-              <span className="bg-gradient-to-r from-red-600 to-amber-600 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold animate-pulse">
-                {combo}X STREAK
+              <span className="bg-gradient-to-r from-rose-950/80 to-amber-950/80 border border-rose-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-mono font-medium tracking-widest text-rose-200 animate-pulse">
+                {combo}X
               </span>
             )}
           </div>
         </div>
 
-        {/* Top-Center: Title Badge & Dynamic Streak Ribbon */}
+        {/* Top-Center: Editorial Emblem & Dynamic Streak Ribbon */}
         <div className="flex flex-col items-center">
-          <div className="hidden md:flex flex-col items-center bg-black/60 backdrop-blur-sm border border-neutral-700 px-4 py-1.5 rounded-full">
-            <span className="text-xs font-mono font-extrabold tracking-[0.25em] text-white">
-              SALMAN DRIVING SCHOOL
+          <div className="hidden md:flex flex-col items-center bg-black/45 backdrop-blur-2xl border border-white/10 px-6 py-2 rounded-full shadow-[0_12px_40px_rgba(0,0,0,0.6)] ring-1 ring-white/5 transition-all">
+            <div className="flex items-center gap-2.5">
+              <span className="h-1 w-1 rounded-full bg-[#E5C158] animate-pulse" />
+              <span className="font-serif text-xs sm:text-[13px] tracking-[0.32em] font-normal text-white uppercase">
+                Salman Driving School
+              </span>
+              <span className="h-1 w-1 rounded-full bg-[#E5C158] animate-pulse" />
+            </div>
+            <span className="font-serif italic font-light text-[9px] tracking-[0.25em] text-neutral-400 mt-0.5">
+              — Infinite Nocturnal Highway —
             </span>
-            <span className="text-[9px] font-mono text-neutral-400">INFINITE NOCTURNAL HIGHWAY</span>
           </div>
 
-          {/* Dedicated Arcade Streak Ribbon */}
+          {/* Seductive Streak Ribbon */}
           {recentStreak && (
             <div
               key={recentStreak.key}
-              className="mt-1 px-3.5 py-1 rounded-full bg-gradient-to-r from-red-600 via-amber-500 to-red-600 text-white font-mono font-black text-xs sm:text-sm tracking-wider shadow-[0_0_16px_#F59E0B] border border-amber-300 animate-in zoom-in-90 fade-in duration-150"
+              className="mt-2 px-4 sm:px-5 py-1.5 rounded-full bg-gradient-to-r from-black/85 via-[#881337]/90 to-black/85 backdrop-blur-2xl text-white shadow-[0_8px_32px_rgba(225,29,72,0.4)] border border-rose-500/40 ring-1 ring-rose-400/20 animate-in zoom-in-95 slide-in-from-top-2 duration-200 flex items-center gap-2.5 select-none"
             >
-              +{recentStreak.pts} {recentStreak.combo > 1 ? `(${recentStreak.combo}X STREAK!)` : 'CLEARED!'}
+              <span className="font-serif text-sm sm:text-base font-normal tracking-tight text-white drop-shadow-[0_2px_8px_rgba(255,255,255,0.4)]">
+                +{recentStreak.pts}
+              </span>
+              <span className="h-3 w-px bg-rose-400/30" />
+              <span className="font-mono text-[9.5px] sm:text-[10px] tracking-[0.24em] uppercase text-rose-200 font-medium">
+                {recentStreak.combo > 1 ? `${recentStreak.combo}X STREAK` : 'CLEARED'}
+              </span>
             </div>
           )}
         </div>
@@ -1142,15 +1767,15 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
                 if (!gyroActive) enableGyro()
                 else setGyroActive(false)
               }}
-              className={`h-8 sm:h-9 px-2.5 sm:px-3 rounded-full border text-[10px] sm:text-[11px] font-mono flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`h-8 sm:h-9 px-3 rounded-full border text-[10px] sm:text-[11px] font-mono tracking-wider flex items-center gap-1.5 transition-all cursor-pointer backdrop-blur-xl ${
                 gyroActive
-                  ? 'bg-emerald-600/90 border-emerald-400 text-white shadow-[0_0_12px_#059669]'
-                  : 'bg-black/60 border-neutral-700 text-neutral-300 hover:text-white'
+                  ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-200 shadow-[0_0_15px_rgba(16,185,129,0.3)]'
+                  : 'bg-black/40 border-white/10 text-neutral-300 hover:text-white hover:border-white/30'
               }`}
               title="Toggle Gyroscope Steering"
             >
               <Compass className={`h-3 w-3 sm:h-3.5 sm:w-3.5 ${gyroActive ? 'animate-spin' : ''}`} style={{ animationDuration: '6s' }} />
-              <span>{gyroActive ? 'Gyro ON' : 'Gyro OFF'}</span>
+              <span>{gyroActive ? 'GYRO ON' : 'GYRO OFF'}</span>
             </button>
           )}
 
@@ -1159,15 +1784,15 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
               const muted = salmanAudio.toggleMute()
               setIsAudioMuted(muted)
             }}
-            className="h-8 w-8 sm:h-9 sm:w-9 rounded-full border border-neutral-700 bg-black/60 text-white flex items-center justify-center cursor-pointer shadow-md hover:bg-neutral-800 transition-colors"
-            title="Toggle Engine & Sound SFX"
+            className="h-8 w-8 sm:h-9 sm:w-9 rounded-full border border-white/10 bg-black/40 backdrop-blur-xl text-white flex items-center justify-center cursor-pointer shadow-md hover:bg-white/10 hover:border-white/30 transition-all"
+            title="Toggle Music & Sound SFX (M)"
           >
-            {isAudioMuted ? <VolumeX className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-neutral-400" /> : <Volume2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-400" />}
+            {isAudioMuted ? <VolumeX className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-neutral-400" /> : <Volume2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#F3E5AB]" />}
           </button>
 
           <button
             onClick={() => setShowExitScorecard(true)}
-            className="h-8 sm:h-9 px-3 sm:px-3.5 rounded-full bg-red-600/90 hover:bg-red-700 text-white text-xs font-mono font-semibold flex items-center gap-1.5 cursor-pointer shadow-lg active:scale-95 transition-all"
+            className="h-8 sm:h-9 px-3.5 sm:px-4 rounded-full border border-white/15 bg-black/60 hover:bg-black/90 backdrop-blur-xl text-white text-[11px] font-mono uppercase tracking-[0.16em] flex items-center gap-1.5 cursor-pointer shadow-lg active:scale-95 transition-all"
           >
             <X className="h-3.5 w-3.5" />
             <span>Exit</span>
@@ -1225,57 +1850,89 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/85 backdrop-blur-lg animate-in fade-in duration-200"
+          className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300 select-none"
         >
-          <div className="relative w-full max-w-md rounded-3xl border border-amber-400/60 bg-gradient-to-b from-[#13192B] via-[#0D1322] to-[#080D1A] p-6 text-center text-white shadow-[0_25px_80px_rgba(245,158,11,0.3)] animate-in zoom-in-95 duration-200">
-            {/* Academy Gold Seal */}
-            <div className="mx-auto mb-3 flex items-center justify-center h-16 w-16 rounded-full border-2 border-amber-400 bg-amber-950/70 text-amber-400 shadow-[0_0_20px_#F59E0B]">
-              <Trophy className="h-8 w-8" />
+          <div className="relative w-full max-w-md rounded-[32px] border border-[#D4AF37]/35 bg-[#090A0C]/95 backdrop-blur-3xl p-7 sm:p-9 text-center text-white shadow-[0_35px_100px_rgba(0,0,0,0.95)] animate-in zoom-in-95 duration-300 overflow-hidden ring-1 ring-white/10">
+            {/* Ambient Warm Golden Halo */}
+            <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-72 h-72 rounded-full bg-[#D4AF37]/15 blur-3xl pointer-events-none" />
+
+            {/* Corner Registration Crosshairs */}
+            <span className="absolute top-4 left-4 font-mono text-[9px] text-[#A8A29E]/30 select-none">+</span>
+            <span className="absolute top-4 right-4 font-mono text-[9px] text-[#A8A29E]/30 select-none">+</span>
+            <span className="absolute bottom-4 left-4 font-mono text-[9px] text-[#A8A29E]/30 select-none">+</span>
+            <span className="absolute bottom-4 right-4 font-mono text-[9px] text-[#A8A29E]/30 select-none">+</span>
+
+            {/* Gilded Archival Seal */}
+            <div className="relative mx-auto mb-4 flex items-center justify-center">
+              <div className="absolute h-20 w-20 rounded-full bg-[#D4AF37]/15 blur-xl pointer-events-none" />
+              <div className="relative flex items-center justify-center h-16 w-16 rounded-full border border-[#D4AF37]/70 bg-gradient-to-b from-[#1F190E] to-[#0A0805] shadow-[0_0_35px_rgba(212,175,55,0.3)] ring-1 ring-[#D4AF37]/30 ring-offset-2 ring-offset-[#090A0C]">
+                <Trophy className="h-7 w-7 text-[#F5E6A3] stroke-[1.6]" />
+              </div>
             </div>
 
-            <span className="text-[10px] font-mono tracking-[0.25em] uppercase text-amber-300">
+            {/* Eyebrow Accreditation */}
+            <span className="font-mono text-[8.5px] sm:text-[9px] tracking-[0.32em] uppercase text-[#D4AF37] font-medium block">
               SALMAN DRIVING ACADEMY • OFFICIAL LICENSE
             </span>
-            <h2 className="text-2xl font-serif font-black tracking-tight mt-1 text-white">
-              Highway Clearance Report
+
+            {/* Headline */}
+            <h2 className="font-serif text-3xl sm:text-4xl font-normal tracking-[-0.03em] text-[#FAFAFA] mt-1.5 leading-tight">
+              Highway Clearance
+              <span className="block font-serif italic font-light text-[#E5C158]/90 text-lg sm:text-xl mt-0.5">
+                Official License Report
+              </span>
             </h2>
 
-            {/* Performance Stats */}
-            <div className="my-5 grid grid-cols-3 gap-2.5 rounded-2xl bg-black/50 border border-neutral-800 p-3">
-              <div className="flex flex-col">
-                <span className="text-[10px] font-mono text-neutral-400">DEERS CLEARED</span>
-                <span className="text-xl font-mono font-bold text-red-500">{deersHit}</span>
+            {/* Hairline Divider */}
+            <div className="flex items-center justify-center gap-3 my-4">
+              <span className="h-px w-10 bg-white/10" />
+              <span className="h-1 w-1 rounded-full bg-[#D4AF37]" />
+              <span className="h-px w-10 bg-white/10" />
+            </div>
+
+            {/* Telemetry Stats Grid */}
+            <div className="my-5 grid grid-cols-3 divide-x divide-white/10 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/10 py-4 px-2">
+              <div className="flex flex-col items-center px-1">
+                <span className="text-[8px] sm:text-[8.5px] font-mono uppercase tracking-[0.22em] text-neutral-400">DEERS CLEARED</span>
+                <span className="text-2xl sm:text-3xl font-serif font-light text-rose-300 mt-1">{deersHit}</span>
               </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-mono text-neutral-400">TOTAL SCORE</span>
-                <span className="text-xl font-mono font-bold text-amber-400">{score}</span>
+              <div className="flex flex-col items-center px-1">
+                <span className="text-[8px] sm:text-[8.5px] font-mono uppercase tracking-[0.22em] text-neutral-400">TOTAL SCORE</span>
+                <span className="text-2xl sm:text-3xl font-serif font-light text-[#FDF8E1] mt-1">{score}</span>
               </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-mono text-neutral-400">TOP SPEED</span>
-                <span className="text-xl font-mono font-bold text-emerald-400">{speedKmH} KM/H</span>
+              <div className="flex flex-col items-center px-1">
+                <span className="text-[8px] sm:text-[8.5px] font-mono uppercase tracking-[0.22em] text-neutral-400">PEAK SPEED</span>
+                <div className="flex items-baseline gap-1 mt-1">
+                  <span className="text-2xl sm:text-3xl font-serif font-light text-emerald-300">{speedKmH}</span>
+                  <span className="text-[8.5px] font-mono tracking-widest text-neutral-500">KM/H</span>
+                </div>
               </div>
             </div>
 
-            {/* Rank Designation */}
-            <div className="mb-6 rounded-xl border border-amber-500/40 bg-amber-950/40 p-3">
-              <span className="text-xs font-mono text-amber-200 block">
+            {/* Rank Designation Ribbon */}
+            <div className="mb-7 rounded-full border border-[#D4AF37]/35 bg-gradient-to-r from-black/80 via-[#1C1810] to-black/80 backdrop-blur-xl py-2.5 px-5 shadow-[0_4px_25px_rgba(212,175,55,0.18)] flex items-center justify-center gap-2.5">
+              <span className="font-serif text-sm font-medium tracking-wider text-[#F5E6A3]">
+                {deersHit >= 15 ? 'CLASS S' : deersHit >= 8 ? 'CLASS A' : deersHit >= 3 ? 'CLASS B' : 'CLASS C'}
+              </span>
+              <span className="h-3 w-px bg-white/20" />
+              <span className="font-mono text-[9.5px] tracking-[0.24em] uppercase text-neutral-300 font-medium">
                 {deersHit >= 15
-                  ? 'RANK S • HONORARY MIDNIGHT CHINKARA PILOT 🏆'
+                  ? 'MIDNIGHT CHINKARA PILOT'
                   : deersHit >= 8
-                  ? 'RANK A • CERTIFIED HIGHWAY SWERVER 🥇'
+                  ? 'CERTIFIED HIGHWAY SWERVER'
                   : deersHit >= 3
-                  ? 'RANK B • ROOKIE BUMPER APPRENTICE 🥈'
-                  : 'RANK C • BICYCLE LANE PROBATIONER 🥉'}
+                  ? 'ROOKIE BUMPER APPRENTICE'
+                  : 'BICYCLE LANE PROBATIONER'}
               </span>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-center gap-2.5">
               <button
                 onClick={() => setShowExitScorecard(false)}
-                className="w-full sm:w-1/2 rounded-full bg-gradient-to-r from-amber-500 to-amber-700 text-white py-3 text-xs font-mono font-bold uppercase tracking-wider shadow-lg active:scale-98 cursor-pointer flex items-center justify-center gap-2"
+                className="w-full sm:w-1/2 group relative flex items-center justify-center gap-2 rounded-full bg-white hover:bg-neutral-100 text-[#090A0C] py-3.5 px-6 text-xs font-mono uppercase tracking-[0.2em] font-semibold transition-all duration-300 shadow-[0_4px_20px_rgba(255,255,255,0.15)] active:scale-[0.98] cursor-pointer"
               >
-                <RotateCcw className="h-4 w-4" />
+                <RotateCcw className="h-3.5 w-3.5 transition-transform duration-500 group-hover:-rotate-90" />
                 <span>Keep Driving</span>
               </button>
 
@@ -1284,7 +1941,7 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
                   setShowExitScorecard(false)
                   onClose()
                 }}
-                className="w-full sm:w-1/2 rounded-full border border-neutral-700 bg-neutral-900 hover:bg-neutral-800 text-neutral-300 py-3 text-xs font-mono font-bold uppercase tracking-wider cursor-pointer"
+                className="w-full sm:w-1/2 flex items-center justify-center gap-2 rounded-full border border-white/15 hover:border-white/40 bg-black/40 hover:bg-white/5 text-neutral-400 hover:text-white py-3.5 px-6 text-xs font-mono uppercase tracking-[0.18em] font-medium transition-all duration-300 cursor-pointer"
               >
                 <span>Return to Campus</span>
               </button>

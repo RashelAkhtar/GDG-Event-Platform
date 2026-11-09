@@ -76,6 +76,8 @@ interface WebSocketContextType {
   closeCeremony: () => void
   reconnect: () => void
   sendQuestionsUpdate: (gameSlug: string, questions: QuestionData[]) => void
+  sendTimeLimitUpdate: (gameSlug: string, timeLimitSeconds: number) => void
+  subscribeToTimeLimitUpdate: (callback: (gameSlug: string, timeLimitSeconds: number) => void) => () => void
   subscribeToUserJoin: (callback: (session: ConnectedSession) => void) => () => void
   subscribeToUserLeave: (callback: (sessionId: string) => void) => () => void
   subscribeToLeaderboardReset: (callback: (gameSlug: string) => void) => () => void
@@ -102,6 +104,8 @@ const WebSocketContext = createContext<WebSocketContextType>({
   sendLeaderboardReset: () => {},
   sendDeleteLeaderboardEntry: () => {},
   sendQuestionsUpdate: () => {},
+  sendTimeLimitUpdate: () => {},
+  subscribeToTimeLimitUpdate: () => () => {},
   sendWendConfigUpdate: () => {},
   sendBubbleImpulse: () => {},
   securityAlerts: [],
@@ -175,6 +179,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   const leaderboardResetSubscribersRef = useRef<Set<(gameSlug: string) => void>>(new Set())
   const leaderboardUpdateSubscribersRef = useRef<Set<(gameSlug: string, leaderboard: LeaderboardEntry[]) => void>>(new Set())
   const questionsUpdateSubscribersRef = useRef<Set<(gameSlug: string, questions: QuestionData[]) => void>>(new Set())
+  const timeLimitUpdateSubscribersRef = useRef<Set<(gameSlug: string, timeLimitSeconds: number) => void>>(new Set())
   const pendingMessagesRef = useRef<{ type: string; payload?: unknown }[]>([])
   const connectFnRef = useRef<(() => void) | null>(null)
 
@@ -424,6 +429,20 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
             }
             questionsUpdateSubscribersRef.current.forEach((cb) => {
               try { cb(gameSlug, questions) } catch (err) { console.error('Error in questions update listener:', err) }
+            })
+          }
+          break
+        }
+        case 'GAME_TIME_LIMIT_UPDATE': {
+          const gameSlug = payload?.gameSlug as string | undefined
+          const timeLimitSeconds = payload?.timeLimitSeconds as number | undefined
+          if (gameSlug && typeof timeLimitSeconds === 'number') {
+            if (typeof window !== 'undefined') {
+              localStorage.setItem(`gdg_time_limit_${gameSlug}`, String(timeLimitSeconds))
+              window.dispatchEvent(new CustomEvent('gdg_time_limit_sync', { detail: payload }))
+            }
+            timeLimitUpdateSubscribersRef.current.forEach((cb) => {
+              try { cb(gameSlug, timeLimitSeconds) } catch (err) { console.error('Error in time limit update listener:', err) }
             })
           }
           break
@@ -845,6 +864,34 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     []
   )
 
+  const sendTimeLimitUpdate = useCallback((gameSlug: string, timeLimitSeconds: number) => {
+    const norm = normalizeGameSlug(gameSlug)
+    const safeSecs = Math.max(10, timeLimitSeconds)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`gdg_time_limit_${norm}`, String(safeSecs))
+      window.dispatchEvent(new CustomEvent('gdg_time_limit_sync', { detail: { slug: norm, timeLimitSeconds: safeSecs } }))
+    }
+    broadcastMessage({
+      type: 'GAME_TIME_LIMIT_UPDATE',
+      payload: {
+        gameSlug: norm,
+        timeLimitSeconds: safeSecs,
+        role: 'ADMIN',
+        adminAuth: true,
+      },
+    })
+  }, [broadcastMessage])
+
+  const subscribeToTimeLimitUpdate = useCallback(
+    (callback: (gameSlug: string, timeLimitSeconds: number) => void) => {
+      timeLimitUpdateSubscribersRef.current.add(callback)
+      return () => {
+        timeLimitUpdateSubscribersRef.current.delete(callback)
+      }
+    },
+    []
+  )
+
   const sendGameEnter = useCallback(
     (gameSlug: string) => {
       const norm = normalizeGameSlug(gameSlug)
@@ -938,6 +985,8 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
         sendLeaderboardReset,
         sendDeleteLeaderboardEntry,
         sendQuestionsUpdate,
+        sendTimeLimitUpdate,
+        subscribeToTimeLimitUpdate,
         sendWendConfigUpdate,
         sendBubbleImpulse,
         securityAlerts,

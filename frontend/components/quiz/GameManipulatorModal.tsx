@@ -82,6 +82,9 @@ function GameManipulatorModalInner({
   // Event info state
   const [title, setTitle] = useState(event.title)
   const [description, setDescription] = useState(event.description || '')
+  const [timeLimitSeconds, setTimeLimitSeconds] = useState<number>(() =>
+    event.timeLimitSeconds || api.getQuizTimeLimit(event.slug)
+  )
 
   // Quiz Questions state (for web & mentis)
   const [questions, setQuestions] = useState<QuestionData[]>(() =>
@@ -241,9 +244,17 @@ function GameManipulatorModalInner({
       ...event,
       title: title.trim() || event.title,
       description: description.trim() || event.description,
+      timeLimitSeconds: !isWend ? timeLimitSeconds : event.timeLimitSeconds,
     }
 
-    if (updatedEvent.title !== event.title || updatedEvent.description !== event.description) {
+    if (!isWend) {
+      void api.setQuizTimeLimit(event.slug, timeLimitSeconds)
+      void api.updateEventDetails(event._id, {
+        title: updatedEvent.title,
+        description: updatedEvent.description,
+        timeLimitSeconds,
+      })
+    } else if (updatedEvent.title !== event.title || updatedEvent.description !== event.description) {
       void api.updateEventDetails(event._id, {
         title: updatedEvent.title,
         description: updatedEvent.description,
@@ -391,6 +402,10 @@ function GameManipulatorModalInner({
 
           {!isWend && activeTab === 'questions' && (
             <div className="hidden md:flex items-center gap-3 font-mono text-xs text-[#6B7280]">
+              <span className="inline-flex items-center gap-1 rounded-full border border-[#E5E7EB] bg-white px-2.5 py-0.5" title="Cumulative round countdown timer for all questions">
+                <Clock className="h-3 w-3 text-[#1A73E8]" />
+                <strong className="text-[#111827]">{timeLimitSeconds}s</strong> ({Math.floor(timeLimitSeconds / 60)}m {timeLimitSeconds % 60 ? `${timeLimitSeconds % 60}s` : ''}) round
+              </span>
               <span className="inline-flex items-center gap-1 rounded-full border border-[#E5E7EB] bg-white px-2.5 py-0.5">
                 <Award className="h-3 w-3 text-[#FBBC04]" />
                 <strong className="text-[#111827]">{totalPoints}</strong> pts
@@ -846,6 +861,58 @@ function GameManipulatorModalInner({
                   className="w-full rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] p-3 text-xs text-[#111827] focus:outline-none focus:border-[#111827] focus:bg-white leading-relaxed transition-colors"
                 />
               </div>
+
+              {/* Cumulative Quiz Round Time Limit Card */}
+              {!isWend && (
+                <div className="rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] p-4 text-left">
+                  <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-[#E5E7EB]">
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-[#1A73E8] font-medium flex items-center gap-1.5">
+                      <Clock className="h-3 w-3" />
+                      <span>Cumulative Round Time Limit (All Questions)</span>
+                    </span>
+                    <span className="font-mono text-xs font-semibold text-[#111827]">
+                      {timeLimitSeconds}s ({Math.floor(timeLimitSeconds / 60)}m {timeLimitSeconds % 60 ? `${timeLimitSeconds % 60}s` : ''})
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[#6B7280] mb-3 leading-relaxed">
+                    Dictates the total round countdown for all questions combined in this quiz track, not a timer per question.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {[60, 90, 120, 180, 300, 600].map((sec) => (
+                      <button
+                        key={sec}
+                        type="button"
+                        onClick={() => {
+                          setTimeLimitSeconds(sec)
+                          showToast(`Set cumulative quiz timer to ${sec}s!`)
+                        }}
+                        className={`rounded-full px-3 py-1 font-mono text-xs transition-all cursor-pointer ${
+                          timeLimitSeconds === sec
+                            ? 'bg-[#111827] text-white shadow-xs'
+                            : 'border border-[#E5E7EB] bg-white text-[#4B5563] hover:border-[#111827]'
+                        }`}
+                      >
+                        {sec}s ({Math.floor(sec / 60)}m {sec % 60 ? `${sec % 60}s` : ''})
+                      </button>
+                    ))}
+                    <div className="flex items-center gap-1.5 ml-auto">
+                      <input
+                        type="number"
+                        min={15}
+                        max={1800}
+                        step={15}
+                        value={timeLimitSeconds}
+                        onChange={(e) => {
+                          const sec = Math.max(10, Number(e.target.value))
+                          setTimeLimitSeconds(sec)
+                        }}
+                        className="w-20 rounded-xl border border-[#E5E7EB] bg-white px-2.5 py-1 font-mono text-xs font-semibold text-[#111827]"
+                      />
+                      <span className="font-mono text-xs text-[#6B7280]">sec</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

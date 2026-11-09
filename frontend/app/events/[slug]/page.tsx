@@ -28,7 +28,15 @@ import {
   ArrowLeft,
   RotateCcw,
   Sliders,
+  Clock,
 } from 'lucide-react'
+
+function formatTimer(totalSecs: number): string {
+  if (totalSecs <= 0) return '00:00'
+  const mins = Math.floor(totalSecs / 60)
+  const secs = totalSecs % 60
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+}
 
 function formatDuration(ms: number): string {
   if (!ms || ms <= 0) return '0s'
@@ -52,7 +60,7 @@ function QuizRunnerContent() {
     }
   }, [authLoading, user, slug, router])
 
-  const { currentSessionId, subscribeToLeaderboardReset, sendSubmitAttempt, sendScreenshotViolation, subscribeToQuestionsUpdate, gameLockStates, sendGameEnter, sendGameLeave } = useWebSocket()
+  const { currentSessionId, subscribeToLeaderboardReset, sendSubmitAttempt, sendScreenshotViolation, subscribeToQuestionsUpdate, subscribeToTimeLimitUpdate, gameLockStates, sendGameEnter, sendGameLeave } = useWebSocket()
 
   // Real-time active presence tracking for this specific game
   useEffect(() => {
@@ -75,6 +83,43 @@ function QuizRunnerContent() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({})
   const [isCountingDown, setIsCountingDown] = useState(true)
+
+  // Cumulative time limit for the entire quiz (all questions combined)
+  const allocatedTimeSeconds = event?.timeLimitSeconds || (slug.includes('mentis') ? 180 : 120)
+  const [timeLeft, setTimeLeft] = useState<number>(() => allocatedTimeSeconds)
+
+  // Sync timeLeft when event metadata updates or before quiz start
+  useEffect(() => {
+    if (event?.timeLimitSeconds && isCountingDown) {
+      setTimeLeft(event.timeLimitSeconds)
+    }
+  }, [event?.timeLimitSeconds, isCountingDown])
+
+  // Real-time synchronization if admin updates quiz round time limit
+  useEffect(() => {
+    const unsub = subscribeToTimeLimitUpdate((updatedSlug, updatedSeconds) => {
+      if (updatedSlug === slug && typeof updatedSeconds === 'number') {
+        setEvent((prev) => (prev ? { ...prev, timeLimitSeconds: updatedSeconds } : prev))
+        if (isCountingDown) {
+          setTimeLeft(updatedSeconds)
+        }
+      }
+    })
+    const handleSync = (e: Event) => {
+      const detail = (e as CustomEvent)?.detail
+      if (detail && detail.slug === slug && typeof detail.timeLimitSeconds === 'number') {
+        setEvent((prev) => (prev ? { ...prev, timeLimitSeconds: detail.timeLimitSeconds } : prev))
+        if (isCountingDown) {
+          setTimeLeft(detail.timeLimitSeconds)
+        }
+      }
+    }
+    window.addEventListener('gdg_time_limit_sync', handleSync)
+    return () => {
+      unsub()
+      window.removeEventListener('gdg_time_limit_sync', handleSync)
+    }
+  }, [slug, subscribeToTimeLimitUpdate, isCountingDown])
 
   const handleCountdownComplete = useCallback(() => {
     setIsCountingDown(false)
@@ -115,12 +160,13 @@ function QuizRunnerContent() {
         setCurrentIndex(0)
         setSelectedAnswers({})
         setIsCountingDown(true)
+        setTimeLeft(allocatedTimeSeconds)
         startTimeRef.current = null
         api.clearSessionsForSlug(slug)
       }
     })
     return () => unsubscribe()
-  }, [slug, subscribeToLeaderboardReset])
+  }, [slug, subscribeToLeaderboardReset, allocatedTimeSeconds])
 
   const handleStartNewAttempt = useCallback(() => {
     if (user) {
@@ -134,8 +180,9 @@ function QuizRunnerContent() {
     setCurrentIndex(0)
     setSelectedAnswers({})
     setIsCountingDown(true)
+    setTimeLeft(allocatedTimeSeconds)
     startTimeRef.current = Date.now()
-  }, [slug, user])
+  }, [slug, user, allocatedTimeSeconds])
 
   const handleSecurityDisqualification = useCallback(async () => {
     setIsDisqualified(true)
@@ -293,7 +340,8 @@ function QuizRunnerContent() {
         }
       })
 
-      const durationMs = Math.max(1500, Date.now() - (startTimeRef.current ?? Date.now()))
+      const computedDuration = Math.max(1500, (allocatedTimeSeconds - timeLeft) * 1000)
+      const durationMs = startTimeRef.current ? Math.min(computedDuration, Math.max(1500, Date.now() - startTimeRef.current)) : computedDuration
       const attemptEntry = {
         _id: `quiz_${Date.now()}_${user?._id || 'anon'}`,
         totalScore: score,
@@ -338,7 +386,96 @@ function QuizRunnerContent() {
     } finally {
       setIsSubmitting(false)
     }
-  }, [currentSessionId, event, questions, selectedAnswers, sendSubmitAttempt, slug, user])
+  }, [allocatedTimeSeconds, currentSessionId, event, questions, selectedAnswers, sendSubmitAttempt, slug, timeLeft, user])
+
+  // Auto-submit when cumulative round time expires
+  const handleTimeUpSubmit = useCallback(async () => {
+    if (isSubmitting || completedSession) return
+    setIsSubmitting(true)
+    try {
+      try { soundManager.playError() } catch {}
+      const answersPayload = questions.map((q, idx) => ({
+        questionId: q._id || `q-${idx}`,
+        selectedOptionIndex: selectedAnswers[idx] ?? -1,
+      }))
+
+      if (event && !event._id.endsWith('-id')) {
+        await api.submitQuiz(event._id, answersPayload).catch(() => ({}))
+      }
+
+      let score = 0
+      let correct = 0
+      questions.forEach((q, idx) => {
+        const selected = selectedAnswers[idx]
+        if (q.correctOptionIndex !== undefined && selected === q.correctOptionIndex) {
+          score += q.points || 100
+          correct++
+        } else if (selected !== undefined && selected !== -1) {
+          score += q.points || 100
+          correct++
+        }
+      })
+
+      const durationMs = allocatedTimeSeconds * 1000
+      const attemptEntry = {
+        _id: `quiz_timeup_${Date.now()}_${user?._id || 'anon'}`,
+        totalScore: score,
+        durationMs,
+        submittedAt: new Date().toISOString(),
+        user: {
+          _id: user?._id,
+          name: user?.name || 'Community Participant',
+          avatar: user?.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${user?.name || 'Participant'}`,
+        },
+      }
+      api.recordLocalAttempt(slug, attemptEntry)
+      sendSubmitAttempt(slug, attemptEntry)
+
+      const userKey = user?._id || user?.email || (currentSessionId ? `guest_${currentSessionId}` : 'guest')
+      const sessionData: ParticipantSession = {
+        sessionId: `sess_timeup_${Date.now()}_${user?._id || 'guest'}`,
+        eventSlug: slug,
+        eventTitle: event?.title || 'Quiz Session',
+        userId: user?._id,
+        userEmail: user?.email,
+        userName: user?.name || 'Community Participant',
+        avatar: user?.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${user?.name || 'Participant'}`,
+        totalItems: questions.length,
+        durationMs,
+        submittedAt: new Date().toISOString(),
+        status: 'SUBMITTED',
+        internalScore: score,
+        internalCorrectCount: correct,
+      }
+      api.saveParticipantSession(slug, sessionData, userKey)
+      setCompletedSession(sessionData)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }, [allocatedTimeSeconds, completedSession, currentSessionId, event, isSubmitting, questions, selectedAnswers, sendSubmitAttempt, slug, user])
+
+  // Countdown timer honoring cumulative time limit set by host
+  useEffect(() => {
+    if (completedSession || isLocked || isCountingDown || loading || isDisqualified || questions.length === 0) return
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer)
+          setTimeout(() => {
+            void handleTimeUpSubmit()
+          }, 0)
+          return 0
+        }
+        if (prev <= 10 && prev > 1) {
+          try { soundManager.playCountdownTick() } catch {}
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [completedSession, isLocked, isCountingDown, loading, isDisqualified, questions.length, handleTimeUpSubmit])
 
   const handleSelectOption = (optionIndex: number) => {
     void soundManager.unlock()
@@ -483,6 +620,12 @@ function QuizRunnerContent() {
                   <span className="font-medium text-[#111827] dark:text-[#F9FAFB]">{completedSession.totalItems} Completed</span>
                 </div>
                 <div className="flex justify-between items-center">
+                  <span className="text-[#6B7280] dark:text-[#94A3B8]">Round Limit:</span>
+                  <span className="font-mono text-xs font-medium text-[#111827] dark:text-[#F9FAFB]">
+                    {allocatedTimeSeconds}s cumulative
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
                   <span className="text-[#6B7280] dark:text-[#94A3B8]">Duration:</span>
                   <span className="font-mono font-medium text-[#111827] dark:text-[#F9FAFB] dark:text-[#F9FAFB]">
                     {formatDuration(completedSession.durationMs)}
@@ -548,10 +691,10 @@ function QuizRunnerContent() {
         ) : (
           /* --- ACTIVE QUIZ QUESTION PLAYER --- */
           <div className="flex flex-col flex-1">
-            {/* Progress Header */}
+            {/* Progress Header with Cumulative Round Timer */}
             <div className="flex items-center justify-between py-2">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-[11px] tracking-wider uppercase text-[#111827] font-medium">
+                <span className="font-mono text-[11px] tracking-wider uppercase text-[#111827] dark:text-[#F9FAFB] font-medium">
                   Question {currentIndex + 1} / {questions.length}
                 </span>
                 <span className="font-mono text-[10px] text-[#9CA3AF]">
@@ -559,16 +702,49 @@ function QuizRunnerContent() {
                 </span>
               </div>
 
+              {/* Cumulative Countdown Timer for All Questions */}
+              <div
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-mono text-[11px] font-bold border transition-all ${
+                  timeLeft <= 15
+                    ? 'border-[#EA4335] bg-[#FCE8E6] dark:bg-[#7F1D1D]/30 text-[#C5221F] dark:text-[#EF4444] animate-pulse ring-2 ring-[#EA4335]/20'
+                    : timeLeft <= allocatedTimeSeconds * 0.3
+                    ? 'border-[#FBBC04] bg-[#FEF7E0] dark:bg-[#78350F]/20 text-[#B06000] dark:text-[#FBBF24]'
+                    : 'border-[#E5E7EB] dark:border-[#334155] bg-white dark:bg-[#1E293B] text-[#111827] dark:text-[#F9FAFB]'
+                }`}
+                title={`Cumulative round time limit: ${allocatedTimeSeconds}s for all questions combined`}
+              >
+                <Clock className={`h-3 w-3 ${timeLeft <= 15 ? 'text-[#EA4335]' : 'text-[#6B7280] dark:text-[#94A3B8]'}`} />
+                <span>{formatTimer(timeLeft)}</span>
+                <span className="hidden sm:inline text-[9.5px] font-normal text-[#9CA3AF]">
+                  / {allocatedTimeSeconds}s
+                </span>
+              </div>
             </div>
 
-            {/* Hairline Progress Line */}
-            <div className="h-1 w-full rounded-full bg-[#E5E7EB] dark:bg-[#1E293B] overflow-hidden my-2">
-              <div
-                className="h-full bg-[#1A73E8] transition-all duration-300"
-                style={{
-                  width: `${((currentIndex + 1) / questions.length) * 100}%`,
-                }}
-              />
+            {/* Hairline Progress Lines: Question Progress & Cumulative Round Time */}
+            <div className="space-y-1 my-2">
+              <div className="h-1 w-full rounded-full bg-[#E5E7EB] dark:bg-[#1E293B] overflow-hidden">
+                <div
+                  className="h-full bg-[#1A73E8] transition-all duration-300"
+                  style={{
+                    width: `${((currentIndex + 1) / questions.length) * 100}%`,
+                  }}
+                />
+              </div>
+              <div className="h-0.5 w-full rounded-full bg-[#E5E7EB]/50 dark:bg-[#1E293B]/50 overflow-hidden">
+                <div
+                  className={`h-full transition-all duration-1000 ${
+                    timeLeft <= 15
+                      ? 'bg-[#EA4335]'
+                      : timeLeft <= allocatedTimeSeconds * 0.3
+                      ? 'bg-[#FBBC04]'
+                      : 'bg-[#34A853]'
+                  }`}
+                  style={{
+                    width: `${Math.max(0, Math.min(100, (timeLeft / allocatedTimeSeconds) * 100))}%`,
+                  }}
+                />
+              </div>
             </div>
 
             {/* Question Card - Pristine Editorial Architecture */}

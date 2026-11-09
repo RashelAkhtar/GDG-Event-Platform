@@ -27,6 +27,7 @@ export interface WsMessage {
     | 'ADMIN_SECURITY_ALERT'
     | 'CLEAR_SECURITY_ALERTS'
     | 'WEND_CONFIG_UPDATE'
+    | 'GAME_TIME_LIMIT_UPDATE'
     | 'GAME_PRESENCE'
     | 'SYNC_STATE';
   payload?: any;
@@ -539,6 +540,20 @@ class EventWebSocketService {
           type: 'QUESTIONS_UPDATE',
           payload: message.payload,
         });
+        break;
+      }
+
+      case 'GAME_TIME_LIMIT_UPDATE': {
+        const principalRole = this.socketPrincipals.get(ws)?.role;
+        const isAdmin = principalRole === UserRole.ADMIN || message.payload?.role === 'ADMIN' || message.payload?.adminAuth === true;
+        if (!isAdmin) break;
+        const { gameSlug, timeLimitSeconds } = message.payload || {};
+        if (gameSlug && typeof timeLimitSeconds === 'number') {
+          this.broadcast({
+            type: 'GAME_TIME_LIMIT_UPDATE',
+            payload: { gameSlug, timeLimitSeconds: Math.max(10, timeLimitSeconds) },
+          });
+        }
         break;
       }
 

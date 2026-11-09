@@ -20,6 +20,7 @@ export interface IEvent extends Document {
   description: string;
   type: EventType;
   status: EventStatus;
+  timeLimitSeconds?: number;
   bannerImage?: string;
   startTime: Date;
   endTime: Date;
@@ -46,6 +47,7 @@ const EventSchema = new Schema<IEvent>(
       enum: Object.values(EventStatus),
       default: EventStatus.DRAFT,
     },
+    timeLimitSeconds: { type: Number, default: 120 },
     bannerImage: { type: String },
     startTime: { type: Date, required: true },
     endTime: { type: Date, required: true },

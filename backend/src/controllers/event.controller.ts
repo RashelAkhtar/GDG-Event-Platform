@@ -1,7 +1,7 @@
 import { type Request, type Response, type NextFunction } from 'express';
 import { EventService } from '../services/event.service.ts';
 import { UserRole, type IUser } from '../models/User.ts';
-import { EventType } from '../models/Event.ts';
+import { Event, EventType } from '../models/Event.ts';
 import mongoose, { Types } from 'mongoose';
 import { wsService } from '../websocket.ts';
 import { WendBoard } from '../models/WendBoard.ts';
@@ -14,6 +14,7 @@ export const inMemoryEvents: Record<string, any> = {
     description: 'Frontend fundamentals, CSS tricks & JavaScript core concepts.',
     type: 'QUIZ',
     status: 'LIVE',
+    timeLimitSeconds: 120,
     startTime: new Date(Date.now() - 3600 * 1000).toISOString(),
     endTime: new Date(Date.now() + 4 * 3600 * 1000).toISOString(),
   },
@@ -24,6 +25,7 @@ export const inMemoryEvents: Record<string, any> = {
     description: 'Fast-paced word puzzle challenge. Decode technical keywords from real-time clues.',
     type: 'QUIZ',
     status: 'LIVE',
+    timeLimitSeconds: 120,
     startTime: new Date(Date.now() - 3600 * 1000).toISOString(),
     endTime: new Date(Date.now() + 5 * 3600 * 1000).toISOString(),
   },
@@ -34,6 +36,7 @@ export const inMemoryEvents: Record<string, any> = {
     description: 'Algorithmic reasoning, data structures & brain-teasing puzzles.',
     type: 'QUIZ',
     status: 'UPCOMING',
+    timeLimitSeconds: 180,
     startTime: new Date(Date.now() + 1800 * 1000).toISOString(),
     endTime: new Date(Date.now() + 3 * 3600 * 1000).toISOString(),
   },
@@ -52,7 +55,7 @@ const isValidDateRange = (startTime: unknown, endTime: unknown): boolean => {
 
 export const createEvent = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { title, description, type, bannerImage, startTime, endTime } = req.body ?? {};
+    const { title, description, type, bannerImage, startTime, endTime, timeLimitSeconds } = req.body ?? {};
 
     // slug is no longer required in req.body
     if (typeof title !== 'string' || !title.trim() || typeof description !== 'string' || !description.trim() ||
@@ -70,7 +73,7 @@ export const createEvent = async (req: Request, res: Response, next: NextFunctio
     if (!admin) return res.status(401).json({ success: false, message: 'Authentication required' });
 
     const event = await EventService.createEvent(
-      { title, description, type, bannerImage, startTime, endTime },
+      { title, description, type, bannerImage, startTime, endTime, timeLimitSeconds: timeLimitSeconds ? Number(timeLimitSeconds) : 120 } as any,
       admin._id
     );
 
@@ -217,7 +220,7 @@ export const updateEvent = async (req: Request, res: Response, next: NextFunctio
     if (!id) {
       return res.status(400).json({ success: false, message: 'Invalid event id' });
     }
-    const allowedFields = ['title', 'slug', 'description', 'type', 'status', 'bannerImage', 'startTime', 'endTime'] as const;
+    const allowedFields = ['title', 'slug', 'description', 'type', 'status', 'bannerImage', 'startTime', 'endTime', 'timeLimitSeconds'] as const;
     const updates = Object.fromEntries(
       allowedFields.filter((field) => req.body?.[field] !== undefined).map((field) => [field, req.body[field]]),
     );
@@ -253,6 +256,15 @@ export const updateEvent = async (req: Request, res: Response, next: NextFunctio
           },
         });
       }
+      if (updates.timeLimitSeconds !== undefined) {
+        wsService.broadcast({
+          type: 'GAME_TIME_LIMIT_UPDATE',
+          payload: {
+            gameSlug: foundFallbackKey,
+            timeLimitSeconds: Number(updates.timeLimitSeconds),
+          },
+        });
+      }
       return res.status(200).json({
         success: true,
         data: inMemoryEvents[foundFallbackKey],
@@ -272,6 +284,15 @@ export const updateEvent = async (req: Request, res: Response, next: NextFunctio
     const event = await EventService.updateEvent(id, updates);
     if (!event) {
       return res.status(404).json({ success: false, message: 'Event not found' });
+    }
+    if (updates.timeLimitSeconds !== undefined) {
+      wsService.broadcast({
+        type: 'GAME_TIME_LIMIT_UPDATE',
+        payload: {
+          gameSlug: event.slug,
+          timeLimitSeconds: Number(updates.timeLimitSeconds),
+        },
+      });
     }
     res.status(200).json({ success: true, data: event });
   } catch (error) {

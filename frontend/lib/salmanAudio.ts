@@ -11,6 +11,9 @@ class SalmanAudioEngine {
   private engineFilter: BiquadFilterNode | null = null
   private isEngineRunning: boolean = false
   private isMuted: boolean = false
+  private bgmAudio: HTMLAudioElement | null = null
+  private isBgmPlaying: boolean = false
+  private bgmTargetVolume: number = 0.55
 
   private getContext(): AudioContext | null {
     if (typeof window === 'undefined') return null
@@ -26,11 +29,103 @@ class SalmanAudioEngine {
     return this.ctx
   }
 
+  private initBgm(): HTMLAudioElement | null {
+    if (typeof window === 'undefined') return null
+    if (!this.bgmAudio) {
+      try {
+        const audio = new Audio()
+        audio.loop = true
+        audio.preload = 'auto'
+        audio.volume = this.isMuted ? 0 : this.bgmTargetVolume
+
+        // Primary source: /sound/salman-bgm.mp4, fallback: /sound/salman-bgm.m4a
+        audio.src = '/sound/salman-bgm.mp4'
+        audio.onerror = () => {
+          if (audio.src.includes('.mp4')) {
+            audio.src = '/sound/salman-bgm.m4a'
+            if (this.isBgmPlaying && !this.isMuted) {
+              audio.play().catch(() => {})
+            }
+          }
+        }
+
+        this.bgmAudio = audio
+      } catch {
+        return null
+      }
+    }
+    return this.bgmAudio
+  }
+
+  public startBgm() {
+    if (typeof window === 'undefined') return
+    const audio = this.initBgm()
+    if (!audio) return
+
+    this.isBgmPlaying = true
+    audio.muted = this.isMuted
+    audio.volume = this.isMuted ? 0 : this.bgmTargetVolume
+
+    const playPromise = audio.play()
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {
+        // Autoplay policy: unlock playback on first user gesture
+        const unlockAudio = () => {
+          if (this.isBgmPlaying && this.bgmAudio) {
+            this.bgmAudio.play().catch(() => {})
+          }
+          window.removeEventListener('pointerdown', unlockAudio)
+          window.removeEventListener('keydown', unlockAudio)
+        }
+        window.addEventListener('pointerdown', unlockAudio, { once: true })
+        window.addEventListener('keydown', unlockAudio, { once: true })
+      })
+    }
+  }
+
+  public stopBgm() {
+    this.isBgmPlaying = false
+    if (this.bgmAudio) {
+      try {
+        this.bgmAudio.pause()
+        this.bgmAudio.currentTime = 0
+      } catch {}
+    }
+  }
+
+  public pauseBgm() {
+    if (this.bgmAudio && !this.bgmAudio.paused) {
+      try {
+        this.bgmAudio.pause()
+      } catch {}
+    }
+  }
+
+  public resumeBgm() {
+    if (this.isBgmPlaying && this.bgmAudio && this.bgmAudio.paused && !this.isMuted) {
+      this.bgmAudio.play().catch(() => {})
+    }
+  }
+
+  public setBgmVolume(volume: number) {
+    this.bgmTargetVolume = Math.max(0, Math.min(1, volume))
+    if (this.bgmAudio && !this.isMuted) {
+      this.bgmAudio.volume = this.bgmTargetVolume
+    }
+  }
+
   public setMuted(muted: boolean) {
     this.isMuted = muted
     if (this.engineGain && this.ctx) {
       const now = this.ctx.currentTime
       this.engineGain.gain.setValueAtTime(muted ? 0 : 0.15, now)
+    }
+    if (this.bgmAudio) {
+      this.bgmAudio.muted = muted
+      this.bgmAudio.volume = muted ? 0 : this.bgmTargetVolume
+      if (!muted && this.isBgmPlaying && this.bgmAudio.paused) {
+        this.bgmAudio.play().catch(() => {})
+      }
     }
   }
 
@@ -47,6 +142,7 @@ class SalmanAudioEngine {
   // ENGINE SOUND: Continuous pitch-tracked V8 engine rumble
   // --------------------------------------------------------------------------
   public startEngine() {
+    this.startBgm()
     if (this.isEngineRunning) return
     const ctx = this.getContext()
     if (!ctx) return
@@ -108,6 +204,7 @@ class SalmanAudioEngine {
   }
 
   public stopEngine() {
+    this.stopBgm()
     if (!this.isEngineRunning) return
     this.isEngineRunning = false
     const ctx = this.getContext()
@@ -340,6 +437,110 @@ class SalmanAudioEngine {
         osc.start(now + idx * 0.07)
         osc.stop(now + idx * 0.07 + 0.65)
       })
+    } catch {}
+  }
+
+  // --------------------------------------------------------------------------
+  // SALMAN KHAN TURQUOISE KEYCHAIN CHIME: Sterling silver link clink
+  // --------------------------------------------------------------------------
+  public playKeychainChime() {
+    if (this.isMuted) return
+    const ctx = this.getContext()
+    if (!ctx) return
+
+    try {
+      const now = ctx.currentTime
+      const harmonics = [2180, 3420, 5140, 6890]
+      harmonics.forEach((freq, i) => {
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.type = 'sine'
+        osc.frequency.setValueAtTime(freq + (Math.random() * 80 - 40), now + i * 0.015)
+
+        gain.gain.setValueAtTime(0.09 / (i + 1), now + i * 0.015)
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.015 + 0.28)
+
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        osc.start(now + i * 0.015)
+        osc.stop(now + i * 0.015 + 0.3)
+      })
+    } catch {}
+  }
+
+  // --------------------------------------------------------------------------
+  // ENGINE PUSH-TO-START REV: Starter crank & aggressive V8 throttle blip
+  // --------------------------------------------------------------------------
+  public playStarterRev() {
+    if (this.isMuted) return
+    const ctx = this.getContext()
+    if (!ctx) return
+
+    try {
+      const now = ctx.currentTime
+
+      // Starter electric whine
+      const starter = ctx.createOscillator()
+      const starterGain = ctx.createGain()
+      starter.type = 'sawtooth'
+      starter.frequency.setValueAtTime(160, now)
+      starter.frequency.exponentialRampToValueAtTime(320, now + 0.25)
+      starterGain.gain.setValueAtTime(0.18, now)
+      starterGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3)
+      starter.connect(starterGain)
+      starterGain.connect(ctx.destination)
+      starter.start(now)
+      starter.stop(now + 0.32)
+
+      // V8 Throttle Blip
+      const v8 = ctx.createOscillator()
+      const v8Gain = ctx.createGain()
+      const filter = ctx.createBiquadFilter()
+      v8.type = 'sawtooth'
+      v8.frequency.setValueAtTime(75, now + 0.2)
+      v8.frequency.exponentialRampToValueAtTime(260, now + 0.5)
+      v8.frequency.exponentialRampToValueAtTime(110, now + 0.95)
+
+      filter.type = 'lowpass'
+      filter.frequency.setValueAtTime(380, now + 0.2)
+      filter.frequency.linearRampToValueAtTime(950, now + 0.5)
+      filter.frequency.exponentialRampToValueAtTime(220, now + 0.95)
+
+      v8Gain.gain.setValueAtTime(0.001, now + 0.2)
+      v8Gain.gain.linearRampToValueAtTime(0.38, now + 0.42)
+      v8Gain.gain.exponentialRampToValueAtTime(0.001, now + 1.0)
+
+      v8.connect(filter)
+      filter.connect(v8Gain)
+      v8Gain.connect(ctx.destination)
+      v8.start(now + 0.2)
+      v8.stop(now + 1.05)
+    } catch {}
+  }
+
+  // --------------------------------------------------------------------------
+  // HAZARD WARNING RELAY CLICK: Realistic automotive flasher tick
+  // --------------------------------------------------------------------------
+  public playHazardClick() {
+    if (this.isMuted) return
+    const ctx = this.getContext()
+    if (!ctx) return
+
+    try {
+      const now = ctx.currentTime
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.type = 'square'
+      osc.frequency.setValueAtTime(980, now)
+      osc.frequency.exponentialRampToValueAtTime(340, now + 0.025)
+
+      gain.gain.setValueAtTime(0.14, now)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03)
+
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.start(now)
+      osc.stop(now + 0.035)
     } catch {}
   }
 }
