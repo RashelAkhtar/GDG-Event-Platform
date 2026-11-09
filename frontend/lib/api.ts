@@ -633,14 +633,26 @@ export const api = {
 
   clearSessionsForSlug(slug: string): void {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem(`gdg_all_sessions_${slug}`)
-      localStorage.removeItem(`gdg_leaderboard_${slug}`)
-      localStorage.removeItem(`gdg_user_session_${slug}`)
-      localStorage.removeItem(`gdg_active_session_${slug}`)
-      localStorage.removeItem(`gdg_quiz_attempt_${slug}`)
-      if (slug === 'wend-game') {
-        localStorage.removeItem('gdg_user_session_wend-game')
-        localStorage.removeItem('gdg_wend_session')
+      const keysToRemove: string[] = []
+      for (let i = 0; i < localStorage.length; i += 1) {
+        const key = localStorage.key(i)
+        if (!key) continue
+        if (
+          key === `gdg_all_sessions_${slug}` ||
+          key === `gdg_leaderboard_${slug}` ||
+          key === `gdg_user_session_${slug}` ||
+          key === `gdg_active_session_${slug}` ||
+          key === `gdg_quiz_attempt_${slug}` ||
+          key.startsWith(`gdg_user_session_${slug}_`) ||
+          key === 'gdg_user_session_wend-game' ||
+          key === 'gdg_wend_session'
+        ) {
+          keysToRemove.push(key)
+        }
+      }
+
+      for (const key of keysToRemove) {
+        localStorage.removeItem(key)
       }
     }
   },

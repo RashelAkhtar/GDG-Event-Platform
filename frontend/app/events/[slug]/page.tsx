@@ -208,6 +208,15 @@ function QuizRunnerContent() {
 
   // Active play session guard: participants entering arena always start a fresh live attempt
   useEffect(() => {
+    if (!user) return
+
+    const userKey = user._id || user.email
+    const currentAttempt = userKey ? api.getParticipantSession(slug, userKey) : null
+    if (currentAttempt) {
+      setCompletedSession(currentAttempt)
+      return
+    }
+
     setCompletedSession(null)
   }, [user, slug])
   const [loading, setLoading] = useState(false)
@@ -229,6 +238,11 @@ function QuizRunnerContent() {
   }, [slug, subscribeToLeaderboardReset, allocatedTimeSeconds])
 
   const handleStartNewAttempt = useCallback(() => {
+    const userKey = user?._id || user?.email
+    if (userKey && api.getParticipantSession(slug, userKey)) {
+      setCompletedSession(api.getParticipantSession(slug, userKey))
+      return
+    }
     if (user) {
       api.clearParticipantSession(slug, user._id)
       api.clearParticipantSession(slug, user.email)

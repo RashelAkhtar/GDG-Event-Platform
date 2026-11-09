@@ -148,6 +148,15 @@ export default function WendGamePage() {
 
   // Active play session guard: participants entering arena always start a fresh live attempt
   useEffect(() => {
+    if (!user) return
+
+    const userKey = user._id || user.email
+    const currentAttempt = userKey ? api.getParticipantSession('wend-game', userKey) : null
+    if (currentAttempt) {
+      setCompletedSession(currentAttempt)
+      return
+    }
+
     setCompletedSession(null)
   }, [user])
 
@@ -159,11 +168,13 @@ export default function WendGamePage() {
   useEffect(() => {
     startTimeRef.current = Date.now()
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('gdg_user_session_wend-game')
-      localStorage.removeItem('gdg_wend_session')
-      localStorage.removeItem('gdg_user_session_wend-game')
+      const userKey = user?._id || user?.email
+      if (!userKey) {
+        localStorage.removeItem('gdg_user_session_wend-game')
+        localStorage.removeItem('gdg_wend_session')
+      }
     }
-  }, [])
+  }, [user])
 
   const foundWordIdsRef = useRef(foundWordIds)
   useEffect(() => {
@@ -289,6 +300,12 @@ export default function WendGamePage() {
   }, [subscribeToLeaderboardReset])
 
   const handleStartNewAttempt = useCallback(() => {
+    const userKey = user?._id || user?.email
+    if (userKey && api.getParticipantSession('wend-game', userKey)) {
+      setCompletedSession(api.getParticipantSession('wend-game', userKey))
+      showToast('This challenge is locked until the admin resets the track.', 'info')
+      return
+    }
     if (user) {
       api.clearParticipantSession('wend-game', user._id)
       api.clearParticipantSession('wend-game', user.email)
@@ -307,7 +324,7 @@ export default function WendGamePage() {
     setTimeLeft(allocatedTimeSeconds)
     setIsCountingDown(true)
     startTimeRef.current = Date.now()
-  }, [allocatedTimeSeconds, user])
+  }, [allocatedTimeSeconds, showToast, user])
 
 
   const handleSecurityDisqualification = useCallback(async () => {
