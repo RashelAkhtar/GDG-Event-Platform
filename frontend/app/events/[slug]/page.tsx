@@ -50,33 +50,58 @@ function formatDuration(ms: number): string {
 function renderQuestionText(questionText?: string) {
   if (!questionText) return null
 
-  const codePattern = /\b(?:let|const|var|function|if|for|while|return|console\.log|=>)\b/i
-  const codeMatch = questionText.match(/^([\s\S]*?)(\b(?:let|const|var|function|if|for|while|return|console\.log|=>)\b[\s\S]*)$/i)
+  const codeFencePattern = /```([\s\S]*?)```/g
+  const matches = [...questionText.matchAll(codeFencePattern)]
 
-  if (codeMatch && codePattern.test(codeMatch[2])) {
-    const prose = codeMatch[1].trim()
-    const codeSnippet = codeMatch[2].trim()
+  if (matches.length === 0) {
+    return (
+      <h3 className="text-xl sm:text-2xl font-normal tracking-[-0.03em] leading-snug text-[#111827] dark:text-[#F9FAFB] select-none pointer-events-none">
+        {questionText}
+      </h3>
+    )
+  }
 
-    if (prose && codeSnippet) {
-      return (
-        <div className="space-y-4">
-          <h3 className="text-xl sm:text-2xl font-normal tracking-[-0.03em] leading-snug text-[#111827] dark:text-[#F9FAFB] select-none pointer-events-none">
-            {prose}
-          </h3>
-          <pre className="overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-[#1E293B] bg-[#F8FAFC] dark:bg-[#020817] p-4 text-left shadow-inner">
-            <code className="block whitespace-pre-wrap font-mono text-[12px] sm:text-[13px] leading-relaxed text-[#111827] dark:text-[#E2E8F0]">
-              {codeSnippet}
-            </code>
-          </pre>
-        </div>
+  const segments: React.ReactNode[] = []
+  let lastIndex = 0
+
+  matches.forEach((match, index) => {
+    const [fullMatch, codeSnippet] = match
+    const textBefore = questionText.slice(lastIndex, match.index)
+
+    if (textBefore) {
+      segments.push(
+        <span key={`text-${index}`} className="whitespace-pre-wrap">
+          {textBefore}
+        </span>
       )
     }
+
+    if (codeSnippet.trim()) {
+      segments.push(
+        <pre key={`code-${index}`} className="mt-2 overflow-x-auto rounded-xl border border-[#E5E7EB] dark:border-[#1E293B] bg-[#F8FAFC] dark:bg-[#020817] p-4 text-left shadow-inner">
+          <code className="block whitespace-pre-wrap font-mono text-[12px] sm:text-[13px] leading-relaxed text-[#111827] dark:text-[#E2E8F0]">
+            {codeSnippet.trim()}
+          </code>
+        </pre>
+      )
+    }
+
+    lastIndex = (match.index ?? 0) + fullMatch.length
+  })
+
+  const trailingText = questionText.slice(lastIndex)
+  if (trailingText) {
+    segments.push(
+      <span key="text-tail" className="whitespace-pre-wrap">
+        {trailingText}
+      </span>
+    )
   }
 
   return (
-    <h3 className="text-xl sm:text-2xl font-normal tracking-[-0.03em] leading-snug text-[#111827] dark:text-[#F9FAFB] select-none pointer-events-none">
-      {questionText}
-    </h3>
+    <div className="space-y-2 text-xl sm:text-2xl font-normal tracking-[-0.03em] leading-snug text-[#111827] dark:text-[#F9FAFB] select-none pointer-events-none">
+      {segments}
+    </div>
   )
 }
 
