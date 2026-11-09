@@ -14,6 +14,7 @@ export interface IQuizAttempt extends Document {
   userId: Types.ObjectId;
   startTime: Date;
   submittedAt?: Date;
+  durationMs?: number;
   answers: IAnswer[];
   totalScore: number;
   isCompleted: boolean;
@@ -53,11 +54,12 @@ const QuizAttemptSchema = new Schema<IQuizAttempt>(
     },
     startTime: { type: Date, required: true, default: Date.now },
     submittedAt: { type: Date },
+    durationMs: { type: Number },
     answers: [AnswerSchema],
     totalScore: { type: Number, required: true, default: 0, index: true },
     isCompleted: { type: Boolean, required: true, default: false },
   },
-  { timestamps: true },
+  { timestamps: true, strict: false },
 );
 
 // Ensure a user only submits one attempt per quiz event

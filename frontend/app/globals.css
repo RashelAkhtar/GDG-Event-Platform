@@ -1769,3 +1769,99 @@ html.dark .hairline-divider {
   animation: tree-epic-shake 0.8s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
   transform-origin: bottom center;
 }
+
+/* ========================================================================== */
+/* WINDSHIELD GLASS SHATTER & IMPACT CRACK ANIMATIONS                         */
+/* ========================================================================== */
+@keyframes glass-crack-burst {
+  0% {
+    transform: translate(-50%, -50%) rotate(var(--rot, 0deg)) scale(0.35);
+    opacity: 0.7;
+    filter: brightness(2.6) drop-shadow(0 0 16px #FFFFFF);
+  }
+  30% {
+    transform: translate(-50%, -50%) rotate(var(--rot, 0deg)) scale(1.12);
+    opacity: 1;
+    filter: brightness(1.8) drop-shadow(0 0 12px #BAE6FD);
+  }
+  65% {
+    transform: translate(-50%, -50%) rotate(var(--rot, 0deg)) scale(0.98);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(var(--rot, 0deg)) scale(1);
+    opacity: 0.95;
+    filter: brightness(1.1) drop-shadow(0 0 4px rgba(255, 255, 255, 0.7));
+  }
+}
+
+.anim-glass-crack-burst {
+  animation: glass-crack-burst 0.28s cubic-bezier(0.12, 0.9, 0.25, 1) forwards;
+}
+
+@keyframes glass-shockwave-ring {
+  0% {
+    transform: translate(-50%, -50%) scale(0.1);
+    opacity: 1;
+    border-color: #FFFFFF;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.8);
+    opacity: 0.85;
+    border-color: #BAE6FD;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.8);
+    opacity: 0;
+    border-color: transparent;
+  }
+}
+
+.anim-glass-shockwave {
+  animation: glass-shockwave-ring 0.38s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+}
+
+@keyframes glass-frost-pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.4);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.15);
+    opacity: 0.75;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.65;
+  }
+}
+
+.anim-glass-frost {
+  animation: glass-frost-pulse 0.32s ease-out forwards;
+}
+
+@keyframes wiper-arm-sweep {
+  0% {
+    transform: rotate(-58deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  50% {
+    transform: rotate(48deg);
+    opacity: 1;
+  }
+  85% {
+    transform: rotate(-58deg);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(-58deg);
+    opacity: 0;
+  }
+}
+
+.anim-wiper-sweep {
+  animation: wiper-arm-sweep 0.65s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  transform-origin: bottom left;
+}

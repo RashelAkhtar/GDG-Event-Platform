@@ -79,6 +79,134 @@ interface RecentStreakNotice {
   key: number
 }
 
+interface ShardParticle {
+  x: number
+  y: number
+  vx: number
+  vy: number
+  size: number
+  rotation: number
+  vRot: number
+  alpha: number
+  aspect: number
+}
+
+interface WindshieldCrack {
+  id: string
+  xPct: number
+  yPct: number
+  scale: number
+  rotation: number
+  severity: number
+  createdAt: number
+  radialPaths: string[]
+  branchPaths: string[]
+  webPaths: string[]
+  corePaths: string[]
+}
+
+function createRealisticGlassCrack(xPct: number, yPct: number, severity = 2): WindshieldCrack {
+  const id = `crack_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
+  const rotation = Math.floor(Math.random() * 360)
+  const scale = 0.9 + Math.random() * 0.4 + (severity === 3 ? 0.3 : 0)
+
+  const numRays = severity === 3 ? 12 : severity === 2 ? 10 : 8
+  const radialPaths: string[] = []
+  const branchPaths: string[] = []
+  const webPaths: string[] = []
+  const corePaths: string[] = []
+
+  const waypointsByRay: Array<Array<{ x: number; y: number }>> = []
+  const ringRadii = [24, 52, 90, 142, 205, 275]
+
+  for (let r = 0; r < numRays; r++) {
+    const angleBase = (r / numRays) * Math.PI * 2 + (Math.random() - 0.5) * 0.32
+    const isMajorRay = r % 3 === 0 || Math.random() < 0.35
+    const totalLength =
+      (isMajorRay ? 180 + Math.random() * 110 : 90 + Math.random() * 80) *
+      (severity === 3 ? 1.25 : 1.0)
+    const segments = isMajorRay ? 7 : 5
+
+    let pathStr = 'M 0 0'
+    let currentX = 0
+    let currentY = 0
+    const rayWaypoints: Array<{ x: number; y: number }> = []
+
+    for (let s = 1; s <= segments; s++) {
+      const frac = s / segments
+      const segDist = frac * totalLength
+      const segAngle = angleBase + (Math.random() - 0.5) * 0.35
+      const targetX = Math.round(Math.cos(segAngle) * segDist)
+      const targetY = Math.round(Math.sin(segAngle) * segDist)
+
+      pathStr += ` L ${targetX} ${targetY}`
+      currentX = targetX
+      currentY = targetY
+
+      rayWaypoints.push({ x: currentX, y: currentY })
+
+      if (isMajorRay && (s === 3 || s === 5) && Math.random() < 0.75) {
+        const forkDir = Math.random() > 0.5 ? 1 : -1
+        const forkAngle = segAngle + forkDir * (0.35 + Math.random() * 0.3)
+        const forkLen = 35 + Math.random() * 55
+        const forkSteps = 3
+        let forkStr = `M ${currentX} ${currentY}`
+        for (let fs = 1; fs <= forkSteps; fs++) {
+          const fDist = (fs / forkSteps) * forkLen
+          const fAngle = forkAngle + (Math.random() - 0.5) * 0.25
+          const fx = Math.round(currentX + Math.cos(fAngle) * fDist)
+          const fy = Math.round(currentY + Math.sin(fAngle) * fDist)
+          forkStr += ` L ${fx} ${fy}`
+        }
+        branchPaths.push(forkStr)
+      }
+    }
+    radialPaths.push(pathStr)
+    waypointsByRay.push(rayWaypoints)
+  }
+
+  const numRings = severity === 3 ? 5 : 4
+  for (let ringIdx = 0; ringIdx < numRings; ringIdx++) {
+    for (let r = 0; r < numRays; r++) {
+      if (Math.random() < 0.15) continue
+      const nextR = (r + 1) % numRays
+      const ray1Pts = waypointsByRay[r]
+      const ray2Pts = waypointsByRay[nextR]
+
+      const pt1 = ray1Pts[Math.min(ray1Pts.length - 1, ringIdx + 1)] || ray1Pts[ray1Pts.length - 1]
+      const pt2 = ray2Pts[Math.min(ray2Pts.length - 1, ringIdx + 1)] || ray2Pts[ray2Pts.length - 1]
+
+      if (pt1 && pt2) {
+        const midX = Math.round((pt1.x + pt2.x) * 0.5 * 0.88 + (Math.random() - 0.5) * 6)
+        const midY = Math.round((pt1.y + pt2.y) * 0.5 * 0.88 + (Math.random() - 0.5) * 6)
+        webPaths.push(`M ${pt1.x} ${pt1.y} Q ${midX} ${midY} ${pt2.x} ${pt2.y}`)
+      }
+    }
+  }
+
+  for (let c = 0; c < 8; c++) {
+    const coreAngle = (c / 8) * Math.PI * 2 + (Math.random() - 0.5) * 0.4
+    const coreDist = 12 + Math.random() * 16
+    const cx = Math.round(Math.cos(coreAngle) * coreDist)
+    const cy = Math.round(Math.sin(coreAngle) * coreDist)
+    corePaths.push(`M 0 0 L ${cx} ${cy}`)
+  }
+
+  return {
+    id,
+    xPct,
+    yPct,
+    scale,
+    rotation,
+    severity,
+    createdAt: Date.now(),
+    radialPaths,
+    branchPaths,
+    webPaths,
+    corePaths,
+  }
+}
+
 export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
   const [mounted, setMounted] = useState(false)
   const [score, setScore] = useState(0)
@@ -90,6 +218,9 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
   const [steerAngle, setSteerAngle] = useState(0) // Visual wheel angle in degrees
   const [isScreenShaking, setIsScreenShaking] = useState(false)
   const [impactFlash, setImpactFlash] = useState(false)
+  const [windshieldCracks, setWindshieldCracks] = useState<WindshieldCrack[]>([])
+  const [recentCrackHit, setRecentCrackHit] = useState<string | null>(null)
+  const [wiperActive, setWiperActive] = useState(false)
   const [recentStreak, setRecentStreak] = useState<RecentStreakNotice | null>(null)
   const [showExitScorecard, setShowExitScorecard] = useState(false)
   const [gyroActive, setGyroActive] = useState(false)
@@ -101,6 +232,31 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
   const [driveMode, setDriveMode] = useState<'SPORT+' | 'BEAST' | 'CRUISE'>('SPORT+')
   const [engineReving, setEngineReving] = useState(false)
   const [climateTemp, setClimateTemp] = useState(21.5)
+  const [isBgmActive, setIsBgmActive] = useState(false)
+  const [activeMobileSteer, setActiveMobileSteer] = useState<'left' | 'right' | null>(null)
+  const [isPressingGas, setIsPressingGas] = useState(false)
+  const [isPressingBrake, setIsPressingBrake] = useState(false)
+  const touchStartXRef = useRef<number | null>(null)
+
+  // Interactive Windshield Defroster & Wiper Cleaner
+  const handleCleanWindshield = useCallback(() => {
+    salmanAudio.playWiperSweep()
+    setWiperActive(true)
+    setTimeout(() => {
+      setWindshieldCracks([])
+    }, 320)
+    setTimeout(() => {
+      setWiperActive(false)
+    }, 680)
+  }, [])
+
+  // Direct user-gesture audio unlocker for mobile iOS / Android restrictions
+  const handleUserTouchStart = useCallback(() => {
+    salmanAudio.unlock()
+    salmanAudio.startBgm()
+    salmanAudio.startEngine()
+    setIsBgmActive(true)
+  }, [])
 
   // Hazard warning flasher rhythm
   useEffect(() => {
@@ -143,6 +299,27 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
   const deerStripRef = useRef<HTMLImageElement | null>(null)
   const asphaltImageRef = useRef<HTMLImageElement | null>(null)
 
+  // Direct DOM animation refs (bypassing 60 FPS React re-renders for max efficiency)
+  const wheelRef = useRef<HTMLDivElement | null>(null)
+  const talismanRef = useRef<HTMLDivElement | null>(null)
+  const keychainRef = useRef<HTMLDivElement | null>(null)
+  const speedDisplayRef = useRef<HTMLSpanElement | null>(null)
+  const distanceDisplayRef = useRef<HTMLSpanElement | null>(null)
+  const needleRpmRef = useRef<HTMLDivElement | null>(null)
+  const needleSpeedRef = useRef<HTMLDivElement | null>(null)
+  const frameCountRef = useRef(0)
+
+  // Safe accessor for preloaded deer gallop spritesheet
+  const getDeerStrip = useCallback(() => {
+    if (cachedDeerStripImg && cachedDeerStripImg.complete && cachedDeerStripImg.naturalWidth > 0) {
+      return cachedDeerStripImg
+    }
+    if (deerStripRef.current && deerStripRef.current.complete && deerStripRef.current.naturalWidth > 0) {
+      return deerStripRef.current
+    }
+    return cachedDeerStripImg || deerStripRef.current
+  }, [])
+
   // Mutable Game Physics State
   const gameState = useRef({
     playerX: 0, // -0.85 (left lane) to 0.85 (right lane)
@@ -156,6 +333,7 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
     nextDeerId: 1,
     spawnTimer: 0,
     trees: [] as RoadsideTree[],
+    shards: [] as ShardParticle[],
     keys: { left: false, right: false, up: false, down: false },
     touchGas: false,
     touchBrake: false,
@@ -166,21 +344,40 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
     comboTimer: 0,
   })
 
-  // Preload photorealistic stag sprite for high-performance canvas rendering
+  // Preload photorealistic stag sprite & gallop strip for instantaneous canvas rendering
   useEffect(() => {
     setMounted(true)
     if (typeof window !== 'undefined') {
-      const img = new Image()
-      img.src = '/game/deer_stag.png'
-      deerImageRef.current = img
+      const stagImg = cachedDeerImg || new Image()
+      if (!stagImg.src) stagImg.src = '/game/deer_stag.png'
+      stagImg.onload = () => {
+        deerImageRef.current = stagImg
+        cachedDeerImg = stagImg
+      }
+      deerImageRef.current = stagImg
+      cachedDeerImg = stagImg
 
-      const sImg = new Image()
-      sImg.src = '/game/deer_stag_gallop_strip.png'
-      deerStripRef.current = sImg
+      const stripImg = cachedDeerStripImg || new Image()
+      if (!stripImg.src) stripImg.src = '/game/deer_stag_gallop_strip.png'
+      stripImg.onload = () => {
+        deerStripRef.current = stripImg
+        cachedDeerStripImg = stripImg
+      }
+      stripImg.onerror = () => {
+        const fallback = new Image()
+        fallback.src = 'game/deer_stag_gallop_strip.png'
+        fallback.onload = () => {
+          deerStripRef.current = fallback
+          cachedDeerStripImg = fallback
+        }
+      }
+      deerStripRef.current = stripImg
+      cachedDeerStripImg = stripImg
 
-      const aImg = new Image()
-      aImg.src = '/game/asphalt_texture.jpg'
-      asphaltImageRef.current = aImg
+      const asphaltImg = cachedAsphaltImg || new Image()
+      if (!asphaltImg.src) asphaltImg.src = '/game/asphalt_texture.jpg'
+      asphaltImageRef.current = asphaltImg
+      cachedAsphaltImg = asphaltImg
     }
 
     const initialTrees: RoadsideTree[] = []
@@ -206,18 +403,23 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
   // Audio lifecycle: start engine sound & background music on open, stop on dismiss
   useEffect(() => {
     if (isOpen) {
+      salmanAudio.unlock()
+      salmanAudio.startBgm()
       salmanAudio.startEngine()
+      setIsBgmActive(salmanAudio.isBgmActive())
       if (typeof document !== 'undefined') {
         document.body.style.overflow = 'hidden'
       }
     } else {
       salmanAudio.stopEngine()
+      setIsBgmActive(false)
       if (typeof document !== 'undefined') {
         document.body.style.overflow = ''
       }
     }
     return () => {
       salmanAudio.stopEngine()
+      setIsBgmActive(false)
       if (typeof document !== 'undefined') {
         document.body.style.overflow = ''
       }
@@ -303,9 +505,11 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
       }
       if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
         gameState.current.keys.up = true
+        setIsPressingGas(true)
       }
       if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S' || e.key === ' ') {
         gameState.current.keys.down = true
+        setIsPressingBrake(true)
       }
       if (e.key === 'h' || e.key === 'H') {
         salmanAudio.playHorn()
@@ -321,6 +525,9 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
         const muted = salmanAudio.toggleMute()
         setIsAudioMuted(muted)
       }
+      if (e.key === 'c' || e.key === 'C') {
+        handleCleanWindshield()
+      }
       if (e.key === 'Escape') {
         setShowExitScorecard(true)
       }
@@ -335,9 +542,11 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
       }
       if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
         gameState.current.keys.up = false
+        setIsPressingGas(false)
       }
       if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S' || e.key === ' ') {
         gameState.current.keys.down = false
+        setIsPressingBrake(false)
       }
     }
 
@@ -358,8 +567,9 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
       } catch {}
     }
 
-    // 2. Audio Engine SFX: Heavy bumper crunch + animal distress cry
+    // 2. Audio Engine SFX: Heavy bumper crunch + laminated glass fracture + animal distress cry
     salmanAudio.playHitSound()
+    salmanAudio.playGlassCrackSound()
     setTimeout(() => {
       salmanAudio.playDeerCrySound()
     }, 40)
@@ -370,7 +580,41 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
     setTimeout(() => setImpactFlash(false), 240)
     setTimeout(() => setIsScreenShaking(false), 360)
 
-    // 4. Score increment & Top-Center Streak Banner (Eliminating center-road text smearing)
+    // 4. Laminated Safety Glass Crack Simulation
+    const playerRelX = gameState.current.playerX
+    const hitOffset = deer.x - playerRelX
+    const xPct = Math.max(16, Math.min(84, 50 + hitOffset * 105))
+    const yPct = Math.max(50, Math.min(68, 57 + (Math.random() - 0.5) * 12))
+    const severity = deer.species === 'stag' ? 3 : deer.species === 'buck' ? 2 : 1
+    const newCrack = createRealisticGlassCrack(xPct, yPct, severity)
+    setWindshieldCracks((prev) => [...prev.slice(-5), newCrack])
+    setRecentCrackHit(newCrack.id)
+    setTimeout(() => setRecentCrackHit(null), 350)
+
+    // 5. Canvas Flying Glass Shard Particles Burst
+    if (typeof window !== 'undefined') {
+      const screenW = window.innerWidth
+      const screenH = window.innerHeight
+      const originX = (xPct / 100) * screenW
+      const originY = (yPct / 100) * screenH
+      for (let s = 0; s < 24; s++) {
+        const angle = Math.random() * Math.PI * 2
+        const spd = 2.5 + Math.random() * 6.5
+        gameState.current.shards.push({
+          x: originX,
+          y: originY,
+          vx: Math.cos(angle) * spd,
+          vy: Math.sin(angle) * spd - 2.5,
+          size: 2.2 + Math.random() * 4.2,
+          rotation: Math.random() * Math.PI * 2,
+          vRot: (Math.random() - 0.5) * 0.25,
+          alpha: 1.0,
+          aspect: 0.35 + Math.random() * 0.9,
+        })
+      }
+    }
+
+    // 6. Score increment & Top-Center Streak Banner (Eliminating center-road text smearing)
     const basePts = deer.species === 'stag' ? 300 : deer.species === 'buck' ? 150 : 100
     const currentCombo = gameState.current.comboStreak + 1
     gameState.current.comboStreak = currentCombo
@@ -398,12 +642,15 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
 
     let isRunning = true
     let roadStripeOffset = 0
+    let dpr = 1
+    let cssWidth = typeof window !== 'undefined' ? window.innerWidth : 800
+    let cssHeight = typeof window !== 'undefined' ? window.innerHeight : 600
 
     const render = () => {
       if (!isRunning) return
 
-      const width = canvas.width
-      const height = canvas.height
+      const width = cssWidth
+      const height = cssHeight
       const g = gameState.current
 
       // -------------------------------------------------------------
@@ -418,28 +665,65 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
       // Smooth steering damping
       g.currentSteer += (g.targetSteer - g.currentSteer) * 0.18
       const steerDegrees = g.currentSteer * 28 // Max 28-degree wheel rotation
-      setSteerAngle(steerDegrees)
 
       // Speed physics (Gas / Brake)
       const isAccelerating = g.keys.up || g.touchGas
       const isBraking = g.keys.down || g.touchBrake
 
       if (isAccelerating) {
-        g.playerSpeed = Math.min(2.8, g.playerSpeed + 0.02)
+        g.playerSpeed = Math.min(2.85, g.playerSpeed + 0.026)
       } else if (isBraking) {
-        g.playerSpeed = Math.max(0.7, g.playerSpeed - 0.04)
+        // High-performance responsive Brembo braking:
+        // Strong initial bite decelerates quickly from high speed down to an 8 km/h crawl
+        const brakeBite = g.playerSpeed > 1.3 ? 0.078 : 0.052
+        g.playerSpeed = Math.max(0.12, g.playerSpeed - brakeBite)
       } else {
-        // Cruising equilibrium speed
-        g.playerSpeed += (1.85 - g.playerSpeed) * 0.02
+        // Cruising equilibrium speed (1.85 ~ 120 km/h)
+        // If slowed down below 0.8, recover speed gradually like an automatic transmission creep
+        const returnRate = g.playerSpeed < 0.8 ? 0.010 : 0.020
+        g.playerSpeed += (1.85 - g.playerSpeed) * returnRate
       }
 
       const currentKmH = Math.round(g.playerSpeed * 65)
-      setSpeedKmH(currentKmH)
       salmanAudio.updateSpeed(currentKmH)
 
       // Distance tracking
       g.distanceAccum += g.playerSpeed * 0.55
-      setDistanceM(Math.floor(g.distanceAccum))
+
+      // Synchronize cyclic road markings and guardrail posts movement with car speed
+      roadStripeOffset = (roadStripeOffset + g.playerSpeed * 0.038) % 1.0
+
+      // 60 FPS Direct DOM style updates (bypassing React re-renders for buttery 60 FPS mobile performance)
+      if (wheelRef.current) {
+        wheelRef.current.style.transform = `translateX(-50%) rotate(${steerDegrees.toFixed(1)}deg)`
+      }
+      if (talismanRef.current) {
+        talismanRef.current.style.transform = `rotate(${(-steerDegrees * 0.85 + keychainSwingBonus).toFixed(1)}deg)`
+      }
+      if (keychainRef.current) {
+        keychainRef.current.style.transform = `rotate(${(-steerDegrees * 0.75 + keychainSwingBonus).toFixed(1)}deg)`
+      }
+      if (speedDisplayRef.current) {
+        speedDisplayRef.current.textContent = String(currentKmH)
+      }
+      if (distanceDisplayRef.current) {
+        distanceDisplayRef.current.textContent = `${Math.floor(g.distanceAccum)} M TRIP`
+      }
+      if (needleSpeedRef.current) {
+        const spdRot = Math.min(135, (currentKmH / 180) * 140 - 70)
+        needleSpeedRef.current.style.transform = `rotate(${spdRot.toFixed(1)}deg)`
+      }
+      if (needleRpmRef.current) {
+        const rpmRot = engineReving ? 130 : isBraking ? -55 : Math.min(135, (currentKmH / 180) * 140 - 70)
+        needleRpmRef.current.style.transform = `rotate(${rpmRot.toFixed(1)}deg)`
+      }
+
+      // Throttle React state sync to ~4 FPS for external consumers & exit scorecard
+      frameCountRef.current++
+      if (frameCountRef.current % 15 === 0) {
+        setSpeedKmH(currentKmH)
+        setDistanceM(Math.floor(g.distanceAccum))
+      }
 
       // Move player lateral position along road
       g.playerX += g.currentSteer * (g.playerSpeed * 0.016)
@@ -462,8 +746,11 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
         }
       }
 
-      // Tire screech sound on sharp turns at high speed
-      if (Math.abs(g.currentSteer) > 0.85 && g.playerSpeed > 2.0 && Math.random() < 0.08) {
+      // Tire screech sound on sharp turns at high speed or heavy emergency braking
+      if (
+        (Math.abs(g.currentSteer) > 0.85 && g.playerSpeed > 2.0 && Math.random() < 0.08) ||
+        (isBraking && g.playerSpeed > 1.25 && Math.random() < 0.09)
+      ) {
         salmanAudio.playTireScreech()
       }
 
@@ -472,8 +759,9 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
       // -------------------------------------------------------------
       ctx.clearRect(0, 0, width, height)
 
-      // Horizon line placed at 30% of screen height for wide scenic highway
-      const horizonY = height * 0.30
+      // Horizon line placed at 30% of screen height with front damper pitch dive on braking
+      const brakeDip = isBraking ? Math.min(5.5, (1.85 - g.playerSpeed) * 3.8) : 0
+      const horizonY = height * 0.30 + brakeDip
       // Road bottom is clipped before screen bottom to ensure zero bleed under dashboard
       const roadCowlY = height * 0.88
       const roadBottomWidth = width * 1.60
@@ -603,8 +891,7 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
       // --- 2. NOTCHED SHOULDER RUMBLE STRIPS ---
       const numRumble = 28
       for (let r = 0; r < numRumble; r++) {
-        const rp = (r + roadStripeOffset * 2) / numRumble
-        if (rp > 1) continue
+        const rp = ((r / numRumble) + roadStripeOffset) % 1.0
         const rz = Math.pow(rp, 1.8)
         const ry = horizonY + rz * (roadCowlY - horizonY)
         const rcx = centerTopX + (centerBottomX - centerTopX) * rz
@@ -637,12 +924,13 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
       // --- 4. 3D THERMOPLASTIC DASHED LANE MARKINGS WITH RETROREFLECTIVE CAT'S EYES ---
       const numStripes = 14
       for (let s = 0; s < numStripes; s++) {
-        const p1 = (s + roadStripeOffset) / numStripes
-        const p2 = (s + 0.42 + roadStripeOffset) / numStripes
-        if (p1 > 1) continue
+        const p1 = ((s / numStripes) + roadStripeOffset) % 1.0
+        const stripeLen = 0.42 / numStripes
+        const p2 = Math.min(1.0, p1 + stripeLen)
+        if (p1 > 0.96) continue
 
         const z1 = Math.pow(p1, 1.8)
-        const z2 = Math.pow(Math.min(1, p2), 1.8)
+        const z2 = Math.pow(p2, 1.8)
 
         const sy1 = horizonY + z1 * (roadCowlY - horizonY)
         const sy2 = horizonY + z2 * (roadCowlY - horizonY)
@@ -692,8 +980,7 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
       // Vertical Steel I-Beam Stanchions
       const guardrailPosts = 18
       for (let p = 0; p < guardrailPosts; p++) {
-        const postP = (p + roadStripeOffset) / guardrailPosts
-        if (postP > 1) continue
+        const postP = ((p / guardrailPosts) + roadStripeOffset) % 1.0
         const postZ = Math.pow(postP, 1.7)
         const postY = horizonY + postZ * (roadCowlY - horizonY)
         const postRcx = centerTopX + (centerBottomX - centerTopX) * postZ
@@ -891,7 +1178,7 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
         }
 
         if (!d.isHit) {
-          d.z += d.speedZ
+          d.z += 0.0058 * g.playerSpeed
 
           // Startled reaction as car high beams hit deer
           if (d.z >= 0.34 && !d.isStartled) {
@@ -981,19 +1268,11 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
           ctx.scale(squashStretchX, squashStretchY)
         }
 
-        const activeStripImg = deerStripRef.current || cachedDeerStripImg
+        const activeStripImg = getDeerStrip()
+        const isStripReady = Boolean(activeStripImg && activeStripImg.complete && activeStripImg.naturalWidth > 0)
         const activeDeerImg = deerImageRef.current || cachedDeerImg
 
-        // Distance-based nocturnal headlight illumination (inverse-square transition)
-        const headlightFactor = Math.max(0, Math.min(1, (d.z - 0.08) / 0.62))
-        const nocturnalBrightness = 0.32 + headlightFactor * 0.78
-        const nocturnalContrast = 1.05 + headlightFactor * 0.1
-
-        if (ctx.filter !== undefined) {
-          ctx.filter = `brightness(${nocturnalBrightness.toFixed(2)}) contrast(${nocturnalContrast.toFixed(2)})`
-        }
-
-        if (activeStripImg && activeStripImg.complete && activeStripImg.naturalWidth > 0) {
+        if (isStripReady && activeStripImg) {
           // 8-Frame Multi-Limb Galloping Animation Spritesheet (2880x360, 360x360 per frame)
           const frameW = 360
           const frameH = 360
@@ -1008,32 +1287,126 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
             deerW,
             deerH
           )
-        } else if (activeDeerImg && activeDeerImg.complete && activeDeerImg.naturalWidth > 0) {
-          ctx.drawImage(
-            activeDeerImg,
-            -deerW * 0.5,
-            -deerH,
-            deerW,
-            deerH * (697 / 954)
-          )
         } else {
-          // Anatomical wild deer silhouette fallback with antlers
-          ctx.fillStyle = '#C27835'
-          ctx.beginPath()
-          ctx.ellipse(0, -deerH * 0.45, deerW * 0.42, deerH * 0.28, 0, 0, Math.PI * 2)
-          ctx.fill()
-          if (d.species === 'stag' || d.species === 'buck') {
-            ctx.strokeStyle = '#FDE047'
-            ctx.lineWidth = Math.max(1.5, 3 * scale)
+          // Guaranteed Biomechanical Quadruped Gallop Gait (Legs always move vigorously on mobile!)
+          if (activeDeerImg && activeDeerImg.complete && activeDeerImg.naturalWidth > 0) {
+            // Draw upper body and head from high-res image
+            ctx.save()
             ctx.beginPath()
-            ctx.moveTo(deerW * 0.24, -deerH * 0.8)
-            ctx.lineTo(deerW * 0.35, -deerH * 1.05)
-            ctx.stroke()
-          }
-        }
+            ctx.rect(-deerW * 0.5, -deerH, deerW, deerH * 0.65)
+            ctx.clip()
+            ctx.drawImage(
+              activeDeerImg,
+              -deerW * 0.5,
+              -deerH,
+              deerW,
+              deerH * (697 / 954)
+            )
+            ctx.restore()
+          } else {
+            // High-fidelity procedural stag torso and antlers
+            ctx.fillStyle = '#9A5B27'
+            ctx.beginPath()
+            ctx.ellipse(0, -deerH * 0.52, deerW * 0.38, deerH * 0.24, -0.05, 0, Math.PI * 2)
+            ctx.fill()
 
-        if (ctx.filter !== undefined) {
-          ctx.filter = 'none'
+            // Neck & Head
+            ctx.beginPath()
+            ctx.ellipse(deerW * 0.22, -deerH * 0.68, deerW * 0.16, deerH * 0.18, 0.4, 0, Math.PI * 2)
+            ctx.fill()
+
+            if (d.species === 'stag' || d.species === 'buck') {
+              ctx.strokeStyle = '#E8D49E'
+              ctx.lineWidth = Math.max(1.8, 3.2 * scale)
+              ctx.beginPath()
+              ctx.moveTo(deerW * 0.22, -deerH * 0.78)
+              ctx.lineTo(deerW * 0.28, -deerH * 1.05)
+              ctx.lineTo(deerW * 0.36, -deerH * 1.15)
+              ctx.moveTo(deerW * 0.26, -deerH * 0.92)
+              ctx.lineTo(deerW * 0.18, -deerH * 1.08)
+              ctx.stroke()
+            }
+          }
+
+          // Articulated Galloping Limbs (Front & Hind Legs with Pounding Hooves)
+          const legColor = '#7A441B'
+          const hoofColor = '#1F140A'
+          const legWidth = Math.max(2.2, 4.2 * scale)
+          ctx.strokeStyle = legColor
+          ctx.lineWidth = legWidth
+          ctx.lineCap = 'round'
+          ctx.lineJoin = 'round'
+
+          // 1. Forelimb Lead (Front Right)
+          const fLeadPhase = phaseNorm * Math.PI * 2
+          const fLeadHipX = deerW * 0.18
+          const fLeadHipY = -deerH * 0.46
+          const fLeadKneeX = fLeadHipX + Math.sin(fLeadPhase) * (deerH * 0.22)
+          const fLeadKneeY = fLeadHipY + Math.cos(fLeadPhase) * (deerH * 0.14) + deerH * 0.22
+          const fLeadHoofX = fLeadKneeX + Math.sin(fLeadPhase + 0.3) * (deerH * 0.24)
+          const fLeadHoofY = fLeadKneeY + deerH * 0.24
+
+          ctx.beginPath()
+          ctx.moveTo(fLeadHipX, fLeadHipY)
+          ctx.lineTo(fLeadKneeX, fLeadKneeY)
+          ctx.lineTo(fLeadHoofX, fLeadHoofY)
+          ctx.stroke()
+
+          ctx.fillStyle = hoofColor
+          ctx.beginPath()
+          ctx.arc(fLeadHoofX, fLeadHoofY, legWidth * 0.7, 0, Math.PI * 2)
+          ctx.fill()
+
+          // 2. Forelimb Trailing (Front Left, offset)
+          const fTrailPhase = phaseNorm * Math.PI * 2 - 0.7
+          const fTrailHipX = deerW * 0.12
+          const fTrailHipY = -deerH * 0.46
+          const fTrailKneeX = fTrailHipX + Math.sin(fTrailPhase) * (deerH * 0.2)
+          const fTrailKneeY = fTrailHipY + Math.cos(fTrailPhase) * (deerH * 0.12) + deerH * 0.22
+          const fTrailHoofX = fTrailKneeX + Math.sin(fTrailPhase + 0.3) * (deerH * 0.22)
+          const fTrailHoofY = fTrailKneeY + deerH * 0.24
+
+          ctx.strokeStyle = '#5E3314'
+          ctx.beginPath()
+          ctx.moveTo(fTrailHipX, fTrailHipY)
+          ctx.lineTo(fTrailKneeX, fTrailKneeY)
+          ctx.lineTo(fTrailHoofX, fTrailHoofY)
+          ctx.stroke()
+
+          // 3. Hindlimb Lead (Back Right)
+          const hLeadPhase = phaseNorm * Math.PI * 2 + 2.4
+          const hLeadHipX = -deerW * 0.2
+          const hLeadHipY = -deerH * 0.48
+          const hLeadHockX = hLeadHipX + Math.sin(hLeadPhase) * (deerH * 0.24)
+          const hLeadHockY = hLeadHipY + Math.cos(hLeadPhase) * (deerH * 0.15) + deerH * 0.24
+          const hLeadHoofX = hLeadHockX - Math.sin(hLeadPhase * 0.8) * (deerH * 0.22)
+          const hLeadHoofY = hLeadHockY + deerH * 0.24
+
+          ctx.strokeStyle = legColor
+          ctx.beginPath()
+          ctx.moveTo(hLeadHipX, hLeadHipY)
+          ctx.lineTo(hLeadHockX, hLeadHockY)
+          ctx.lineTo(hLeadHoofX, hLeadHoofY)
+          ctx.stroke()
+          ctx.beginPath()
+          ctx.arc(hLeadHoofX, hLeadHoofY, legWidth * 0.7, 0, Math.PI * 2)
+          ctx.fill()
+
+          // 4. Hindlimb Trailing (Back Left)
+          const hTrailPhase = phaseNorm * Math.PI * 2 + 1.7
+          const hTrailHipX = -deerW * 0.26
+          const hTrailHipY = -deerH * 0.48
+          const hTrailHockX = hTrailHipX + Math.sin(hTrailPhase) * (deerH * 0.22)
+          const hTrailHockY = hTrailHipY + Math.cos(hTrailPhase) * (deerH * 0.13) + deerH * 0.24
+          const hTrailHoofX = hTrailHockX - Math.sin(hTrailPhase * 0.8) * (deerH * 0.2)
+          const hTrailHoofY = hTrailHockY + deerH * 0.24
+
+          ctx.strokeStyle = '#5E3314'
+          ctx.beginPath()
+          ctx.moveTo(hTrailHipX, hTrailHipY)
+          ctx.lineTo(hTrailHockX, hTrailHockY)
+          ctx.lineTo(hTrailHoofX, hTrailHoofY)
+          ctx.stroke()
         }
 
         // -----------------------------------------------------------
@@ -1077,12 +1450,51 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
         ctx.restore()
       }
 
+      // -------------------------------------------------------------
+      // 4. Flying Laminated Glass Shards & Micro-Sparks Across Windshield
+      // -------------------------------------------------------------
+      for (let si = g.shards.length - 1; si >= 0; si--) {
+        const sh = g.shards[si]
+        sh.x += sh.vx
+        sh.y += sh.vy
+        sh.vy += 0.22 // gravity sliding down the raked windshield
+        sh.vx *= 0.98
+        sh.rotation += sh.vRot
+        sh.alpha -= 0.022
+
+        if (sh.alpha <= 0.02 || sh.y > height * 0.92) {
+          g.shards.splice(si, 1)
+          continue
+        }
+
+        ctx.save()
+        ctx.translate(sh.x, sh.y)
+        ctx.rotate(sh.rotation)
+        ctx.fillStyle = `rgba(255, 255, 255, ${sh.alpha.toFixed(2)})`
+        ctx.shadowColor = '#BAE6FD'
+        ctx.shadowBlur = 5
+
+        // Diamond / sharp crystalline glass sliver
+        ctx.beginPath()
+        ctx.moveTo(0, -sh.size * 1.5)
+        ctx.lineTo(sh.size * sh.aspect, 0)
+        ctx.lineTo(0, sh.size * 1.5)
+        ctx.lineTo(-sh.size * sh.aspect, 0)
+        ctx.closePath()
+        ctx.fill()
+        ctx.restore()
+      }
+
       animFrameRef.current = requestAnimationFrame(render)
     }
 
     const handleResize = () => {
-      canvas.width = window.innerWidth
-      canvas.height = window.innerHeight
+      dpr = Math.min(window.devicePixelRatio || 1, 2.0)
+      cssWidth = window.innerWidth
+      cssHeight = window.innerHeight
+      canvas.width = Math.floor(cssWidth * dpr)
+      canvas.height = Math.floor(cssHeight * dpr)
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     }
     handleResize()
     window.addEventListener('resize', handleResize)
@@ -1122,15 +1534,184 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
       {/* Touch-Steer Zones on Mobile Screen: Left half steers left, right half steers right */}
       <div className="absolute inset-0 z-20 flex pointer-events-auto sm:pointer-events-none">
         <div
-          onTouchStart={() => (gameState.current.touchSteerLeft = true)}
-          onTouchEnd={() => (gameState.current.touchSteerLeft = false)}
-          className="w-1/2 h-full opacity-0"
+          onTouchStart={() => {
+            handleUserTouchStart()
+            setActiveMobileSteer('left')
+            gameState.current.touchSteerLeft = true
+          }}
+          onTouchEnd={() => {
+            setActiveMobileSteer(null)
+            gameState.current.touchSteerLeft = false
+          }}
+          className="w-1/2 h-[75%] opacity-0 touch-none"
         />
         <div
-          onTouchStart={() => (gameState.current.touchSteerRight = true)}
-          onTouchEnd={() => (gameState.current.touchSteerRight = false)}
-          className="w-1/2 h-full opacity-0"
+          onTouchStart={() => {
+            handleUserTouchStart()
+            setActiveMobileSteer('right')
+            gameState.current.touchSteerRight = true
+          }}
+          onTouchEnd={() => {
+            setActiveMobileSteer(null)
+            gameState.current.touchSteerRight = false
+          }}
+          className="w-1/2 h-[75%] opacity-0 touch-none"
         />
+      </div>
+
+      {/* Seductive Glowing Neon Apex Lines on Mobile Steering */}
+      {activeMobileSteer === 'left' && (
+        <div className="sm:hidden absolute left-2 top-[28%] h-[36%] w-2 rounded-full bg-gradient-to-b from-transparent via-cyan-400 to-transparent shadow-[0_0_28px_#22D3EE] pointer-events-none z-30 animate-pulse" />
+      )}
+      {activeMobileSteer === 'right' && (
+        <div className="sm:hidden absolute right-2 top-[28%] h-[36%] w-2 rounded-full bg-gradient-to-b from-transparent via-cyan-400 to-transparent shadow-[0_0_28px_#22D3EE] pointer-events-none z-30 animate-pulse" />
+      )}
+
+      {/* ==================================================================== */}
+      {/* LAYER 1.5: LAMINATED WINDSHIELD SAFETY GLASS IMPACT CRACKS & WIPER   */}
+      {/* Fractures and cobweb fissures situated on car glass behind A-pillars */}
+      {/* ==================================================================== */}
+      <div className="absolute inset-0 pointer-events-none z-21 overflow-hidden">
+        {windshieldCracks.map((crack) => {
+          const isNew = recentCrackHit === crack.id
+          return (
+            <div
+              key={crack.id}
+              className={`absolute pointer-events-none select-none ${isNew ? 'anim-glass-crack-burst' : ''}`}
+              style={{
+                left: `${crack.xPct}%`,
+                top: `${crack.yPct}%`,
+                width: '520px',
+                height: '520px',
+                transform: `translate(-50%, -50%) rotate(${crack.rotation}deg) scale(${crack.scale})`,
+                ['--rot' as any]: `${crack.rotation}deg`,
+              }}
+            >
+              {/* Epicenter Pulverized Micro-Frost Crater */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.85)_0%,rgba(186,230,253,0.45)_40%,transparent_75%)] blur-[1px] pointer-events-none anim-glass-frost" />
+
+              {/* Supersonic Impact Shockwave Ring on spawn */}
+              {isNew && (
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 rounded-full border-2 border-white/95 shadow-[0_0_24px_#FFFFFF] anim-glass-shockwave pointer-events-none" />
+              )}
+
+              {/* High-Precision Multi-Layer Safety Glass Vector Fractures */}
+              <svg
+                viewBox="-260 -260 520 520"
+                className="w-full h-full overflow-visible pointer-events-none"
+              >
+                <defs>
+                  <filter id={`glass-glow-${crack.id}`} x="-30%" y="-30%" width="160%" height="160%">
+                    <feDropShadow dx="1" dy="1.5" stdDeviation="1.5" floodColor="#000000" floodOpacity="0.55" />
+                  </filter>
+                </defs>
+
+                {/* 1. Deep Lamination Shadow Offset (6mm dual-layer glass depth) */}
+                <g transform="translate(1.2, 1.8)" opacity="0.45">
+                  {crack.radialPaths.map((p, i) => (
+                    <path key={`sh-rad-${i}`} d={p} stroke="#000000" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                  ))}
+                  {crack.branchPaths.map((p, i) => (
+                    <path key={`sh-br-${i}`} d={p} stroke="#000000" strokeWidth="2.0" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                  ))}
+                  {crack.webPaths.map((p, i) => (
+                    <path key={`sh-web-${i}`} d={p} stroke="#000000" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                  ))}
+                </g>
+
+                {/* 2. Concentric Spiderweb Connector Chords */}
+                <g opacity="0.82">
+                  {crack.webPaths.map((p, i) => (
+                    <path
+                      key={`web-${i}`}
+                      d={p}
+                      stroke="#FFFFFF"
+                      strokeWidth="1.1"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      fill="none"
+                      filter={`url(#glass-glow-${crack.id})`}
+                    />
+                  ))}
+                </g>
+
+                {/* 3. Secondary Bifurcated Branches */}
+                <g opacity="0.88">
+                  {crack.branchPaths.map((p, i) => (
+                    <path
+                      key={`br-${i}`}
+                      d={p}
+                      stroke="#E0F2FE"
+                      strokeWidth="1.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      fill="none"
+                    />
+                  ))}
+                </g>
+
+                {/* 4. Main Radial Fissures (Deep, crystalline fractured fissures) */}
+                <g opacity="0.95">
+                  {crack.radialPaths.map((p, i) => (
+                    <path
+                      key={`rad-${i}`}
+                      d={p}
+                      stroke="#FFFFFF"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      fill="none"
+                    />
+                  ))}
+                </g>
+
+                {/* 5. Prismatic Refractive Core Accent (Cyan/Blue Caustic sheen) */}
+                <g opacity="0.75">
+                  {crack.radialPaths.map((p, i) => (
+                    <path
+                      key={`core-sheen-${i}`}
+                      d={p}
+                      stroke="#BAE6FD"
+                      strokeWidth="0.7"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      fill="none"
+                    />
+                  ))}
+                </g>
+
+                {/* 6. Pulverized Micro-Impact Center Starburst */}
+                <g>
+                  {crack.corePaths.map((p, i) => (
+                    <path
+                      key={`core-${i}`}
+                      d={p}
+                      stroke="#FFFFFF"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      fill="none"
+                    />
+                  ))}
+                </g>
+              </svg>
+            </div>
+          )
+        })}
+
+        {/* Animated Automotive Windshield Wiper Blade Sweep */}
+        {wiperActive && (
+          <div className="absolute inset-0 pointer-events-none z-24 overflow-hidden">
+            <div className="absolute bottom-[-10%] left-[-10%] w-[130%] h-[120%] origin-bottom-left anim-wiper-sweep">
+              {/* Wiper Arm Blade */}
+              <div className="absolute bottom-[20%] left-[25%] w-[68vw] h-2.5 bg-gradient-to-r from-[#1E293B] via-[#0F172A] to-[#1E293B] border-t border-slate-600 shadow-[0_4px_16px_rgba(0,0,0,0.85)] -rotate-35 origin-left">
+                {/* Rubber squeegee lip */}
+                <div className="absolute -bottom-1 inset-x-0 h-1 bg-black/90 shadow-sm" />
+                {/* Clean water mist wipe trail */}
+                <div className="absolute -top-16 inset-x-0 h-16 bg-gradient-to-t from-cyan-200/25 via-white/10 to-transparent blur-sm pointer-events-none" />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ==================================================================== */}
@@ -1149,8 +1730,8 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
           </svg>
         </div>
 
-        {/* Left Driver Door Sill & Armrest Panel (Matching Reference Photo) */}
-        <div className="absolute bottom-0 left-0 w-24 sm:w-36 h-[34vh] bg-gradient-to-t from-[#080B12] via-[#0E131E] to-[#182130] border-r-2 border-[#242E40] shadow-[10px_0_30px_rgba(0,0,0,0.85)] flex flex-col justify-between p-3 pointer-events-none z-24">
+        {/* Left Driver Door Sill & Armrest Panel (Hidden on mobile for clean pedal room) */}
+        <div className="hidden sm:flex absolute bottom-0 left-0 w-24 sm:w-36 h-[34vh] bg-gradient-to-t from-[#080B12] via-[#0E131E] to-[#182130] border-r-2 border-[#242E40] shadow-[10px_0_30px_rgba(0,0,0,0.85)] flex-col justify-between p-3 pointer-events-none z-24">
           <div className="w-full h-1 bg-[#2C384D] rounded-full opacity-50" />
           {/* Silver Door Handle Release */}
           <div className="w-12 h-4 rounded-md bg-gradient-to-r from-slate-400 to-slate-200 border border-slate-500 shadow-md" />
@@ -1164,16 +1745,12 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
         {/* Ceiling Header Trim across top of windshield */}
         <div className="absolute top-0 inset-x-0 h-4 bg-gradient-to-b from-[#080B11] via-[#10141D] to-transparent pointer-events-none" />
 
-        {/* Left Wing Mirror (Structurally Mounted to Door Base behind A-Pillar) */}
-        <div className="absolute left-2 sm:left-6 top-[30%] sm:top-[28%] pointer-events-auto z-23">
-          {/* Mirror Door Bracket Triangle */}
+        {/* Left Wing Mirror (Visible on tablet/desktop, hidden on mobile portrait to open windshield visibility) */}
+        <div className="hidden sm:block absolute left-2 sm:left-6 top-[30%] sm:top-[28%] pointer-events-auto z-23">
           <div className="relative w-24 sm:w-32 h-16 sm:h-22 rounded-2xl border-4 border-[#18202F] bg-[#0A0E17] shadow-[0_12px_36px_rgba(0,0,0,0.8)] overflow-hidden -rotate-3">
-            {/* Mirror Reflective Glass showing receding highway */}
             <div className="relative w-full h-full bg-gradient-to-r from-[#0C1424] via-[#182234] to-[#0A0E17] flex items-center justify-center overflow-hidden">
-              {/* Receding Asphalt Road Line */}
               <div className="absolute w-[140%] h-1 bg-amber-400/90 -rotate-12 shadow-[0_0_6px_#F59E0B]" />
               <div className="absolute w-[140%] h-0.5 bg-white/70 -rotate-12 translate-y-3" />
-              {/* Silver Guardrail Reflection */}
               <div className="absolute top-2 inset-x-0 h-1 bg-slate-400/40" />
               <span className="absolute bottom-1 left-2 text-[7px] font-mono tracking-wider text-neutral-400">
                 SIDE MIRROR
@@ -1182,17 +1759,17 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
           </div>
         </div>
 
-        {/* Upper Windshield Rear-View Mirror (Cleanly positioned at 66% width with ample clearance from HUD buttons) */}
-        <div className="absolute top-5 sm:top-6 left-[66%] -translate-x-1/2 pointer-events-auto flex flex-col items-center z-25">
+        {/* Upper Windshield Rear-View Mirror & Turquoise Talisman (Cleanly positioned on mobile & desktop with zero HUD button conflict) */}
+        <div className="absolute top-14 sm:top-6 left-1/2 -translate-x-1/2 sm:left-[66%] pointer-events-auto flex flex-col items-center z-25 scale-80 sm:scale-100 origin-top">
           {/* Mounting Stem */}
           <div className="w-2.5 h-3.5 bg-gradient-to-b from-[#0B0F19] to-[#1E293B] rounded-t-sm" />
           {/* Mirror Casing */}
-          <div className="w-36 sm:w-44 h-11 sm:h-13 rounded-2xl border-3 border-[#1E293B] bg-[#090D16] shadow-[0_10px_30px_rgba(0,0,0,0.7)] overflow-hidden flex items-center justify-center -rotate-2">
+          <div className="w-32 sm:w-44 h-9 sm:h-13 rounded-2xl border-2 sm:border-3 border-[#1E293B] bg-[#090D16] shadow-[0_10px_30px_rgba(0,0,0,0.7)] overflow-hidden flex items-center justify-center -rotate-1 sm:-rotate-2">
             <div className="relative w-full h-full bg-gradient-to-t from-[#1A2333] to-[#0B111D] flex items-center justify-center">
               {/* Receding Highway Reflection */}
               <div className="w-0.5 h-full bg-white/40 rotate-15" />
               <div className="w-0.5 h-full bg-white/40 -rotate-15" />
-              <div className="absolute bottom-0.5 text-[7px] font-mono tracking-widest text-neutral-400">
+              <div className="absolute bottom-0.5 text-[6.5px] sm:text-[7px] font-mono tracking-widest text-neutral-400">
                 REAR VIEW
               </div>
             </div>
@@ -1200,20 +1777,19 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
 
           {/* ================================================================ */}
           {/* SALMAN KHAN SIGNATURE TURQUOISE TALISMAN HANGING CHARM           */}
-          {/* Authentic firoza cabochon in heavy sterling silver bezel setting */}
-          {/* Real-time centrifugal steering sway physics & interactive chime  */}
           {/* ================================================================ */}
           <div
-            className="relative flex flex-col items-center cursor-pointer select-none transition-transform duration-100 origin-top mt-[-2px]"
+            ref={talismanRef}
+            className="relative flex flex-col items-center cursor-pointer select-none transition-transform duration-75 origin-top mt-[-2px]"
             style={{
-              transform: `rotate(${-steerAngle * 0.85 + keychainSwingBonus}deg)`,
+              transform: `rotate(${keychainSwingBonus}deg)`,
               transformOrigin: 'top center',
             }}
             onClick={handleKeychainClick}
             title="Salman Khan's Iconic Turquoise Stone Talisman (Click to Jingle)"
           >
             {/* Hanging Sterling Silver Curb Chain */}
-            <div className="w-0.5 h-14 sm:h-18 bg-gradient-to-b from-slate-400 via-slate-200 to-slate-400 shadow-[0_0_4px_rgba(255,255,255,0.4)] flex flex-col items-center justify-between">
+            <div className="w-0.5 h-12 sm:h-18 bg-gradient-to-b from-slate-400 via-slate-200 to-slate-400 shadow-[0_0_4px_rgba(255,255,255,0.4)] flex flex-col items-center justify-between">
               <div className="w-1.5 h-1.5 rounded-full bg-slate-300 border border-slate-500 shadow-sm" />
               <div className="w-1.5 h-1.5 rounded-full bg-slate-100 border border-slate-400 shadow-sm" />
               <div className="w-1.5 h-1.5 rounded-full bg-slate-300 border border-slate-500 shadow-sm" />
@@ -1228,7 +1804,7 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
               <div className="absolute -bottom-0.5 -right-0.5 w-1 h-1 bg-white rounded-full border border-slate-400" />
 
               {/* Genuine Firoza Turquoise Gemstone */}
-              <div className="relative w-7 sm:w-8 h-9 sm:h-10 rounded-md bg-gradient-to-br from-[#06B6D4] via-[#0891B2] to-[#0E7490] overflow-hidden shadow-inner flex items-center justify-center border border-cyan-300/40">
+              <div className="relative w-6 sm:w-8 h-8 sm:h-10 rounded-md bg-gradient-to-br from-[#06B6D4] via-[#0891B2] to-[#0E7490] overflow-hidden shadow-inner flex items-center justify-center border border-cyan-300/40">
                 {/* Natural Organic Veins */}
                 <svg className="absolute inset-0 w-full h-full opacity-65" viewBox="0 0 32 40">
                   <path d="M 4 2 Q 12 10 10 18 Q 8 28 18 34" stroke="#042F2E" strokeWidth="1.2" fill="none" />
@@ -1251,8 +1827,8 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
           </div>
         </div>
 
-        {/* Right Wing Mirror (Passenger Side - Matching Left Mirror) */}
-        <div className="absolute right-2 sm:right-6 top-[30%] sm:top-[28%] pointer-events-auto z-23">
+        {/* Right Wing Mirror (Visible on tablet/desktop, hidden on mobile portrait) */}
+        <div className="hidden sm:block absolute right-2 sm:right-6 top-[30%] sm:top-[28%] pointer-events-auto z-23">
           <div className="relative w-24 sm:w-32 h-16 sm:h-22 rounded-2xl border-4 border-[#18202F] bg-[#0A0E17] shadow-[0_12px_36px_rgba(0,0,0,0.8)] overflow-hidden rotate-3">
             <div className="relative w-full h-full bg-gradient-to-l from-[#0C1424] via-[#182234] to-[#0A0E17] flex items-center justify-center overflow-hidden">
               <div className="absolute w-[140%] h-1 bg-amber-400/90 rotate-12 shadow-[0_0_6px_#F59E0B]" />
@@ -1271,8 +1847,8 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
       {/* Precision-aligned mechanical column, Infotainment, Key Chain, Controls*/}
       {/* ==================================================================== */}
       <div className="absolute inset-x-0 bottom-0 pointer-events-none flex flex-col justify-end z-25">
-        {/* Solid Automotive Deck: Full Width, Edge to Edge */}
-        <div className="relative w-full h-[28vh] sm:h-[30vh] min-h-[220px] bg-gradient-to-t from-[#04060A] via-[#090C14] to-[#121722] border-t border-slate-700/60 shadow-[0_-25px_70px_rgba(0,0,0,0.98)] flex items-center justify-center">
+        {/* Solid Automotive Deck: Full Width, Responsive Height */}
+        <div className="relative w-full h-[22vh] sm:h-[30vh] min-h-[170px] sm:min-h-[220px] bg-gradient-to-t from-[#04060A] via-[#090C14] to-[#121722] border-t border-slate-700/60 shadow-[0_-25px_70px_rgba(0,0,0,0.98)] flex items-center justify-center">
 
           {/* Ambient Electroluminescent Cowl Edge Lighting (Cyan-Ice LED Piping) */}
           <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent shadow-[0_0_14px_rgba(34,211,238,0.6)]" />
@@ -1315,10 +1891,16 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
               <div className="flex gap-1">
                 <button
                   type="button"
-                  className="px-1.5 py-0.5 rounded bg-slate-800/80 border border-slate-600 text-[6.5px] font-mono text-cyan-300 hover:bg-slate-700 transition"
-                  title="Front Windshield Defroster"
+                  onClick={handleCleanWindshield}
+                  className={`px-1.5 py-0.5 rounded border text-[6.5px] font-mono transition cursor-pointer flex items-center gap-1 active:scale-95 ${
+                    windshieldCracks.length > 0
+                      ? 'bg-amber-950/80 border-amber-500 text-amber-300 shadow-[0_0_8px_#F59E0B] animate-pulse'
+                      : 'bg-slate-800/80 border-slate-600 text-cyan-300 hover:bg-slate-700'
+                  }`}
+                  title="Front Windshield Defroster & Wiper (Click or press 'C' to clean/repair cracked glass)"
                 >
-                  MAX ⛆
+                  <span>MAX ⛆</span>
+                  {windshieldCracks.length > 0 && <span className="text-[6px] font-bold text-amber-200">({windshieldCracks.length})</span>}
                 </button>
                 <button
                   type="button"
@@ -1333,21 +1915,22 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
           </div>
 
           {/* Sculpted Instrument Binnacle Hood with Deep Shadow */}
-          <div className="absolute -top-7 sm:-top-9 left-1/2 -translate-x-1/2 w-[390px] sm:w-[490px] md:w-[550px] h-16 sm:h-20 rounded-t-[36px] bg-gradient-to-b from-[#1B2332] via-[#0E1420] to-[#06080E] border-t-2 border-x-2 border-[#2E3C52] shadow-[0_16px_36px_rgba(0,0,0,0.98)]" />
+          <div className="absolute -top-6 sm:-top-9 left-1/2 -translate-x-1/2 w-[310px] sm:w-[490px] md:w-[550px] h-14 sm:h-20 rounded-t-[28px] sm:rounded-t-[36px] bg-gradient-to-b from-[#1B2332] via-[#0E1420] to-[#06080E] border-t-2 border-x-2 border-[#2E3C52] shadow-[0_16px_36px_rgba(0,0,0,0.98)]" />
 
           {/* High-Definition Dual Virtual Cockpit Display */}
-          <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-[370px] sm:w-[460px] md:w-[520px] h-16 sm:h-18 rounded-2xl bg-gradient-to-b from-[#0A0E18] to-[#020407] border border-slate-700/80 px-3 sm:px-5 py-2 shadow-[inset_0_3px_12px_rgba(0,0,0,0.95),0_0_24px_rgba(0,0,0,0.9)] flex items-center justify-between z-26">
+          <div className="absolute top-1 sm:top-1.5 left-1/2 -translate-x-1/2 w-[295px] sm:w-[460px] md:w-[520px] h-13 sm:h-18 rounded-xl sm:rounded-2xl bg-gradient-to-b from-[#0A0E18] to-[#020407] border border-slate-700/80 px-2 sm:px-5 py-1.5 sm:py-2 shadow-[inset_0_3px_12px_rgba(0,0,0,0.95),0_0_24px_rgba(0,0,0,0.9)] flex items-center justify-between z-26">
 
             {/* Left Instrument: RPM Tachometer Dial */}
-            <div className="flex items-center gap-2">
-              <div className="relative w-11 sm:w-13 h-11 sm:h-13 rounded-full border border-slate-700 bg-[#03060B] flex items-center justify-center shadow-inner">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="relative w-9 h-9 sm:w-13 sm:h-13 rounded-full border border-slate-700 bg-[#03060B] flex items-center justify-center shadow-inner">
                 {/* Dial Ticks & Redline */}
                 <div className="absolute inset-0.5 rounded-full border border-cyan-400/30" />
-                <div className="absolute top-1 right-2 w-1.5 h-1.5 rounded-full bg-rose-500/80 shadow-[0_0_6px_#F43F5E]" title="Redline 7500 RPM" />
-                <span className="text-[7.5px] font-mono font-bold text-cyan-300">RPM</span>
-                {/* Dynamic Tachometer Needle (Sweeps on engine rev) */}
+                <div className="absolute top-0.5 right-1.5 w-1.5 h-1.5 rounded-full bg-rose-500/80 shadow-[0_0_6px_#F43F5E]" title="Redline 7500 RPM" />
+                <span className="text-[6.5px] sm:text-[7.5px] font-mono font-bold text-cyan-300">RPM</span>
+                {/* Dynamic Tachometer Needle */}
                 <div
-                  className="absolute w-0.5 h-4 sm:h-5 bg-cyan-400 origin-bottom shadow-[0_0_8px_#22D3EE] transition-transform duration-100"
+                  ref={needleRpmRef}
+                  className="absolute w-0.5 h-3.5 sm:h-5 bg-cyan-400 origin-bottom shadow-[0_0_8px_#22D3EE] transition-transform duration-100"
                   style={{
                     transform: `rotate(${engineReving ? 130 : Math.min(135, (speedKmH / 180) * 140 - 70)}deg)`,
                     bottom: '50%',
@@ -1361,46 +1944,55 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
             </div>
 
             {/* Center Digital Cockpit: Large High-Contrast Speedometer & Indicators */}
-            <div className="flex flex-col items-center justify-center px-2">
+            <div className="flex flex-col items-center justify-center px-1 sm:px-2">
               <div className="flex items-baseline gap-1">
-                <span className="text-2xl sm:text-3xl font-mono font-black text-[#FDF8E1] tracking-tight drop-shadow-[0_0_12px_rgba(253,248,225,0.4)]">
+                <span
+                  ref={speedDisplayRef}
+                  className="text-2xl sm:text-3xl font-mono font-black text-[#FDF8E1] tracking-tight drop-shadow-[0_0_12px_rgba(253,248,225,0.4)]"
+                >
                   {speedKmH}
                 </span>
-                <span className="text-[8.5px] font-mono uppercase tracking-[0.24em] text-neutral-400">
+                <span className="text-[7.5px] sm:text-[8.5px] font-mono uppercase tracking-[0.2em] sm:tracking-[0.24em] text-neutral-400">
                   KM/H
                 </span>
               </div>
-              <div className="flex items-center gap-2 mt-0.5">
-                {hazardActive && hazardBlink ? (
-                  <span className="text-[7.5px] font-mono font-bold text-amber-400 flex items-center gap-1 animate-pulse">
-                    <span>◀</span> HAZARDS ON <span>▶</span>
+              <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5">
+                {isPressingBrake ? (
+                  <span className="text-[6.5px] sm:text-[7.5px] font-mono font-black text-rose-400 flex items-center gap-1 animate-pulse">
+                    <span className="h-1.5 w-1.5 rounded-full bg-rose-500 shadow-[0_0_8px_#F43F5E]" />
+                    BRAKE (ABS)
+                  </span>
+                ) : hazardActive && hazardBlink ? (
+                  <span className="text-[6.5px] sm:text-[7.5px] font-mono font-bold text-amber-400 flex items-center gap-1 animate-pulse">
+                    <span>◀</span> HAZARDS <span>▶</span>
                   </span>
                 ) : (
-                  <span className="text-[7.5px] font-mono text-cyan-300 flex items-center gap-1">
+                  <span className="text-[6.5px] sm:text-[7.5px] font-mono text-cyan-300 flex items-center gap-1">
                     <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_#22D3EE]" />
                     HIGH BEAMS
                   </span>
                 )}
-                <span className="text-[7px] font-mono text-neutral-500">|</span>
-                <span className="text-[7.5px] font-mono text-neutral-400">
+                <span className="text-[6.5px] sm:text-[7px] font-mono text-neutral-500">|</span>
+                <span ref={distanceDisplayRef} className="text-[6.5px] sm:text-[7.5px] font-mono text-neutral-400">
                   {distanceM} M TRIP
                 </span>
               </div>
             </div>
 
             {/* Right Instrument: Speed Sweep & Boost Dial */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <div className="hidden sm:flex flex-col text-right">
                 <span className="text-[8px] font-mono font-bold text-amber-300 tracking-wider">24°C</span>
                 <span className="text-[7px] font-mono text-neutral-400 uppercase">TURBO 1.2B</span>
               </div>
-              <div className="relative w-11 sm:w-13 h-11 sm:h-13 rounded-full border border-slate-700 bg-[#03060B] flex items-center justify-center shadow-inner">
+              <div className="relative w-9 h-9 sm:w-13 sm:h-13 rounded-full border border-slate-700 bg-[#03060B] flex items-center justify-center shadow-inner">
                 {/* Dial Ticks */}
                 <div className="absolute inset-0.5 rounded-full border border-rose-500/30" />
-                <span className="text-[7.5px] font-mono font-bold text-rose-400">SPD</span>
+                <span className="text-[6.5px] sm:text-[7.5px] font-mono font-bold text-rose-400">SPD</span>
                 {/* Dynamic Speed Needle */}
                 <div
-                  className="absolute w-0.5 h-4 sm:h-5 bg-rose-500 origin-bottom shadow-[0_0_8px_#F43F5E]"
+                  ref={needleSpeedRef}
+                  className="absolute w-0.5 h-3.5 sm:h-5 bg-rose-500 origin-bottom shadow-[0_0_8px_#F43F5E]"
                   style={{
                     transform: `rotate(${Math.min(135, (speedKmH / 180) * 140 - 70)}deg)`,
                     bottom: '50%',
@@ -1412,9 +2004,8 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
 
           {/* ============================================================== */}
           {/* FLOATING CURVED INFOTAINMENT DISPLAY & RADHE MEDIA PLAYER       */}
-          {/* High-res MBUX/CarPlay touchscreen console                       */}
           {/* ============================================================== */}
-          <div className="hidden sm:flex absolute left-[59%] md:left-[56%] top-1 sm:top-1.5 w-[280px] sm:w-[350px] md:w-[420px] h-[95px] sm:h-[105px] rounded-2xl bg-gradient-to-b from-[#0B0F19] via-[#06080F] to-[#020306] border border-slate-700/80 shadow-[0_12px_32px_rgba(0,0,0,0.95),inset_0_1px_3px_rgba(255,255,255,0.15)] overflow-hidden flex flex-col justify-between p-2 pointer-events-auto z-26 -rotate-1">
+          <div className="hidden sm:flex absolute left-[59%] md:left-[56%] top-1 sm:top-1.5 w-[280px] sm:w-[350px] md:w-[420px] h-[95px] sm:h-[105px] rounded-2xl bg-gradient-to-b from-[#0B0F19] via-[#06080F] to-[#020306] border border-slate-700/80 shadow-[0_12px_32px_rgba(0,0,0,0.95),inset_0_1px_3px_rgba(255,255,255,0.15)] overflow-hidden flex-col justify-between p-2 pointer-events-auto z-26 -rotate-1">
             {/* Screen Top Status Ribbon */}
             <div className="flex items-center justify-between border-b border-slate-800/80 pb-1 text-[7px] font-mono text-neutral-400">
               <div className="flex items-center gap-1.5">
@@ -1449,6 +2040,7 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
                     </span>
                     <button
                       onClick={() => {
+                        salmanAudio.unlock()
                         const muted = salmanAudio.toggleMute()
                         setIsAudioMuted(muted)
                       }}
@@ -1552,7 +2144,6 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
               }`}
               title="Push-To-Start Engine Button (Click to Rev Engine!)"
             >
-              {/* Glowing Crimson LED Halo Ring */}
               <div className="absolute inset-1 rounded-full border border-rose-500/70 shadow-[0_0_8px_#F43F5E] animate-pulse" />
               <Power className="w-3.5 h-3.5 text-rose-400 relative z-10" />
               <span className="text-[6px] font-mono font-black text-white tracking-widest relative z-10 leading-none mt-0.5">
@@ -1598,24 +2189,21 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
             {/* Metal Ignition Key Barrel */}
             <div className="relative w-7 sm:w-8 h-7 sm:h-8 rounded-full border-2 border-slate-500 bg-gradient-to-br from-[#1E293B] to-[#0A0D14] shadow-[0_4px_10px_rgba(0,0,0,0.85)] flex items-center justify-center">
               <span className="absolute -top-2.5 text-[5px] font-mono text-slate-400">ON</span>
-              {/* Inserted Car Key Head */}
               <div className="w-5 h-2 bg-gradient-to-r from-slate-400 to-slate-200 rounded-sm border border-slate-600 shadow-sm" />
             </div>
 
             {/* DANGLING SALMAN KHAN ACTOR KEYCHAIN */}
             <div
-              className="relative flex flex-col items-center cursor-pointer select-none transition-transform duration-100 origin-top mt-[-2px] ml-1"
+              ref={keychainRef}
+              className="relative flex flex-col items-center cursor-pointer select-none transition-transform duration-75 origin-top mt-[-2px] ml-1"
               style={{
-                transform: `rotate(${-steerAngle * 0.75 + keychainSwingBonus}deg)`,
+                transform: `rotate(${keychainSwingBonus}deg)`,
                 transformOrigin: 'top center',
               }}
               onClick={handleKeychainClick}
               title="Salman Khan's Signature Turquoise Actor Keychain (Click to Jingle)"
             >
-              {/* Heavy Silver Key Ring */}
               <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-300 bg-transparent shadow-sm" />
-
-              {/* Chunky Sterling Silver Curb Links */}
               <div className="w-1.5 h-7 bg-gradient-to-b from-slate-300 via-slate-100 to-slate-300 rounded-full border border-slate-400 shadow-sm flex flex-col items-center justify-around py-0.5">
                 <div className="w-1 h-1 rounded-full bg-slate-400" />
                 <div className="w-1 h-1 rounded-full bg-slate-400" />
@@ -1623,20 +2211,16 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
 
               {/* Salman Khan Signature Turquoise (Firoza) Gemstone Fob */}
               <div className="relative p-0.5 rounded-md bg-gradient-to-b from-slate-200 via-white to-slate-300 border border-slate-400 shadow-[0_4px_12px_rgba(0,0,0,0.8)] flex items-center justify-center mt-[-2px]">
-                {/* Turquoise Cabochon Stone */}
                 <div className="relative w-5 sm:w-6 h-6 sm:h-7 rounded-sm bg-gradient-to-br from-[#06B6D4] via-[#0891B2] to-[#0E7490] overflow-hidden shadow-inner flex items-center justify-center border border-cyan-300/50">
-                  {/* Dark Stone Matrix Veining */}
                   <svg className="absolute inset-0 w-full h-full opacity-70" viewBox="0 0 24 28">
                     <path d="M 2 2 Q 8 8 7 14 Q 5 22 14 26" stroke="#042F2E" strokeWidth="1" fill="none" />
                     <path d="M 7 14 Q 14 11 18 17" stroke="#083344" strokeWidth="0.8" fill="none" />
                     <path d="M 14 26 Q 19 27 22 25" stroke="#042F2E" strokeWidth="0.7" fill="none" />
                   </svg>
-                  {/* Gloss Specular Sheen */}
                   <div className="absolute top-0.5 left-0.5 w-2 h-2.5 bg-white/60 rounded-full blur-[0.4px] -rotate-45" />
                 </div>
               </div>
 
-              {/* Silver Tag: 'SALMAN' */}
               <div className="mt-0.5 px-1 py-0.2 rounded-sm bg-gradient-to-r from-slate-200 to-slate-300 border border-slate-400 shadow-sm text-[5.5px] font-mono font-bold text-slate-800 tracking-wider">
                 SALMAN
               </div>
@@ -1645,28 +2229,42 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
 
           {/* ============================================================== */}
           {/* PASSENGER DASHBOARD DECK (FAR RIGHT)                           */}
-          {/* Soft-touch leather finish, Airbag emboss, glovebox latch       */}
           {/* ============================================================== */}
           <div className="hidden lg:flex absolute right-6 md:right-8 top-3 flex-col items-end pointer-events-none">
             <div className="flex items-center gap-1.5 opacity-40">
               <span className="text-[7.5px] font-mono tracking-[0.25em] text-neutral-400 uppercase">AIRBAG</span>
               <div className="w-1.5 h-1.5 rounded-full bg-neutral-600" />
             </div>
-            {/* Flush Brushed Aluminum Glovebox Handle */}
             <div className="w-16 h-2 rounded bg-gradient-to-r from-slate-500 to-slate-400 border border-slate-600 shadow-inner mt-4 opacity-70" />
           </div>
 
           {/* ============================================================== */}
           {/* PHOTOREALISTIC STEERING WHEEL WITH REAL HUMAN HANDS AT 9 & 3   */}
-          {/* Precision Center-Column Rotation (51.0% X, 54.6% Y)            */}
+          {/* Responsive Scale: w-[220px] on mobile screen, w-[440px] desktop */}
           {/* ============================================================== */}
           <div
-            className="absolute bottom-[-14px] sm:bottom-[-20px] left-1/2 w-[340px] sm:w-[440px] md:w-[480px] aspect-square pointer-events-auto cursor-grab active:cursor-grabbing transition-transform duration-75 select-none z-28"
+            ref={wheelRef}
+            className="absolute bottom-[-10px] sm:bottom-[-20px] left-1/2 w-[220px] sm:w-[440px] md:w-[480px] aspect-square pointer-events-auto cursor-grab active:cursor-grabbing transition-transform duration-75 select-none z-28 touch-none"
             style={{
-              transform: `translateX(-50%) rotate(${steerAngle}deg)`,
+              transform: 'translateX(-50%) rotate(0deg)',
               transformOrigin: '51.0% 54.6%',
             }}
+            onTouchStart={(e) => {
+              handleUserTouchStart()
+              touchStartXRef.current = e.touches[0].clientX
+            }}
+            onTouchMove={(e) => {
+              if (touchStartXRef.current !== null) {
+                const deltaX = e.touches[0].clientX - touchStartXRef.current
+                gameState.current.targetSteer = Math.max(-1, Math.min(1, deltaX / 50))
+              }
+            }}
+            onTouchEnd={() => {
+              touchStartXRef.current = null
+              gameState.current.targetSteer = 0
+            }}
             onClick={() => {
+              handleUserTouchStart()
               salmanAudio.playHorn()
               gameState.current.deers.forEach((d) => {
                 if (!d.isHit && !d.isStartled) {
@@ -1691,10 +2289,10 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
             >
               <div className="relative w-full h-full rounded-2xl bg-gradient-to-br from-[#2D333B] via-[#161B22] to-[#0D1117] border border-slate-400/40 shadow-[inset_0_1px_4px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.85)] flex items-center justify-center">
                 <div className="flex flex-col items-center justify-center">
-                  <span className="font-serif text-[11px] sm:text-xs font-black tracking-[0.22em] text-[#FAFAFA] drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
+                  <span className="font-serif text-[10px] sm:text-xs font-black tracking-[0.22em] text-[#FAFAFA] drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
                     S
                   </span>
-                  <span className="h-0.5 w-3 rounded-full bg-gradient-to-r from-amber-400 to-amber-200 opacity-80" />
+                  <span className="h-0.5 w-2.5 sm:w-3 rounded-full bg-gradient-to-r from-amber-400 to-amber-200 opacity-80" />
                 </div>
               </div>
             </div>
@@ -1704,23 +2302,23 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
 
       {/* ==================================================================== */}
       {/* LAYER 4: TOP HUD, REFINED STREAK RIBBON & CONTROLS                   */}
-      {/* Completely non-conflicting layout with 0 mirror overlap              */}
+      {/* Fully responsive layout with zero mirror overlap & zero button collision */}
       {/* ==================================================================== */}
-      <div className="absolute top-0 inset-x-0 p-3 sm:p-5 flex items-center justify-between z-30 pointer-events-auto">
+      <div className="absolute top-0 inset-x-0 p-2.5 sm:p-5 flex items-center justify-between z-30 pointer-events-auto">
         {/* Top-Left: Score & Deer Counter */}
-        <div className="flex items-center gap-3">
-          <div className="bg-black/45 backdrop-blur-2xl border border-white/10 rounded-2xl px-4 py-2 flex items-center gap-3.5 text-white shadow-[0_12px_40px_rgba(0,0,0,0.5)] ring-1 ring-white/5">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="bg-black/55 backdrop-blur-2xl border border-white/10 rounded-2xl px-2.5 py-1.5 sm:px-4 sm:py-2 flex items-center gap-2.5 sm:gap-3.5 text-white shadow-[0_12px_40px_rgba(0,0,0,0.5)] ring-1 ring-white/5">
             <div className="flex flex-col">
-              <span className="text-[8.5px] font-mono uppercase tracking-[0.22em] text-neutral-400">DEERS HIT</span>
-              <span className="text-xl sm:text-2xl font-serif font-normal text-rose-400 leading-tight">{deersHit}</span>
+              <span className="text-[7.5px] sm:text-[8.5px] font-mono uppercase tracking-[0.16em] sm:tracking-[0.22em] text-neutral-400">DEERS</span>
+              <span className="text-base sm:text-2xl font-serif font-normal text-rose-400 leading-tight">{deersHit}</span>
             </div>
-            <div className="h-7 w-px bg-white/10" />
+            <div className="h-6 sm:h-7 w-px bg-white/10" />
             <div className="flex flex-col">
-              <span className="text-[8.5px] font-mono uppercase tracking-[0.22em] text-neutral-400">SCORE</span>
-              <span className="text-xl sm:text-2xl font-serif font-normal text-[#F3E5AB] leading-tight">{score}</span>
+              <span className="text-[7.5px] sm:text-[8.5px] font-mono uppercase tracking-[0.16em] sm:tracking-[0.22em] text-neutral-400">SCORE</span>
+              <span className="text-base sm:text-2xl font-serif font-normal text-[#F3E5AB] leading-tight">{score}</span>
             </div>
             {combo > 1 && (
-              <span className="bg-gradient-to-r from-rose-950/80 to-amber-950/80 border border-rose-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-mono font-medium tracking-widest text-rose-200 animate-pulse">
+              <span className="bg-gradient-to-r from-rose-950/80 to-amber-950/80 border border-rose-500/30 px-1.5 sm:px-2.5 py-0.5 rounded-full text-[8px] sm:text-[9px] font-mono font-medium tracking-widest text-rose-200 animate-pulse">
                 {combo}X
               </span>
             )}
@@ -1746,13 +2344,13 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
           {recentStreak && (
             <div
               key={recentStreak.key}
-              className="mt-2 px-4 sm:px-5 py-1.5 rounded-full bg-gradient-to-r from-black/85 via-[#881337]/90 to-black/85 backdrop-blur-2xl text-white shadow-[0_8px_32px_rgba(225,29,72,0.4)] border border-rose-500/40 ring-1 ring-rose-400/20 animate-in zoom-in-95 slide-in-from-top-2 duration-200 flex items-center gap-2.5 select-none"
+              className="mt-1 sm:mt-2 px-3 sm:px-5 py-1 sm:py-1.5 rounded-full bg-gradient-to-r from-black/85 via-[#881337]/90 to-black/85 backdrop-blur-2xl text-white shadow-[0_8px_32px_rgba(225,29,72,0.4)] border border-rose-500/40 ring-1 ring-rose-400/20 animate-in zoom-in-95 duration-200 flex items-center gap-2 sm:gap-2.5 select-none"
             >
-              <span className="font-serif text-sm sm:text-base font-normal tracking-tight text-white drop-shadow-[0_2px_8px_rgba(255,255,255,0.4)]">
+              <span className="font-serif text-xs sm:text-base font-normal tracking-tight text-white drop-shadow-[0_2px_8px_rgba(255,255,255,0.4)]">
                 +{recentStreak.pts}
               </span>
-              <span className="h-3 w-px bg-rose-400/30" />
-              <span className="font-mono text-[9.5px] sm:text-[10px] tracking-[0.24em] uppercase text-rose-200 font-medium">
+              <span className="h-2.5 sm:h-3 w-px bg-rose-400/30" />
+              <span className="font-mono text-[8px] sm:text-[10px] tracking-[0.2em] sm:tracking-[0.24em] uppercase text-rose-200 font-medium">
                 {recentStreak.combo > 1 ? `${recentStreak.combo}X STREAK` : 'CLEARED'}
               </span>
             </div>
@@ -1760,86 +2358,234 @@ export function SalmanDrivingGame({ isOpen, onClose }: SalmanDrivingGameProps) {
         </div>
 
         {/* Top-Right: Audio, Gyro & Exit Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {gyroSupported && (
             <button
               onClick={() => {
+                salmanAudio.unlock()
                 if (!gyroActive) enableGyro()
                 else setGyroActive(false)
               }}
-              className={`h-8 sm:h-9 px-3 rounded-full border text-[10px] sm:text-[11px] font-mono tracking-wider flex items-center gap-1.5 transition-all cursor-pointer backdrop-blur-xl ${
+              className={`h-8 sm:h-9 px-2 sm:px-3 rounded-full border text-[9.5px] sm:text-[11px] font-mono tracking-wider flex items-center gap-1 sm:gap-1.5 transition-all cursor-pointer backdrop-blur-xl ${
                 gyroActive
                   ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-200 shadow-[0_0_15px_rgba(16,185,129,0.3)]'
-                  : 'bg-black/40 border-white/10 text-neutral-300 hover:text-white hover:border-white/30'
+                  : 'bg-black/50 border-white/10 text-neutral-300 hover:text-white'
               }`}
               title="Toggle Gyroscope Steering"
             >
               <Compass className={`h-3 w-3 sm:h-3.5 sm:w-3.5 ${gyroActive ? 'animate-spin' : ''}`} style={{ animationDuration: '6s' }} />
-              <span>{gyroActive ? 'GYRO ON' : 'GYRO OFF'}</span>
+              <span className="hidden xs:inline">{gyroActive ? 'GYRO ON' : 'GYRO'}</span>
             </button>
           )}
 
+          {/* Radhe Song / Sound Toggle with Visual Vinyl Disc */}
           <button
             onClick={() => {
+              salmanAudio.unlock()
               const muted = salmanAudio.toggleMute()
               setIsAudioMuted(muted)
             }}
-            className="h-8 w-8 sm:h-9 sm:w-9 rounded-full border border-white/10 bg-black/40 backdrop-blur-xl text-white flex items-center justify-center cursor-pointer shadow-md hover:bg-white/10 hover:border-white/30 transition-all"
-            title="Toggle Music & Sound SFX (M)"
+            className={`h-8 sm:h-9 px-2.5 sm:px-3 rounded-full border flex items-center gap-1 sm:gap-1.5 cursor-pointer backdrop-blur-xl shadow-md transition-all ${
+              !isAudioMuted
+                ? 'bg-cyan-950/70 border-cyan-500/50 text-cyan-200 shadow-[0_0_12px_rgba(6,182,212,0.3)]'
+                : 'bg-black/50 border-white/10 text-neutral-400'
+            }`}
+            title={isAudioMuted ? 'Unmute Radhe Song' : 'Mute Radhe Song'}
           >
-            {isAudioMuted ? <VolumeX className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-neutral-400" /> : <Volume2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#F3E5AB]" />}
+            {isAudioMuted ? (
+              <VolumeX className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-neutral-400" />
+            ) : (
+              <>
+                <Disc className="h-3.5 w-3.5 text-amber-300 animate-spin" style={{ animationDuration: '4s' }} />
+                <Volume2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-cyan-300" />
+              </>
+            )}
+            <span className="hidden sm:inline text-[9px] font-mono tracking-wider">RADHE</span>
           </button>
 
+          {/* Exit Button */}
           <button
-            onClick={() => setShowExitScorecard(true)}
-            className="h-8 sm:h-9 px-3.5 sm:px-4 rounded-full border border-white/15 bg-black/60 hover:bg-black/90 backdrop-blur-xl text-white text-[11px] font-mono uppercase tracking-[0.16em] flex items-center gap-1.5 cursor-pointer shadow-lg active:scale-95 transition-all"
+            onClick={() => {
+              setSpeedKmH(Math.round(gameState.current.playerSpeed * 65))
+              setDistanceM(Math.floor(gameState.current.distanceAccum))
+              setShowExitScorecard(true)
+            }}
+            className="h-8 sm:h-9 px-2.5 sm:px-4 rounded-full border border-white/15 bg-black/60 hover:bg-black/90 backdrop-blur-xl text-white text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.14em] flex items-center gap-1 cursor-pointer shadow-lg active:scale-95 transition-all"
           >
             <X className="h-3.5 w-3.5" />
-            <span>Exit</span>
+            <span className="hidden xs:inline">Exit</span>
           </button>
+        </div>
+      </div>
+
+      {/* Floating Windshield Repair / Defroster Quick Pill for Mobile */}
+      {windshieldCracks.length > 0 && (
+        <button
+          type="button"
+          onClick={handleCleanWindshield}
+          className="sm:hidden absolute top-16 right-3 z-40 bg-gradient-to-r from-cyan-950/90 via-black/85 to-slate-900/90 backdrop-blur-md border border-cyan-400/60 text-cyan-200 px-2.5 py-1.5 rounded-full text-[9px] font-mono tracking-wider flex items-center gap-1.5 shadow-[0_0_18px_rgba(34,211,238,0.5)] active:scale-95 cursor-pointer animate-in fade-in duration-200"
+          title="Repair Windshield Glass"
+        >
+          <Sparkles className="w-3 h-3 text-cyan-300 animate-spin" style={{ animationDuration: '3s' }} />
+          <span>REPAIR GLASS ({windshieldCracks.length})</span>
+        </button>
+      )}
+
+      {/* Floating Radhe Song & V8 Engine Unlock Prompt (Dismisses automatically on first tap) */}
+      {!isBgmActive && !isAudioMuted && (
+        <div
+          onClick={handleUserTouchStart}
+          onTouchStart={handleUserTouchStart}
+          className="sm:hidden absolute top-16 left-1/2 -translate-x-1/2 z-40 bg-gradient-to-r from-amber-600/95 via-rose-700/95 to-amber-600/95 backdrop-blur-xl text-white px-4 py-2 rounded-full shadow-[0_8px_30px_rgba(244,63,94,0.6)] border border-amber-300/50 flex items-center gap-2 cursor-pointer animate-bounce select-none"
+        >
+          <Disc className="w-4 h-4 text-amber-200 animate-spin" />
+          <span className="font-mono text-[10px] font-black uppercase tracking-wider text-amber-100">
+            Tap to Play Radhe Song & Roar V8 🎵
+          </span>
+        </div>
+      )}
+
+      {/* Mobile Steer Guidance Chevrons */}
+      <div className="sm:hidden absolute top-[44%] inset-x-3 pointer-events-none z-20 flex justify-between select-none">
+        <div
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full backdrop-blur-md border text-[9px] font-mono tracking-wider transition-all ${
+            activeMobileSteer === 'left'
+              ? 'border-cyan-400 bg-cyan-950/80 text-cyan-200 shadow-[0_0_12px_#22D3EE]'
+              : 'border-white/10 bg-black/40 text-cyan-400/50'
+          }`}
+        >
+          <span className="animate-pulse">◀</span>
+          <span>STEER</span>
+        </div>
+        <div
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full backdrop-blur-md border text-[9px] font-mono tracking-wider transition-all ${
+            activeMobileSteer === 'right'
+              ? 'border-cyan-400 bg-cyan-950/80 text-cyan-200 shadow-[0_0_12px_#22D3EE]'
+              : 'border-white/10 bg-black/40 text-cyan-400/50'
+          }`}
+        >
+          <span>STEER</span>
+          <span className="animate-pulse">▶</span>
         </div>
       </div>
 
       {/* Mobile Tap-To-Engage-Gyro Overlay (Shown initially on touch devices) */}
       {showMobileTouchPrompt && gyroSupported && !gyroActive && (
         <div
-          onClick={enableGyro}
-          className="sm:hidden absolute top-16 inset-x-4 z-40 bg-gradient-to-r from-amber-600/90 to-amber-700/90 text-white p-3 rounded-2xl shadow-2xl flex items-center justify-between cursor-pointer animate-in fade-in slide-in-from-top-2 duration-300"
+          onClick={() => {
+            handleUserTouchStart()
+            enableGyro()
+          }}
+          className="sm:hidden absolute top-28 inset-x-4 z-40 bg-gradient-to-r from-amber-600/95 via-amber-700/95 to-amber-800/95 backdrop-blur-md text-white p-2.5 rounded-2xl shadow-2xl flex items-center justify-between cursor-pointer animate-in fade-in slide-in-from-top-2 duration-300 border border-amber-400/40"
         >
           <div className="flex items-center gap-2">
-            <Compass className="h-5 w-5 animate-spin text-amber-200" style={{ animationDuration: '4s' }} />
+            <Compass className="h-4 w-4 animate-spin text-amber-200" style={{ animationDuration: '4s' }} />
             <div className="flex flex-col text-left">
-              <span className="text-xs font-bold leading-tight">Tap to Enable Gyroscope Steering</span>
-              <span className="text-[10px] text-amber-200">Tilt your phone left and right to steer</span>
+              <span className="text-[11px] font-bold leading-tight">Enable Gyroscope Tilt</span>
+              <span className="text-[9px] text-amber-200">Tilt phone left and right to steer</span>
             </div>
           </div>
-          <span className="text-xs font-mono font-black bg-white/20 px-2.5 py-1 rounded-full uppercase">START</span>
+          <span className="text-[10px] font-mono font-black bg-white/20 px-2 py-0.5 rounded-full uppercase">START</span>
         </div>
       )}
 
-      {/* Mobile On-Screen Touch Controls (Gas & Brake Pedals) */}
-      <div className="sm:hidden absolute bottom-3 inset-x-3 z-40 flex items-center justify-between pointer-events-none">
-        {/* Brake Pedal (Left Thumb) */}
+      {/* Mobile On-Screen Racing Pedals (Left Thumb = Brembo Sport Brake, Right Thumb = Titanium Boost Gas) */}
+      <div className="sm:hidden absolute bottom-3.5 inset-x-3.5 z-40 flex items-end justify-between pointer-events-none select-none">
+        {/* Brembo Sport Brake Pedal (Left Thumb) */}
         <button
-          onTouchStart={() => (gameState.current.touchBrake = true)}
-          onTouchEnd={() => (gameState.current.touchBrake = false)}
-          onMouseDown={() => (gameState.current.touchBrake = true)}
-          onMouseUp={() => (gameState.current.touchBrake = false)}
-          className="pointer-events-auto h-14 w-18 rounded-2xl border-2 border-red-500/80 bg-red-950/80 active:bg-red-600 text-white font-mono font-bold text-xs flex flex-col items-center justify-center shadow-2xl active:scale-95"
+          type="button"
+          onTouchStart={(e) => {
+            e.preventDefault()
+            handleUserTouchStart()
+            setIsPressingBrake(true)
+            gameState.current.touchBrake = true
+          }}
+          onTouchEnd={(e) => {
+            e.preventDefault()
+            setIsPressingBrake(false)
+            gameState.current.touchBrake = false
+          }}
+          onTouchCancel={(e) => {
+            e.preventDefault()
+            setIsPressingBrake(false)
+            gameState.current.touchBrake = false
+          }}
+          onMouseDown={() => {
+            handleUserTouchStart()
+            setIsPressingBrake(true)
+            gameState.current.touchBrake = true
+          }}
+          onMouseUp={() => {
+            setIsPressingBrake(false)
+            gameState.current.touchBrake = false
+          }}
+          onMouseLeave={() => {
+            setIsPressingBrake(false)
+            gameState.current.touchBrake = false
+          }}
+          className={`pointer-events-auto h-[70px] w-[78px] rounded-2xl border-2 flex flex-col items-center justify-center transition-all duration-150 active:scale-95 touch-none ${
+            isPressingBrake
+              ? 'border-rose-400 bg-rose-700/90 shadow-[0_0_30px_rgba(244,63,94,0.85)] scale-95'
+              : 'border-rose-500/50 bg-gradient-to-b from-[#220B10] via-[#140609] to-[#0A0204] shadow-[0_8px_24px_rgba(0,0,0,0.85)]'
+          }`}
+          title="Brembo Sport Brake"
         >
-          <span>BRAKE</span>
+          {/* Perforated Metal Brake Caliper Ribs */}
+          <div className="flex gap-1 mb-1">
+            <span className="w-1.5 h-1 rounded-full bg-rose-400/80 shadow-[0_0_4px_#FB7185]" />
+            <span className="w-1.5 h-1 rounded-full bg-rose-400/80 shadow-[0_0_4px_#FB7185]" />
+            <span className="w-1.5 h-1 rounded-full bg-rose-400/80 shadow-[0_0_4px_#FB7185]" />
+          </div>
+          <span className="font-mono text-[11px] font-black tracking-widest text-white leading-tight">BRAKE</span>
+          <span className="text-[7.5px] font-mono text-rose-300 font-semibold tracking-wider">SLOW</span>
         </button>
 
-        {/* Gas Pedal (Right Thumb) */}
+        {/* Titanium Boost Gas Accelerator Pedal (Right Thumb) */}
         <button
-          onTouchStart={() => (gameState.current.touchGas = true)}
-          onTouchEnd={() => (gameState.current.touchGas = false)}
-          onMouseDown={() => (gameState.current.touchGas = true)}
-          onMouseUp={() => (gameState.current.touchGas = false)}
-          className="pointer-events-auto h-16 w-20 rounded-2xl border-2 border-emerald-500/80 bg-emerald-950/80 active:bg-emerald-600 text-white font-mono font-bold text-sm flex flex-col items-center justify-center shadow-2xl active:scale-95"
+          type="button"
+          onTouchStart={(e) => {
+            e.preventDefault()
+            handleUserTouchStart()
+            setIsPressingGas(true)
+            gameState.current.touchGas = true
+          }}
+          onTouchEnd={(e) => {
+            e.preventDefault()
+            setIsPressingGas(false)
+            gameState.current.touchGas = false
+          }}
+          onTouchCancel={(e) => {
+            e.preventDefault()
+            setIsPressingGas(false)
+            gameState.current.touchGas = false
+          }}
+          onMouseDown={() => {
+            handleUserTouchStart()
+            setIsPressingGas(true)
+            gameState.current.touchGas = true
+          }}
+          onMouseUp={() => {
+            setIsPressingGas(false)
+            gameState.current.touchGas = false
+          }}
+          onMouseLeave={() => {
+            setIsPressingGas(false)
+            gameState.current.touchGas = false
+          }}
+          className={`pointer-events-auto h-[84px] w-[84px] rounded-2xl border-2 flex flex-col items-center justify-center transition-all duration-150 active:scale-95 touch-none ${
+            isPressingGas
+              ? 'border-cyan-300 bg-cyan-600/90 shadow-[0_0_35px_rgba(34,211,238,0.9)] scale-95'
+              : 'border-cyan-500/50 bg-gradient-to-b from-[#0A1A22] via-[#061016] to-[#020608] shadow-[0_8px_24px_rgba(0,0,0,0.85)]'
+          }`}
+          title="Titanium Boost Gas Pedal"
         >
-          <span>GAS</span>
-          <span className="text-[9px] text-emerald-300">BOOST</span>
+          <Flame
+            className={`w-4 h-4 mb-0.5 transition-colors ${
+              isPressingGas ? 'text-white animate-bounce' : 'text-cyan-400'
+            }`}
+          />
+          <span className="font-mono text-[12px] font-black tracking-widest text-white leading-tight">GAS</span>
+          <span className="text-[8px] font-mono font-bold text-cyan-200 tracking-wider">BOOST</span>
         </button>
       </div>
 

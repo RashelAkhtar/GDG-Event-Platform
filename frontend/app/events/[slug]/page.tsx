@@ -7,7 +7,7 @@ import { Navbar } from '@/components/ui/Navbar'
 import { ScreenshotWarningModal } from '@/components/security/ScreenshotWarningModal'
 import { LocalGameCountdown } from '@/components/realtime/LocalGameCountdown'
 import { useAuth } from '@/context/AuthContext'
-import { useWebSocket } from '@/context/WebSocketContext'
+import { useWebSocket, normalizeGameSlug } from '@/context/WebSocketContext'
 import { soundManager } from '@/lib/sound'
 import { SoundToggle } from '@/components/sound/SoundToggle'
 import { LockedIllustration } from '@/components/ui/LockIllustrations'
@@ -74,9 +74,11 @@ function QuizRunnerContent() {
   const startTimeRef = useRef<number | null>(null)
 
   const [event, setEvent] = useState<GdgEvent | null>(() => (slug === 'mentis-quiz' ? DEFAULT_MENTIS_EVENT : DEFAULT_WEB_EVENT))
+  const normSlug = normalizeGameSlug(slug)
+  const lockStateObj = gameLockStates[normSlug] || gameLockStates[slug]
   const isLocked = Boolean(
-    gameLockStates[slug]
-      ? gameLockStates[slug].isLocked
+    lockStateObj
+      ? lockStateObj.isLocked
       : event?.status === 'UPCOMING'
   )
   const [questions, setQuestions] = useState<QuestionData[]>([])
@@ -283,7 +285,12 @@ function QuizRunnerContent() {
           api.getEventBySlug(slug),
           api.fetchQuestions(slug),
         ])
-        setEvent(foundEvent)
+        if (foundEvent) {
+          setEvent(foundEvent)
+          if (foundEvent.timeLimitSeconds) {
+            setTimeLeft(foundEvent.timeLimitSeconds)
+          }
+        }
         setQuestions(remoteQuestions || [])
       } catch {
         setQuestions(api.getQuestionsForSlug(slug))
@@ -323,25 +330,37 @@ function QuizRunnerContent() {
         selectedOptionIndex: selectedAnswers[idx] ?? -1,
       }))
 
-      if (event && !event._id.endsWith('-id')) {
-        await api.submitQuiz(event._id, answersPayload).catch(() => ({}))
-      }
+      const computedDuration = Math.max(1500, (allocatedTimeSeconds - timeLeft) * 1000)
+      const durationMs = startTimeRef.current
+        ? Math.min(computedDuration, Math.max(1500, Date.now() - startTimeRef.current))
+        : computedDuration
 
       let score = 0
       let correct = 0
-      questions.forEach((q, idx) => {
-        const selected = selectedAnswers[idx]
-        if (q.correctOptionIndex !== undefined && selected === q.correctOptionIndex) {
-          score += q.points || 100
-          correct++
-        } else if (selected !== undefined && selected !== -1) {
-          score += q.points || 100
-          correct++
-        }
-      })
 
-      const computedDuration = Math.max(1500, (allocatedTimeSeconds - timeLeft) * 1000)
-      const durationMs = startTimeRef.current ? Math.min(computedDuration, Math.max(1500, Date.now() - startTimeRef.current)) : computedDuration
+      // Authoritative Server-side evaluation against MongoDB answer keys
+      const eventTargetId = event?._id || slug
+      const submitRes = await api
+        .submitQuiz(eventTargetId, answersPayload, durationMs, {
+          name: user?.name,
+          avatar: user?.avatar,
+        })
+        .catch(() => null)
+
+      if (submitRes && submitRes.success && submitRes.data) {
+        score = typeof submitRes.data.score === 'number' ? submitRes.data.score : 0
+        correct = typeof submitRes.data.correctCount === 'number' ? submitRes.data.correctCount : 0
+      } else {
+        // Fallback scoring strictly against verified answer keys
+        questions.forEach((q, idx) => {
+          const selected = selectedAnswers[idx]
+          if (q.correctOptionIndex !== undefined && selected === q.correctOptionIndex) {
+            score += q.points || 100
+            correct++
+          }
+        })
+      }
+
       const attemptEntry = {
         _id: `quiz_${Date.now()}_${user?._id || 'anon'}`,
         totalScore: score,
@@ -399,24 +418,33 @@ function QuizRunnerContent() {
         selectedOptionIndex: selectedAnswers[idx] ?? -1,
       }))
 
-      if (event && !event._id.endsWith('-id')) {
-        await api.submitQuiz(event._id, answersPayload).catch(() => ({}))
-      }
-
+      const durationMs = allocatedTimeSeconds * 1000
       let score = 0
       let correct = 0
-      questions.forEach((q, idx) => {
-        const selected = selectedAnswers[idx]
-        if (q.correctOptionIndex !== undefined && selected === q.correctOptionIndex) {
-          score += q.points || 100
-          correct++
-        } else if (selected !== undefined && selected !== -1) {
-          score += q.points || 100
-          correct++
-        }
-      })
 
-      const durationMs = allocatedTimeSeconds * 1000
+      // Authoritative Server-side evaluation against MongoDB answer keys
+      const eventTargetId = event?._id || slug
+      const submitRes = await api
+        .submitQuiz(eventTargetId, answersPayload, durationMs, {
+          name: user?.name,
+          avatar: user?.avatar,
+        })
+        .catch(() => null)
+
+      if (submitRes && submitRes.success && submitRes.data) {
+        score = typeof submitRes.data.score === 'number' ? submitRes.data.score : 0
+        correct = typeof submitRes.data.correctCount === 'number' ? submitRes.data.correctCount : 0
+      } else {
+        // Fallback scoring strictly against verified answer keys
+        questions.forEach((q, idx) => {
+          const selected = selectedAnswers[idx]
+          if (q.correctOptionIndex !== undefined && selected === q.correctOptionIndex) {
+            score += q.points || 100
+            correct++
+          }
+        })
+      }
+
       const attemptEntry = {
         _id: `quiz_timeup_${Date.now()}_${user?._id || 'anon'}`,
         totalScore: score,

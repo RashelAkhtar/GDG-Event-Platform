@@ -88,7 +88,15 @@ export const getEvents = async (req: Request, res: Response, _next: NextFunction
     const isAdmin = getUser(req)?.role === UserRole.ADMIN;
     const events = await EventService.getAllEvents(isAdmin);
     if (Array.isArray(events) && events.length > 0) {
-      return res.status(200).json({ success: true, count: events.length, data: events });
+      const synced = events.map((ev: any) => {
+        const liveState = wsService.getGameState(ev.slug);
+        const evObj = typeof ev.toObject === 'function' ? ev.toObject() : ev;
+        return {
+          ...evObj,
+          status: liveState ? liveState.status : ev.status,
+        };
+      });
+      return res.status(200).json({ success: true, count: synced.length, data: synced });
     }
   } catch {}
 
@@ -115,7 +123,15 @@ export const getEventBySlug = async (req: Request, res: Response, _next: NextFun
   try {
     const event = await EventService.getEventBySlug(slug, getUser(req)?.role === UserRole.ADMIN);
     if (event) {
-      return res.status(200).json({ success: true, data: event });
+      const liveState = wsService.getGameState(event.slug);
+      const evObj = typeof (event as any).toObject === 'function' ? (event as any).toObject() : event;
+      return res.status(200).json({
+        success: true,
+        data: {
+          ...evObj,
+          status: liveState ? liveState.status : event.status,
+        },
+      });
     }
   } catch {}
 
@@ -285,6 +301,20 @@ export const updateEvent = async (req: Request, res: Response, next: NextFunctio
     if (!event) {
       return res.status(404).json({ success: false, message: 'Event not found' });
     }
+    if (updates.status) {
+      const isLocked = updates.status !== 'LIVE';
+      wsService.setGameState(event.slug, isLocked, updates.status);
+      const canonical = wsService.resolveCanonicalSlug(event.slug);
+      wsService.broadcast({
+        type: 'GAME_LOCK_TOGGLE',
+        payload: {
+          gameSlug: event.slug,
+          canonicalSlug: canonical,
+          isLocked,
+          status: updates.status,
+        },
+      });
+    }
     if (updates.timeLimitSeconds !== undefined) {
       wsService.broadcast({
         type: 'GAME_TIME_LIMIT_UPDATE',
@@ -294,7 +324,12 @@ export const updateEvent = async (req: Request, res: Response, next: NextFunctio
         },
       });
     }
-    res.status(200).json({ success: true, data: event });
+    const liveState = wsService.getGameState(event.slug);
+    const returnData = {
+      ...(typeof (event as any).toObject === 'function' ? (event as any).toObject() : event),
+      status: liveState ? liveState.status : event.status,
+    };
+    res.status(200).json({ success: true, data: returnData });
   } catch (error) {
     if (error instanceof Error) return res.status(400).json({ success: false, message: error.message });
     next(error);

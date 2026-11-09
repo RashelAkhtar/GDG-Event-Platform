@@ -41,7 +41,7 @@ import {
   Users,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
-import { useWebSocket } from '@/context/WebSocketContext'
+import { useWebSocket, normalizeGameSlug } from '@/context/WebSocketContext'
 import { GameManipulatorModal } from './GameManipulatorModal'
 import { AnimatedLockToggle } from '@/components/ui/AnimatedLockToggle'
 
@@ -223,18 +223,16 @@ export function DualQuizSection({
     setTimeout(() => setToastMessage(null), 3500)
   }
 
-  // Real-time lock states
-  const isWebLive = gameLockStates['web-dev-quiz']
-    ? gameLockStates['web-dev-quiz'].status === 'LIVE'
-    : webEvent.status === 'LIVE'
+  // Real-time lock states with canonical slug resolution
+  const getLockState = (slug: string, eventStatus: string) => {
+    const norm = normalizeGameSlug(slug)
+    const state = gameLockStates[norm] || gameLockStates[slug]
+    return state ? state.status === 'LIVE' : eventStatus === 'LIVE'
+  }
 
-  const isMentisLive = gameLockStates['mentis-quiz']
-    ? gameLockStates['mentis-quiz'].status === 'LIVE'
-    : mentisEvent.status === 'LIVE'
-
-  const isWendLive = gameLockStates['wend-game']
-    ? gameLockStates['wend-game'].status === 'LIVE'
-    : wendEvent.status === 'LIVE'
+  const isWebLive = getLockState(webEvent.slug || 'web-dev-quiz', webEvent.status)
+  const isMentisLive = getLockState(mentisEvent.slug || 'mentis-quiz', mentisEvent.status)
+  const isWendLive = getLockState(wendEvent.slug || 'wend-game', wendEvent.status)
 
   const toggleEventLock = async (
     targetEvent: GdgEvent,
@@ -243,10 +241,14 @@ export function DualQuizSection({
     if (!isAdmin) return
     const newStatus: 'LIVE' | 'UPCOMING' = isCurrentlyLive ? 'UPCOMING' : 'LIVE'
     const isLocked = newStatus !== 'LIVE'
+    const canonicalSlug = normalizeGameSlug(targetEvent.slug)
 
     setUpdatingId(targetEvent._id)
     try {
       sendLockToggle(targetEvent.slug, isLocked, newStatus)
+      if (canonicalSlug !== targetEvent.slug) {
+        sendLockToggle(canonicalSlug, isLocked, newStatus)
+      }
       await api.updateEventStatus(targetEvent._id, newStatus)
       setStatusOverrides((prev) => ({ ...prev, [targetEvent._id]: newStatus }))
       if (onStatusChange) {

@@ -393,23 +393,27 @@ export const api = {
 
   async submitQuiz(
     eventId: string,
-    answers: { questionId: string; selectedOptionIndex: number }[]
-  ): Promise<{ success: boolean; data?: unknown; message?: string }> {
-    // If eventId is a mock ID, resolve locally without sending failing network request
-    if (!eventId || (!/^[0-9a-fA-F]{24}$/.test(eventId) && eventId.endsWith('-id'))) {
-      return { success: true, message: 'Evaluated in active session' }
-    }
+    answers: { questionId: string; selectedOptionIndex: number }[],
+    durationMs?: number,
+    userInfo?: { name?: string; avatar?: string }
+  ): Promise<{ success: boolean; data?: any; message?: string }> {
     try {
-      const res = await fetch(`${API_BASE}/events/${eventId}/quiz/submit`, {
+      const cleanEventId = (eventId || 'quiz').replace(/-id$/, '')
+      const res = await fetch(`${API_BASE}/events/${cleanEventId}/quiz/submit`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers }),
+        body: JSON.stringify({
+          answers,
+          durationMs,
+          userName: userInfo?.name,
+          userAvatar: userInfo?.avatar,
+        }),
       })
       const json = await res.json().catch(() => ({}))
       return { success: res.ok, data: json.data, message: json.message }
     } catch {
-      return { success: true, message: 'Fallback to local session' }
+      return { success: false, message: 'Could not connect to quiz submission service' }
     }
   },
 
@@ -444,7 +448,9 @@ export const api = {
 
   async getLeaderboard(eventId: string, slug?: string): Promise<LeaderboardEntry[]> {
     try {
-      const res = await fetch(`${API_BASE}/events/${eventId}/leaderboard`, {
+      const cleanId = (eventId || slug || 'event').replace(/-id$/, '')
+      const queryParam = slug ? `?slug=${encodeURIComponent(slug)}` : ''
+      const res = await fetch(`${API_BASE}/events/${cleanId}/leaderboard${queryParam}`, {
         credentials: 'include',
         headers: { Accept: 'application/json' },
       })
@@ -755,6 +761,9 @@ export const api = {
 
     const sessions = api.getAllSessionsForSlug(slug)
     const localLb = api.getLocalLeaderboard(slug)
+    const defaultItems = slug.includes('wend')
+      ? (api.getWendWords()?.length || 5)
+      : (api.getQuestionsForSlug(slug)?.length || 5)
 
     // Deduplicate by participant identifier (userId or normalized userName)
     const participantMap = new Map<string, RankedParticipant>()
@@ -767,7 +776,7 @@ export const api = {
       const score = s.internalScore ?? 0
       const correctCount = s.internalCorrectCount ?? (score > 0 ? Math.floor(score / 100) : 0)
       const durationMs = s.durationMs || 0
-      const totalItems = s.totalItems || 5
+      const totalItems = s.totalItems || defaultItems
       const submittedAt = s.submittedAt || new Date().toISOString()
       const avatar =
         s.userAvatar ||
@@ -831,7 +840,7 @@ export const api = {
           avatar,
           score,
           correctCount,
-          totalItems: 5,
+          totalItems: defaultItems,
           durationMs,
           submittedAt,
         })
@@ -844,6 +853,7 @@ export const api = {
             ...existing,
             score: Math.max(existing.score, score),
             durationMs: Math.min(existing.durationMs || durationMs, durationMs),
+            correctCount: Math.max(existing.correctCount, correctCount),
           })
         }
       }
@@ -873,7 +883,7 @@ export const api = {
             avatar,
             score,
             correctCount,
-            totalItems: 5,
+            totalItems: defaultItems,
             durationMs,
             submittedAt,
           })
@@ -886,6 +896,7 @@ export const api = {
               ...existing,
               score: Math.max(existing.score, score),
               durationMs: Math.min(existing.durationMs || durationMs, durationMs),
+              correctCount: Math.max(existing.correctCount, correctCount),
             })
           }
         }

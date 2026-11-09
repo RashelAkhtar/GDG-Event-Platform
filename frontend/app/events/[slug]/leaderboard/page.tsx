@@ -9,10 +9,12 @@ import { RankList } from '@/components/leaderboard/RankList'
 import { api, DEFAULT_LEADERBOARD, LeaderboardEntry } from '@/lib/api'
 import Loader from '@/components/ui/Loader'
 import { ArrowLeft, RefreshCw, Trophy, Home } from 'lucide-react'
+import { useWebSocket } from '@/context/WebSocketContext'
 
 export function LeaderboardContent({ customSlug }: { customSlug?: string }) {
   const params = useParams()
   const slug = customSlug || (params?.slug as string) || 'web-dev-quiz'
+  const { liveLeaderboards, subscribeToLeaderboardUpdate } = useWebSocket()
 
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(true)
@@ -20,15 +22,34 @@ export function LeaderboardContent({ customSlug }: { customSlug?: string }) {
 
   const loadLeaderboard = React.useCallback(async () => {
     try {
-      const data = await api.getLeaderboard('event-id', slug)
-      setLeaderboard(data)
+      const data = await api.getLeaderboard(slug, slug)
+      const live = liveLeaderboards[slug] || []
+      const mergedMap = new Map<string, LeaderboardEntry>()
+      for (const d of data) {
+        const id = d.user?._id || d.user?.name?.toLowerCase() || d._id
+        mergedMap.set(id, d)
+      }
+      for (const l of live) {
+        const id = l.user?._id || l.user?.name?.toLowerCase() || l._id
+        const existing = mergedMap.get(id)
+        if (
+          !existing ||
+          l.totalScore > existing.totalScore ||
+          (l.totalScore === existing.totalScore && l.durationMs < existing.durationMs)
+        ) {
+          mergedMap.set(id, l)
+        }
+      }
+      const combined = Array.from(mergedMap.values())
+      combined.sort((a, b) => b.totalScore - a.totalScore || a.durationMs - b.durationMs)
+      setLeaderboard(combined)
     } catch {
       setLeaderboard(DEFAULT_LEADERBOARD[slug] || DEFAULT_LEADERBOARD['web-dev-quiz'] || [])
     } finally {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [slug])
+  }, [slug, liveLeaderboards])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -36,6 +57,15 @@ export function LeaderboardContent({ customSlug }: { customSlug?: string }) {
     }, 0)
     return () => clearTimeout(timer)
   }, [loadLeaderboard])
+
+  useEffect(() => {
+    const unsub = subscribeToLeaderboardUpdate((updatedSlug) => {
+      if (updatedSlug === slug || updatedSlug.replace('-quiz', '') === slug.replace('-quiz', '')) {
+        void loadLeaderboard()
+      }
+    })
+    return () => unsub()
+  }, [subscribeToLeaderboardUpdate, slug, loadLeaderboard])
 
   const handleRefresh = () => {
     setRefreshing(true)

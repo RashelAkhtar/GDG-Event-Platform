@@ -36,13 +36,22 @@ class SalmanAudioEngine {
         const audio = new Audio()
         audio.loop = true
         audio.preload = 'auto'
+        audio.setAttribute('playsinline', 'true')
+        audio.setAttribute('webkit-playsinline', 'true')
         audio.volume = this.isMuted ? 0 : this.bgmTargetVolume
 
-        // Primary source: /sound/salman-bgm.mp4, fallback: /sound/salman-bgm.m4a
-        audio.src = '/sound/salman-bgm.mp4'
+        // Universal mobile format: salman-bgm.mp4 has 99.9% mobile codec compatibility
+        const canPlayMp4 = audio.canPlayType('audio/mp4') || audio.canPlayType('video/mp4')
+        audio.src = canPlayMp4 ? '/sound/salman-bgm.mp4' : '/sound/salman-bgm.m4a'
+
         audio.onerror = () => {
-          if (audio.src.includes('.mp4')) {
+          if (audio.src.endsWith('.mp4')) {
             audio.src = '/sound/salman-bgm.m4a'
+            if (this.isBgmPlaying && !this.isMuted) {
+              audio.play().catch(() => {})
+            }
+          } else if (!audio.src.includes('/sounds/')) {
+            audio.src = '/sounds/salman-bgm.mp4'
             if (this.isBgmPlaying && !this.isMuted) {
               audio.play().catch(() => {})
             }
@@ -57,6 +66,27 @@ class SalmanAudioEngine {
     return this.bgmAudio
   }
 
+  public isBgmActive(): boolean {
+    return Boolean(this.bgmAudio && !this.bgmAudio.paused && !this.isMuted)
+  }
+
+  public unlock() {
+    if (typeof window === 'undefined') return
+    const ctx = this.getContext()
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().catch(() => {})
+    }
+    const audio = this.initBgm()
+    if (audio) {
+      audio.muted = this.isMuted
+      audio.volume = this.isMuted ? 0 : this.bgmTargetVolume
+      this.isBgmPlaying = true
+      if (audio.paused && !this.isMuted) {
+        audio.play().catch(() => {})
+      }
+    }
+  }
+
   public startBgm() {
     if (typeof window === 'undefined') return
     const audio = this.initBgm()
@@ -69,15 +99,22 @@ class SalmanAudioEngine {
     const playPromise = audio.play()
     if (playPromise !== undefined) {
       playPromise.catch(() => {
-        // Autoplay policy: unlock playback on first user gesture
+        // Autoplay policy: unlock playback on first touch/click user gesture
         const unlockAudio = () => {
-          if (this.isBgmPlaying && this.bgmAudio) {
+          this.unlock()
+          if (this.isBgmPlaying && this.bgmAudio && this.bgmAudio.paused && !this.isMuted) {
             this.bgmAudio.play().catch(() => {})
           }
+          window.removeEventListener('touchstart', unlockAudio)
+          window.removeEventListener('touchend', unlockAudio)
           window.removeEventListener('pointerdown', unlockAudio)
+          window.removeEventListener('click', unlockAudio)
           window.removeEventListener('keydown', unlockAudio)
         }
+        window.addEventListener('touchstart', unlockAudio, { once: true, passive: true })
+        window.addEventListener('touchend', unlockAudio, { once: true, passive: true })
         window.addEventListener('pointerdown', unlockAudio, { once: true })
+        window.addEventListener('click', unlockAudio, { once: true })
         window.addEventListener('keydown', unlockAudio, { once: true })
       })
     }
@@ -335,6 +372,124 @@ class SalmanAudioEngine {
 
       vibrato.stop(now + 0.46)
       osc.stop(now + 0.46)
+    } catch {}
+  }
+
+  // --------------------------------------------------------------------------
+  // GLASS CRACK SOUND: Sharp high-frequency laminated safety glass fracture
+  // --------------------------------------------------------------------------
+  public playGlassCrackSound() {
+    if (this.isMuted) return
+    const ctx = this.getContext()
+    if (!ctx) return
+
+    try {
+      const now = ctx.currentTime
+
+      // 1. Instantaneous high-frequency glass snap ping (4500Hz - 6800Hz)
+      const snapOsc = ctx.createOscillator()
+      const snapGain = ctx.createGain()
+      snapOsc.type = 'triangle'
+      snapOsc.frequency.setValueAtTime(5400, now)
+      snapOsc.frequency.exponentialRampToValueAtTime(1600, now + 0.08)
+
+      snapGain.gain.setValueAtTime(0.75, now)
+      snapGain.gain.exponentialRampToValueAtTime(0.001, now + 0.09)
+
+      snapOsc.connect(snapGain)
+      snapGain.connect(ctx.destination)
+      snapOsc.start(now)
+      snapOsc.stop(now + 0.10)
+
+      // 2. Highpass brittle shatter noise burst (fracturing crystalline glass)
+      const bufferSize = Math.floor(ctx.sampleRate * 0.28)
+      const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
+      const data = noiseBuffer.getChannelData(0)
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.06))
+      }
+
+      const noiseSource = ctx.createBufferSource()
+      noiseSource.buffer = noiseBuffer
+
+      const highpass = ctx.createBiquadFilter()
+      highpass.type = 'highpass'
+      highpass.frequency.setValueAtTime(3200, now)
+
+      const bandpass = ctx.createBiquadFilter()
+      bandpass.type = 'bandpass'
+      bandpass.frequency.setValueAtTime(6200, now)
+      bandpass.Q.setValueAtTime(2.5, now)
+
+      const noiseGain = ctx.createGain()
+      noiseGain.gain.setValueAtTime(0.85, now)
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.28)
+
+      noiseSource.connect(highpass)
+      highpass.connect(bandpass)
+      bandpass.connect(noiseGain)
+      noiseGain.connect(ctx.destination)
+
+      noiseSource.start(now)
+      noiseSource.stop(now + 0.29)
+
+      // 3. Secondary micro-clicks (fracture propagation along radial fissures)
+      for (let c = 0; c < 3; c++) {
+        const clickTime = now + 0.03 + c * 0.04
+        const clickOsc = ctx.createOscillator()
+        const clickGain = ctx.createGain()
+        clickOsc.type = 'square'
+        clickOsc.frequency.setValueAtTime(3800 + Math.random() * 2000, clickTime)
+
+        clickGain.gain.setValueAtTime(0.35, clickTime)
+        clickGain.gain.exponentialRampToValueAtTime(0.001, clickTime + 0.02)
+
+        clickOsc.connect(clickGain)
+        clickGain.connect(ctx.destination)
+        clickOsc.start(clickTime)
+        clickOsc.stop(clickTime + 0.025)
+      }
+    } catch {}
+  }
+
+  // --------------------------------------------------------------------------
+  // WIPER SWEEP SOUND: Rubber blade swish across windshield glass
+  // --------------------------------------------------------------------------
+  public playWiperSweep() {
+    if (this.isMuted) return
+    const ctx = this.getContext()
+    if (!ctx) return
+
+    try {
+      const now = ctx.currentTime
+      const bufferSize = Math.floor(ctx.sampleRate * 0.45)
+      const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
+      const data = noiseBuffer.getChannelData(0)
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1
+      }
+
+      const noise = ctx.createBufferSource()
+      noise.buffer = noiseBuffer
+
+      const filter = ctx.createBiquadFilter()
+      filter.type = 'bandpass'
+      filter.frequency.setValueAtTime(450, now)
+      filter.frequency.exponentialRampToValueAtTime(850, now + 0.22)
+      filter.frequency.exponentialRampToValueAtTime(400, now + 0.45)
+      filter.Q.setValueAtTime(3.0, now)
+
+      const gain = ctx.createGain()
+      gain.gain.setValueAtTime(0.001, now)
+      gain.gain.linearRampToValueAtTime(0.3, now + 0.15)
+      gain.gain.linearRampToValueAtTime(0.001, now + 0.45)
+
+      noise.connect(filter)
+      filter.connect(gain)
+      gain.connect(ctx.destination)
+
+      noise.start(now)
+      noise.stop(now + 0.46)
     } catch {}
   }
 

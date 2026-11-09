@@ -326,12 +326,15 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
         case 'GAME_LOCK_TOGGLE': {
           const gameSlug = payload?.gameSlug as string | undefined
           if (gameSlug) {
+            const norm = normalizeGameSlug(gameSlug)
+            const lockObj = {
+              isLocked: Boolean(payload?.isLocked),
+              status: String(payload?.status || 'UPCOMING'),
+            }
             setGameLockStates((prev) => ({
               ...prev,
-              [gameSlug]: {
-                isLocked: Boolean(payload?.isLocked),
-                status: String(payload?.status || 'UPCOMING'),
-              },
+              [gameSlug]: lockObj,
+              [norm]: lockObj,
             }))
           }
           break
@@ -368,8 +371,17 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
           break
         }
         case 'SYNC_STATE': {
-          if (payload?.gameStates) {
-            setGameLockStates(payload.gameStates as Record<string, { isLocked: boolean; status: string }>)
+          if (payload?.gameStates && typeof payload.gameStates === 'object') {
+            const normalizedMap: Record<string, { isLocked: boolean; status: string }> = {}
+            for (const [key, val] of Object.entries(payload.gameStates as Record<string, any>)) {
+              if (val && typeof val === 'object') {
+                const normKey = normalizeGameSlug(key)
+                const entry = { isLocked: Boolean(val.isLocked), status: String(val.status || 'UPCOMING') }
+                normalizedMap[key] = entry
+                normalizedMap[normKey] = entry
+              }
+            }
+            setGameLockStates((prev) => ({ ...prev, ...normalizedMap }))
           }
           if (Array.isArray(payload?.sessions)) {
             const sessionsList = (payload.sessions as ConnectedSession[]).map((s) => ({
@@ -667,14 +679,17 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
 
   const sendLockToggle = useCallback(
     (gameSlug: string, isLocked: boolean, status: string) => {
+      const norm = normalizeGameSlug(gameSlug)
       setGameLockStates((prev) => ({
         ...prev,
         [gameSlug]: { isLocked, status },
+        [norm]: { isLocked, status },
       }))
       broadcastMessage({
         type: 'GAME_LOCK_TOGGLE',
         payload: {
-          gameSlug,
+          gameSlug: norm,
+          rawSlug: gameSlug,
           isLocked,
           status,
           role: 'ADMIN',

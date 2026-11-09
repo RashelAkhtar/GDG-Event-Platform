@@ -202,8 +202,15 @@ export function GoldenAppleModal({
         <div className="flex flex-col gap-2.5">
           <button
             onClick={() => {
+              salmanAudio.unlock()
+              salmanAudio.startBgm()
+              salmanAudio.startEngine()
               onClose()
               onEnterGame()
+            }}
+            onTouchEnd={() => {
+              salmanAudio.unlock()
+              salmanAudio.startBgm()
             }}
             className="group w-full flex items-center justify-between rounded-full bg-[#111827] hover:bg-black dark:bg-[#FAFAFA] dark:hover:bg-white text-white dark:text-[#111827] px-6 py-3.5 text-xs font-mono uppercase tracking-[0.18em] font-semibold transition-all duration-300 shadow-sm active:scale-[0.99] cursor-pointer"
           >

@@ -6,6 +6,7 @@ import { getId, getUser } from '../utils/auth.ts';
 import { wsService } from '../websocket.ts';
 import { Event } from '../models/Event.ts';
 import { Question } from '../models/Questions.ts';
+import { QuizAttempt } from '../models/QuizAttempt.ts';
 import { UserRole } from '../models/User.ts';
 
 // Central in-memory questions registry initialized strictly to empty arrays (NO default mock questions)
@@ -70,9 +71,6 @@ export const getQuestions = async (req: Request, res: Response, next: NextFuncti
         if (foundEvent && foundEvent._id) targetEventId = foundEvent._id as Types.ObjectId;
       }
 
-      const selectFields = isAdmin ? '+correctOptionIndex' : '-correctOptionIndex';
-
-      // Build inclusive multi-field query so any database-seeded questions are resolved
       const queryClauses: any[] = [];
       if (targetEventId) {
         queryClauses.push({ eventId: targetEventId });
@@ -86,20 +84,22 @@ export const getQuestions = async (req: Request, res: Response, next: NextFuncti
       queryClauses.push({ category: slug });
       queryClauses.push({ category: { $regex: new RegExp(slug.replace('-quiz', ''), 'i') } });
 
+      // Query DB with ALL fields (+correctOptionIndex) so memory cache contains full answer keys
       let dbQuestions = await Question.find({ $or: queryClauses })
-        .select(selectFields)
+        .select('+correctOptionIndex')
         .sort({ order: 1, createdAt: 1 })
         .lean();
 
       if (dbQuestions.length > 0) {
-        // Sync local memory cache with DB truth
+        // Sync local memory cache with DB truth (complete with answer keys)
         inMemoryQuestions[slug] = dbQuestions;
 
-        // User side receives STRICTLY what was retrieved from database
+        // User side receives sanitized questions if non-admin
+        const responseData = isAdmin ? dbQuestions : sanitizeQuestions(dbQuestions);
         return res.status(200).json({
           success: true,
-          count: dbQuestions.length,
-          data: dbQuestions,
+          count: responseData.length,
+          data: responseData,
         });
       }
     }
@@ -369,38 +369,105 @@ export const submitQuiz = async (req: Request, res: Response, next: NextFunction
   const userAnswers: { questionId: string; selectedOptionIndex: number }[] = Array.isArray(req.body?.answers)
     ? req.body.answers
     : [];
+  const durationMs = Number(req.body?.durationMs) || 30000;
+  const userName = req.body?.userName || user?.name || 'Anonymous Participant';
+  const userAvatar = req.body?.userAvatar || user?.avatar;
 
-  // If valid ObjectId and authenticated user, try DB submit
-  if (Types.ObjectId.isValid(eventIdOrSlug) && user) {
+  // 1. Locate questions with answer keys (MongoDB first, then memory cache)
+  let questions: any[] = [];
+  let targetEvent: any = null;
+
+  if (mongoose.connection.readyState === 1) {
     try {
-      const attempt = await QuizService.submitQuiz(eventIdOrSlug, user._id, userAnswers);
-      return res.status(200).json({ success: true, data: attempt });
-    } catch (error) {
-      // If error, fall through to in-memory evaluation
+      if (Types.ObjectId.isValid(eventIdOrSlug)) {
+        targetEvent = await Event.findById(eventIdOrSlug);
+      }
+      if (!targetEvent) {
+        targetEvent = await Event.findOne({
+          $or: [
+            { slug },
+            { slug: slug.replace('-quiz', '') },
+            { slug: { $regex: new RegExp(slug.replace(/[-_]/g, '.*'), 'i') } },
+          ],
+        });
+      }
+      if (targetEvent) {
+        questions = await Question.find({ eventId: targetEvent._id })
+          .select('+correctOptionIndex')
+          .sort({ order: 1 })
+          .lean();
+      }
+    } catch (dbErr) {
+      console.warn('[QuizSubmit] DB lookup error:', dbErr);
     }
   }
 
-  // Scoring using user-created question answer keys
-  let questions = inMemoryQuestions[slug] || [];
   if (questions.length === 0) {
-    try {
-      const foundEvent = await Event.findOne({ slug });
-      if (foundEvent) {
-        questions = await Question.find({ eventId: foundEvent._id }).select('+correctOptionIndex').lean();
-      }
-    } catch {}
+    questions = inMemoryQuestions[slug] || [];
   }
 
+  // 2. Authoritative server-side evaluation against answer keys
   let score = 0;
   let correctCount = 0;
-
-  userAnswers.forEach((ans) => {
+  const evaluatedAnswers = userAnswers.map((ans) => {
     const q = questions.find((item) => String(item._id) === String(ans.questionId));
-    if (q && q.correctOptionIndex === ans.selectedOptionIndex) {
-      score += q.points || 100;
+    const isCorrect = Boolean(
+      q && typeof q.correctOptionIndex === 'number' && q.correctOptionIndex === ans.selectedOptionIndex
+    );
+    const points = q && typeof q.points === 'number' ? q.points : 100;
+    const scoreAwarded = isCorrect ? points : 0;
+    if (isCorrect) {
+      score += points;
       correctCount++;
     }
+    return {
+      questionId: q && Types.ObjectId.isValid(q._id) ? new Types.ObjectId(q._id) : ans.questionId,
+      selectedOptionIndex: ans.selectedOptionIndex,
+      answeredAt: new Date(),
+      isCorrect,
+      scoreAwarded,
+    };
   });
+
+  // 3. Persist QuizAttempt to MongoDB if connected
+  if (mongoose.connection.readyState === 1 && targetEvent && user && Types.ObjectId.isValid(user._id)) {
+    try {
+      const now = new Date();
+      const startTime = new Date(now.getTime() - durationMs);
+      await QuizAttempt.findOneAndUpdate(
+        { eventId: targetEvent._id, userId: user._id },
+        {
+          $set: {
+            answers: evaluatedAnswers,
+            totalScore: score,
+            durationMs,
+            submittedAt: now,
+            isCompleted: true,
+          },
+          $setOnInsert: {
+            startTime,
+          },
+        },
+        { upsert: true, new: true, runValidators: false }
+      );
+    } catch (saveErr) {
+      console.warn('[QuizSubmit] Could not persist QuizAttempt to DB:', saveErr);
+    }
+  }
+
+  // 4. Update real-time WebSocket contest leaderboard
+  const attemptEntry = {
+    _id: `att_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    totalScore: score,
+    durationMs,
+    submittedAt: new Date().toISOString(),
+    user: {
+      _id: user?._id ? String(user._id) : undefined,
+      name: userName,
+      avatar: userAvatar,
+    },
+  };
+  wsService.recordAttempt(slug, attemptEntry);
 
   return res.status(200).json({
     success: true,
@@ -409,6 +476,7 @@ export const submitQuiz = async (req: Request, res: Response, next: NextFunction
       score,
       correctCount,
       totalQuestions: questions.length,
+      durationMs,
       isCompleted: true,
     },
   });

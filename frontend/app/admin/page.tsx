@@ -816,13 +816,7 @@ function AdminPageContent() {
                         </div>
 
                         {/* Animated Lock State Toggle */}
-                        <div
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleToggleDivLock(slug, isLive)
-                          }}
-                          className="flex items-center gap-1.5"
-                        >
+                        <div className="flex items-center gap-1.5">
                           <AnimatedLockToggle
                             id={`admin-lock-toggle-${slug}`}
                             checked={isLive}

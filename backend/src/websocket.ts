@@ -4,6 +4,7 @@ import type { IncomingMessage } from 'http';
 import mongoose from 'mongoose';
 import { User, UserRole } from './models/User.ts';
 import { WendBoard } from './models/WendBoard.ts';
+import { Event } from './models/Event.ts';
 import { verifyToken } from './utils/jwt.ts';
 import 'dotenv/config';
 
@@ -84,14 +85,24 @@ class EventWebSocketService {
   ]);
   private gameStates: Record<string, { isLocked: boolean; status: string }> = {
     'web-dev-quiz': { isLocked: false, status: 'LIVE' },
-    'mentis-quiz': { isLocked: true, status: 'UPCOMING' },
+    'mentis-quiz': { isLocked: false, status: 'LIVE' },
     'wend-game': { isLocked: false, status: 'LIVE' },
   };
+  private disqualifiedUserIds: Set<string> = new Set();
   private securityAlerts: SecurityAlert[] = [];
   private wendBoardConfig: unknown = null;
   private heartbeatInterval: NodeJS.Timeout | null = null;
   private lastBubbleImpulseTime = 0;
   private leaderboardBroadcastTimers: Map<string, NodeJS.Timeout> = new Map();
+
+  public resolveCanonicalSlug(slug: string): string {
+    if (!slug) return slug;
+    const s = slug.toLowerCase();
+    if (s.includes('mentis')) return 'mentis-quiz';
+    if (s.includes('web') || s.includes('sprint')) return 'web-dev-quiz';
+    if (s.includes('wend')) return 'wend-game';
+    return slug;
+  }
 
   private queueLeaderboardBroadcast(gameSlug: string): void {
     if (this.leaderboardBroadcastTimers.has(gameSlug)) return;
@@ -115,18 +126,60 @@ class EventWebSocketService {
   }
 
   public getGameState(slug: string): { isLocked: boolean; status: string } {
-    return this.gameStates[slug] || { isLocked: false, status: 'LIVE' };
+    const canonical = this.resolveCanonicalSlug(slug);
+    return this.gameStates[slug] || this.gameStates[canonical] || { isLocked: false, status: 'LIVE' };
   }
 
   public setGameState(slug: string, isLocked: boolean, status: string): void {
+    const canonical = this.resolveCanonicalSlug(slug);
     this.gameStates[slug] = { isLocked, status };
+    this.gameStates[canonical] = { isLocked, status };
+
+    if (mongoose.connection.readyState === 1) {
+      void Event.updateMany(
+        {
+          $or: [
+            { slug },
+            { slug: canonical },
+            { slug: { $regex: new RegExp(slug.replace(/[-_]/g, '.*'), 'i') } },
+          ],
+        },
+        { $set: { status, updatedAt: new Date() } }
+      ).catch(() => {});
+    }
+  }
+
+  public recordAttempt(gameSlug: string, entry: LeaderboardEntryPayload): void {
+    const canonical = this.resolveCanonicalSlug(gameSlug);
+    const participantId = entry.user?._id || entry._id;
+    if (participantId && this.disqualifiedUserIds.has(participantId)) {
+      console.warn(`[WebSocket] Blocked disqualified participant attempt: ${participantId}`);
+      return;
+    }
+    const name = entry.user?.name || '';
+    if (name.toLowerCase().includes('admin') || participantId === 'admin_master_aryan') {
+      return;
+    }
+
+    const targets = Array.from(new Set([gameSlug, canonical]));
+    for (const target of targets) {
+      const list = this.activeContestAttempts.get(target) || [];
+      const filtered = list.filter((e) => (e.user?._id || e._id) !== participantId);
+      const updated = [...filtered, entry];
+      updated.sort((a, b) => b.totalScore - a.totalScore || a.durationMs - b.durationMs);
+      this.activeContestAttempts.set(target, updated);
+      this.queueLeaderboardBroadcast(target);
+    }
   }
 
   public getLeaderboard(slug: string): LeaderboardEntryPayload[] {
-    const list = this.activeContestAttempts.get(slug) || [];
+    const canonical = this.resolveCanonicalSlug(slug);
+    const list = this.activeContestAttempts.get(canonical) || this.activeContestAttempts.get(slug) || [];
     return list.filter((e) => {
       const name = e.user?.name || '';
-      return !name.toLowerCase().includes('admin') && e.user?._id !== 'admin_master_aryan';
+      const userId = e.user?._id || e._id;
+      if (userId && this.disqualifiedUserIds.has(userId)) return false;
+      return !name.toLowerCase().includes('admin') && userId !== 'admin_master_aryan';
     });
   }
 
@@ -158,7 +211,7 @@ class EventWebSocketService {
       },
     });
 
-    // Hydrate Wend board directly from MongoDB (Single Source of Truth)
+    // Hydrate Wend board and Event lock states directly from MongoDB (Single Source of Truth)
     try {
       if (mongoose.connection.readyState === 1) {
         void WendBoard.findOne({
@@ -169,6 +222,20 @@ class EventWebSocketService {
           .then((dbBoard) => {
             if (dbBoard) {
               this.wendBoardConfig = dbBoard;
+            }
+          })
+          .catch(() => {});
+
+        void Event.find({})
+          .lean()
+          .then((events) => {
+            if (Array.isArray(events)) {
+              for (const ev of events) {
+                const canonical = this.resolveCanonicalSlug(ev.slug);
+                const isLocked = ev.status === 'UPCOMING' || ev.status === 'DRAFT';
+                this.gameStates[ev.slug] = { isLocked, status: ev.status };
+                this.gameStates[canonical] = { isLocked, status: ev.status };
+              }
             }
           })
           .catch(() => {});
@@ -364,6 +431,12 @@ class EventWebSocketService {
       case 'SUBMIT_ATTEMPT': {
         const { gameSlug, entry } = message.payload || {};
         if (gameSlug && entry) {
+          const participantId = entry.user?._id || entry._id;
+          if (participantId && this.disqualifiedUserIds.has(participantId)) {
+            console.warn(`[WebSocket] Rejected submission from disqualified participant: ${participantId}`);
+            break;
+          }
+
           // Strictly exclude GDG Admin submissions from contest leaderboards
           const isSenderAdmin =
             this.socketPrincipals.get(ws)?.role === UserRole.ADMIN ||
@@ -375,16 +448,7 @@ class EventWebSocketService {
             break;
           }
 
-          const list = this.activeContestAttempts.get(gameSlug) || [];
-          const participantId = entry.user?._id || entry._id;
-          const filtered = list.filter((e) => (e.user?._id || e._id) !== participantId);
-          const updated = [...filtered, entry];
-          // Rank by highest totalScore first, then lowest durationMs
-          updated.sort((a, b) => b.totalScore - a.totalScore || a.durationMs - b.durationMs);
-          this.activeContestAttempts.set(gameSlug, updated);
-
-          // Debounced broadcast (200ms batching) ensures sub-second updates without socket thrashing under 300+ submissions
-          this.queueLeaderboardBroadcast(gameSlug);
+          this.recordAttempt(gameSlug, entry);
         }
         break;
       }
@@ -392,6 +456,7 @@ class EventWebSocketService {
       case 'SCREENSHOT_VIOLATION': {
         const payload = message.payload as Partial<SecurityAlert> | undefined;
         if (payload) {
+          const isDisq = Boolean(payload.warningCount && payload.warningCount >= 3);
           const alert: SecurityAlert = {
             id: `alert_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
             userId: payload.userId,
@@ -403,9 +468,12 @@ class EventWebSocketService {
             questionIndex: payload.questionIndex,
             warningCount: payload.warningCount || 1,
             maxWarnings: 3,
-            isDisqualified: Boolean(payload.warningCount && payload.warningCount >= 3),
+            isDisqualified: isDisq,
             timestamp: payload.timestamp || new Date().toISOString(),
           };
+          if (isDisq && alert.userId) {
+            this.disqualifiedUserIds.add(alert.userId);
+          }
           this.securityAlerts = [alert, ...this.securityAlerts.slice(0, 49)];
           console.log(`[SECURITY] Screenshot attempt by ${alert.userName} (${alert.userEmail || 'No email'}) - Warning ${alert.warningCount}/3`);
           this.broadcast({
@@ -449,11 +517,12 @@ class EventWebSocketService {
         if (gameSlug) {
           const finalLocked = Boolean(isLocked);
           const finalStatus = status || (finalLocked ? 'UPCOMING' : 'LIVE');
-          this.gameStates[gameSlug] = { isLocked: finalLocked, status: finalStatus };
-          console.log(`[WebSocket] Game lock toggled: ${gameSlug} -> isLocked=${finalLocked}, status=${finalStatus}`);
+          this.setGameState(gameSlug, finalLocked, finalStatus);
+          const canonical = this.resolveCanonicalSlug(gameSlug);
+          console.log(`[WebSocket] Game lock toggled: ${gameSlug} (${canonical}) -> isLocked=${finalLocked}, status=${finalStatus}`);
           this.broadcast({
             type: 'GAME_LOCK_TOGGLE',
-            payload: { gameSlug, isLocked: finalLocked, status: finalStatus },
+            payload: { gameSlug, canonicalSlug: canonical, isLocked: finalLocked, status: finalStatus },
           });
         }
         break;
@@ -486,37 +555,53 @@ class EventWebSocketService {
       case 'RESET_GAME_LEADERBOARD': {
         const gameSlug = message.payload?.gameSlug;
         if (gameSlug) {
+          const canonical = this.resolveCanonicalSlug(gameSlug);
           this.activeContestAttempts.set(gameSlug, []);
+          this.activeContestAttempts.set(canonical, []);
+          this.broadcast({
+            type: 'RESET_GAME_LEADERBOARD',
+            payload: { gameSlug, canonicalSlug: canonical },
+          });
+          this.broadcast({
+            type: 'LEADERBOARD_UPDATE',
+            payload: { gameSlug, leaderboard: [] },
+          });
+          if (canonical !== gameSlug) {
+            this.broadcast({
+              type: 'LEADERBOARD_UPDATE',
+              payload: { gameSlug: canonical, leaderboard: [] },
+            });
+          }
         } else {
           for (const key of this.activeContestAttempts.keys()) {
             this.activeContestAttempts.set(key, []);
           }
+          this.broadcast({
+            type: 'RESET_GAME_LEADERBOARD',
+            payload: message.payload,
+          });
         }
-        this.broadcast({
-          type: 'RESET_GAME_LEADERBOARD',
-          payload: message.payload,
-        });
-        this.broadcast({
-          type: 'LEADERBOARD_UPDATE',
-          payload: { gameSlug, leaderboard: [] },
-        });
         break;
       }
 
       case 'DELETE_LEADERBOARD_ENTRY': {
         const { gameSlug, participantId, participantName } = message.payload || {};
         if (gameSlug) {
-          const list = this.activeContestAttempts.get(gameSlug) || [];
-          const filtered = list.filter((e) => {
-            const matchesId = (e.user?._id && e.user._id === participantId) || e._id === participantId;
-            const matchesName = participantName && e.user?.name?.toLowerCase() === participantName.toLowerCase();
-            return !matchesId && !matchesName;
-          });
-          this.activeContestAttempts.set(gameSlug, filtered);
-          this.broadcast({
-            type: 'LEADERBOARD_UPDATE',
-            payload: { gameSlug, leaderboard: filtered },
-          });
+          const canonical = this.resolveCanonicalSlug(gameSlug);
+          const targets = Array.from(new Set([gameSlug, canonical]));
+          for (const t of targets) {
+            const list = this.activeContestAttempts.get(t) || [];
+            const filtered = list.filter((e) => {
+              const matchesId = (e.user?._id && e.user._id === participantId) || e._id === participantId;
+              const matchesName = participantName && e.user?.name?.toLowerCase() === participantName.toLowerCase();
+              return !matchesId && !matchesName;
+            });
+            this.activeContestAttempts.set(t, filtered);
+            this.broadcast({
+              type: 'LEADERBOARD_UPDATE',
+              payload: { gameSlug: t, leaderboard: filtered },
+            });
+          }
         }
         break;
       }
